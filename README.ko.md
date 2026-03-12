@@ -94,23 +94,17 @@ SEC 공시에서 구조화 데이터를 직접 수집합니다:
 
 ## 데이터 출처 — 한국 주식
 
-> **DART API는 무료입니다** — [opendart.fss.or.kr](https://opendart.fss.or.kr)에서 발급 (1분 소요). 미국 SEC EDGAR API의 한국판입니다.
-
-금융감독원에서 구조화 재무제표를 직접 수집합니다:
+한국 주식은 **DART OpenAPI**(무료)를 통해 금융감독원에서 구조화 재무제표를 항상 직접 수집합니다. 미국 SEC EDGAR API의 한국판입니다.
 
 | 데이터 | 출처 | 신뢰도 |
 |--------|------|--------|
 | 연결 재무제표 (IS/BS/CF) | DART OpenAPI `fnlttSinglAcntAll` | Grade A |
 | 기업 기본정보 (corp_code, 대표이사) | DART OpenAPI `company` | Grade A |
 | 최근 공시 목록 (90일) | DART OpenAPI `list` | Grade A |
-| 현재가 · PER · PBR · 외국인지분율 | 네이버금융 (항상 수집) | Grade B |
+| 현재가 · PER · PBR · 외국인지분율 | 네이버금융 (시장 데이터용 항상 수집) | Grade B |
 | 애널리스트 컨센서스 | FnGuide / 웹 검색 | Grade B |
 
-**연동 없이도:** DART 웹사이트 + 네이버금융 스크래핑으로 동작합니다. 최대 신뢰도 Grade B.
-
-```
-💡 .claude/settings.local.json → env → DART_API_KEY에 발급받은 키 입력
-```
+[opendart.fss.or.kr](https://opendart.fss.or.kr)에서 무료 API 키를 발급받아 `.claude/settings.local.json → env → DART_API_KEY`에 입력하세요.
 
 ---
 
@@ -228,12 +222,12 @@ claude mcp add --transport http financial-datasets https://mcp.financialdatasets
 API 키 발급: [financialdatasets.ai](https://financialdatasets.ai)
 전체 설정 가이드: [docs/mcp-setup-guide.ko.md](docs/mcp-setup-guide.ko.md)
 
-### (무료) DART API 연동 — 한국 주식
+### DART API 연동 — 한국 주식 *(무료, 필수)*
 
-```bash
-# opendart.fss.or.kr에서 무료 API 키 발급 (1분 소요)
-# .claude/settings.local.json → "env" 항목에 아래 추가:
-# "DART_API_KEY": "발급받은_키_입력"
+[opendart.fss.or.kr](https://opendart.fss.or.kr)에서 무료 API 키를 발급받아 `.claude/settings.local.json`에 추가:
+
+```json
+"env": { "DART_API_KEY": "발급받은_키_입력" }
 ```
 
 ### 실행
@@ -269,9 +263,7 @@ Ready. Send a ticker or question to begin.
 
 ---
 
-## 모드별 데이터 수준 비교
-
-### 미국 주식
+## 미국 주식 모드 비교
 
 | | Enhanced Mode 🟢 | Standard Mode 🟡 |
 |-|-----------------|-----------------|
@@ -282,24 +274,15 @@ Ready. Send a ticker or question to begin.
 | **최대 신뢰도** | **Grade A** | Grade B |
 | **비용** | 분석당 약 $0.05–$0.28 | 무료 |
 
-### 한국 주식
-
-| | DART-Enhanced 🟢 | Standard Mode 🟡 |
-|-|-----------------|-----------------|
-| **필요 조건** | DART API 키 (무료) | 추가 설정 없음 |
-| **데이터 출처** | 금융감독원 DART OpenAPI | DART 웹사이트 + 네이버금융 스크래핑 |
-| **재무 데이터** | 구조화 IS/BS/CF, Grade A | 웹 스크랩, Grade B |
-| **주가 데이터** | 네이버금융, Grade B | 네이버금융, Grade B |
-| **최대 신뢰도** | **Grade A** (재무제표) | Grade B |
-| **비용** | 무료 | 무료 |
+한국 주식은 항상 DART OpenAPI(Grade A 재무제표) + 네이버금융(Grade B 주가)을 사용합니다. DART API는 무료이므로 별도 모드 구분 없음.
 
 ---
 
 ## 한국 주식 지원
 
-KOSPI / KOSDAQ 종목 완전 지원 — **DART OpenAPI로 Grade A 재무 데이터 직접 수집**.
+KOSPI / KOSDAQ 종목 완전 지원 — **DART OpenAPI로 Grade A 재무 데이터 항상 직접 수집**.
 
-- **DART OpenAPI** — 금융감독원에서 직접 연결 재무제표 수집 (IS/BS/CF, 공시 목록)
+- **DART OpenAPI** — 금융감독원에서 직접 연결 재무제표 수집 (IS/BS/CF, 공시 목록). 무료, 항상 사용.
 - **네이버금융** — 실시간 주가, PER/PBR, 외국인 지분율 (시장 데이터용 항상 수집)
 - **FnGuide / KIND** — 애널리스트 컨센서스, 수급 데이터
 - **한국어 출력** — 한국어로 요청하면 한국어로 분석 생성

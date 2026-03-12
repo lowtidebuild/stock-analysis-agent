@@ -2,9 +2,7 @@
 
 This file defines the priority-ordered list of sources for Korean stock research.
 
-**Korean stocks support two data modes:**
-- **DART-Enhanced** (`DART_API_KEY` set): DART OpenAPI → Grade A financial statements
-- **Standard** (no API key): Web-based sources → Grade B max
+DART OpenAPI is always attempted first (free API, key pre-configured). If it fails, the web chain below serves as fallback.
 
 ---
 
@@ -142,19 +140,12 @@ Execute these searches in Standard Mode for KR stocks:
 
 ## Korean Stock Confidence Grade Notes
 
-**With DART API** (`DART_API_KEY` set):
 - Financial statements (IS/BS/CF) from DART API → **Grade A**, tag `[DART-API]`
-- Price/market data (real-time): 네이버금융 → Grade B, tag `[네이버]`
+- Price/market data: 네이버금융 → Grade B, tag `[네이버]`
 - Analyst consensus: FnGuide/web → Grade B, tag `[KR-Web]`
+- If DART API unavailable (fallback): DART web + 네이버금융 agree → Grade B `[≈]`; single source → Grade C `[1S]`
 
-**Without DART API** (Standard Mode):
-- Maximum grade is B (no structured API)
-- Grade B: DART web + 네이버금융 agree within 5% → `[≈]`
-- Grade C: Single web source → `[1S]`
-- Grade D: Sources contradict or unavailable → `[Unverified]` → display "—"
-
-**Always** tag Korean web sources with `[KR-Web]` in addition to grade tag.
-DART API sources tagged `[DART-API]` (no `[KR-Web]` suffix needed).
+Tag Korean web sources with `[KR-Web]`. DART API sources tagged `[DART-API]` only.
 
 ---
 

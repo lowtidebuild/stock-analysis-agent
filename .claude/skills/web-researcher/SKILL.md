@@ -58,7 +58,7 @@ Read `kr-data-sources.md` for full source priority chain. Execute in this order:
 
 **Step 4.4.0 — DART OpenAPI (structured data, Grade A)**:
 
-Check if `DART_API_KEY` is set (available via environment variable from `.claude/settings.local.json`):
+Always run dart-collector.py for Korean stocks (DART API is free, key is pre-configured):
 
 ```bash
 python .claude/skills/web-researcher/scripts/dart-collector.py \
@@ -67,7 +67,7 @@ python .claude/skills/web-researcher/scripts/dart-collector.py \
 ```
 
 - **Success** → `dart-api-raw.json` written with Grade A financial data. Proceed to Step 4.4.2 (skip web DART scraping — Step 4.4.1).
-- **Failure** (API key not set, network error, no DART listing) → log the error, proceed with web fallback from Step 4.4.1.
+- **Failure** (network error, invalid stock code, API issue) → log the error, proceed with web fallback from Step 4.4.1.
 
 **Step 4.4.1 — DART web (fallback only, skip if dart-api-raw.json exists)**:
 - Search: `"{company}" 사업보고서 분기보고서 DART site:dart.fss.or.kr`

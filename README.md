@@ -94,23 +94,17 @@ When connected, the agent pulls structured data directly from SEC filings:
 
 ## Data Sources — Korean Stocks
 
-> **DART OpenAPI is free** — get your key at [opendart.fss.or.kr](https://opendart.fss.or.kr). It's the Korean equivalent of SEC EDGAR's API.
-
-When connected, the agent pulls structured financial statements directly from 금융감독원:
+The agent always pulls structured financial statements directly from 금융감독원 via **DART OpenAPI** (free).
 
 | Data | Source | Confidence |
 |------|--------|------------|
 | 연결 재무제표 (IS/BS/CF) | DART OpenAPI `fnlttSinglAcntAll` | Grade A |
 | 기업 기본정보 (corp_code, CEO) | DART OpenAPI `company` | Grade A |
 | 최근 공시 목록 (90일) | DART OpenAPI `list` | Grade A |
-| 현재가 · PER · PBR · 외국인지분율 | 네이버금융 (always fetched) | Grade B |
+| 현재가 · PER · PBR · 외국인지분율 | 네이버금융 (always fetched for market data) | Grade B |
 | 애널리스트 컨센서스 | FnGuide / 웹 검색 | Grade B |
 
-**Without it:** web scraping of DART website + 네이버금융. Max confidence Grade B. Analysis still works.
-
-```
-💡 Add DART_API_KEY to .claude/settings.local.json → env section
-```
+Get your free DART API key at [opendart.fss.or.kr](https://opendart.fss.or.kr) and add it to `.claude/settings.local.json → env → DART_API_KEY`. It's the Korean equivalent of SEC EDGAR's API.
 
 ---
 
@@ -226,11 +220,12 @@ claude mcp add --transport http financial-datasets https://mcp.financialdatasets
 Get your API key at [financialdatasets.ai](https://financialdatasets.ai).
 Full setup guide: [docs/mcp-setup-guide.md](docs/mcp-setup-guide.md)
 
-### (Free) Connect DART API — Korean Stocks
+### Connect DART API — Korean Stocks *(free, required)*
 
-```bash
-# Edit .claude/settings.local.json → add DART_API_KEY under "env"
-# Get your free key at opendart.fss.or.kr (takes 1 minute)
+Get a free API key at [opendart.fss.or.kr](https://opendart.fss.or.kr), then add it to `.claude/settings.local.json`:
+
+```json
+"env": { "DART_API_KEY": "your_key_here" }
 ```
 
 ### Run
@@ -266,9 +261,7 @@ All generated files go under `output/` (gitignored):
 
 ---
 
-## Mode Comparison
-
-### US Stocks
+## US Stock Mode Comparison
 
 | | Enhanced Mode 🟢 | Standard Mode 🟡 |
 |-|-----------------|--------------------|
@@ -279,16 +272,7 @@ All generated files go under `output/` (gitignored):
 | **Max grade** | **Grade A** | Grade B |
 | **Cost** | ~$0.05–$0.28/analysis | Free |
 
-### Korean Stocks
-
-| | DART-Enhanced 🟢 | Standard Mode 🟡 |
-|-|-----------------|------------------|
-| **Requires** | DART API key (free) | Nothing extra |
-| **Data source** | 금융감독원 DART OpenAPI | DART website + 네이버금융 scraping |
-| **Financials** | Structured IS/BS/CF, Grade A | Web-scraped, Grade B |
-| **Price data** | 네이버금융, Grade B | 네이버금융, Grade B |
-| **Max grade** | **Grade A** (financials) | Grade B |
-| **Cost** | Free | Free |
+Korean stocks always use DART OpenAPI (Grade A financials) + 네이버금융 (Grade B price). DART API is free — no mode distinction needed.
 
 ---
 
@@ -296,7 +280,7 @@ All generated files go under `output/` (gitignored):
 
 Full support for KOSPI / KOSDAQ stocks with **Grade A financial data via DART OpenAPI**.
 
-- **DART OpenAPI** — structured 재무제표 directly from 금융감독원 (IS/BS/CF, 공시 목록)
+- **DART OpenAPI** — structured 재무제표 directly from 금융감독원 (IS/BS/CF, 공시 목록). Free API, always used.
 - **네이버금융** — real-time price, PER/PBR, 외국인 지분율 (always fetched for market data)
 - **FnGuide / KIND** — analyst consensus, 수급 data
 - **Korean-language output** — all analysis in Korean when you ask in Korean

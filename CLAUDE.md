@@ -33,13 +33,13 @@ Test call: get_current_stock_price("AAPL")
   → Second failure: DATA_MODE = "standard"
 ```
 
-Korean stocks → check `DART_API_KEY` env var. If set, DATA_MODE_KR = "dart-enhanced" (Grade A financials). Otherwise DATA_MODE_KR = "standard" (Grade B max).
+Korean stocks → always run DART API (dart-collector.py). DART API is free — no mode distinction needed. If API call fails (network error, invalid key), fall back to web sources automatically.
 
 ### Session State Block (display at start)
 ```
 === Stock Analysis Agent ===
 Data Mode (US):  {Enhanced (MCP active) / Standard (Web-only)}
-Data Mode (KR):  {DART-Enhanced (Grade A) / Standard (Web-only, Grade B max)}
+Data Mode (KR):  DART API (Grade A financials) + 네이버금융 (price)
 Date: {YYYY-MM-DD}
 Ready. Send a ticker or question to begin.
 ```
