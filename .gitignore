@@ -1,0 +1,48 @@
+# ── Design & Private Docs ──────────────────────────────────────────────────
+stock-analysis-agent-design-v2.md
+
+# ── Runtime Output ─────────────────────────────────────────────────────────
+output/
+# Keep directory structure but ignore generated files
+!output/.gitkeep
+
+# ── Python ─────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Node / npm ─────────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-error.log*
+package-lock.json
+
+# ── Environment & Secrets ──────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+secrets.json
+.claude/settings.local.json
+
+# ── OS ─────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ── Editor ─────────────────────────────────────────────────────────────────
+.vscode/settings.json
+.vscode/launch.json
+*.swp
+*.swo
+*~
+
+# ── Claude session artifacts ────────────────────────────────────────────────
+.claude/projects/
