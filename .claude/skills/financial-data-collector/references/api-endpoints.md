@@ -55,7 +55,7 @@ ebitda_ttm, revenue_ttm, gross_margin, operating_margin, net_margin
 
 ---
 
-## Minimum Viable Call Bundle (Mode A/B)
+## Minimum Viable Call Bundle (Mode B)
 
 For quicker analysis where full depth not needed. Estimated cost: ~$0.05/stock.
 

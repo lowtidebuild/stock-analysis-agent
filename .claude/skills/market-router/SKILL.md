@@ -73,8 +73,6 @@ Based on output_mode and company_type, select which API calls to make in Step 3:
 
 | Output Mode | API Bundle |
 |-------------|-----------|
-| Mode 0 (price check) | `get_current_stock_price` only |
-| Mode A | Minimum bundle: price + metrics + estimates + news |
 | Mode B, C, D | Full standard bundle (10 calls) |
 
 From `api-endpoints.md`:

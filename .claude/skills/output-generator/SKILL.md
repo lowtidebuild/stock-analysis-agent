@@ -1,54 +1,20 @@
 # Output Generator — SKILL.md
 
-**Role**: Step 8 — Generate the final analysis output in the requested mode (A, B, C, D). Mode C delegates to dashboard-generator; Modes A, B, D are handled here.
+**Role**: Step 8 — Generate the final analysis output in the requested mode (B, C, D). Mode C delegates to dashboard-generator; Modes B, D are handled here.
 **Triggered by**: CLAUDE.md after Analyst Agent (Step 7) completes
 **Reads**: `output/analysis-result.json`, appropriate mode template
-**Writes**: Inline response (Mode A) or file (Mode B, D); Mode C delegates to dashboard-generator/SKILL.md
-**References**: `mode-a-template.md`, `mode-b-template.md`, `mode-d-template.md`
+**Writes**: File (Mode B, D); Mode C delegates to dashboard-generator/SKILL.md
+**References**: `mode-b-template.md`, `mode-d-template.md`
 
 ---
 
 ## Mode Routing
 
 ```
-output_mode = "A" → Mode A: inline chat response (this file)
 output_mode = "B" → Mode B: HTML file (this file, uses mode-b-template.md)
 output_mode = "C" → Mode C: HTML dashboard (delegate to dashboard-generator/SKILL.md)
 output_mode = "D" → Mode D: Markdown memo (this file, uses mode-d-template.md)
-output_mode = "0" → Mode 0: Price check (inline, 1-2 lines)
 ```
-
----
-
-## Mode 0 — Price Check (Inline)
-
-Simple inline response. No file output.
-
-```
-{Company Name} ({TICKER}): ${price} ({▲/▼}{change_pct}% today)
-Mkt Cap: ${mkt_cap} | 52W Range: ${low_52}–${high_52} | Vol: {volume}
-[Source: {tag} | {date}]
-```
-
-Korean format:
-```
-{회사명} ({종목코드}): ₩{price:,} ({▲/▼}{change_pct}% 오늘)
-시총: ₩{mkt_cap:,}억 | 52주: ₩{low_52:,}–₩{high_52:,}
-```
-
----
-
-## Mode A — Quick Brief (Inline)
-
-Load `mode-a-template.md`. Populate fields from `output/analysis-result.json`. Output as inline markdown.
-
-**Pre-output checks**:
-1. All 5 metrics selected and have source tags?
-2. Scenario probabilities sum to 100%?
-3. R/R Score formula applied?
-4. Variant View passes competitor replacement test?
-
-Render directly in chat (no file saved for Mode A, unless user explicitly asks to save).
 
 ---
 
@@ -158,4 +124,4 @@ Use these tags consistently throughout all output:
 - [ ] Disclaimer present (Mode B and D files)
 - [ ] File written to correct path (Mode B and D)
 - [ ] File path reported to user
-- [ ] Mode A: no file needed, inline response complete
+- [ ] Mode B and D: file written, path reported to user

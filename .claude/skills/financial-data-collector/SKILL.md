@@ -51,7 +51,7 @@ Execute calls in this order. For **each call**:
 10. get_insider_trades(ticker, limit=20)
 ```
 
-**Minimum bundle** (Mode A only, or if time-constrained):
+**Minimum bundle** (Mode B only, or if time-constrained):
 ```
 1. get_current_stock_price(ticker)
 2. get_financial_metrics(ticker)

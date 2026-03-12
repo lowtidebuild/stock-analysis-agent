@@ -44,7 +44,7 @@ Load:
 **Test**: Verify that the current price and analysis date are both present and non-null in the output.
 
 **Pass criteria**:
-- Current price appears prominently in the output (Section 1 for Mode C, first table for Mode A/B, executive summary for Mode D)
+- Current price appears prominently in the output (Section 1 for Mode C, first table for Mode B, executive summary for Mode D)
 - Analysis date appears in the output
 - Price is in correct currency format ($ for US, ₩ for KR)
 - Date is in YYYY-MM-DD format
@@ -64,7 +64,6 @@ Load:
 **Test**: Verify that a disclaimer is present in the output.
 
 **Pass criteria**:
-- Mode A: Short disclaimer at bottom of inline response ("This is not investment advice. For informational purposes only.")
 - Mode B/C: Full disclaimer in footer section
 - Mode D: Full disclaimer at end of Appendix section
 
@@ -193,11 +192,6 @@ Flags are added inline in the output where the issue is located:
 **Markdown output**:
 ```
 > ⚠️ **Quality flag**: {item} — {description}
-```
-
-**Inline chat (Mode A)**:
-```
-[⚠️ Quality flag: {item} — {description}]
 ```
 
 ---

@@ -87,8 +87,7 @@ Step 6: Ambiguous? → Ask user: "US or Korean market?" (max 1 clarification)
 
 | Query Signal | Mode Selected | Examples |
 |-------------|--------------|---------|
-| Price/fact only keywords | Mode 0 (Price Check) | "얼마야", "지금 가격", "시총이", "what's the price", "current price", "market cap" |
-| Quick/brief request | Mode A | "간단히", "빠르게", "요약", "quick", "brief", "summary" |
+| Price/fact only keywords | Not supported — redirect to Yahoo Finance | "얼마야", "지금 가격", "시총이", "what's the price", "current price", "market cap" |
 | Comparison request | Mode B | "vs", "비교", "compare", "peer" |
 | Analysis request (default) | Mode C | "분석해줘", "분석", "analyze", "dashboard", "deep dive" |
 | Memo/report request | Mode D | "메모", "리포트", "보고서", "투자 메모", "investment memo", "report" |

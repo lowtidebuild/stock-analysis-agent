@@ -32,7 +32,7 @@ That is all. No SKILL.md files, no framework files, no conversation history.
 
 ### Item 1 — Generic Test (Variant View Specificity)
 
-**Test**: Take the Variant View statement (Q1 for Mode D, the "Variant View" section for Mode C/A, or any thesis statement for Mode B). Replace the company name with the #1 direct competitor. Does the argument still hold?
+**Test**: Take the Variant View statement (Q1 for Mode D, the "Variant View" section for Mode C, or any thesis statement for Mode B). Replace the company name with the #1 direct competitor. Does the argument still hold?
 
 **Pass**: Statement is company-specific — replacing the name makes it factually wrong or inapplicable.
 **Fail**: Statement reads equally well for any company in the sector.
@@ -54,7 +54,7 @@ That is all. No SKILL.md files, no framework files, no conversation history.
 
 ### Item 2 — Mechanism Test (Risk Specificity)
 
-**Test**: For each risk in the Precision Risk section (or Top Risk for Mode A), verify there is a complete causal chain: [Risk Event] → [Operational Impact] → [Financial Impact ($)] → [Stock Price Effect].
+**Test**: For each risk in the Precision Risk section, verify there is a complete causal chain: [Risk Event] → [Operational Impact] → [Financial Impact ($)] → [Stock Price Effect].
 
 **Pass**: Each risk has all 4 elements of the causal chain with at least one quantified number.
 **Fail**: Any risk is stated as a category without mechanism ("Competition risk", "Macro risk", "Regulatory risk").
@@ -169,7 +169,6 @@ Manually compute Market Cap = Price × Shares, Net Debt = Debt - Cash, EV = Mkt 
 
 **Test**: For the selected output mode, verify that all required sections are present and non-trivial (≥50 words each).
 
-**Mode A required**: Price, 5 Metrics, 3 Scenarios, R/R Score, Variant View, Top Risk, Verdict, Disclaimer.
 **Mode B required**: Header, Comparison Table, Scenario Cards, R/R Ranking, Best Pick, Differentiators, Disclaimer.
 **Mode C required**: All 11 HTML sections (Header, Scenarios, KPI tiles, Variant View, Valuation, Peers, Analysts, Charts, Quarterly, Portfolio Strategy, Disclaimer).
 **Mode D required**: Executive Summary + all 10 sections + Appendix (total ≥2,950 words estimated).

@@ -12,26 +12,26 @@
 
 ### Step 1.1 — Detect Analysis Intent
 
-First, determine if this is an **analysis request** or a **simple fact query** (Workflow 0).
+First, determine if this is an **analysis request** or a **price-only query** (not supported).
 
-**Workflow 0 triggers** (no analysis needed, just data retrieval):
+**Price-only queries** (not supported — respond with guidance):
 - "X 지금 얼마야?" / "X current price?" / "What is X trading at?"
 - "X 시총이 얼마야?" / "X market cap?"
 - "X 52주 최고가?" / "X 52-week high?"
 - Any query asking for a single data point without analysis context
 
-**Workflow 1 triggers** (full analysis):
+```
+IF price-only query detected:
+    → Respond: "가격 조회는 지원하지 않습니다. Yahoo Finance / Perplexity에서 확인하시거나,
+                '{ticker} 분석해줘'로 심층 분석을 요청하세요."
+    → Do not proceed further
+```
+
+**Analysis triggers** (full analysis — proceed with workflow):
 - "X 분석해줘" / "Analyze X"
 - "X 어때?" / "What do you think about X?"
 - "X 투자할 만해?" / "Is X worth investing in?"
 - Any query implying an investment recommendation or thesis
-
-```
-IF Workflow 0 detected:
-    → Set workflow = 0
-    → Skip output_mode selection (will be Mode 0 = inline price check)
-    → Proceed to Step 1.3 (ticker resolution) then route to Step 3 or 4
-```
 
 ### Step 1.2 — Detect Multi-Ticker Query
 
@@ -82,7 +82,6 @@ Apply this decision table:
 
 | User Signal | Output Mode |
 |------------|-------------|
-| "간단히" / "briefly" / "quick" / "빠르게" | A |
 | "비교" / "vs" / "compare" (multi-ticker) | B |
 | "심층" / "자세히" / "deep dive" / "detailed" / "full" | C |
 | "투자 메모" / "memo" / "investment memo" / "리포트" | D |
@@ -131,8 +130,8 @@ Output session state block:
 === Query Interpretation ===
 Ticker(s): {list}
 Market(s): {US/KR}
-Workflow: {0/1/2/3}
-Output Mode: {0/A/B/C/D}
+Workflow: {1/2/3}
+Output Mode: {B/C/D}
 Output Language: {en/ko}
 Company Type (pre-detected): {type or "unknown"}
 Peer tickers: {list or none}
@@ -145,7 +144,7 @@ Delta mode: {yes/no}
 
 ## Completion Check
 
-- [ ] Workflow determined (0/1/2/3)
+- [ ] Workflow determined (1/2/3)
 - [ ] Ticker(s) resolved to canonical format (uppercase US, 6-digit KR)
 - [ ] Market(s) identified (US/KR)
 - [ ] Output mode selected

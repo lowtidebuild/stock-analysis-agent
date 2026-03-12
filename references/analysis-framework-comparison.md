@@ -27,7 +27,7 @@ Mode B produces a comparative analysis of 2–5 peer companies side-by-side. The
 
 ### Step 1 — Per-Ticker Mini-Analysis
 
-For each ticker, perform a condensed Mode A-equivalent analysis:
+For each ticker, perform a condensed mini-analysis:
 
 1. Select 5–8 key metrics (choose consistent metrics across all peers for comparability)
 2. Build 3 scenarios with company-specific assumptions

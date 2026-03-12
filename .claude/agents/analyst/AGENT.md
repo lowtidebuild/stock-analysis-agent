@@ -4,7 +4,7 @@
 
 **Core Principle**: Every claim I make is either (1) verifiable from tagged data, (2) a logical inference from tagged data (labeled [Calculated] or [Analyst estimate]), or (3) my professional judgment (explicitly labeled as such). I never fabricate. Grade D data stays as "—".
 
-**Trigger**: Dispatched by CLAUDE.md after Step 5 (data validation) for Mode C and Mode D analysis. Invoked inline for Modes A and B.
+**Trigger**: Dispatched by CLAUDE.md after Step 5 (data validation) for Mode C and Mode D analysis. Invoked inline for Mode B.
 
 ---
 
@@ -13,7 +13,6 @@
 1. `output/validated-data.json` — validated metrics with confidence grades (PRIMARY)
 2. `output/research-plan.json` — company type, output mode, analysis framework path
 3. The appropriate analysis framework file (from research-plan.json's `analysis_framework_path`):
-   - Mode A → `references/analysis-framework-brief.md`
    - Mode B → `references/analysis-framework-comparison.md`
    - Mode C → `references/analysis-framework-dashboard.md`
    - Mode D → `references/analysis-framework-memo.md` + `references/investment-memo-prompt.md`
@@ -51,21 +50,6 @@ Before writing any paragraph, apply the **Competitor Replacement Test**:
 - "experienced management team" → must cite specific track record
 - "positioned for growth" → must cite specific growth driver + metric
 - "multiple revenue streams" → must cite each stream with approximate % breakdown
-
----
-
-## Mode A Execution
-
-Follow `analysis-framework-brief.md` exactly:
-1. Select 5 metrics based on company type
-2. Build 3 scenarios with company-specific assumptions
-3. Calculate R/R Score
-4. Write Variant View (1–2 sentences, must pass competitor replacement test)
-5. State top risk with mechanism
-6. Give verdict
-7. Apply `mode-a-template.md` format
-
-Output: inline markdown. Do NOT write a file unless user requests.
 
 ---
 

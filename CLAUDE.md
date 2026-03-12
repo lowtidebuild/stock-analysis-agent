@@ -59,11 +59,13 @@ User query received
 ├─ Watchlist/portfolio management → Workflow 3
 │   Triggers: "워치리스트", "watchlist", "포트폴리오", "portfolio", "추가", "삭제", "스캔"
 │
-├─ Price check only → Workflow 0
-│   Triggers: "얼마야", "주가", "price", "current", single data point question
-│
 ├─ Multi-ticker (2–5 tickers with comparison intent) → Workflow 2
 │   Triggers: "vs", "비교", "compare", "versus", "대", comma-separated tickers
+│
+├─ Price-only query (no analysis intent) → Not supported
+│   Triggers: "얼마야", "주가", "price", "current", single data point question
+│   Response: "가격 조회는 지원하지 않습니다. Yahoo Finance / Perplexity에서 확인하시거나,
+│              '{ticker} 분석해줘'로 심층 분석을 요청하세요."
 │
 └─ Single stock analysis → Workflow 1
     Default for all other analysis requests
@@ -76,26 +78,7 @@ User query received
 
 ---
 
-## Section 4 — Workflow 0: Price Check
-
-**Steps**: Query Interpreter (Step 1) → API/Web data (Step 3 or 4 minimal) → Inline response
-
-**Response format**:
-```
-{Company} ({TICKER}): ${price} ({▲/▼}{change_pct}% today) | Mkt Cap: ${mkt_cap}
-52W: ${low}–${high} | Vol: {volume}
-[Source: {tag} | {date}]
-```
-
-Korean format:
-```
-{회사명} ({종목코드}): ₩{price:,} ({▲/▼}{change_pct}% 오늘) | 시총: ₩{mkt_cap:,}억
-52주: ₩{low:,}–₩{high:,}
-```
-
----
-
-## Section 5 — Workflow 1: Single Stock Analysis
+## Section 4 — Workflow 1: Single Stock Analysis
 
 10-step pipeline. Read each step's SKILL.md for detailed instructions.
 
@@ -145,12 +128,11 @@ Read `.claude/skills/data-validator/SKILL.md`
 **Dispatch Analyst Agent** for Mode C and Mode D:
 - Read `.claude/agents/analyst/AGENT.md`
 - Load: validated-data.json, research-plan.json, appropriate framework file
-- Mode A/B: execute inline (no subagent)
+- Mode B: execute inline (no subagent)
 - Mode C/D: analyst produces `output/analysis-result.json`
 - Verify output: `output/analysis-result.json` exists AND rr_score is non-null
 
 ### Step 8 — Output Generation
-- **Mode A**: Apply `.claude/skills/output-generator/SKILL.md` (inline response)
 - **Mode B**: Apply `.claude/skills/output-generator/SKILL.md` → HTML file
 - **Mode C**: Apply `.claude/skills/dashboard-generator/SKILL.md` → HTML file
 - **Mode D**: Apply `.claude/skills/output-generator/SKILL.md` → Markdown file
@@ -188,7 +170,7 @@ Step 10 writes: output/data/{ticker}/{ticker}_{date}_snapshot.json
 
 ---
 
-## Section 6 — Workflow 2: Peer Comparison
+## Section 5 — Workflow 2: Peer Comparison
 
 **Trigger**: Multi-ticker query (2–5 tickers, comparison intent)
 **Default output**: Mode B (HTML comparison matrix)
@@ -216,7 +198,7 @@ Steps:
 
 ---
 
-## Section 7 — Workflow 3: Portfolio & Watchlist
+## Section 6 — Workflow 3: Portfolio & Watchlist
 
 Read `.claude/skills/data-manager/SKILL.md` (Part B) for all operations.
 
@@ -237,7 +219,7 @@ Write to `output/portfolio.json`.
 ### Portfolio Review
 1. Get current prices for all holdings
 2. Compute P&L per holding
-3. Run abbreviated Mode A analysis per stock
+3. Run abbreviated Mode C analysis per stock
 4. Display portfolio summary table + sector concentration
 5. Flag: positions where R/R Score < 1.0 or data is STALE_30D
 
@@ -249,12 +231,12 @@ Write to `output/portfolio.json`.
 
 ---
 
-## Section 8 — Sub-agent Dispatch Rules
+## Section 7 — Sub-agent Dispatch Rules
 
 | Agent | Trigger | Inputs | Outputs | Max Dispatches |
 |-------|---------|--------|---------|---------------|
 | data-researcher | ≥3 tickers in Workflow 2 not in session cache | research-plan.json | tier1-raw.json + tier2-raw.json per ticker | 1 per workflow run |
-| analyst | Mode C or D (always); Mode A/B (inline, no dispatch) | validated-data.json, research-plan.json, framework file | analysis-result.json | 2 (original + patch) |
+| analyst | Mode C or D (always); Mode B (inline, no dispatch) | validated-data.json, research-plan.json, framework file | analysis-result.json | 2 (original + patch) |
 | critic | Mode C/D (always); Mode B with ≥3 tickers | analysis-result.json, validated-data.json | quality-report.json | 1 per output (re-check after patch = 1 more) |
 
 **Sub-agent file paths** (pass explicitly when dispatching):
@@ -266,7 +248,7 @@ critic receives: ["output/analysis-result.json", "output/validated-data.json"]
 
 ---
 
-## Section 9 — Quality Gate Summary
+## Section 8 — Quality Gate Summary
 
 Quality check runs at Step 9 for all outputs. Critic adds 7-item review for Mode C/D.
 
@@ -294,7 +276,7 @@ Quality check runs at Step 9 for all outputs. Critic adds 7-item review for Mode
 
 ---
 
-## Section 10 — Failure Handling
+## Section 9 — Failure Handling
 
 ### Step-level retry budgets
 
@@ -331,13 +313,12 @@ IF analysis fails to meet quality threshold after 1 feedback loop:
 
 ---
 
-## Section 11 — File Path Reference
+## Section 10 — File Path Reference
 
 ```
 Project Root
 ├── CLAUDE.md                          ← You are here
 ├── references/
-│   ├── analysis-framework-brief.md    ← Mode A framework
 │   ├── analysis-framework-comparison.md  ← Mode B framework
 │   ├── analysis-framework-dashboard.md   ← Mode C framework
 │   ├── analysis-framework-memo.md     ← Mode D framework
@@ -381,7 +362,7 @@ Project Root
 
 ---
 
-## Section 12 — Source Tagging Reference
+## Section 11 — Source Tagging Reference
 
 Every numerical value in analysis output must carry a source tag:
 

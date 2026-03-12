@@ -8,7 +8,7 @@ A Claude Code-based AI research assistant for retail investors. Covers US equiti
 
 ## Key Features
 
-- **4 Analysis Modes** — Quick Brief (A), Peer Comparison (B), Deep Dive Dashboard (C), Investment Memo (D)
+- **3 Analysis Modes** — Peer Comparison (B), Deep Dive Dashboard (C), Investment Memo (D)
 - **Adaptive Data Strategy** — Enhanced Mode via MCP APIs when available; Standard Mode via web research as fallback
 - **Anti-Hallucination Policy** — unverifiable data is displayed as "—", never fabricated
 - **3-Layer Fact-Checking** — arithmetic consistency → multi-source cross-reference → sector sanity check
@@ -58,61 +58,22 @@ Ready. Send a ticker or question to begin.
 
 ## How to Use
 
-### Workflow 0 — Price Check
-
-A quick price lookup. No analysis generated.
-
-```
-AAPL 지금 얼마야?
-What is NVDA trading at?
-삼성전자 현재 주가?
-```
-
-**Output** (inline):
-```
-Apple Inc. (AAPL): $175.50 (▲0.72% today) | Mkt Cap: $2.72T
-52W: $164.08–$199.62
-[Source: [API] | 2026-03-12]
-```
-
----
-
 ### Workflow 1 — Single Stock Analysis
 
 Full analysis pipeline. Mode is auto-selected based on your phrasing, or specify explicitly.
 
 | Phrasing | Mode | Output |
 |----------|------|--------|
-| "간단히 분석" / "quick brief" | A — Quick Brief | Inline markdown, ~400 words |
 | "분석해줘" (default) | C — Deep Dive Dashboard | HTML file |
 | "심층 분석" / "deep dive" | C — Deep Dive Dashboard | HTML file |
 | "투자 메모" / "investment memo" | D — Investment Memo | Markdown file |
 
 **Examples**:
 ```
-AAPL 간단히 분석해줘
 Analyze NVDA
 삼성전자 심층 분석해줘
 TSLA investment memo
-005930 분석 (Mode C)
-```
-
-**Mode A — Quick Brief** (inline):
-```
-## Apple Inc. (AAPL) — Quick Brief
-*2026-03-12 | Standard Mode*
-
-Current Price: $175.50 (▲0.72%)  Mkt Cap: $2.72T
-
-| Metric | Value | Grade |
-|--------|-------|-------|
-| P/E (TTM) | 28.0x [≈] | B |
-| EV/EBITDA | 22.1x [Calculated] | B |
-| Revenue Growth YoY | +4.9% [API] | A |
-...
-
-R/R Score: 7.8 — Attractive
-Verdict: Overweight
+005930 분석
 ```
 
 **Mode C — Deep Dive Dashboard** (HTML file):
@@ -191,7 +152,6 @@ All generated files are saved under `output/` (gitignored by default):
 
 | Path | Content |
 |------|---------|
-| `output/reports/{ticker}_A_*.md` | Mode A inline text (if saved) |
 | `output/reports/{ticker}_C_*.html` | Mode C HTML dashboard |
 | `output/reports/{ticker}_D_*.md` | Mode D investment memo |
 | `output/reports/{tickers}_B_*.html` | Mode B comparison matrix |
@@ -268,7 +228,7 @@ stock-analysis-agent/
 ├── README.md                    ← This file
 ├── README.ko.md                 ← Korean README
 ├── .gitignore
-├── references/                  ← Analysis frameworks (Mode A/B/C/D)
+├── references/                  ← Analysis frameworks (Mode B/C/D)
 ├── docs/
 │   ├── mcp-setup-guide.md       ← MCP setup (English)
 │   └── mcp-setup-guide.ko.md   ← MCP setup (Korean)
