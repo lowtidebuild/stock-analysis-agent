@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+
+      "WebFetch(domain:finance.yahoo.com)",
+      "WebFetch(domain:query1.finance.yahoo.com)",
+      "WebFetch(domain:query2.finance.yahoo.com)",
+      "WebFetch(domain:www.finance.yahoo.com)",
+      "WebFetch(domain:www.sec.gov)",
+      "WebFetch(domain:efts.sec.gov)",
+      "WebFetch(domain:stockanalysis.com)",
+      "WebFetch(domain:www.marketwatch.com)",
+      "WebFetch(domain:seekingalpha.com)",
+      "WebFetch(domain:www.cnbc.com)",
+      "WebFetch(domain:www.reuters.com)",
+      "WebFetch(domain:finviz.com)",
+      "WebFetch(domain:www.macrotrends.net)",
+      "WebFetch(domain:www.google.com)",
+      "WebFetch(domain:www.wsj.com)",
+      "WebFetch(domain:www.bloomberg.com)",
+      "WebFetch(domain:www.prnewswire.com)",
+      "WebFetch(domain:www.businesswire.com)",
+      "WebFetch(domain:investor.com)",
+      "WebFetch(domain:simplywall.st)",
+      "WebFetch(domain:www.perplexity.ai)",
+      "WebFetch(domain:perplexity.ai)",
+
+      "WebFetch(domain:finance.naver.com)",
+      "WebFetch(domain:m.stock.naver.com)",
+      "WebFetch(domain:dart.fss.or.kr)",
+      "WebFetch(domain:opendart.fss.or.kr)",
+      "WebFetch(domain:comp.fnguide.com)",
+      "WebFetch(domain:kind.krx.co.kr)",
+      "WebFetch(domain:finance.daum.net)",
+      "WebFetch(domain:www.hankyung.com)",
+      "WebFetch(domain:stock.hankyung.com)",
+      "WebFetch(domain:www.mk.co.kr)",
+      "WebFetch(domain:stock.mk.co.kr)",
+      "WebFetch(domain:www.sedaily.com)"
+    ]
+  }
+}
