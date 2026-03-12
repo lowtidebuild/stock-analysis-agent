@@ -248,16 +248,26 @@ All generated files go under `output/` (gitignored):
 
 ## Korean Stock Support
 
-Full support for KOSPI / KOSDAQ stocks:
+Full support for KOSPI / KOSDAQ stocks — now with **Grade A data via DART OpenAPI**.
 
-- **DART filings** — 사업보고서, 분기보고서 direct fetch
-- **네이버금융** — price, shareholding data
-- **FnGuide / KIND** — consensus estimates
+| Mode | Financial Data | Max Grade |
+|------|----------------|-----------|
+| 🟢 DART-Enhanced | DART OpenAPI (structured IS/BS/CF, same source as SEC EDGAR for US) | **Grade A** |
+| 🟡 Standard | Web scraping (DART website, 네이버금융) | Grade B |
+
+- **DART OpenAPI** — structured 재무제표 direct from 금융감독원 (free, API key required)
+- **네이버금융** — real-time price, PER/PBR, 외국인 지분율 (always used for market data)
+- **FnGuide / KIND** — analyst consensus, 수급 data
 - **Korean-language output** — all analysis in Korean when you ask in Korean
 - **Korean market overlay** — 외국인 지분율, 밸류업 프로그램, 자사주 소각 policy
 
+```bash
+# Enable DART-Enhanced: get free API key at opendart.fss.or.kr
+# Add to .claude/settings.local.json → env → DART_API_KEY
 ```
-삼성전자 심층 분석해줘  →  한국어로 Mode C 대시보드 생성
+
+```
+삼성전자 심층 분석해줘  →  한국어로 Mode C 대시보드 생성 (Grade A data)
 SK하이닉스 투자 메모     →  한국어로 Mode D DOCX 생성
 ```
 

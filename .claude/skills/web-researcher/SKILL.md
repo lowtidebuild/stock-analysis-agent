@@ -52,28 +52,45 @@ Execute ALL 8 searches from `us-data-sources.md` Standard Mode section:
 - Yahoo Finance: `https://finance.yahoo.com/quote/{ticker}/`
 - SEC EDGAR: `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={ticker}&type=10-Q`
 
-### Step 4.4 — Standard Mode Korean Protocol
+### Step 4.4 — Korean Stock Protocol
 
-Read `kr-data-sources.md` for full 5-source priority chain. Execute in this order:
+Read `kr-data-sources.md` for full source priority chain. Execute in this order:
 
-**Step 4.4.1 — DART (primary)**:
-- Fetch: `https://dart.fss.or.kr/dsab007/main.do` → search for company
-- OR search: `"{company}" 사업보고서 분기보고서 DART site:dart.fss.or.kr`
+**Step 4.4.0 — DART OpenAPI (structured data, Grade A)**:
+
+Check if `DART_API_KEY` is set (available via environment variable from `.claude/settings.local.json`):
+
+```bash
+python .claude/skills/web-researcher/scripts/dart-collector.py \
+  --stock-code {6digit_ticker} \
+  --output output/data/{ticker}/dart-api-raw.json
+```
+
+- **Success** → `dart-api-raw.json` written with Grade A financial data. Proceed to Step 4.4.2 (skip web DART scraping — Step 4.4.1).
+- **Failure** (API key not set, network error, no DART listing) → log the error, proceed with web fallback from Step 4.4.1.
+
+**Step 4.4.1 — DART web (fallback only, skip if dart-api-raw.json exists)**:
+- Search: `"{company}" 사업보고서 분기보고서 DART site:dart.fss.or.kr`
+- OR fetch: `https://dart.fss.or.kr/dsearch/main.do?maxResults=5&textCrpNm={company}`
 - Extract: 매출액, 영업이익, 당기순이익, EPS from most recent 분기보고서
+- Tag: `[KR-Web]`, Grade B (if confirmed by 네이버) or Grade C (single source)
 
-**Step 4.4.2 — 네이버금융**:
+**Step 4.4.2 — 네이버금융 (always run — price + market data)**:
 - Fetch: `https://finance.naver.com/item/main.naver?code={6digit_ticker}`
-- Extract: 현재가, 거래량, PER, PBR, EPS, 배당수익률, 외국인 지분율
+- Extract: 현재가, 거래량, PER, PBR, EPS, 배당수익률, 외국인 지분율, 52주 고/저
+- Tag: `[네이버]`
+- Note: 네이버금융 is the primary source for real-time price and market metrics (DART API does not provide price data)
 
-**Step 4.4.3 — FnGuide** (if DART/Naver insufficient):
-- Search: `"{company}" 실적 PER PBR site:comp.fnguide.com`
-- Extract: consensus estimate, financial statements
+**Step 4.4.3 — FnGuide** (if consensus data needed):
+- Fetch: `http://comp.fnguide.com/SVO2/ASP/SVD_Main.asp?pGB=1&gicode=A{6digit_ticker}`
+- Extract: consensus EPS, revenue estimates, analyst target prices
+- Tag: `[KR-Web]`
 
-**Step 4.4.4 — KIND**:
-- Fetch: `https://kind.krx.co.kr/disclosure/todaydisclosure.do?method=searchTodayDisclosureSub&reprimCd={ticker}`
-- Look for: 공시 (recent disclosures)
+**Step 4.4.4 — KIND** (수급/지분율):
+- Search: `"{company}" 외국인 지분율 기관 수급 site:kind.krx.co.kr`
+- Extract: 외국인 지분율, 기관 순매수/순매도
 
-**Step 4.4.5 — General search** (if above insufficient):
+**Step 4.4.5 — General search**:
 - Search: `"{company}" 실적발표 2026 영업이익 매출`
 - Search: `"{company}" 잠정실적 2026`
 
@@ -171,7 +188,8 @@ For peer comparison, run a parallel (or sequential) web research for each ticker
 ## Completion Check
 
 - [ ] All planned searches executed (Standard: 8 minimum; Enhanced supplement: 4 minimum)
-- [ ] Korean stocks: DART → 네이버금융 → FnGuide chain attempted
+- [ ] Korean stocks: dart-collector.py attempted first; outcome logged (success/fallback)
+- [ ] Korean stocks: 네이버금융 fetched for price/market data regardless of DART API result
 - [ ] Source tags applied to all extracted data points
 - [ ] Confidence grades assigned (A/B/C/D)
 - [ ] 10 key metrics coverage check performed

@@ -33,12 +33,13 @@ Test call: get_current_stock_price("AAPL")
   → Second failure: DATA_MODE = "standard"
 ```
 
-Korean stocks → always DATA_MODE = "standard" regardless of MCP status.
+Korean stocks → check `DART_API_KEY` env var. If set, DATA_MODE_KR = "dart-enhanced" (Grade A financials). Otherwise DATA_MODE_KR = "standard" (Grade B max).
 
 ### Session State Block (display at start)
 ```
 === Stock Analysis Agent ===
-Data Mode: {Enhanced (MCP active) / Standard (Web-only)}
+Data Mode (US):  {Enhanced (MCP active) / Standard (Web-only)}
+Data Mode (KR):  {DART-Enhanced (Grade A) / Standard (Web-only, Grade B max)}
 Date: {YYYY-MM-DD}
 Ready. Send a ticker or question to begin.
 ```
@@ -112,9 +113,10 @@ Read `.claude/skills/financial-data-collector/SKILL.md`
 ### Step 4 — Web Research
 Read `.claude/skills/web-researcher/SKILL.md`
 - Execute 8 US searches (Standard Mode) or 4 supplement searches (Enhanced Mode)
-- Korean: DART → 네이버금융 → FnGuide → KIND → general
+- Korean: DART OpenAPI (dart-collector.py) first → 네이버금융 → FnGuide → KIND → general
+- Write `output/data/{ticker}/dart-api-raw.json` (Korean, if DART API available)
 - Write `output/data/{ticker}/tier2-raw.json`
-- Verify output: file exists
+- Verify output: tier2-raw.json exists
 
 ### Step 5 — Data Validation
 Read `.claude/skills/data-validator/SKILL.md`
@@ -332,7 +334,8 @@ Project Root
 │   ├── analysis-result.json           ← Step 7 output
 │   ├── quality-report.json            ← Step 9 output
 │   ├── data/{ticker}/
-│   │   ├── tier1-raw.json             ← Step 3 output
+│   │   ├── tier1-raw.json             ← Step 3 output (US Enhanced only)
+│   │   ├── dart-api-raw.json          ← Step 4 output (KR DART-Enhanced only)
 │   │   ├── tier2-raw.json             ← Step 4 output
 │   │   ├── validated-data.json        ← Step 5 output (Workflow 2)
 │   │   ├── research-plan.json         ← Step 2 output (Workflow 2)

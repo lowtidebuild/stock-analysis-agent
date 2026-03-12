@@ -34,11 +34,22 @@ Primary source: tier1 (API)
 Cross-check source: tier2 (web)
 ```
 
-**Standard Mode**:
+**Standard Mode (US stocks)**:
 ```
 Load: output/data/{ticker}/tier2-raw.json    (web data only)
 Primary source: tier2 (first source found)
 Cross-check source: tier2 (second source found)
+```
+
+**Korean stocks (DART-Enhanced)**:
+```
+IF output/data/{ticker}/dart-api-raw.json exists AND confidence_grade = "A":
+  Load: dart-api-raw.json    (DART OpenAPI — Grade A financials)
+  Load: tier2-raw.json       (web — price, consensus, qualitative)
+  Primary financial source: dart-api-raw.json
+  Primary market data source: tier2 (네이버금융)
+ELSE:
+  Load: tier2-raw.json only  (web fallback, max Grade B)
 ```
 
 ### Step 5.2 — Layer 1: Arithmetic Consistency (ratio-calculator.py)
@@ -152,9 +163,16 @@ Using `confidence-grading.md` decision tree, assign final grade per metric:
 | D | `[Unverified]` | "—" | No sources, or >10% disagreement unresolved |
 
 **Korean stock special rules**:
-- Maximum grade B (no Grade A for KR stocks — DART is web-fetched, not API)
-- DART-sourced data: Grade B if consistent with 네이버금융
-- 잠정실적 (preliminary earnings): Grade C until confirmed by official DART filing
+- **DART-Enhanced** (dart-api-raw.json available):
+  - Financial statements (IS/BS/CF) from DART API → **Grade A**, tag `[DART-API]`
+  - Price / market cap from 네이버금융 → Grade B, tag `[네이버]`
+  - Analyst consensus from FnGuide/web → Grade B, tag `[KR-Web]`
+  - 잠정실적 공시 found in dart-api-raw.json disclosures → Grade B (preliminary, not final)
+- **Standard Mode** (no dart-api-raw.json):
+  - Maximum grade B for all metrics
+  - DART web + 네이버금융 agree within 5% → Grade B, tag `[≈]`
+  - Single web source → Grade C, tag `[1S]`
+  - 잠정실적 (preliminary earnings): Grade C until confirmed by official DART filing
 
 ### Step 5.6 — Build Validated Data Object
 
@@ -260,7 +278,7 @@ If `ratio-calculator.py` cannot be executed:
 - [ ] Cross-reference check: each metric validated against ≥2 sources where possible
 - [ ] Sanity check: all values compared against sector ranges
 - [ ] Confidence grades assigned (A/B/C/D) for all 10 key metrics
-- [ ] Korean stocks: max grade B applied
+- [ ] Korean stocks: DART-Enhanced → Grade A for IS/BS/CF; Standard → max grade B
 - [ ] Grade D metrics → value = null, exclusion_reason filled
 - [ ] `output/validated-data.json` written
 - [ ] Validation summary printed

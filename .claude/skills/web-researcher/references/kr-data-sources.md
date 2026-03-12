@@ -1,22 +1,58 @@
 # Korean Data Sources Reference
 
-This file defines the priority-ordered list of sources for Korean stock research. All Korean stock analysis is Standard Mode (web-based), regardless of MCP status.
+This file defines the priority-ordered list of sources for Korean stock research.
+
+**Korean stocks support two data modes:**
+- **DART-Enhanced** (`DART_API_KEY` set): DART OpenAPI → Grade A financial statements
+- **Standard** (no API key): Web-based sources → Grade B max
 
 ---
 
 ## Priority Chain (Use in Order)
 
-| Priority | Source | URL | Data Available | Method |
-|----------|--------|-----|----------------|--------|
-| 1 | DART 전자공시 | `https://dart.fss.or.kr` | 재무제표, 공시, 사업보고서 | fetch |
-| 2 | 네이버금융 | `https://finance.naver.com/item/main.naver?code={종목코드}` | 현재가, 시총, PER, PBR, 배당률, 증권사 목표가 | fetch |
-| 3 | FnGuide | `http://comp.fnguide.com/SVO2/ASP/SVD_Main.asp?pGB=1&gicode=A{종목코드}` | 상세 재무제표, 컨센서스, 분기 실적 | fetch |
-| 4 | 한국거래소 KIND | `https://kind.krx.co.kr` | 공시, 외국인/기관 수급, 지분율 변동 | search |
-| 5 | General web search | — | 뉴스, 증권사 리포트, 업계 동향 | search |
+| Priority | Source | URL / Method | Data Available | Grade |
+|----------|--------|--------------|----------------|-------|
+| **0** | **DART OpenAPI** | `dart-collector.py` (structured API) | 재무제표 (IS/BS/CF), 최근 공시 | **A** |
+| 1 | 네이버금융 | `https://finance.naver.com/item/main.naver?code={종목코드}` | 현재가, 시총, PER, PBR, 배당률, 외국인지분 | B |
+| 2 | FnGuide | `http://comp.fnguide.com/SVO2/ASP/SVD_Main.asp?pGB=1&gicode=A{종목코드}` | 컨센서스, 분기 실적 | B |
+| 3 | 한국거래소 KIND | `https://kind.krx.co.kr` | 공시, 외국인/기관 수급, 지분율 변동 | B |
+| 4 | General web search | — | 뉴스, 증권사 리포트, 업계 동향 | C |
 
 ---
 
-## DART 전자공시 Usage
+## Priority 0 — DART OpenAPI (구조화된 재무 데이터, Grade A)
+
+**Script**: `.claude/skills/web-researcher/scripts/dart-collector.py`
+
+**Run**:
+```bash
+python .claude/skills/web-researcher/scripts/dart-collector.py \
+  --stock-code {6digit} \
+  --output output/data/{ticker}/dart-api-raw.json
+```
+API key is read from `DART_API_KEY` environment variable (set in `.claude/settings.local.json`).
+
+**Data returned** (written to `dart-api-raw.json`):
+- `ttm_income_statement`: 매출액, 영업이익, 당기순이익, EPS (annual or YTD)
+- `balance_sheet_latest`: 자산총계, 부채총계, 자본총계, 현금, 차입금
+- `periods_detail`: up to 4 periods (Q3/H1/Q1/Annual) with all account items
+- `recent_disclosures`: 최근 90일 공시 목록 (잠정실적, 사업보고서 등)
+- `corp_info`: 회사명, 대표이사, 업종
+
+**Tag**: `[DART-API]` → Grade A (primary-source structured data, equivalent to `[API]` for US stocks)
+
+**Confidence rule**:
+- DART API financial statements → Grade A (direct from regulator database)
+- Cross-checked with 네이버금융 within 5% → Grade A confirmed
+- Not cross-checkable → Grade A with note "Single primary source — DART OpenAPI"
+
+**If DART API fails** (network error, invalid stock code, no data):
+- Log: "DART API unavailable — falling back to web sources"
+- Proceed with Priority 1–4 chain (max Grade B)
+
+---
+
+## DART 전자공시 Web Usage (fallback when API unavailable)
 
 **Purpose**: DART is the Korean SEC equivalent. Most authoritative source for financial statements.
 
@@ -106,12 +142,19 @@ Execute these searches in Standard Mode for KR stocks:
 
 ## Korean Stock Confidence Grade Notes
 
-- All Korean data sources are web-based (no API equivalent to Financial Datasets MCP)
-- **Maximum grade is B** (Cross-Referenced), never A
-- Grade B: DART + 네이버금융 agree (within 5%) → `[≈]`
-- Grade C: DART only or 네이버금융 only → `[1S]`
-- Grade D: Sources contradict or data unavailable → `[Unverified]` → display "—"
-- All Korean data points tagged `[KR-Web]` in addition to grade tag
+**With DART API** (`DART_API_KEY` set):
+- Financial statements (IS/BS/CF) from DART API → **Grade A**, tag `[DART-API]`
+- Price/market data (real-time): 네이버금융 → Grade B, tag `[네이버]`
+- Analyst consensus: FnGuide/web → Grade B, tag `[KR-Web]`
+
+**Without DART API** (Standard Mode):
+- Maximum grade is B (no structured API)
+- Grade B: DART web + 네이버금융 agree within 5% → `[≈]`
+- Grade C: Single web source → `[1S]`
+- Grade D: Sources contradict or unavailable → `[Unverified]` → display "—"
+
+**Always** tag Korean web sources with `[KR-Web]` in addition to grade tag.
+DART API sources tagged `[DART-API]` (no `[KR-Web]` suffix needed).
 
 ---
 

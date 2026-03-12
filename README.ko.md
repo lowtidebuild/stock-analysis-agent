@@ -250,16 +250,26 @@ Ready. Send a ticker or question to begin.
 
 ## 한국 주식 지원
 
-KOSPI / KOSDAQ 종목 완전 지원:
+KOSPI / KOSDAQ 종목 완전 지원 — 이제 **DART OpenAPI 연동으로 Grade A 데이터** 제공.
 
-- **DART 공시** — 사업보고서, 분기보고서 직접 수집
-- **네이버금융** — 주가, 외국인 지분율 데이터
-- **FnGuide / KIND** — 컨센서스 추정치
+| 모드 | 재무 데이터 출처 | 최대 신뢰도 |
+|------|----------------|-----------|
+| 🟢 DART-Enhanced | DART OpenAPI (구조화 재무제표, 미국 SEC EDGAR와 동급) | **Grade A** |
+| 🟡 Standard | 웹 수집 (DART 웹사이트, 네이버금융) | Grade B |
+
+- **DART OpenAPI** — 금융감독원에서 직접 구조화 재무제표 수집 (무료, API 키 필요)
+- **네이버금융** — 실시간 주가, PER/PBR, 외국인 지분율 (항상 시장 데이터로 사용)
+- **FnGuide / KIND** — 애널리스트 컨센서스, 수급 데이터
 - **한국어 출력** — 한국어로 요청하면 한국어로 분석 생성
 - **한국 시장 오버레이** — 외국인 지분율, 밸류업 프로그램, 자사주 소각 정책
 
+```bash
+# DART-Enhanced 활성화: opendart.fss.or.kr에서 무료 API 키 발급
+# .claude/settings.local.json → env → DART_API_KEY에 입력
 ```
-삼성전자 심층 분석해줘  →  한국어 Mode C 대시보드 생성
+
+```
+삼성전자 심층 분석해줘  →  한국어 Mode C 대시보드 생성 (Grade A 데이터)
 SK하이닉스 투자 메모    →  한국어 Mode D DOCX 생성
 ```
 
