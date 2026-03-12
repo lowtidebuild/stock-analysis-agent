@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/lowtidebuild/.claude/projects/c--Users-lowtidebuild-Desktop-VS-Code-stock-analysis-agent/b0651e8c-347d-4870-be03-eeaf5bdf04f0/tool-results/**)",
+      "Bash(python3 -c \":*)",
+      "Bash(python -c \":*)",
+      "Bash(mkdir -p \"c:\\\\Users\\\\lowtidebuild\\\\Desktop\\\\VS Code\\\\stock-analysis-agent\\\\.claude\\\\skills\\\\data-validator\\\\scripts\")",
+      "Bash(mkdir -p \"c:\\\\Users\\\\lowtidebuild\\\\Desktop\\\\VS Code\\\\stock-analysis-agent\\\\.claude\\\\skills\\\\data-manager\\\\scripts\")",
+      "Bash(mkdir -p \"c:\\\\Users\\\\lowtidebuild\\\\Desktop\\\\VS Code\\\\stock-analysis-agent\\\\.claude\\\\skills\\\\staleness-checker\")",
+      "Bash(mkdir -p \"c:\\\\Users\\\\lowtidebuild\\\\Desktop\\\\VS Code\\\\stock-analysis-agent\\\\.claude\\\\skills\\\\query-interpreter\")",
+      "Bash(mkdir -p \"c:\\\\Users\\\\lowtidebuild\\\\Desktop\\\\VS Code\\\\stock-analysis-agent\\\\.claude\\\\skills\\\\market-router\")",
+      "Bash(mkdir -p \"c:\\\\Users\\\\lowtidebuild\\\\Desktop\\\\VS Code\\\\stock-analysis-agent\\\\.claude\\\\skills\\\\financial-data-collector\")",
+      "Bash(mkdir -p \"c:\\\\Users\\\\lowtidebuild\\\\Desktop\\\\VS Code\\\\stock-analysis-agent\\\\.claude\\\\skills\\\\web-researcher\")",
+      "Bash(mkdir -p \"c:\\\\Users\\\\lowtidebuild\\\\Desktop\\\\VS Code\\\\stock-analysis-agent\\\\.claude\\\\skills\\\\data-validator\")",
+      "Bash(mkdir -p \"c:\\\\Users\\\\lowtidebuild\\\\Desktop\\\\VS Code\\\\stock-analysis-agent\\\\.claude\\\\skills\\\\data-manager\")",
+      "Bash(mkdir -p \"c:\\\\Users\\\\lowtidebuild\\\\Desktop\\\\VS Code\\\\stock-analysis-agent\\\\.claude\\\\skills\\\\dashboard-generator\")",
+      "Bash(mkdir -p \"c:\\\\Users\\\\lowtidebuild\\\\Desktop\\\\VS Code\\\\stock-analysis-agent\\\\.claude\\\\skills\\\\output-generator\")",
+      "Bash(mkdir -p \"c:\\\\Users\\\\lowtidebuild\\\\Desktop\\\\VS Code\\\\stock-analysis-agent\\\\.claude\\\\skills\\\\quality-checker\")",
+      "Bash(mkdir -p \"c:\\\\Users\\\\lowtidebuild\\\\Desktop\\\\VS Code\\\\stock-analysis-agent\\\\.claude\\\\agents\\\\data-researcher\")",
+      "Bash(mkdir -p \"c:\\\\Users\\\\lowtidebuild\\\\Desktop\\\\VS Code\\\\stock-analysis-agent\\\\.claude\\\\agents\\\\analyst\")",
+      "Bash(mkdir -p \"c:\\\\Users\\\\lowtidebuild\\\\Desktop\\\\VS Code\\\\stock-analysis-agent\\\\.claude\\\\agents\\\\critic\")",
+      "Bash(python -m py_compile .claude/skills/data-validator/scripts/ratio-calculator.py)",
+      "Bash(python -m py_compile .claude/skills/data-manager/scripts/snapshot-manager.py)",
+      "Bash(python -m py_compile .claude/skills/data-manager/scripts/watchlist-manager.py)",
+      "Bash(python -m py_compile .claude/skills/data-manager/scripts/catalyst-aggregator.py)",
+      "Bash(python -m py_compile .claude/skills/data-manager/scripts/delta-comparator.py)",
+      "Bash(python .claude/skills/data-validator/scripts/ratio-calculator.py --inline '{\"\"price\"\": 175.50, \"\"diluted_shares\"\": 15500, \"\"net_income_ttm\"\": 97000, \"\"ebitda_ttm\"\": 125000, \"\"total_debt\"\": 110000, \"\"cash\"\": 65000, \"\"operating_cf\"\": 120000, \"\"capex\"\": 11000, \"\"revenue_ttm\"\": 395000, \"\"operating_income_ttm\"\": 118000, \"\"gross_profit_ttm\"\": 180000}')",
+      "Bash(mkdir -p \"c:\\\\Users\\\\lowtidebuild\\\\Desktop\\\\VS Code\\\\stock-analysis-agent\\\\output\")",
+      "Bash(\"c:\\\\Users\\\\lowtidebuild\\\\Desktop\\\\VS Code\\\\stock-analysis-agent\\\\output\\\\.gitkeep\")"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\lowtidebuild\\Desktop\\VS Code\\stock-analysis-agent\\output"
+    ]
+  }
+}

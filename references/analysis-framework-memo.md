@@ -1,0 +1,474 @@
+# Analysis Framework — Mode D (Investment Memo)
+
+This file defines the analytical process and content requirements for Mode D. The Analyst agent reads this file along with `investment-memo-prompt.md` when `output_mode = "D"`.
+
+**Output template**: `.claude/skills/output-generator/references/mode-d-template.md`
+**Output path**: `output/reports/{ticker}_D_{lang}_{YYYY-MM-DD}.md`
+**Target length**: 3,000–4,000 words across 10 sections
+
+Read `investment-memo-prompt.md` BEFORE starting Mode D analysis. The philosophy and quality standards defined there apply to every section.
+
+---
+
+## Pre-Analysis Setup
+
+### Inputs Required
+1. `output/validated-data.json` — with confidence grades
+2. `output/data/{ticker}/tier1-raw.json` (Enhanced Mode) or `output/data/{ticker}/tier2-raw.json` (Standard Mode)
+3. Company type from `company-type-classification.md`
+4. Research plan from `output/research-plan.json`
+
+### Writing Protocol
+- Write sections **sequentially** from Section 1 to Section 10
+- Do **NOT** go back to edit earlier sections after completing later ones
+- If a later section reveals a factual inconsistency in an earlier section, add an inline note: `[Correction: Section X stated Y; actual value is Z per [tag]]`
+- If a section requires data that is Grade D: write the heading and note "Excluded: insufficient verified data for this section component. See Appendix."
+
+---
+
+## Section 1 — Executive Summary
+
+**Purpose**: Give the reader the single most important thing to know about this company and why you have a view.
+
+**Required elements**:
+- Verdict (Overweight / Underweight / Neutral / Watch) with R/R Score
+- Current price, base case target, implied return
+- The thesis in ONE sentence (this is the hardest sentence to write — if you cannot write it in one sentence, the thesis is not clear)
+- Why now? What has changed or what is the market missing?
+
+**Word count target**: 100–150 words
+
+**Quality test**: Can the reader understand your thesis without reading the rest of the memo? If yes, the executive summary is working. If no, rewrite.
+
+**Anti-pattern**: Do not use the executive summary to preview all 10 sections ("This memo covers business overview, valuation, risks..."). Lead with the thesis.
+
+---
+
+## Section 2 — Business Overview & Competitive Position
+
+**Purpose**: Establish the factual foundation. What does this company do and why does it matter?
+
+**Required elements**:
+
+1. **Business description** — revenue model, primary revenue streams with approximate % breakdown. If exact % unavailable, note [Analyst estimate] and cite the basis.
+
+2. **Competitive position** — market share [tag required], basis of competitive advantage. Every competitive advantage claim requires ONE supporting data point:
+   - "Scale advantage" → cite cost per unit vs. nearest competitor [tag]
+   - "Switching costs" → cite customer retention rate or churn [tag]
+   - "Network effects" → cite engagement metric or user growth [tag]
+   - "IP/Patents" → cite patent count or revenue from licensed IP [tag]
+   - Generic claim with no data → NOT ACCEPTABLE
+
+3. **Addressable market** — TAM [tag], company penetration %, market growth rate [tag]
+
+4. **Key operating metrics** — company-type specific (see Section 3 of `analysis-framework-dashboard.md` for metric set by type). These are the non-GAAP metrics the company actually manages to.
+
+**Word count target**: 300–400 words
+
+---
+
+## Section 3 — Financial Performance
+
+**Purpose**: Show the trajectory of the business through numbers.
+
+**Required elements**:
+
+1. **Revenue trend table** — last 8 quarters (or fewer if data unavailable; note how many quarters available). Show: Quarter, Revenue, YoY Growth, Source tag.
+
+2. **Revenue quality analysis** — organic vs. inorganic growth (if M&A active), geographic mix (% from key regions), product/segment mix shifts, pricing power evidence (ASP trend, price/volume contribution to growth)
+
+3. **Profitability trend table** — last 8 quarters. Show: Quarter, Gross Margin, Operating Margin, Net Margin. Source tags in header.
+
+4. **Margin analysis** — direction, key cost drivers, any one-time items. Flag if margins are expanding or contracting and why.
+
+5. **Cash flow table** — TTM values: Operating CF, CapEx, FCF, FCF Margin. Compare to prior year.
+
+6. **FCF quality** — SBC as % of revenue [tag], working capital changes, one-time charges. High SBC (>5% revenue) should be flagged.
+
+7. **Balance sheet snapshot** — Cash, Total Debt, Net Debt [Calculated], Net Debt/EBITDA [Calculated], Shares Outstanding
+
+**Word count target**: 400–500 words (tables count toward word count)
+
+**Data availability fallback**:
+- If fewer than 4 quarters available → note "Insufficient quarterly data for trend analysis. TTM data only."
+- If FCF data unavailable → note "FCF data unavailable — cash flow section excluded [Grade D]"
+
+---
+
+## Section 4 — Valuation Analysis
+
+**Purpose**: Assess whether the current price is justified and what assumptions it implies.
+
+**Required elements**:
+
+1. **Core valuation metrics table** — P/E NTM, EV/EBITDA, P/FCF [Calculated], P/Sales. Compare to: Sector Average [tag], 5Y Historical Average [tag if available].
+
+2. **Valuation context** — Explain the premium or discount:
+   - If premium: what growth rate, margin expansion, or multiple must sustain?
+   - If discount: what risk is the market pricing in?
+   - Calculate the implied growth rate: at current P/E and cost of equity, what EPS growth is priced in?
+
+3. **SOTP** (if ≥2 distinct segments with different economics):
+   - Segment table: Revenue TTM, Assigned Multiple (with peer justification), Implied EV
+   - Sum → Total EV → Less Net Debt → Equity Value → Per Share → vs. Current Price
+   - If single-segment: explicitly note "Single-segment business — SOTP not applicable"
+
+**Word count target**: 300–400 words
+
+**Special cases**:
+- Pre-revenue biotech: Replace P/E/EV/EBITDA with EV/Revenue + Pipeline NPV approach
+- Banks/insurance: Replace EV metrics with P/B, P/TBV, ROE-ROC framework
+- Korean companies with complex holding structures: Add controlling-discount analysis
+
+---
+
+## Section 5 — 5-Question Variant View
+
+**Purpose**: State the investment thesis as a specific disagreement with market consensus. This is the most important section.
+
+Read `investment-memo-prompt.md` before writing this section.
+
+---
+
+### Q1 — What Is the Market Pricing In? Where Do We Disagree?
+
+**Structure** (must follow exactly):
+
+Paragraph 1 — Market Consensus:
+> "The market currently implies [specific multiple / growth rate / assumption] for [company], based on [evidence — current price, consensus EPS, current multiple]."
+
+Paragraph 2 — Analyst Disagreement:
+> "We believe [specific counter-argument]. Evidence: [data point 1 with tag], [data point 2 with tag]."
+
+Paragraph 3 — Why the Mispricing Exists:
+> "The mispricing likely reflects [information asymmetry / behavioral bias / structural constraint on who can own this stock / temporary dislocation]."
+
+**Quality gate — Competitor Replacement Test**:
+After writing Q1, replace the company name with its direct competitor. If the paragraph still reads as true → FAIL. Rewrite until the paragraph is uniquely applicable to this company.
+
+**Examples**:
+
+FAIL example:
+> "The market is underestimating the company's ability to grow its AI-adjacent revenue streams. We believe AI adoption will drive significant upside beyond current consensus estimates."
+→ Applicable to NVDA, AMD, MSFT, GOOGL, META, and dozens of others. Pure genericness. FAIL.
+
+PASS example:
+> "The market prices AEHR at 8x EV/Revenue ($340M EV on $42M TTM revenue) implying only 15% growth — consistent with the view that SiC wafer testing demand has peaked post-EV subsidies. We disagree: our channel checks [1S] indicate Wolfspeed's 200mm Mohawk Valley fab (the largest SiC fab globally) is ramping faster than planned, with AEHR's FOX-P system being the only qualified tester for 200mm SiC production. Three AEHR customers representing ~60% of revenue are mid-ramp at this fab. Consensus models this as 2026 revenue; we believe revenue conversion begins Q4 2025 based on the 14-week qualification cycle noted in AEHR's Q2 conference call transcript [1S]. The mispricing reflects the Street's difficulty modeling multi-year fab ramp revenue curves for capital-equipment companies."
+→ Company-specific data (Wolfspeed 200mm fab, FOX-P qualification, 14-week cycle), specific market assumption (15% growth, 2026 revenue), specific disagreement. PASS.
+
+---
+
+### Q2 — What Would Change the Market's Mind? (Catalyst Map)
+
+**Structure**:
+- Table with ≥3 catalysts: Event | Timeline | Probability | Impact if Triggered
+- 1–2 sentences on the MOST important catalyst and why it's the swing factor
+
+**Catalyst quality requirements**:
+- Catalyst must be **specific and observable**: "Quarterly earnings beat" → too generic. "Q3 2025 earnings showing Cloud ARR above $XB with >30% YoY growth" → specific.
+- Timeline must be specific: "Soon" → FAIL. "Q3 2025 earnings call (October 2025)" → PASS.
+- Impact must be quantified: "Positive" → FAIL. "Could re-rate P/E from 22x to 28x (+$X/share)" → PASS.
+
+**Examples**:
+
+FAIL:
+| Catalyst | Timeline | Probability | Impact |
+|----------|----------|-------------|--------|
+| Strong earnings | Next quarter | High | Stock goes up |
+
+PASS:
+| Catalyst | Timeline | Probability | Impact if Triggered |
+|----------|----------|-------------|---------------------|
+| NVIDIA H200 allocation announcement at GTC March 2025 | March 18-21, 2025 | High | Lifts data center revenue guidance above $100B run-rate; multiple re-rate to 35x from 30x |
+| FTC dismissal of Microsoft-Activision related investigation | Q2 2025 | Medium | Removes $15B risk overhang; unlocks $10B buyback authorization |
+| Apple Vision Pro enterprise sales data (Q2 FY2025 earnings) | Late April 2025 | Low | If unit sales >500K/quarter, validates new product category; adds $50–100B to fair value at 10x rev |
+
+---
+
+### Q3 — What Optionality Is the Market Not Pricing In?
+
+**Purpose**: Identify 1–2 specific upside scenarios not in analyst consensus.
+
+**Requirements**:
+- Must explain WHY consensus excludes this (not just "they're wrong")
+- Must include a rough size estimate: "If X achieves Y revenue by Z date at W multiple, adds ~$A to fair value per share"
+- Must be distinct from the base case scenario
+
+**Example**:
+> "Consensus ignores {company}'s nascent healthcare data licensing business (noted in a single 10-K footnote as 'emerging revenue line'). {Company}'s de-identified patient dataset — covering 47M members across 12 hospital systems — is among the 3 largest in the US. At current healthcare AI licensing rates ($2–5/patient/year for training rights), this dataset represents $94–235M of annual licensing revenue potential. Consensus models zero contribution through 2026. At 8x Revenue (healthcare SaaS comp), this optionality represents $8–19/share, or 5–12% of current market cap. Key trigger: any announced licensing partnership with a pharma/biotech AI research program."
+
+---
+
+### Q4 — Capital Allocation: Value Creation or Destruction?
+
+**Purpose**: Assess whether management is good stewards of capital.
+
+**Required elements** (include all with available data):
+
+1. **Buyback math** (if buybacks active):
+   - Shares outstanding trend: [Q-4] → [Current] → % reduction [tag]
+   - Buyback yield: (Buybacks TTM / Market Cap) × 100% [Calculated from tag]
+   - Effect: "Buybacks have reduced share count by X% over 4 quarters, adding ~Xpp to EPS growth mechanically [Calculated]"
+   - Are buybacks value-accretive? (Buying below intrinsic value = good; buying overvalued stock = bad)
+
+2. **M&A track record** (if any acquisitions in past 3 years):
+   - Deal name, purchase price, integration outcome
+   - Revenue/EBITDA contribution from acquired entities vs. acquisition price [tag if available]
+   - Assessment: value-creating (IRR above cost of capital) or destructive
+
+3. **Debt strategy**:
+   - Net Debt trend [tag], maturity profile (any near-term refinancing risk)
+   - Current Net Debt/EBITDA vs. peer average
+
+4. **Dividend policy** (if dividend-paying):
+   - Yield [tag], payout ratio [tag], dividend coverage ratio, growth history
+
+5. **Assessment** — One paragraph: "Management is [creating / destroying / preserving] value because [specific evidence]."
+
+---
+
+### Q5 — Exit Conditions
+
+**Purpose**: Pre-define when to exit before you're in the position. Prevents emotional decision-making.
+
+**Required elements**:
+
+1. **Positive exit** (Thesis Achieved):
+> "Reduce/exit when: [specific price = $X at Y multiple] OR [specific catalyst = Z event confirms full thesis realization], whichever comes first."
+
+2. **Negative exits — Stop-Loss Conditions** (≥3, specific and testable):
+> "Exit if any of the following occur:
+> 1. [Metric] [direction] [threshold] for [N consecutive quarters]
+> 2. [Event] occurs that invalidates [specific assumption]
+> 3. [Management action] signals [structural change to business model]"
+
+3. **Better opportunity** (optional but preferred):
+> "Consider replacing with [peer] if [specific condition] makes their risk/reward clearly superior."
+
+**Quality gate**: Every exit condition must be:
+- Observable: you will know when it happens
+- Specific: not "if fundamentals deteriorate"
+- Pre-defined: written before seeing future data
+
+---
+
+**Section 5 total word count target**: 500–600 words
+
+---
+
+## Section 6 — Precision Risk Analysis
+
+**Purpose**: Identify the 3 most important risks with full causal mechanisms.
+
+**Required elements for each risk**:
+1. Risk title (specific, not generic)
+2. Mechanism: [Risk Event] → [Operational Impact] → [Financial Impact ($)] → [Multiple Compression]
+3. EBITDA Impact: quantified in $ and % of TTM EBITDA
+4. Probability: High (>40%), Medium (15–40%), Low (<15%)
+5. Mitigation: specific monitoring indicator or hedge (portfolio or operational)
+
+**The Mechanism Rule** (from `investment-memo-prompt.md`):
+Every risk must complete the full causal chain. "Competition risk" → FAIL. See the mechanism formula in that file.
+
+**Optional — Macro Risk Overlay**:
+If material macro exposure:
+- Interest rate sensitivity: % change in earnings per 100bp rate change
+- FX exposure: % revenue from non-domestic sources, hedging status [tag]
+- Commodity: volume and cost exposure, pass-through rate
+
+**Word count target**: 300–400 words
+
+---
+
+## Section 7 — Investment Scenarios
+
+**Purpose**: Translate the thesis into quantified price outcomes with explicit assumptions.
+
+**Required elements**:
+
+1. **Three-scenario table** — Bull, Base, Bear:
+   - Probability (sum = 100%)
+   - Price target
+   - Implied return from current price
+   - Key assumption (company-specific, singular, falsifiable)
+   - Key metric driver
+
+2. **R/R Score calculation** (show the math):
+   ```
+   R/R Score = (Bull_return × Bull_prob + Base_return × Base_prob) / |Bear_return × Bear_prob|
+   ```
+
+3. **Scenario narratives** (2–3 sentences each):
+   - Bull: specific triggers, specific metrics, specific timeline
+   - Base: most likely path, key assumption that must hold
+   - Bear: specific catalyst for downside, how far price could fall
+
+**Scenario design rules**:
+- Bull and Bear key assumptions must be **mutually exclusive** — the Bull assumption cannot also be true in the Bear scenario
+- All 3 scenarios must share the same 12-month time horizon
+- Base case should have the highest probability (>35%)
+- Bear probability should be non-trivial (>15%) — if you can't imagine a bear case, you haven't thought about it enough
+
+**Word count target**: 200–300 words
+
+---
+
+## Section 8 — Peer Comparison
+
+**Purpose**: Context — how does this company look relative to direct competitors?
+
+**Required elements**:
+
+1. **Peer comparison table** (3–5 peers):
+   | Metric | {Subject} | Peer1 | Peer2 | Peer3 | Sector Avg |
+   Metrics: P/E, EV/EBITDA, Revenue Growth, Operating Margin, FCF Yield
+
+2. **Relative valuation assessment**:
+   - Is the subject trading at a premium or discount to peers? By how much?
+   - Is the premium/discount justified? Cite specific operational or structural reason (not just "better quality")
+
+3. **Competitive threat assessment**:
+   - Which peer poses the most direct competitive threat?
+   - What specific metric is most at risk?
+
+**Peer selection**:
+- Prefer direct business competitors over just sector peers
+- If peers were analyzed in the same session: use session data
+- If not: use web research data [Web] for peer metrics
+
+**Word count target**: 200–300 words
+
+---
+
+## Section 9 — Management & Corporate Governance
+
+**Purpose**: Assess whether leadership will execute the thesis and allocate capital wisely.
+
+**Required elements**:
+
+1. **Leadership** — CEO tenure, relevant background, insider ownership % [tag] or stock comp % [tag]
+
+2. **Guidance track record** — last 4 quarters:
+   - Did management meet, beat, or miss their own guidance?
+   - Pattern: Consistently beats (positive signal) / In-line (neutral) / Misses or guides down (negative signal)
+   - Quote specific guidance vs. actual where data available [tag]
+
+3. **Capital allocation history** (last 2 years) — covered in Q4 of Variant View; reference that section rather than repeating
+
+4. **Korean overlay** (if market = KR, mandatory):
+   - 외국인 지분율: current % and 3-month trend [tag]
+   - 지배구조: Chaebol / Independent / etc.
+   - 밸류업 프로그램 참여: Yes / No / Pending / Not announced
+   - 주요 대주주: Name and % [tag]
+   - Dividend / buyback history relative to Korean peers
+
+**Word count target**: 150–200 words
+
+---
+
+## Section 10 — Quality of Earnings (QoE) Assessment
+
+**Purpose**: Bridge from reported numbers to real cash earnings. Identify add-backs that inflate EBITDA and adjust for true economic cost.
+
+**Required elements**:
+
+1. **EBITDA Bridge**:
+   | Reported EBITDA [tag] | ${val}B |
+   | Less: Stock-Based Compensation [tag] | (${val}B) |
+   | Less: Restructuring / Non-recurring [tag] | (${val}B) |
+   | Less: M&A-related costs [tag] | (${val}B) |
+   | Less: Maintenance CapEx [Calculated] | (${val}B) |
+   | = Adjusted Cash Earnings | ${val}B |
+   | Haircut vs. Reported | {pct}% |
+
+2. **FCF Conversion Quality**:
+   - Ratio: Operating CF TTM / Net Income TTM = {val}x
+   - High (>1.1x): good accruals quality → earnings "real"
+   - Low (<0.8x): investigate — working capital build, aggressive revenue recognition, or high non-cash income
+
+3. **Earnings Sustainability**:
+   - Any one-time revenues that inflate current period? (licensing payments, asset sales, government grants)
+   - Any one-time costs that depress margins? (will reverse next period)
+   - Trend in accrual ratio (operating CF - investing CF) / total assets → rising accruals = earnings quality concern
+
+4. **Maintenance CapEx estimation** (if not disclosed):
+   - Use: D&A × {industry-specific ratio} OR management commentary from conference calls [1S]
+   - Label as [Calculated / estimate] — not precise
+
+**Word count target**: 200–250 words
+
+---
+
+## Section 11 — What Would Make Me Wrong
+
+**Purpose**: Steelman the bear case. Force honest engagement with the ways the thesis can fail.
+
+**Structure** (3 assumptions):
+
+For each:
+- **Assumption**: State the core assumption the thesis depends on
+- **If wrong**: What specifically happens to price target / earnings model
+- **Monitoring indicator**: What observable data point or event would confirm this assumption is breaking (not breaking)
+- **Probability of being wrong**: High / Medium / Low
+
+**Pre-mortem** (required, 2–3 sentences):
+> "If this investment loses 30% over 12 months, the most likely cause would be: [specific scenario, written in past tense, as if it already happened]. This would have been preceded by: [early warning indicator that was observable but perhaps dismissed]. The decision to hold through these warning signs would have been mistaken because: [reflection on what exit condition should have been applied]."
+
+**Quality gate**: Each assumption must be:
+- Falsifiable (can be confirmed right or wrong by future data)
+- Material (if wrong, it changes the thesis meaningfully, not marginally)
+- Specific (not "if macro deteriorates")
+
+**Word count target**: 200–250 words
+
+---
+
+## Section 12 — Appendix: Data Sources & Confidence
+
+**Required elements**:
+
+1. **Data sources table**:
+   | Data Category | Source | Confidence | Tag |
+   (Enumerate all major data categories used in the memo)
+
+2. **Exclusions**:
+   > "The following data points were excluded due to Grade D confidence (insufficient verification):"
+   > - {Metric}: Reason for exclusion
+   (If no exclusions: "No metrics excluded — all key data points meet minimum Grade C confidence threshold")
+
+3. **Data mode**: Enhanced (Financial Datasets MCP + FMP MCP active) or Standard (web-only)
+
+4. **DART reference** (Korean stocks): filing date, period, URL if available [DART]
+
+---
+
+## Mode D Output Protocol
+
+1. Write `output/analysis-result.json` with structured data (for Step 10 snapshot)
+2. Render the full memo using `mode-d-template.md`
+3. Save to `output/reports/{ticker}_D_{lang}_{YYYY-MM-DD}.md`
+4. Report file path to user
+
+Do NOT write the Appendix inline during section-by-section writing. Accumulate the data sources used throughout and write the Appendix last.
+
+---
+
+## Completion Check
+
+Before finalizing Mode D output:
+- [ ] All 10 sections present (Executive Summary through What Would Make Me Wrong)
+- [ ] Each section ≥50 words
+- [ ] Total word count approximately 2,950–3,750 (estimate acceptable)
+- [ ] Q1 Variant View passes competitor replacement test
+- [ ] Q2 Catalyst Map: ≥3 catalysts, each with specific date/timeline, probability, and quantified impact
+- [ ] Q3 Optionality: rough size estimate included
+- [ ] Q4 Capital Allocation: buyback yield or M&A assessment included
+- [ ] Q5 Exit Conditions: ≥3 specific, testable stop-loss conditions + positive exit condition
+- [ ] Section 6 Precision Risks: ≥3 risks with full mechanism chains + EBITDA impact %
+- [ ] Section 7 Scenarios: probabilities sum to 100%, R/R Score formula shown
+- [ ] Section 10 QoE: EBITDA Bridge with SBC subtracted, FCF Conversion ratio calculated
+- [ ] Section 11 Pre-mortem included
+- [ ] No Grade D data in analytical body (Appendix exclusions list complete)
+- [ ] All numerical claims have source tags
+- [ ] Disclaimer present
+- [ ] Files written: `analysis-result.json` + `.md` memo file
