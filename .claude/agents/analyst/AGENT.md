@@ -111,18 +111,78 @@ Section order:
 11. What Would Make Me Wrong (3 assumptions + pre-mortem)
 12. Appendix: Data Sources & Confidence
 
-Write complete structured data to `output/analysis-result.json`, then write full memo to `output/reports/{ticker}_D_{lang}_{YYYY-MM-DD}.md`.
+Write ALL content — narrative text and structured tables — to `output/analysis-result.json`. The output-generator will call `docx-generator.py` to produce the final `.docx` file. Do NOT write a separate `.md` file.
+
+**Sections JSON structure for Mode D** — write each section as follows:
+
+```json
+"sections": {
+  "executive_summary": {
+    "verdict": "Overweight",
+    "rr_score": 7.8,
+    "current_price": 175.50,
+    "base_target": 195,
+    "horizon": "12 months",
+    "narrative": "Full 3-5 sentence executive summary text here..."
+  },
+  "business_overview": "Full narrative text for Section 1 (300-400 words)...",
+  "financial_performance": {
+    "narrative": "Revenue and margin narrative...",
+    "revenue_table": [{"quarter": "Q1 FY2025", "revenue": "$124.3B", "yoy_growth": "5.1%", "source": "[API]"}],
+    "margin_table": [{"quarter": "Q1 FY2025", "gross_margin": "46.9%", "op_margin": "31.2%", "net_margin": "24.1%", "source": "[API]"}],
+    "cash_flow_table": [{"metric": "Operating CF", "ttm": "$118B", "prior_year": "$109B", "change": "+8.3%"}],
+    "balance_sheet": [{"item": "Cash & Equivalents", "value": "$65.2B", "source": "[API]"}],
+    "fcf_note": "FCF quality note text..."
+  },
+  "valuation_analysis": {
+    "narrative": "Valuation context text...",
+    "valuation_table": [{"metric": "P/E (NTM)", "current": "28.0x", "sector_avg": "~22x", "5y_historical": "~25x", "assessment": "Premium"}],
+    "sotp_table": null
+  },
+  "variant_view_q1": "Full Q1 text (150-250 words)...",
+  "variant_view_q2": "Catalyst summary text...",
+  "variant_view_q2_catalysts": [{"catalyst": "Q2 FY2026 earnings", "timeline": "Apr 2026", "probability": "High", "impact": "+5-8% if Services beats"}],
+  "variant_view_q3": "Full Q3 text...",
+  "variant_view_q4": "Full Q4 text...",
+  "variant_view_q5": "Full Q5 text...",
+  "precision_risks": [
+    {"risk": "Risk name", "mechanism": "Full causal chain...", "ebitda_impact": "$4B (3.3% of TTM EBITDA)", "probability": "Medium", "mitigation": "Monitor X metric"}
+  ],
+  "macro_risk": "Macro risk overlay text...",
+  "investment_scenarios": {
+    "narratives": {
+      "bull": "2-3 sentence bull narrative...",
+      "base": "2-3 sentence base narrative...",
+      "bear": "2-3 sentence bear narrative..."
+    }
+  },
+  "peer_comparison": [{"metric": "P/E", "ticker": "28.0x", "peer1": "24.5x", "peer2": "21.0x", "sector_avg": "~22x"}],
+  "peer_comparison_narrative": "Relative valuation assessment text...",
+  "management_governance": "Full Section 8 text (150-200 words)...",
+  "quality_of_earnings": {
+    "ebitda_bridge": [{"item": "Reported EBITDA", "amount": "$125.0B", "note": "[API]"}],
+    "narrative": "QoE narrative text...",
+    "fcf_conversion": "Operating CF / Net Income = 1.24x (strong accruals quality)"
+  },
+  "what_would_make_me_wrong": [
+    {"assumption": "Core assumption text", "if_wrong": "Consequence...", "monitoring_indicator": "What to watch...", "probability": "Low"}
+  ],
+  "pre_mortem": "If this investment loses 30% over 12 months, the most likely cause would be...",
+  "data_sources": [{"data_category": "Revenue / Earnings", "source": "Financial Datasets MCP", "confidence": "A", "tag": "[API]"}]
+}
+```
 
 **Mode D minimum quality gates** (self-check before finalizing):
-- [ ] Total word count: 2,950–3,750 words
-- [ ] All 10 sections present with ≥50 words each
+- [ ] All 10 sections present in `analysis-result.json` with ≥50 words each
+- [ ] Total narrative word count across all sections: 2,950–3,750 words (estimate)
 - [ ] Q1 Variant View passes competitor replacement test
 - [ ] Q2 Catalyst Map: ≥3 catalysts with timelines + quantified impacts
 - [ ] Q5 Exit Conditions: ≥3 specific, testable stop-loss conditions
 - [ ] All 3 Precision Risks have full mechanism chains
-- [ ] Pre-mortem paragraph present
+- [ ] `pre_mortem` field present in sections
 - [ ] Scenario probabilities sum = 100%
-- [ ] R/R Score formula shown and computed correctly
+- [ ] R/R Score formula computed correctly
+- [ ] No `.md` file written (DOCX only)
 
 ---
 

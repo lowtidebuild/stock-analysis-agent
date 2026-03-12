@@ -135,7 +135,7 @@ Read `.claude/skills/data-validator/SKILL.md`
 ### Step 8 — Output Generation
 - **Mode B**: Apply `.claude/skills/output-generator/SKILL.md` → HTML file
 - **Mode C**: Apply `.claude/skills/dashboard-generator/SKILL.md` → HTML file
-- **Mode D**: Apply `.claude/skills/output-generator/SKILL.md` → Markdown file
+- **Mode D**: Apply `.claude/skills/output-generator/SKILL.md` → DOCX file (via docx-generator.py)
 - Verify output: file written to `output/reports/` (Modes B/C/D)
 
 ### Step 9 — Quality Check
@@ -340,7 +340,7 @@ Project Root
 │   │   └── {ticker}_{date}_snapshot.json  ← Versioned archive
 │   └── reports/
 │       ├── {ticker}_C_{lang}_{date}.html
-│       ├── {ticker}_D_{lang}_{date}.md
+│       ├── {ticker}_D_{lang}_{date}.docx
 │       └── {T1}_{T2}_{T3}_B_{lang}_{date}.html
 └── .claude/
     ├── skills/

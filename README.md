@@ -1,210 +1,158 @@
-# Stock Analysis Agent
+# 📊 Stock Analysis Agent
 
 > **Language / 언어**: English | [한국어](README.ko.md)
 
-A Claude Code-based AI research assistant for retail investors. Covers US equities (NYSE/NASDAQ/AMEX) and Korean equities (KRX/KOSPI/KOSDAQ) with structured, source-tagged analysis and a strict anti-hallucination policy.
+**Institutional-grade stock research, delivered in minutes.**
+Built on Claude Code + [Financial Datasets API](https://financialdatasets.ai) — real SEC filings, 8 quarters of verified financials, zero hallucinated numbers.
 
 ---
 
-## Key Features
+## What Does This Do?
 
-- **3 Analysis Modes** — Peer Comparison (B), Deep Dive Dashboard (C), Investment Memo (D)
-- **Adaptive Data Strategy** — Enhanced Mode via MCP APIs when available; Standard Mode via web research as fallback
-- **Anti-Hallucination Policy** — unverifiable data is displayed as "—", never fabricated
-- **3-Layer Fact-Checking** — arithmetic consistency → multi-source cross-reference → sector sanity check
-- **Source Tagging** — every number carries a tag: `[API]`, `[Web]`, `[Calculated]`, `[DART]`, etc.
-- **Korean Stock Support** — DART → 네이버금융 → FnGuide data chain; Korean-language output
-- **Portfolio & Watchlist** — tracking, delta comparison, catalyst calendar
+You type a ticker. You get a research-grade analysis — the kind a buy-side analyst would produce — complete with:
+
+- **Scenario analysis** (Bull / Base / Bear) with probability-weighted R/R Score
+- **Variant View** — where the market is wrong and why (company-specific, not generic)
+- **Precision Risk Analysis** — every risk has a mechanism chain: event → P&L impact → stock price effect
+- **Source-tagged data** — every number traces back to its origin. Nothing fabricated.
+- **Korean stock support** — DART filings, 네이버금융, FnGuide data chain
+
+> **Core principle**: Blank beats wrong. If a number can't be verified, it shows as "—" — never made up.
 
 ---
 
-## Quick Start
+## 3 Output Modes
 
-### Prerequisites
-
-- [Claude Code](https://claude.ai/code) CLI installed and authenticated
-- Python 3.8+ (for ratio calculation scripts)
-- (Optional) Financial Datasets MCP + FMP MCP API keys for Enhanced Mode
-
-### 1. Clone the repository
-
-```bash
-git clone <your-repo-url>
-cd stock-analysis-agent
-```
-
-### 2. (Optional) Configure MCP for Enhanced Mode
-
-See the full [MCP Setup Guide](docs/mcp-setup-guide.md) | [한국어 가이드](docs/mcp-setup-guide.ko.md).
-
-Without MCP, the agent runs in Standard Mode (web-only) — fully functional with slightly lower data confidence.
-
-### 3. Open in Claude Code
-
-```bash
-claude
-```
-
-Claude Code reads `CLAUDE.md` automatically on session start. You'll see:
+### 📈 Mode C — Deep Dive Dashboard *(default)*
+**Interactive HTML** — open in any browser. Built for quick decision-making.
 
 ```
-=== Stock Analysis Agent ===
-Data Mode: Enhanced (MCP active)   ← or "Standard (Web-only)"
-Date: 2026-03-12
-Ready. Send a ticker or question to begin.
+┌─────────────────────────────────────────────────────────────┐
+│  NVIDIA Corp (NVDA)          $875.40  ▲ +2.3%              │
+│  Data Confidence: ████████░░ Grade A  |  Enhanced Mode      │
+├──────────────┬──────────────┬──────────────────────────────┤
+│  🐂 Bull     │  📊 Base     │  🐻 Bear                     │
+│  $1,100      │  $980        │  $650                        │
+│  +25.7%      │  +11.9%      │  -25.8%                      │
+│  Prob: 30%   │  Prob: 50%   │  Prob: 20%                   │
+├──────────────┴──────────────┴──────────────────────────────┤
+│  R/R Score: 4.2  →  ✅ ATTRACTIVE  |  Verdict: Overweight  │
+├─────────────────────────────────────────────────────────────┤
+│  KPI Tiles: P/E · EV/EBITDA · FCF Yield · Rev Growth ···  │
+│  Variant View Q1–Q3 · Precision Risk Table · Peer Compare  │
+│  Chart.js Charts · Quarterly Financials · QoE Summary      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 📝 Mode D — Investment Memo *(DOCX)*
+**Word document** — 3,000+ words, 10 structured sections. Think Goldman Sachs equity research note.
+
+| Section | Content |
+|---------|---------|
+| Executive Summary | 1-sentence thesis · Verdict · R/R Score |
+| Business Overview | Revenue streams · Market share · TAM |
+| Financial Performance | 8-quarter tables · Margin trends · FCF |
+| Valuation Analysis | P/E · EV/EBITDA · SOTP breakdown |
+| **5-Question Variant View** | Where the market is wrong (most important section) |
+| Precision Risk Analysis | 3 risks × full mechanism chain + EBITDA impact |
+| Investment Scenarios | Bull / Base / Bear with R/R formula shown |
+| Peer Comparison | 5-metric table vs. 3–5 peers |
+| Management & Governance | CEO track record · Capital allocation |
+| Quality of Earnings | EBITDA Bridge · FCF conversion · SBC haircut |
+| What Would Make Me Wrong | 3 assumptions · Pre-mortem paragraph |
+| Appendix | All data sources · Confidence grades · Exclusions |
+
+### ⚖️ Mode B — Peer Comparison *(HTML)*
+**Side-by-side matrix** for 2–5 tickers. R/R Score ranking, Best Pick with rationale, Key Differentiators.
+
+---
+
+## Why Financial Datasets API?
+
+> **Strongly recommended.** This is what separates this agent from a generic LLM stock analysis.
+
+When connected to [financialdatasets.ai](https://financialdatasets.ai), the agent pulls:
+
+| Data | Source | Confidence |
+|------|--------|------------|
+| Real-time price | `get_current_stock_price` | Grade A |
+| 8 quarters income statement | `get_income_statements` | Grade A |
+| Balance sheet (8 quarters) | `get_balance_sheets` | Grade A |
+| Cash flow statement (8 quarters) | `get_cash_flow_statements` | Grade A |
+| Analyst price targets | FMP MCP | Grade B |
+| Insider transactions | `get_insider_transactions` | Grade A |
+| SEC filings (10-K, 10-Q) | `get_sec_filings` | Grade A |
+
+**Without it:** the agent still works — it runs web research and cross-references multiple sources. Max data confidence drops from Grade A to Grade B.
+
+**With it:** structured, machine-readable financial data from SEC filings. Numbers that match the 10-K. No ambiguity.
+
+```
+💡 Setup takes 5 minutes. See → docs/mcp-setup-guide.md
+```
+
+---
+
+## Data Confidence System
+
+Every number in the output carries a grade and source tag. You always know what to trust.
+
+| Grade | Tag | Meaning | When |
+|-------|-----|---------|------|
+| **A** | *(none)* | Verified from primary source, arithmetic consistent | API data matching SEC filings |
+| **B** | `[≈]` | 2+ sources agree within 5% | Web cross-reference |
+| **C** | `[1S]` | Single source, unverified | One web mention |
+| **D** | `—` | Cannot verify → **shown as blank** | Never fabricated |
+
+```
+Example in output:
+  Revenue TTM: $123.5B [API]        ← Grade A, from SEC via API
+  P/E Ratio: 28.4x [Calculated]    ← Derived from Grade A inputs
+  EV/EBITDA: —                     ← Grade D, excluded (EBITDA unverifiable)
 ```
 
 ---
 
 ## How to Use
 
-### Workflow 1 — Single Stock Analysis
-
-Full analysis pipeline. Mode is auto-selected based on your phrasing, or specify explicitly.
-
-| Phrasing | Mode | Output |
-|----------|------|--------|
-| "분석해줘" (default) | C — Deep Dive Dashboard | HTML file |
-| "심층 분석" / "deep dive" | C — Deep Dive Dashboard | HTML file |
-| "투자 메모" / "investment memo" | D — Investment Memo | Markdown file |
-
-**Examples**:
-```
-Analyze NVDA
-삼성전자 심층 분석해줘
-TSLA investment memo
-005930 분석
-```
-
-**Mode C — Deep Dive Dashboard** (HTML file):
-Saved to `output/reports/AAPL_C_EN_2026-03-12.html` — open in any browser.
-
-**Mode D — Investment Memo** (Markdown file):
-Saved to `output/reports/AAPL_D_EN_2026-03-12.md` — ~3,000 words across 10 sections.
-
----
-
-### Workflow 2 — Peer Comparison
-
-Compare 2–5 tickers side-by-side with R/R Score ranking and Best Pick.
+### Single Stock Analysis
 
 ```
-AAPL vs MSFT vs GOOGL
+NVDA 분석해줘
+Analyze TSLA
+005930 심층 분석
+AAPL investment memo
+삼성전자 투자 메모 써줘
+```
+
+### Peer Comparison
+
+```
+NVDA vs AMD vs INTC
 삼성전자 vs SK하이닉스 비교
-Compare NVDA, AMD, INTC
+AAPL vs MSFT vs GOOGL
 ```
 
-**Output**: HTML comparison matrix (`output/reports/AAPL_GOOGL_MSFT_B_EN_2026-03-12.html`).
+### Portfolio & Watchlist
 
----
-
-### Workflow 3 — Portfolio & Watchlist
-
-**Watchlist management**:
 ```
 AAPL 워치리스트 추가
-Add NVDA to watchlist
-삼성전자 워치리스트 추가
-워치리스트 보여줘
-워치리스트 스캔
-카탈리스트 캘린더 보여줘
-```
-
-**Portfolio registration** (3 supported formats):
-
-*Inline chat*:
-```
-AAPL 100주 $150, MSFT 50주 $380, 삼성전자 200주 72000원
-```
-
-*JSON*:
-```json
-[
-  {"ticker": "AAPL", "shares": 100, "avg_cost": 150, "currency": "USD"},
-  {"ticker": "005930", "shares": 200, "avg_cost": 72000, "currency": "KRW"}
-]
-```
-
-*CSV*:
-```
-ticker,shares,avg_cost,currency
-AAPL,100,150,USD
-005930,200,72000,KRW
-```
-
-**Portfolio review**:
-```
+워치리스트 스캔해줘
 포트폴리오 분석해줘
-Analyze my portfolio
+카탈리스트 캘린더 보여줘
+NVDA 지난번 분석이랑 비교해줘
 ```
 
-**Delta comparison** (compare to a previous analysis):
-```
-AAPL 지난번 분석이랑 비교해줘
-What changed since the last AAPL analysis?
-```
+### Price-Only Queries
+
+This agent doesn't do price lookups. For a quick price check, use Yahoo Finance or Perplexity.
+Type `"AAPL 분석해줘"` to get the full research instead.
 
 ---
 
-## Output Files
+## R/R Score — Risk/Reward in One Number
 
-All generated files are saved under `output/` (gitignored by default):
-
-| Path | Content |
-|------|---------|
-| `output/reports/{ticker}_C_*.html` | Mode C HTML dashboard |
-| `output/reports/{ticker}_D_*.md` | Mode D investment memo |
-| `output/reports/{tickers}_B_*.html` | Mode B comparison matrix |
-| `output/data/{ticker}/latest.json` | Most recent snapshot |
-| `output/data/{ticker}/{ticker}_{date}_snapshot.json` | Versioned archive |
-| `output/watchlist.json` | Watchlist registry |
-| `output/portfolio.json` | Portfolio holdings |
-| `output/catalyst-calendar.json` | Aggregated catalyst calendar |
-
----
-
-## Data Confidence System
-
-Every value in the output carries a confidence grade and source tag.
-
-| Grade | Tag | Meaning |
-|-------|-----|---------|
-| A | *(none)* | Verified from primary source; arithmetic consistent |
-| B | `[≈]` | Cross-referenced; 2+ sources agree within 5% |
-| C | `[1S]` | Single source; unverified |
-| D | `[Unverified]` | Cannot verify → displayed as "—" |
-
-**Source tags**:
-
-| Tag | Source |
-|-----|--------|
-| `[API]` | Financial Datasets MCP |
-| `[FMP]` | FMP MCP (analyst data) |
-| `[DART]` | Korea DART filing |
-| `[네이버]` | 네이버금융 |
-| `[Web]` | Web research |
-| `[Calculated]` | Derived from tagged inputs |
-| `[KR-Web]` | Korean financial portals |
-
----
-
-## Enhanced vs Standard Mode
-
-| Feature | Enhanced Mode | Standard Mode |
-|---------|--------------|---------------|
-| Requires | Financial Datasets MCP API key | Nothing additional |
-| Data source | Structured API (8 quarters financials) | Web search + scraping |
-| Max confidence grade | Grade A | Grade B |
-| Historical price chart | ✓ (Chart.js) | ✗ (text table fallback) |
-| Analyst estimates | ✓ (structured) | ✓ (web-sourced) |
-| Korean stocks | Always Standard Mode | Standard Mode |
-| Cost | ~$0.05–$0.28/analysis | Free |
-
----
-
-## R/R Score
-
-The Risk/Reward Score summarizes each scenario analysis into a single number.
+Every analysis computes a single score that summarizes the scenario-weighted upside vs. downside.
 
 ```
 R/R Score = (Bull_return% × Bull_prob + Base_return% × Base_prob)
@@ -212,11 +160,106 @@ R/R Score = (Bull_return% × Bull_prob + Base_return% × Base_prob)
                        |Bear_return% × Bear_prob|
 ```
 
-| R/R Score | Signal | Typical Verdict |
-|-----------|--------|-----------------|
-| > 3.0 | Attractive | Overweight |
-| 1.0 – 3.0 | Neutral | Neutral / Watch |
-| < 1.0 | Unfavorable | Underweight |
+**Example**: Bull +25% × 30% + Base +12% × 50% = 13.5 upside weighted
+            Bear -25% × 20% = 5.0 downside weighted
+            **R/R Score = 13.5 / 5.0 = 2.7 → Neutral**
+
+| Score | Signal | Typical Verdict |
+|-------|--------|-----------------|
+| **> 3.0** | 🟢 Attractive | Overweight |
+| **1.0 – 3.0** | 🟡 Neutral | Neutral / Watch |
+| **< 1.0** | 🔴 Unfavorable | Underweight |
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+```bash
+# 1. Claude Code
+npm install -g @anthropic-ai/claude-code
+
+# 2. Python library for Mode D (Word document output)
+pip install python-docx
+
+# 3. Clone this repo
+git clone https://github.com/your-username/stock-analysis-agent.git
+cd stock-analysis-agent
+```
+
+### (Strongly Recommended) Connect Financial Datasets API
+
+```bash
+# Register the MCP — takes 5 minutes, makes a huge difference
+claude mcp add --transport http financial-datasets https://mcp.financialdatasets.ai/ \
+  --header "X-API-KEY: your_api_key_here"
+```
+
+Get your API key at [financialdatasets.ai](https://financialdatasets.ai).
+Full setup guide: [docs/mcp-setup-guide.md](docs/mcp-setup-guide.md)
+
+### Run
+
+```bash
+claude
+```
+
+Claude Code reads `CLAUDE.md` automatically. You'll see:
+
+```
+=== Stock Analysis Agent ===
+Data Mode: Enhanced (MCP active)   ← Grade A data from SEC filings
+Date: 2026-03-12
+Ready. Send a ticker or question to begin.
+```
+
+---
+
+## Output Files
+
+All generated files go under `output/` (gitignored):
+
+| File | Mode | Open with |
+|------|------|-----------|
+| `output/reports/{ticker}_C_*.html` | C — Dashboard | Any browser |
+| `output/reports/{ticker}_D_*.docx` | D — Investment Memo | Word / Google Docs / LibreOffice |
+| `output/reports/{tickers}_B_*.html` | B — Peer Comparison | Any browser |
+| `output/data/{ticker}/latest.json` | — | Snapshot for delta analysis |
+| `output/watchlist.json` | — | Watchlist registry |
+| `output/catalyst-calendar.json` | — | Upcoming events calendar |
+
+---
+
+## Enhanced vs Standard Mode
+
+| | Enhanced Mode 🟢 | Standard Mode 🟡 |
+|-|-----------------|-----------------|
+| **Requires** | Financial Datasets API key | Nothing extra |
+| **Data source** | SEC filings via structured API | Web research + scraping |
+| **Price data** | Real-time, Grade A | Web-sourced, Grade B |
+| **Financials** | 8 quarters, machine-readable | Web-scraped, may vary |
+| **Max grade** | **Grade A** | Grade B |
+| **Charts** | Historical price (Chart.js) | Text table fallback |
+| **Korean stocks** | Always Standard Mode | Standard Mode |
+| **Cost** | ~$0.05–$0.28/analysis | Free |
+
+---
+
+## Korean Stock Support
+
+Full support for KOSPI / KOSDAQ stocks:
+
+- **DART filings** — 사업보고서, 분기보고서 direct fetch
+- **네이버금융** — price, shareholding data
+- **FnGuide / KIND** — consensus estimates
+- **Korean-language output** — all analysis in Korean when you ask in Korean
+- **Korean market overlay** — 외국인 지분율, 밸류업 프로그램, 자사주 소각 policy
+
+```
+삼성전자 심층 분석해줘  →  한국어로 Mode C 대시보드 생성
+SK하이닉스 투자 메모     →  한국어로 Mode D DOCX 생성
+```
 
 ---
 
@@ -224,23 +267,20 @@ R/R Score = (Bull_return% × Bull_prob + Base_return% × Base_prob)
 
 ```
 stock-analysis-agent/
-├── CLAUDE.md                    ← Master orchestrator (Claude reads this)
-├── README.md                    ← This file
-├── README.ko.md                 ← Korean README
-├── .gitignore
-├── references/                  ← Analysis frameworks (Mode B/C/D)
+├── CLAUDE.md                    ← Master orchestrator (Claude reads this on start)
+├── references/                  ← Analysis frameworks for each mode
+│   ├── analysis-framework-comparison.md
+│   ├── analysis-framework-dashboard.md
+│   └── analysis-framework-memo.md
 ├── docs/
-│   ├── mcp-setup-guide.md       ← MCP setup (English)
-│   └── mcp-setup-guide.ko.md   ← MCP setup (Korean)
+│   ├── mcp-setup-guide.md       ← Financial Datasets API setup (English)
+│   └── mcp-setup-guide.ko.md   ← Financial Datasets API setup (Korean)
 ├── output/                      ← Generated files (gitignored)
-│   ├── watchlist.json
-│   ├── portfolio.json
-│   ├── catalyst-calendar.json
-│   ├── reports/
-│   └── data/
+│   ├── reports/                 ← HTML / DOCX analysis outputs
+│   └── data/                    ← Raw data + snapshots per ticker
 └── .claude/
-    ├── skills/                  ← 10 SKILL.md files (step-by-step instructions)
-    └── agents/                  ← 3 AGENT.md files (analyst, critic, data-researcher)
+    ├── skills/                  ← 10 SKILL.md files (step-by-step pipeline)
+    └── agents/                  ← analyst · critic · data-researcher
 ```
 
 ---
@@ -249,19 +289,9 @@ stock-analysis-agent/
 
 **This tool is for informational purposes only. It does not constitute investment advice, a solicitation to buy or sell any security, or a guarantee of investment returns.**
 
-- All analysis is generated by AI and may contain errors or omissions
-- Past performance data does not guarantee future results
-- Always conduct your own due diligence before making investment decisions
-- Consult a qualified financial advisor for personalized investment guidance
-- Market data may be delayed; verify time-sensitive information with primary sources
+- All analysis is AI-generated and may contain errors
+- Verify time-sensitive data with primary sources before acting
+- Past performance data does not predict future results
+- Always consult a qualified financial advisor before making investment decisions
 
-The anti-hallucination system (Grade D → "—") reduces but does not eliminate the risk of data errors. All outputs should be independently verified before acting on them.
-
----
-
-## Contributing
-
-This is a personal research tool. If you adapt it for your own use, please:
-- Keep the anti-hallucination safeguards intact
-- Do not remove the disclaimer from generated outputs
-- Review the data confidence grades before making investment decisions
+The anti-hallucination system (Grade D → "—") reduces but does not eliminate the risk of data errors. Independently verify all outputs before acting on them.

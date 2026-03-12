@@ -1,16 +1,193 @@
 # Mode D — Investment Memo Output Template
 
-Mode D produces a long-form Markdown investment memo. Output path: `output/reports/{ticker}_D_{lang}_{YYYY-MM-DD}.md`
+Mode D produces a professionally formatted Word document (.docx) with section headings,
+financial tables, scenario matrix, risk table, EBITDA bridge, and source tags throughout.
 
-Example: `output/reports/AAPL_D_EN_2026-03-12.md`
+**Output path**: `output/reports/{ticker}_D_{lang}_{YYYY-MM-DD}.docx`
+**Example**: `output/reports/AAPL_D_EN_2026-03-12.docx`
 
-Target length: 3,000–4,000 words across 10 sections.
+**How it works**:
+1. Analyst writes all content (narrative + tables) into `output/analysis-result.json` → `sections`
+2. `output-generator/SKILL.md` calls `docx-generator.py` to render the DOCX
+3. Final file can be opened in Microsoft Word, Google Docs, or LibreOffice
+
+Target narrative length: 3,000–4,000 words across 10 sections (written into JSON sections).
 
 ---
 
-## Full Template
+## JSON Section Structure (write to `analysis-result.json`)
+
+The Analyst must populate `analysis-result.json → sections` with the following fields.
+The `docx-generator.py` reads these fields to build the formatted document.
+
+### Required top-level fields (outside `sections`)
+```json
+{
+  "ticker": "AAPL",
+  "company_name": "Apple Inc.",
+  "exchange": "NASDAQ",
+  "market": "US",
+  "data_mode": "enhanced",
+  "output_mode": "D",
+  "output_language": "en",
+  "analysis_date": "2026-03-12",
+  "price_at_analysis": 175.50,
+  "currency": "USD",
+  "rr_score": 7.8,
+  "verdict": "Overweight",
+  "scenarios": {
+    "bull": {"target": 225, "return_pct": 28.2, "probability": 0.30, "key_assumption": "..."},
+    "base": {"target": 195, "return_pct": 11.4, "probability": 0.50, "key_assumption": "..."},
+    "bear": {"target": 145, "return_pct": -17.1, "probability": 0.20, "key_assumption": "..."}
+  },
+  "data_quality_used": {
+    "grade_A_count": 3, "grade_B_count": 5, "grade_C_count": 1, "grade_D_count": 1,
+    "overall_grade": "B",
+    "exclusions": [{"metric": "ev_ebitda", "reason": "EBITDA TTM unverifiable"}]
+  }
+}
+```
+
+### Required `sections` fields
+```json
+"sections": {
+  "executive_summary": {
+    "verdict": "Overweight",
+    "rr_score": 7.8,
+    "current_price": 175.50,
+    "base_target": 195,
+    "horizon": "12 months",
+    "narrative": "3-5 sentence executive summary. Lead with variant view — what the market prices in vs. analysis finding..."
+  },
+  "business_overview": "Full Section 1 narrative (300-400 words). Business description, competitive position, TAM, key operating metrics. All numbers source-tagged.",
+  "financial_performance": {
+    "narrative": "Revenue quality and margin analysis narrative...",
+    "revenue_table": [
+      {"quarter": "Q1 FY2025", "revenue": "$124.3B", "yoy_growth": "5.1%", "source": "[API]"},
+      {"quarter": "Q2 FY2025", "revenue": "$95.4B",  "yoy_growth": "4.9%", "source": "[API]"}
+    ],
+    "margin_table": [
+      {"quarter": "Q1 FY2025", "gross_margin": "46.9%", "op_margin": "31.2%", "net_margin": "24.1%", "source": "[API]"}
+    ],
+    "cash_flow_table": [
+      {"metric": "Operating CF", "ttm": "$118.3B", "prior_year": "$109.2B", "change": "+8.3%"},
+      {"metric": "CapEx",        "ttm": "($9.4B)",  "prior_year": "($10.7B)", "change": "-12.1%"},
+      {"metric": "FCF",          "ttm": "$108.9B",  "prior_year": "$98.5B",   "change": "+10.6%"},
+      {"metric": "FCF Margin",   "ttm": "24.2%",    "prior_year": "22.9%",    "change": "+130bps"}
+    ],
+    "balance_sheet": [
+      {"item": "Cash & Equivalents", "value": "$65.2B",   "source": "[API]"},
+      {"item": "Total Debt",         "value": "$109.3B",  "source": "[API]"},
+      {"item": "Net Debt",           "value": "$44.1B",   "source": "[Calculated]"},
+      {"item": "Net Debt/EBITDA",    "value": "0.37x",    "source": "[Calculated]"},
+      {"item": "Shares Outstanding", "value": "15,441M",  "source": "[API]"}
+    ],
+    "fcf_note": "SBC represents 2.8% of TTM revenue [API]. Working capital changes minimal. No major one-time items in TTM period."
+  },
+  "valuation_analysis": {
+    "narrative": "Valuation context: what growth assumptions are implied by current price...",
+    "valuation_table": [
+      {"metric": "P/E (NTM)", "current": "28.0x [API]", "sector_avg": "~22x", "5y_historical": "~25x", "assessment": "Premium"},
+      {"metric": "EV/EBITDA", "current": "—",            "sector_avg": "~16x", "5y_historical": "—",    "assessment": "[Unverified]"},
+      {"metric": "P/FCF",     "current": "22.3x [Calculated]", "sector_avg": "~20x", "5y_historical": "—", "assessment": "Slight premium"},
+      {"metric": "P/Sales",   "current": "7.2x [API]",  "sector_avg": "~5x",  "5y_historical": "~6x",  "assessment": "Premium"}
+    ],
+    "sotp_table": null
+  },
+  "variant_view_q1": "Full Q1 text (150-250 words). State market consensus first, then the specific disagreement, then supporting evidence with data points...",
+  "variant_view_q2": "Catalyst summary text (1-2 sentences on most critical catalyst)...",
+  "variant_view_q2_catalysts": [
+    {"catalyst": "Q2 FY2026 earnings — Services revenue beat", "timeline": "Apr 2026", "probability": "High", "impact": "+5-8% stock reaction if Services >$28B"},
+    {"catalyst": "WWDC 2026 AI features announcement",         "timeline": "Jun 2026", "probability": "Medium", "impact": "Re-rating potential if Apple Intelligence monetization confirmed"},
+    {"catalyst": "China market share data — Lunar New Year",   "timeline": "Mar 2026", "probability": "Medium", "impact": "Downside risk if iPhone share < 15% in China"}
+  ],
+  "variant_view_q3": "Full Q3 text on optionality the market is not pricing in...",
+  "variant_view_q4": "Full Q4 text on capital allocation analysis. Include buyback math, M&A track record, debt strategy...",
+  "variant_view_q5": "Full Q5 text. Thesis achieved conditions, thesis broken conditions (≥3 testable), better opportunity criteria...",
+  "precision_risks": [
+    {
+      "risk": "DOJ App Store Investigation",
+      "mechanism": "Forced reduction in App Store commission rate from 30% to 15-17% → App Store revenue declines ~$6B annually → EBITDA impact ~$5B (4.2% of TTM) → P/E compression from 28x to 24x at current growth rate",
+      "ebitda_impact": "~$5B (4.2% of TTM EBITDA)",
+      "probability": "Medium",
+      "mitigation": "Monitor: DOJ filing updates, EU DMA compliance precedent"
+    }
+  ],
+  "macro_risk": "FX headwind: 57% of revenue ex-Americas [API]. 10% USD strengthening reduces EPS by ~$0.45 (4.5% of FY2026 consensus EPS). Interest rate sensitivity minimal — net cash position after adjusting for operational debt.",
+  "investment_scenarios": {
+    "narratives": {
+      "bull": "Services revenue reaches 25% of total by FY2027 on Apple Intelligence monetization. iPhone cycle stable. Re-rating to 32x NTM P/E drives $225 target.",
+      "base": "iPhone unit growth 6-8% annually, Services 15% YoY. Multiple holds at 28x. $195 target in 12 months on EPS growth alone.",
+      "bear": "China revenue contracts 20%+ on Huawei share gains and geopolitical escalation. Services growth decelerates to <10%. Multiple compresses to 22x. $145 target."
+    }
+  },
+  "peer_comparison": [
+    {"metric": "P/E",       "AAPL": "28.0x [API]", "MSFT": "32.5x", "GOOGL": "20.1x", "sector_avg": "~22x"},
+    {"metric": "EV/EBITDA", "AAPL": "— [Unverified]", "MSFT": "22.3x", "GOOGL": "14.8x", "sector_avg": "~16x"},
+    {"metric": "Rev Growth","AAPL": "5.1% [API]",  "MSFT": "17.6%", "GOOGL": "12.0%", "sector_avg": "~10%"},
+    {"metric": "Op Margin", "AAPL": "31.2% [API]", "MSFT": "44.8%", "GOOGL": "28.5%", "sector_avg": "~25%"},
+    {"metric": "FCF Yield", "AAPL": "4.5% [Calculated]", "MSFT": "2.3%", "GOOGL": "4.1%", "sector_avg": "~3%"}
+  ],
+  "peer_comparison_narrative": "Relative valuation assessment: premium vs. GOOGL justified by ecosystem lock-in and Services margin expansion. Discount vs. MSFT reflects lower growth rate. Key competitive threat: MSFT's enterprise AI adoption rate outpacing Apple Intelligence consumer monetization.",
+  "management_governance": "Full Section 8 text (150-200 words). CEO tenure, guidance track record (last 4 quarters), capital allocation history...",
+  "quality_of_earnings": {
+    "ebitda_bridge": [
+      {"item": "Reported EBITDA",         "amount": "$125.0B", "note": "[API]"},
+      {"item": "Less: SBC",               "amount": "($12.9B)", "note": "2.8% of revenue [API]"},
+      {"item": "Less: Restructuring",     "amount": "($0.0B)",  "note": "None in TTM"},
+      {"item": "Less: M&A Costs",         "amount": "($0.2B)",  "note": "One-time"},
+      {"item": "Less: Maintenance CapEx", "amount": "($6.5B)",  "note": "Estimated [Calculated]"},
+      {"item": "Adjusted Cash Earnings",  "amount": "$105.4B",  "note": "16% haircut vs. reported EBITDA"}
+    ],
+    "narrative": "FCF conversion quality analysis...",
+    "fcf_conversion": "Operating CF / Net Income = 1.24x — strong accruals quality (>1.1x threshold). No unusual working capital changes.",
+    "earnings_sustainability": "Margins sustainable: hardware margins stable, Services margins expanding at 73% gross [API]. No significant one-time items inflate TTM EBITDA."
+  },
+  "what_would_make_me_wrong": [
+    {
+      "assumption": "Services revenue growth sustains at 15%+ annually",
+      "if_wrong": "If Services growth decelerates to <10%, our base case EPS of $8.20 misses by ~$0.40 (5%), compressing target to ~$175 at current multiple",
+      "monitoring_indicator": "Watch quarterly Services revenue reports; flag if growth < 12% for 2 consecutive quarters",
+      "probability": "Low"
+    },
+    {
+      "assumption": "China revenue stabilizes after FY2025 headwinds",
+      "if_wrong": "20% China revenue decline = ~$14B revenue impact = bear case trigger",
+      "monitoring_indicator": "IDC China smartphone market share quarterly data; Huawei P-series sales data",
+      "probability": "Medium"
+    },
+    {
+      "assumption": "No material antitrust action reduces App Store economics",
+      "if_wrong": "Commission cut to 15% reduces EBITDA by ~$5B; P/E compression to 24x = $155 fair value",
+      "monitoring_indicator": "DOJ case progress; EU DMA enforcement actions",
+      "probability": "Low-Medium"
+    }
+  ],
+  "pre_mortem": "If this investment loses 30% over 12 months, the most likely cause would be a simultaneous hit from China revenue contraction exceeding 25% and a DOJ-mandated App Store commission reduction, compressing both revenue and multiple in the same fiscal year — a scenario we assign 8% probability but have not fully priced into our bear case.",
+  "data_sources": [
+    {"data_category": "Revenue / Earnings",  "source": "Financial Datasets MCP",  "confidence": "A", "tag": "[API]"},
+    {"data_category": "Current Price",       "source": "get_current_stock_price", "confidence": "A", "tag": "[API]"},
+    {"data_category": "Analyst Estimates",   "source": "FMP MCP",                 "confidence": "B", "tag": "[FMP]"},
+    {"data_category": "Valuation Ratios",    "source": "ratio-calculator.py",     "confidence": "A", "tag": "[Calculated]"},
+    {"data_category": "Peer Data",           "source": "Financial Datasets MCP",  "confidence": "B", "tag": "[API]"},
+    {"data_category": "News / Qualitative",  "source": "Reuters / CNBC / Web",    "confidence": "C", "tag": "[Web]"}
+  ]
+}
+```
+
+---
+
+## Content Requirements by Section
+
+---
+
+## Content Requirements by Section
+
+The following shows the expected content structure for each section. Write this content
+into the JSON `sections` object — do NOT write a separate Markdown file.
 
 ```markdown
+# Section Content Guide (for analyst reference — output goes into analysis-result.json)
 # Investment Memo: {Company Name} ({TICKER})
 **Date**: {YYYY-MM-DD}
 **Analysis Mode**: {Enhanced/Standard} | **Data Confidence**: {summary_grade}
@@ -382,21 +559,23 @@ Replace with specific, quantified, company-specific language.
 
 ## Korean Output Variant
 
-When `output_language = "Korean"`:
-1. All section headers and narrative in Korean
-2. Section 8 Korean Overlay is mandatory (not optional)
-3. Prices in KRW (₩ prefix, comma separator, no decimals)
-4. R/R Score label: "위험보상비율"
-5. Verdict translations: Overweight=비중확대, Underweight=비중축소, Neutral=중립, Watch=관찰
-6. Include DART filing reference in Appendix
+When `output_language = "ko"` (set in `analysis-result.json`):
+1. All narrative text in `sections` written in Korean
+2. Section 8 Korean Overlay mandatory — include `외국인 지분율`, `지배구조 구조`, `밸류업 참여 여부`, `주요 대주주`
+3. Prices in KRW (₩ prefix, comma separator, no decimals) — set `"currency": "KRW"`
+4. `verdict` value in Korean: "비중확대" / "비중축소" / "중립" / "관찰"
+5. Include DART filing reference in `data_sources` array
+6. `docx-generator.py` automatically uses Korean section headings when `output_language = "ko"`
 
 ---
 
 ## File Output
 
-Save to: `output/reports/{ticker}_D_{lang}_{YYYY-MM-DD}.md`
+Save all content to: `output/analysis-result.json` (sections object as defined above)
 
-Also save the structured data to: `output/analysis-result.json` (for Step 10 snapshot)
+The output-generator calls `docx-generator.py` to produce: `output/reports/{ticker}_D_{lang}_{YYYY-MM-DD}.docx`
+
+The `.docx` file includes: formatted headings, financial tables, scenario matrix, risk table, EBITDA bridge, disclaimer, and data sources appendix. No separate `.md` file is written for Mode D.
 
 ---
 

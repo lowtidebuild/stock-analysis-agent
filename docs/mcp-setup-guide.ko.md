@@ -19,25 +19,41 @@ MCP 없이도 **Standard Mode**(웹 검색)로 완전히 동작합니다. 차이
 
 ---
 
-## 1단계 — MCP 서버 설치
+## 0단계 — python-docx 설치 (Mode D DOCX 출력에 필요)
 
-### Financial Datasets MCP 설치
-
-```bash
-# 전역 설치
-npm install -g financial-datasets-mcp
-
-# 또는 npx로 실행 (전역 설치 불필요)
-npx financial-datasets-mcp
-```
-
-### FMP MCP 설치 (선택, 애널리스트 데이터용)
+Mode D 투자 메모는 Word 문서(.docx)로 생성됩니다. 필요한 라이브러리를 설치하세요:
 
 ```bash
-npm install -g fmp-mcp
+pip install python-docx
 ```
 
-> **참고**: Node.js 18 이상이 필요합니다. [nodejs.org](https://nodejs.org)에서 설치할 수 있습니다.
+설치 확인: `python -c "from docx import Document; print('OK')"`
+
+---
+
+## 1단계 — Financial Datasets MCP 등록
+
+Financial Datasets MCP는 **호스팅된 HTTP 서버**입니다 — npm 패키지 설치가 필요 없습니다.
+
+### Claude Code에 등록 (최초 1회, 사용자 레벨)
+
+```bash
+claude mcp add --transport http financial-datasets https://mcp.financialdatasets.ai/ --header "X-API-KEY: 여기에_API_키_입력"
+```
+
+`여기에_API_키_입력`을 실제 API 키로 교체하세요 (2단계에서 발급).
+
+등록 확인:
+
+```bash
+claude mcp list
+```
+
+`financial-datasets`가 목록에 표시되면 정상입니다.
+
+### FMP MCP (선택 — 구조화된 애널리스트 데이터용)
+
+FMP MCP도 호스팅 서비스입니다. FMP에서 MCP 엔드포인트를 문의하거나, 이 단계를 건너뛰세요 — 애널리스트 데이터는 웹 검색으로 대체됩니다.
 
 ---
 
@@ -67,79 +83,26 @@ FMP 추가 비용: 분석당 약 $0.01–$0.03 추가
 
 ---
 
-## 3단계 — Claude Code 설정
+## 3단계 — API 키로 MCP 재등록
 
-### Claude Code 사용 시 (권장)
-
-프로젝트 루트의 `.claude/settings.local.json`에 MCP 서버를 추가합니다:
-
-```json
-{
-  "mcpServers": {
-    "financial-datasets": {
-      "command": "npx",
-      "args": ["-y", "financial-datasets-mcp"],
-      "env": {
-        "FINANCIAL_DATASETS_API_KEY": "여기에_API_키_입력"
-      }
-    },
-    "fmp": {
-      "command": "npx",
-      "args": ["-y", "fmp-mcp"],
-      "env": {
-        "FMP_API_KEY": "여기에_FMP_API_키_입력"
-      }
-    }
-  }
-}
-```
-
-> **보안 주의**: `settings.local.json`은 `.gitignore`에 이미 포함되어 있지 않습니다. API 키가 담긴 파일을 공개 저장소에 커밋하지 마세요. 환경 변수 방식을 선호한다면 아래 대안을 참고하세요.
-
-### Claude Desktop 사용 시
-
-설정 파일 경로:
-- **macOS/Linux**: `~/.config/claude/claude_desktop_config.json`
-- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-
-```json
-{
-  "mcpServers": {
-    "financial-datasets": {
-      "command": "npx",
-      "args": ["-y", "financial-datasets-mcp"],
-      "env": {
-        "FINANCIAL_DATASETS_API_KEY": "여기에_API_키_입력"
-      }
-    },
-    "fmp": {
-      "command": "npx",
-      "args": ["-y", "fmp-mcp"],
-      "env": {
-        "FMP_API_KEY": "여기에_FMP_API_키_입력"
-      }
-    }
-  }
-}
-```
-
-### 환경 변수로 API 키 설정 (대안)
-
-설정 파일 대신 환경 변수를 사용할 수 있습니다:
+Financial Datasets API 키를 발급받은 후, 키를 포함해서 재등록합니다:
 
 ```bash
-# Windows (PowerShell)
-$env:FINANCIAL_DATASETS_API_KEY = "여기에_API_키_입력"
-$env:FMP_API_KEY = "여기에_FMP_API_키_입력"
-
-# Windows (명령 프롬프트)
-set FINANCIAL_DATASETS_API_KEY=여기에_API_키_입력
-set FMP_API_KEY=여기에_FMP_API_키_입력
-
-# macOS/Linux
-export FINANCIAL_DATASETS_API_KEY=여기에_API_키_입력
-export FMP_API_KEY=여기에_FMP_API_키_입력
+claude mcp remove financial-datasets
+claude mcp add --transport http financial-datasets https://mcp.financialdatasets.ai/ --header "X-API-KEY: 여기에_API_키_입력"
 ```
+
+설정은 `~/.claude.json`(사용자 레벨 — 모든 프로젝트에 적용)에 저장됩니다.
+
+**프로젝트별 설정을 원하는 경우** (프로젝트 디렉토리에서):
+
+```bash
+claude mcp add --transport http financial-datasets https://mcp.financialdatasets.ai/ --header "X-API-KEY: 여기에_API_키_입력" --scope project
+```
+
+이 경우 `.claude/settings.local.json`(프로젝트별, gitignore 처리 권장)에 저장됩니다.
+
+> **보안 주의**: API 키를 채팅창에 입력하지 마세요. 실수로 공개된 경우 즉시 재발급하세요.
 
 ---
 
@@ -167,18 +130,20 @@ MCP가 연결되었다면 `Enhanced (MCP active)`가, 연결 실패 시 `Standar
 
 ### "Standard (Web-only)"가 표시됨 (MCP 설정 후에도)
 
-1. API 키가 올바르게 입력되었는지 확인 (앞뒤 공백, 따옴표 안의 따옴표 없는지 확인)
-2. 설정 파일 수정 후 Claude Code 재시작
-3. 터미널에서 직접 실행하여 오류 확인:
-   ```bash
-   FINANCIAL_DATASETS_API_KEY=your_key npx financial-datasets-mcp
-   ```
+1. `claude mcp list` 실행하여 `financial-datasets`가 등록되었는지 확인
+2. API 키가 올바르게 입력되었는지 확인 (앞뒤 공백 없는지)
+3. Claude Code 재시작 후 다시 시도
 
 ### API 호출 오류
 
 - API 키가 활성 상태이고 크레딧이 충분한지 확인
 - 해당 종목이 미국 주식인지 확인 (Financial Datasets MCP는 미국 주식만 지원)
 - 한국 주식은 항상 Standard Mode — 이것은 정상 동작입니다
+
+### python-docx 없음 (Mode D 실패)
+
+- 설치: `pip install python-docx`
+- 확인: `python -c "from docx import Document; print('OK')"`
 
 ### Python 스크립트 오류
 
@@ -190,16 +155,7 @@ MCP가 연결되었다면 `Enhanced (MCP active)`가, 연결 실패 시 `Standar
   # macOS/Linux
   export PYTHONUTF8=1
   ```
-- 스크립트 위치: `.claude/skills/data-validator/scripts/` 및 `.claude/skills/data-manager/scripts/`
-
-### Node.js 버전 관련 오류
-
-```bash
-node --version   # v18.0.0 이상 필요
-npm --version    # v9.0.0 이상 권장
-```
-
-Node.js가 없거나 버전이 낮다면 [nodejs.org](https://nodejs.org)에서 최신 LTS 버전을 설치하세요.
+- 스크립트 위치: `.claude/skills/data-validator/scripts/`, `.claude/skills/data-manager/scripts/`, `.claude/skills/output-generator/scripts/`
 
 ---
 

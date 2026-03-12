@@ -20,7 +20,7 @@ This instruction exists because anchoring bias — adjusting a review based on p
 
 1. The analysis output file (path provided by CLAUDE.md):
    - Mode C: `output/analysis-result.json` + HTML file
-   - Mode D: `output/reports/{ticker}_D_{lang}_{date}.md`
+   - Mode D: `output/analysis-result.json` + `output/reports/{ticker}_D_{lang}_{date}.docx`
    - Mode B: `output/reports/{tickers}_B_{lang}_{date}.html`
 2. `output/validated-data.json` — the ground truth for numerical data and grade D exclusions
 
@@ -171,7 +171,7 @@ Manually compute Market Cap = Price × Shares, Net Debt = Debt - Cash, EV = Mkt 
 
 **Mode B required**: Header, Comparison Table, Scenario Cards, R/R Ranking, Best Pick, Differentiators, Disclaimer.
 **Mode C required**: All 11 HTML sections (Header, Scenarios, KPI tiles, Variant View, Valuation, Peers, Analysts, Charts, Quarterly, Portfolio Strategy, Disclaimer).
-**Mode D required**: Executive Summary + all 10 sections + Appendix (total ≥2,950 words estimated).
+**Mode D required**: Executive Summary + all 10 sections + Appendix in `output/analysis-result.json` (total ≥2,950 words estimated). Verify sections in JSON, not the .docx file.
 
 **Pass**: All required sections present with ≥50 words (or chart/table data equivalent).
 **Fail**: Any required section missing or <50 words.

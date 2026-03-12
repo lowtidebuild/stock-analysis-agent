@@ -14,23 +14,41 @@ Without MCP, the agent operates in **Standard Mode** (web-only) — fully functi
 
 ---
 
-## Step 1 — Install MCP Servers
+## Step 0 — Install python-docx (required for Mode D DOCX output)
 
-### Financial Datasets MCP
-
-```bash
-# Install via npm
-npm install -g financial-datasets-mcp
-
-# Or via npx (no global install)
-npx financial-datasets-mcp
-```
-
-### FMP MCP (optional but recommended for analyst data)
+Mode D investment memos are generated as Word documents (.docx). Install the required library:
 
 ```bash
-npm install -g fmp-mcp
+pip install python-docx
 ```
+
+Verify: `python -c "from docx import Document; print('OK')`
+
+---
+
+## Step 1 — Register Financial Datasets MCP
+
+Financial Datasets MCP is a **hosted HTTP server** — no npm package to install.
+
+### Register in Claude Code (one-time, user-level)
+
+```bash
+claude mcp add --transport http financial-datasets https://mcp.financialdatasets.ai/ --header "X-API-KEY: your_api_key_here"
+```
+
+Replace `your_api_key_here` with your actual API key (see Step 2 below).
+
+Verify the registration:
+
+```bash
+claude mcp list
+```
+
+You should see `financial-datasets` listed with the hosted URL.
+
+### FMP MCP (optional — for structured analyst data)
+
+FMP MCP is also a hosted service. Contact FMP for their MCP endpoint, or skip this step — analyst data will be sourced from web search instead.
 
 ---
 
@@ -41,6 +59,8 @@ npm install -g fmp-mcp
 2. Create an account and subscribe to a plan
 3. Copy your API key from the dashboard
 
+**Security note**: Do not share your API key in chat or commit it to a public repository. Regenerate it immediately if accidentally exposed.
+
 ### FMP (Financial Modeling Prep) API Key (optional)
 1. Go to [https://financialmodelingprep.com](https://financialmodelingprep.com)
 2. Create an account (free tier available)
@@ -48,57 +68,24 @@ npm install -g fmp-mcp
 
 ---
 
-## Step 3 — Configure Claude Desktop / Claude Code
+## Step 3 — Register the MCP with Your Key
 
-Add MCP servers to your Claude configuration file:
+After obtaining your Financial Datasets API key, re-register to include it:
 
-### For Claude Code (recommended — edit `.claude/settings.local.json`)
-
-```json
-{
-  "mcpServers": {
-    "financial-datasets": {
-      "command": "npx",
-      "args": ["-y", "financial-datasets-mcp"],
-      "env": {
-        "FINANCIAL_DATASETS_API_KEY": "your_api_key_here"
-      }
-    },
-    "fmp": {
-      "command": "npx",
-      "args": ["-y", "fmp-mcp"],
-      "env": {
-        "FMP_API_KEY": "your_fmp_api_key_here"
-      }
-    }
-  }
-}
+```bash
+claude mcp remove financial-datasets
+claude mcp add --transport http financial-datasets https://mcp.financialdatasets.ai/ --header "X-API-KEY: your_api_key_here"
 ```
 
-### For Claude Desktop
+The configuration is saved to `~/.claude.json` (user-level — applies to all projects).
 
-Edit `~/.config/claude/claude_desktop_config.json` (macOS/Linux) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+**Alternative — project-level config** (from the project directory):
 
-```json
-{
-  "mcpServers": {
-    "financial-datasets": {
-      "command": "npx",
-      "args": ["-y", "financial-datasets-mcp"],
-      "env": {
-        "FINANCIAL_DATASETS_API_KEY": "your_api_key_here"
-      }
-    },
-    "fmp": {
-      "command": "npx",
-      "args": ["-y", "fmp-mcp"],
-      "env": {
-        "FMP_API_KEY": "your_fmp_api_key_here"
-      }
-    }
-  }
-}
+```bash
+claude mcp add --transport http financial-datasets https://mcp.financialdatasets.ai/ --header "X-API-KEY: your_api_key_here" --scope project
 ```
+
+This saves to `.claude/settings.local.json` (project-specific, gitignored).
 
 ---
 
@@ -142,18 +129,22 @@ FMP calls (analyst data bundle) add approximately $0.01–$0.03 per analysis.
 
 ### "DATA_MODE: standard" even after MCP setup
 - Verify API key is set correctly (no extra spaces, no quotes inside the string)
-- Restart Claude Code after editing configuration
-- Check that `npx financial-datasets-mcp` runs without error in a terminal
+- Run `claude mcp list` to confirm `financial-datasets` is registered
+- Restart Claude Code after registering the MCP
 
 ### API calls returning errors
 - Verify API key is active and has sufficient credits
 - Check that the ticker is valid (US stocks only for Financial Datasets MCP)
 - Korean stocks always use Standard Mode — this is expected
 
+### python-docx not found (Mode D fails)
+- Run: `pip install python-docx`
+- Verify: `python -c "from docx import Document; print('OK')"`
+
 ### Python scripts failing
 - Ensure Python 3.8+ is installed: `python --version`
 - Set UTF-8 encoding: `set PYTHONUTF8=1` (Windows) or `export PYTHONUTF8=1` (Mac/Linux)
-- Scripts are in `.claude/skills/data-validator/scripts/` and `.claude/skills/data-manager/scripts/`
+- Scripts are in `.claude/skills/data-validator/scripts/`, `.claude/skills/data-manager/scripts/`, and `.claude/skills/output-generator/scripts/`
 
 ---
 

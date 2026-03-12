@@ -4,7 +4,7 @@
 **Triggered by**: CLAUDE.md after Analyst Agent (Step 7) completes
 **Reads**: `output/analysis-result.json`, appropriate mode template
 **Writes**: File (Mode B, D); Mode C delegates to dashboard-generator/SKILL.md
-**References**: `mode-b-template.md`, `mode-d-template.md`
+**References**: `mode-b-template.md`, `mode-d-template.md`, `scripts/docx-generator.py`
 
 ---
 
@@ -13,7 +13,7 @@
 ```
 output_mode = "B" → Mode B: HTML file (this file, uses mode-b-template.md)
 output_mode = "C" → Mode C: HTML dashboard (delegate to dashboard-generator/SKILL.md)
-output_mode = "D" → Mode D: Markdown memo (this file, uses mode-d-template.md)
+output_mode = "D" → Mode D: DOCX investment memo (this file, uses docx-generator.py)
 ```
 
 ---
@@ -35,45 +35,49 @@ Report file path to user.
 
 ---
 
-## Mode D — Investment Memo (Markdown File)
+## Mode D — Investment Memo (DOCX File)
 
-Load `mode-d-template.md`. Populate from `output/analysis-result.json`.
+Mode D produces a Word document (.docx) with professional formatting — section headings,
+financial tables, scenario matrix, risk table, EBITDA bridge, and source tags throughout.
 
-**Writing process** (sequential, do not skip):
-1. Write Executive Summary first
-2. Write Section 1 (Business Overview)
-3. Write Section 2 (Financial Performance) — include all tables
-4. Write Section 3 (Valuation Analysis)
-5. Write Section 4 (5-Question Variant View) — most important, spend most time here
-6. Write Section 5 (Precision Risk Analysis)
-7. Write Section 6 (Investment Scenarios) — verify probability sum = 100%
-8. Write Section 7 (Peer Comparison)
-9. Write Section 8 (Management & Governance)
-10. Write Section 9 (Quality of Earnings)
-11. Write Section 10 (What Would Make Me Wrong) — include pre-mortem
-12. Write Appendix (Data Sources & Confidence) — compile all sources used
+**Step 1 — Ensure all section content is in `output/analysis-result.json`**
 
-**Do NOT go back to edit earlier sections** once later sections are written.
+The Analyst Agent must write all narrative and table data into `analysis-result.json`
+`sections` object before this step runs. See `mode-d-template.md` for the required
+JSON structure for each section.
+
+**Step 2 — Run docx-generator.py**
+
+```bash
+python .claude/skills/output-generator/scripts/docx-generator.py \
+  --input output/analysis-result.json \
+  --output output/reports/{ticker}_D_{lang}_{YYYY-MM-DD}.docx
+```
+
+If Python is unavailable, fall back to writing a structured plain-text memo inline
+(clearly labeled as plain-text fallback) and note the limitation to the user.
 
 **Pre-output checks**:
-- All 10 sections present with ≥50 words each
+- All 10 sections present with ≥50 words each in `analysis-result.json`
 - Q1 Variant View passes competitor replacement test
 - Q2 Catalyst Map: ≥3 catalysts with timelines and quantified impacts
 - Q5 Exit Conditions: ≥3 specific, testable stop-loss conditions
 - Precision Risks: ≥3 with full mechanism chains
-- Pre-mortem paragraph present in Section 10
+- `what_would_make_me_wrong` contains `pre_mortem` field
 - All numerical claims have source tags
 - No Grade D data in analysis body
+- `scenarios` probabilities sum to 100%
 
-Write to: `output/reports/{ticker}_D_{lang}_{YYYY-MM-DD}.md`
+Write to: `output/reports/{ticker}_D_{lang}_{YYYY-MM-DD}.docx`
 
-Report file path to user.
+Report file path to user. The user can open the file directly in Microsoft Word,
+Google Docs, or LibreOffice.
 
 ---
 
-## Disclaimer Text (Required in All File Outputs)
+## Disclaimer Text (Required in Mode B HTML outputs)
 
-Append to all B and D output files:
+Append to all Mode B HTML output files:
 
 ```
 ---
@@ -95,6 +99,8 @@ Korean version:
 수집되었으며 최신 시장 상황을 반영하지 않을 수 있습니다. 과거 실적이 미래 결과를 보장하지
 않습니다. 투자 결정 전 반드시 자체 실사를 수행하고 전문 재무 어드바이저와 상담하시기 바랍니다.
 ```
+
+Note: Mode D DOCX files include the disclaimer automatically via docx-generator.py.
 
 ---
 
@@ -124,4 +130,5 @@ Use these tags consistently throughout all output:
 - [ ] Disclaimer present (Mode B and D files)
 - [ ] File written to correct path (Mode B and D)
 - [ ] File path reported to user
-- [ ] Mode B and D: file written, path reported to user
+- [ ] Mode B: file written, path reported to user
+- [ ] Mode D: docx-generator.py executed successfully, .docx path reported to user
