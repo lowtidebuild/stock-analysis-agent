@@ -323,6 +323,29 @@ During deep research (Steps 3–4) and analysis (Steps 6–7), individual operat
 
 **Key rule**: Never silently hang. If something is taking too long, abort it, explain what happened, and keep moving.
 
+### CRITICAL: No Sleep Polling
+
+**NEVER use `sleep` + `ls`/`cat` to poll for file existence.** This is the #1 cause of pipeline stalls.
+
+```
+❌ WRONG — will loop forever if agent fails:
+   sleep 10 && ls output/data/000660/tier2-raw.json
+   sleep 15 && ls output/data/000660/tier2-raw.json
+   sleep 20 && ls output/data/000660/tier2-raw.json
+
+✅ CORRECT — use agent result directly:
+   1. Dispatch sub-agent with Agent tool (run_in_background: true)
+   2. Receive completion notification automatically
+   3. If agent fails or times out → proceed with available data
+   4. NEVER poll for output files — trust the agent's return value
+```
+
+**For Workflow 2 (multi-ticker)**:
+- Dispatch data-researcher agent → wait for its return (not file polling)
+- If agent returns success → read the files it wrote
+- If agent returns failure or times out → skip that ticker or collect inline
+- The Agent tool's result IS the completion signal — do not check files separately
+
 ### Principle: Always deliver something useful
 ```
 IF data collection fails completely:

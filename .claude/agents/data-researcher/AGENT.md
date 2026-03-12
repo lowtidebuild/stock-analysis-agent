@@ -47,7 +47,9 @@ Execute all searches from `web-researcher/SKILL.md`:
 
 ### Phase 3 — Completion Signal
 
-After all tickers processed, write `output/data/collection-complete.json`:
+**IMPORTANT**: The orchestrator receives your result via the Agent tool's return value — NOT by polling for files. Your final text message IS the completion signal. Include a clear structured summary so the orchestrator can parse it immediately.
+
+Also write `output/data/collection-complete.json` as a persistent record:
 
 ```json
 {
