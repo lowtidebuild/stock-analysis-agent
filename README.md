@@ -29,7 +29,7 @@ You type a ticker — US or Korean. You get a research-grade analysis complete w
 ## 3 Output Modes
 
 ### 📈 Mode C — Deep Dive Dashboard *(default)*
-**Interactive HTML** — open in any browser. Built for quick decision-making.
+**C** as in **C**hart. Interactive HTML — open in any browser. Built for quick decision-making.
 
 | Section | Contents |
 |---------|----------|
@@ -46,7 +46,7 @@ You type a ticker — US or Korean. You get a research-grade analysis complete w
 | **Strategy** | Bull/Base/Bear positioning guide · key monitoring catalysts |
 
 ### 📝 Mode D — Investment Memo *(DOCX)*
-**Word document** — 3,000+ words, 10 structured sections. Think Goldman Sachs equity research note.
+**D** as in **D**ocument. Word document — 3,000+ words, 10 structured sections. Think Goldman Sachs equity research note.
 
 | Section | Content |
 |---------|---------|
@@ -64,7 +64,7 @@ You type a ticker — US or Korean. You get a research-grade analysis complete w
 | Appendix | All data sources · Confidence grades · Exclusions |
 
 ### ⚖️ Mode B — Peer Comparison *(HTML)*
-**Side-by-side matrix** for 2–5 tickers. R/R Score ranking, Best Pick with rationale, Key Differentiators.
+**B** as in **B**enchmark. Side-by-side matrix for 2–5 tickers. R/R Score ranking, Best Pick with rationale, Key Differentiators.
 
 ---
 
