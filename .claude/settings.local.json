@@ -64,7 +64,11 @@
       "WebFetch(domain:www.annualreports.com)",
       "WebFetch(domain:www.koreaherald.com)",
       "WebFetch(domain:en.yna.co.kr)",
-      "WebFetch(domain:www.kedglobal.com)"
+      "WebFetch(domain:www.kedglobal.com)",
+      "Bash(cd \"/Users/lowtidebuild/Desktop/코딩 프로젝트/stock-analysis-agent\" && python3 .claude/skills/output-generator/scripts/docx-generator.py --input output/analysis-result.json --output output/reports/NYT_D_KO_2026-03-12.docx)",
+      "Bash(pip3 install:*)",
+      "Bash(cd \"/Users/lowtidebuild/Desktop/코딩 프로젝트/stock-analysis-agent\" && mkdir -p output/data/005930 output/data/000660 output/data/MU)",
+      "Bash(cd \"/Users/lowtidebuild/Desktop/코딩 프로젝트/stock-analysis-agent\" && python3 .claude/skills/web-researcher/scripts/dart-collector.py --stock-code 005930 --output output/data/005930/dart-api-raw.json 2>&1)"
     ]
   }
 }

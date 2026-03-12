@@ -15,11 +15,14 @@ DART OpenAPI docs: https://opendart.fss.or.kr/guide/main.do
 """
 
 import argparse
+import io
 import json
 import os
 import sys
 import urllib.request
 import urllib.parse
+import xml.etree.ElementTree as ET
+import zipfile
 from datetime import datetime, timedelta
 
 DART_BASE = "https://opendart.fss.or.kr/api"
@@ -80,20 +83,53 @@ def dart_request(endpoint, params):
         return {"status": "error", "message": str(e)}
 
 
+def lookup_corp_code(api_key, stock_code):
+    """Look up corp_code from stock_code via DART's corpCode.xml master list."""
+    url = f"{DART_BASE}/corpCode.xml?crtfc_key={api_key}"
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "StockAnalysisAgent/1.0"})
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            z = zipfile.ZipFile(io.BytesIO(resp.read()))
+            xml_data = z.read(z.namelist()[0])
+        root = ET.fromstring(xml_data)
+        for item in root.findall(".//list"):
+            sc = (item.findtext("stock_code") or "").strip()
+            if sc == stock_code:
+                return item.findtext("corp_code", "").strip(), (item.findtext("corp_name") or "").strip()
+    except Exception:
+        pass
+    return None, None
+
+
 def get_corp_info(api_key, stock_code):
     """Get DART corp_code and company info from 6-digit stock code."""
-    data = dart_request("company.json", {"crtfc_key": api_key, "stock_code": stock_code})
+    # Step 1: Resolve stock_code → corp_code via corpCode.xml
+    corp_code, corp_name_from_xml = lookup_corp_code(api_key, stock_code)
+    if not corp_code:
+        return None
+
+    # Step 2: Get detailed company info using corp_code
+    data = dart_request("company.json", {"crtfc_key": api_key, "corp_code": corp_code})
     if data.get("status") == "000":
         return {
-            "corp_code": data.get("corp_code"),
-            "corp_name": data.get("corp_name"),
+            "corp_code": corp_code,
+            "corp_name": data.get("corp_name") or corp_name_from_xml,
             "stock_name": data.get("stock_name"),
             "ceo_nm": data.get("ceo_nm"),
-            "ind_tp": data.get("ind_tp"),     # industry classification
-            "est_dt": data.get("est_dt"),     # established date
+            "ind_tp": data.get("induty_code"),
+            "est_dt": data.get("est_dt"),
             "hm_url": data.get("hm_url"),
         }
-    return None
+    # Fallback: return minimal info from XML if company.json fails
+    return {
+        "corp_code": corp_code,
+        "corp_name": corp_name_from_xml,
+        "stock_name": corp_name_from_xml,
+        "ceo_nm": None,
+        "ind_tp": None,
+        "est_dt": None,
+        "hm_url": None,
+    }
 
 
 def get_financial_statements(api_key, corp_code, bsns_year, reprt_code):
