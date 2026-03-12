@@ -300,6 +300,29 @@ Quality check runs at Step 9 for all outputs. Critic adds 7-item review for Mode
 5. WebSearch (built-in) → web search
 6. WebFetch (direct URL) → specific page fetch
 
+### Stall Detection & Timeout Protocol
+
+During deep research (Steps 3–4) and analysis (Steps 6–7), individual operations can hang. Apply these guardrails:
+
+| Operation | Timeout | Action on Timeout |
+|-----------|---------|-------------------|
+| Single WebFetch | 30 seconds | Abort, log URL as failed, move to next source |
+| Single WebSearch | 20 seconds | Abort, try alternative query or next search tool in fallback chain |
+| MCP API call | 15 seconds | Abort, retry once, then skip that data point |
+| Sub-agent (data-researcher) | 5 minutes | Abort agent, fall back to sequential collection |
+| Sub-agent (analyst) | 3 minutes | Abort agent, produce Mode B inline analysis instead |
+| Sub-agent (critic) | 2 minutes | Abort agent, skip critic review, deliver with [No critic review] flag |
+| Entire Step 4 (web research) | 8 minutes | Abort remaining searches, proceed with data collected so far |
+| Entire pipeline (Steps 0–10) | 15 minutes | Checkpoint: save whatever data is collected, produce partial output |
+
+**Stall recovery procedure**:
+1. If a WebFetch/WebSearch returns no response → do NOT retry the same URL/query. Try a different source or rephrase the query.
+2. If 3+ consecutive web operations fail → assume network/rate-limit issue. Pause web collection, proceed to next step with available data.
+3. If an agent is dispatched and produces no output within timeout → do NOT re-dispatch. Fall back to inline processing or skip that step.
+4. Always inform the user: "일부 데이터 소스에 접근할 수 없어 {N}개 항목이 누락되었습니다. 수집된 데이터로 분석을 진행합니다."
+
+**Key rule**: Never silently hang. If something is taking too long, abort it, explain what happened, and keep moving.
+
 ### Principle: Always deliver something useful
 ```
 IF data collection fails completely:

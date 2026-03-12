@@ -2,7 +2,6 @@
   "permissions": {
     "allow": [
       "WebSearch",
-
       "WebFetch(domain:finance.yahoo.com)",
       "WebFetch(domain:query1.finance.yahoo.com)",
       "WebFetch(domain:query2.finance.yahoo.com)",
@@ -25,7 +24,6 @@
       "WebFetch(domain:simplywall.st)",
       "WebFetch(domain:www.perplexity.ai)",
       "WebFetch(domain:perplexity.ai)",
-
       "WebFetch(domain:finance.naver.com)",
       "WebFetch(domain:m.stock.naver.com)",
       "WebFetch(domain:dart.fss.or.kr)",
@@ -37,7 +35,36 @@
       "WebFetch(domain:stock.hankyung.com)",
       "WebFetch(domain:www.mk.co.kr)",
       "WebFetch(domain:stock.mk.co.kr)",
-      "WebFetch(domain:www.sedaily.com)"
+      "WebFetch(domain:www.sedaily.com)",
+      "Bash(gh auth:*)",
+      "Bash(brew install:*)",
+      "WebFetch(domain:investors.nytco.com)",
+      "WebFetch(domain:ir.nytco.com)",
+      "WebFetch(domain:www.statista.com)",
+      "WebFetch(domain:nytco.com)",
+      "WebFetch(domain:valueinvesting.io)",
+      "WebFetch(domain:www.gurufocus.com)",
+      "WebFetch(domain:pressgazette.co.uk)",
+      "WebFetch(domain:www.axios.com)",
+      "WebFetch(domain:www.fool.com)",
+      "WebFetch(domain:wisesheets.io)",
+      "WebFetch(domain:www.investing.com)",
+      "WebFetch(domain:www.tradingview.com)",
+      "WebFetch(domain:www.morningstar.com)",
+      "WebFetch(domain:tipranks.com)",
+      "WebFetch(domain:www.tipranks.com)",
+      "WebFetch(domain:finance.google.com)",
+      "WebFetch(domain:www.zacks.com)",
+      "WebFetch(domain:www.barchart.com)",
+      "WebFetch(domain:www.nasdaq.com)",
+      "WebFetch(domain:ir.aboutamazon.com)",
+      "WebFetch(domain:investor.apple.com)",
+      "WebFetch(domain:abc.xyz)",
+      "WebFetch(domain:investor.fb.com)",
+      "WebFetch(domain:www.annualreports.com)",
+      "WebFetch(domain:www.koreaherald.com)",
+      "WebFetch(domain:en.yna.co.kr)",
+      "WebFetch(domain:www.kedglobal.com)"
     ]
   }
 }

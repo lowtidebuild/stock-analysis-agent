@@ -2,6 +2,8 @@
 
 This file provides the complete structural skeleton for the Mode C Deep Dive Dashboard. Claude reads this file, then populates all `{PLACEHOLDER}` values with actual data from `output/analysis-result.json` and `output/validated-data.json`.
 
+**Design**: Professional light theme with company-branded header. White cards, subtle shadows, Inter font. Green/red for semantic values only.
+
 ---
 
 ## CDN Block (always include in `<head>`)
@@ -9,9 +11,10 @@ This file provides the complete structural skeleton for the Mode C Deep Dive Das
 ```html
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<!-- For Korean language output only: -->
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<!-- For Korean language output, also add: -->
+<!-- <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet"> -->
 ```
 
 ---
@@ -27,693 +30,428 @@ This file provides the complete structural skeleton for the Mode C Deep Dive Das
   <title>{COMPANY_NAME} ({TICKER}) — Investment Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   {KOREAN_FONT_IF_KR}
   <style>
-    body { background-color: #030712; }
-    .gradient-header { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); }
-    .card { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; }
-    .metric-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; transition: border-color 0.2s; }
-    .metric-card:hover { border-color: #3b82f6; }
-    .source-tag { font-family: monospace; font-size: 0.7rem; padding: 1px 5px; border-radius: 3px; }
-    .tag-api { background: #1e3a5f; color: #60a5fa; }
-    .tag-web { background: #1a2e1a; color: #86efac; }
-    .tag-calc { background: #1e2a1e; color: #4ade80; }
-    .tag-1s { background: #2d2510; color: #fbbf24; }
-    .tag-dart { background: #2d1a3e; color: #c084fc; }
-    .tag-unverified { background: #3b0f0f; color: #f87171; }
-    .rr-badge { background: linear-gradient(135deg, #059669, #10b981); border-radius: 12px; }
-    .rr-badge-neutral { background: linear-gradient(135deg, #d97706, #f59e0b); border-radius: 12px; }
-    .rr-badge-negative { background: linear-gradient(135deg, #dc2626, #ef4444); border-radius: 12px; }
-    table { width: 100%; }
-    th { background: #1e293b; color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 10px 12px; text-align: left; }
-    td { padding: 10px 12px; border-bottom: 1px solid #1e293b; color: #e2e8f0; font-size: 0.875rem; }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: #1e293b; }
+    * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Noto Sans KR', sans-serif; }
+    @keyframes pulse-price { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+    @keyframes grad { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    .pulse-price { animation: pulse-price 2s ease-in-out infinite; }
+    .grad-ani { background-size: 200% 200%; animation: grad 4s ease infinite; }
+    .card { background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06); transition: transform 0.2s, box-shadow 0.2s; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
+    .stat-card { border-left: 4px solid; }
+    .source-tag { font-family: monospace; font-size: 0.7rem; padding: 1px 5px; border-radius: 3px; background: #f3f4f6; }
+    .tag-api { color: #2563eb; }
+    .tag-web { color: #4b5563; }
+    .tag-calc { color: #059669; }
+    .tag-1s { color: #d97706; }
+    .tag-dart { color: #7c3aed; }
+    .tag-naver { color: #2563eb; }
+    .tag-unverified { color: #dc2626; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
   </style>
+  <script>
+    tailwind.config = { theme: { extend: { colors: {
+      brand: { 50: '#eef3fc', 100: '#d4e2f9', 400: '#4285F4', 500: '#3367d6', 600: '#2a56b0', 700: '#1e3f80', 800: '#142a55', 900: '#0d1b38' }
+    }}}}
+  </script>
 </head>
-<body class="{FONT_CLASS} text-gray-100 min-h-screen">
+<body class="bg-gray-50 text-gray-800">
 
 <!-- ============================================================ -->
-<!-- SECTION 1: PREMIUM HEADER                                    -->
+<!-- SECTION 1: HEADER (dark, company-branded gradient)            -->
 <!-- ============================================================ -->
-<header id="section-header" class="gradient-header px-6 py-8 border-b border-gray-800">
-  <div class="max-w-7xl mx-auto">
-
-    <!-- Top row: Company info + Data Mode Badge -->
-    <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
+<header id="section-header" style="background: linear-gradient(135deg, #0d1b38 0%, #1e3f80 30%, #2a56b0 60%, #3367d6 100%);">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <div>
         <div class="flex items-center gap-3 mb-2">
-          <h1 class="text-4xl font-bold text-white">{COMPANY_NAME}</h1>
-          <span class="bg-blue-700 text-white text-sm font-semibold px-3 py-1 rounded-full">{TICKER}</span>
-          <span class="bg-gray-700 text-gray-200 text-sm px-2 py-1 rounded">{EXCHANGE}</span>
-          <span class="bg-gray-700 text-gray-200 text-sm px-2 py-1 rounded">{MARKET_FLAG} {MARKET}</span>
-          <span class="bg-purple-800 text-purple-200 text-xs px-2 py-1 rounded">{COMPANY_TYPE}</span>
+          <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+            <i class="{COMPANY_ICON} text-2xl text-white"></i>
+          </div>
+          <div>
+            <h1 class="text-3xl font-bold text-white tracking-tight">{COMPANY_NAME}</h1>
+            <p class="text-blue-200 text-sm font-medium">{EXCHANGE}: {TICKER} · {COMPANY_TYPE}</p>
+          </div>
         </div>
-        <p class="text-gray-400 text-sm">{COMPANY_DESCRIPTION_ONE_LINE}</p>
+        <div class="flex items-center gap-3 mt-4">
+          <span class="text-4xl font-extrabold text-white pulse-price">{CURRENCY_SYMBOL}{CURRENT_PRICE}</span>
+          <span class="{PRICE_BADGE_CLASS} px-3 py-1 rounded-full text-sm font-semibold">
+            <i class="fa-solid fa-caret-{PRICE_DIRECTION} mr-1"></i>{PRICE_CHANGE_PCT}%
+          </span>
+        </div>
+        <p class="text-blue-200/60 text-xs mt-1">{PRICE_AS_OF} · Prev Close {CURRENCY_SYMBOL}{PREV_CLOSE}</p>
       </div>
-
-      <!-- Data Confidence Indicator -->
-      <div id="data-confidence-indicator" class="card p-4 min-w-64">
-        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">📊 Data Quality</div>
-        <!-- Enhanced Mode: -->
-        <!-- <div class="flex items-center gap-2 mb-1">
-          <span class="bg-emerald-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">✅ Enhanced</span>
-          <span class="text-gray-300 text-xs">API-verified financial data</span>
+      <div class="flex flex-col gap-2 text-right">
+        <div class="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
+          <span class="text-blue-200/60">Market Cap</span>
+          <span class="text-white font-semibold">{MARKET_CAP}</span>
+          <span class="text-blue-200/60">52-Wk Range</span>
+          <span class="text-white font-semibold">{W52_LOW} – {W52_HIGH}</span>
+          <span class="text-blue-200/60">P/E (TTM)</span>
+          <span class="text-white font-semibold">{PE_RATIO}x</span>
+          <span class="text-blue-200/60">Volume</span>
+          <span class="text-white font-semibold">{VOLUME}</span>
         </div>
-        <div class="w-full bg-gray-700 rounded-full h-1.5 mb-1">
-          <div class="bg-emerald-500 h-1.5 rounded-full" style="width: 100%"></div>
-        </div> -->
-
-        <!-- Standard Mode: -->
-        <!-- <div class="flex items-center gap-2 mb-1">
-          <span class="bg-amber-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">⚠ Standard</span>
-          <span class="text-gray-300 text-xs">Web-sourced, cross-referenced</span>
+        <div class="flex gap-2 mt-3 justify-end">
+          {EXTERNAL_LINKS_HTML}
+          <!-- Pattern: <a href="..." target="_blank" class="bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-1.5 rounded-lg transition"><i class="..."></i> Label</a> -->
         </div>
-        <div class="w-full bg-gray-700 rounded-full h-1.5 mb-1">
-          <div class="bg-amber-500 h-1.5 rounded-full" style="width: 65%"></div>
-        </div>
-        <div class="text-gray-400 text-xs">{N} of 10 key metrics single-source [1S]</div> -->
-
-        <!-- Actual indicator goes here based on data_mode from validated-data.json -->
-        {DATA_CONFIDENCE_INDICATOR_HTML}
-        <div class="text-gray-500 text-xs mt-1">Last updated: {ANALYSIS_DATETIME}</div>
       </div>
     </div>
-
-    <!-- Price row -->
-    <div class="flex flex-wrap items-end gap-8">
-      <div>
-        <div class="text-5xl font-bold text-white">{CURRENCY_SYMBOL}{CURRENT_PRICE}</div>
-        <div class="flex items-center gap-2 mt-1">
-          <span class="{PRICE_CHANGE_COLOR} text-xl font-semibold">{PRICE_CHANGE_ABS} ({PRICE_CHANGE_PCT}%)</span>
-          <span class="text-gray-500 text-sm">as of {PRICE_AS_OF}</span>
-        </div>
-      </div>
-      <div class="flex gap-6 text-sm">
-        <div><div class="text-gray-500">Mkt Cap</div><div class="text-white font-semibold">{MARKET_CAP}</div></div>
-        <div><div class="text-gray-500">52W Range</div><div class="text-white font-semibold">{W52_LOW} – {W52_HIGH}</div></div>
-        <div><div class="text-gray-500">Volume</div><div class="text-white font-semibold">{VOLUME}</div></div>
-        <div><div class="text-gray-500">P/E (TTM)</div><div class="text-white font-semibold">{PE_RATIO}x {PE_TAG}</div></div>
-        <div><div class="text-gray-500">EV/EBITDA</div><div class="text-white font-semibold">{EV_EBITDA}x {EV_EBITDA_TAG}</div></div>
-      </div>
-    </div>
-
-    <!-- Analysis info bar -->
-    <div class="mt-4 pt-4 border-t border-gray-800 flex flex-wrap gap-4 text-xs text-gray-500">
+    <!-- Data mode + analysis info bar -->
+    <div class="mt-4 pt-4 border-t border-white/10 flex flex-wrap gap-4 text-xs text-blue-200/50">
       <span>Analysis Date: {ANALYSIS_DATE}</span>
-      <span>•</span>
-      <span>Output Mode: Deep Dive Dashboard (C)</span>
-      <span>•</span>
-      <span>Language: {LANGUAGE}</span>
-      <span>•</span>
+      <span>·</span>
+      <span>Mode: Deep Dive Dashboard (C)</span>
+      <span>·</span>
       <span>Data Mode: {DATA_MODE}</span>
     </div>
   </div>
 </header>
 
-<main class="max-w-7xl mx-auto px-6 py-8 space-y-8">
+<main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
 
 <!-- ============================================================ -->
-<!-- SECTION 2: VALUATION TARGET HIGHLIGHT + R/R SCORE           -->
+<!-- SECTION 2: SCENARIO VALUATION (dark gradient card)            -->
 <!-- ============================================================ -->
-<section id="section-scenarios" class="card p-6">
-  <h2 class="text-xl font-bold text-white mb-2">
-    <i class="fas fa-bullseye text-blue-400 mr-2"></i>Price Targets & Risk/Reward
-  </h2>
-  <p class="text-gray-400 text-sm mb-5">{VARIANT_VIEW_ONE_LINE}</p>
-
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-    <!-- Bull Case -->
-    <div class="bg-emerald-900/30 border border-emerald-700 rounded-xl p-5">
-      <div class="text-emerald-400 text-xs font-bold uppercase tracking-wider mb-2">🚀 Bull Case</div>
-      <div class="text-emerald-400 text-3xl font-bold">{CURRENCY_SYMBOL}{BULL_TARGET}</div>
-      <div class="text-emerald-300 text-lg font-semibold">{BULL_RETURN_PCT}</div>
-      <div class="text-gray-400 text-xs mt-1">{BULL_PROB}% probability</div>
-      <div class="text-gray-300 text-sm mt-3 pt-3 border-t border-emerald-800/50">{BULL_KEY_ASSUMPTION}</div>
-    </div>
-
-    <!-- Base Case -->
-    <div class="bg-blue-900/30 border border-blue-700 rounded-xl p-5">
-      <div class="text-blue-400 text-xs font-bold uppercase tracking-wider mb-2">📊 Base Case</div>
-      <div class="text-blue-400 text-3xl font-bold">{CURRENCY_SYMBOL}{BASE_TARGET}</div>
-      <div class="text-blue-300 text-lg font-semibold">{BASE_RETURN_PCT}</div>
-      <div class="text-gray-400 text-xs mt-1">{BASE_PROB}% probability</div>
-      <div class="text-gray-300 text-sm mt-3 pt-3 border-t border-blue-800/50">{BASE_KEY_ASSUMPTION}</div>
-    </div>
-
-    <!-- Bear Case -->
-    <div class="bg-red-900/30 border border-red-700 rounded-xl p-5">
-      <div class="text-red-400 text-xs font-bold uppercase tracking-wider mb-2">⚠ Bear Case</div>
-      <div class="text-red-400 text-3xl font-bold">{CURRENCY_SYMBOL}{BEAR_TARGET}</div>
-      <div class="text-red-300 text-lg font-semibold">{BEAR_RETURN_PCT}</div>
-      <div class="text-gray-400 text-xs mt-1">{BEAR_PROB}% probability</div>
-      <div class="text-gray-300 text-sm mt-3 pt-3 border-t border-red-800/50">{BEAR_KEY_ASSUMPTION}</div>
-    </div>
-
-    <!-- R/R Score -->
-    <div class="flex flex-col items-center justify-center {RR_BADGE_CLASS} p-5 text-center">
-      <div class="text-white text-xs font-bold uppercase tracking-wider mb-2">R/R Score</div>
-      <div class="text-white text-5xl font-black">{RR_SCORE}</div>
-      <div class="text-white/80 text-sm mt-1">{RR_INTERPRETATION}</div>
-      <div class="text-white/60 text-xs mt-3">Verdict: <span class="font-bold text-white">{VERDICT}</span></div>
-      <div class="text-white/50 text-xs mt-1">Score &gt;3 = Attractive</div>
+<section id="section-scenarios" class="rounded-2xl overflow-hidden grad-ani" style="background: linear-gradient(135deg, #0d1b38, #1e3f80, #2a56b0, #142a55);">
+  <div class="p-6 sm:p-8">
+    <h2 class="text-lg font-bold text-blue-200 mb-1"><i class="fa-solid fa-bullseye mr-2"></i>Scenario Valuation (12-Month Targets)</h2>
+    <p class="text-blue-200/50 text-xs mb-6">{VARIANT_VIEW_ONE_LINE}</p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Bear Case -->
+      <div class="bg-white/10 backdrop-blur-sm rounded-xl p-5 text-center border border-red-400/30">
+        <p class="text-red-300 text-sm font-semibold mb-1">Bear Case</p>
+        <p class="text-3xl font-extrabold text-white">{CURRENCY_SYMBOL}{BEAR_TARGET}</p>
+        <p class="text-red-300 text-sm mt-1"><i class="fa-solid fa-arrow-down mr-1"></i>{BEAR_RETURN_PCT}</p>
+        <p class="text-blue-200/40 text-xs mt-2">{BEAR_KEY_ASSUMPTION}</p>
+      </div>
+      <!-- Base Case (emphasized) -->
+      <div class="bg-white/15 backdrop-blur-sm rounded-xl p-5 text-center border-2 border-blue-300/50 scale-105">
+        <p class="text-blue-200 text-sm font-semibold mb-1">Base Case</p>
+        <p class="text-4xl font-extrabold text-white">{CURRENCY_SYMBOL}{BASE_TARGET}</p>
+        <p class="text-green-300 text-sm mt-1"><i class="fa-solid fa-arrow-up mr-1"></i>{BASE_RETURN_PCT}</p>
+        <p class="text-blue-200/40 text-xs mt-2">{BASE_KEY_ASSUMPTION}</p>
+      </div>
+      <!-- Bull Case -->
+      <div class="bg-white/10 backdrop-blur-sm rounded-xl p-5 text-center border border-green-400/30">
+        <p class="text-green-300 text-sm font-semibold mb-1">Bull Case</p>
+        <p class="text-3xl font-extrabold text-white">{CURRENCY_SYMBOL}{BULL_TARGET}</p>
+        <p class="text-green-300 text-sm mt-1"><i class="fa-solid fa-arrow-up mr-1"></i>{BULL_RETURN_PCT}</p>
+        <p class="text-blue-200/40 text-xs mt-2">{BULL_KEY_ASSUMPTION}</p>
+      </div>
     </div>
   </div>
 </section>
 
 <!-- ============================================================ -->
-<!-- SECTION 3: COMPANY-SPECIFIC KPI HIGHLIGHT                   -->
+<!-- SECTION 3: COMPANY-SPECIFIC KPI HIGHLIGHT                     -->
 <!-- ============================================================ -->
-<section id="section-kpi" class="card p-6">
-  <h2 class="text-xl font-bold text-white mb-5">
-    <i class="fas fa-chart-bar text-purple-400 mr-2"></i>Key Performance Indicators
-  </h2>
-
-  <!-- KPI tiles (4-6 tiles, company-type dependent) -->
-  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-    <!-- Each KPI tile follows this pattern: -->
+<section id="section-kpi">
+  <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-chart-bar mr-2 text-brand-400"></i>Key Performance Indicators</h2>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
     {KPI_TILES_HTML}
-    <!-- Example tile: -->
+    <!-- Each KPI tile pattern: -->
     <!--
-    <div class="metric-card p-4 text-center">
-      <div class="text-gray-400 text-xs uppercase tracking-wider mb-1">Revenue TTM</div>
-      <div class="text-white text-xl font-bold">$390B</div>
-      <div class="text-gray-500 text-xs">[API]</div>
-      <div class="text-emerald-400 text-xs mt-1">▲ +8.2% YoY</div>
+    <div class="card p-5 stat-card" style="border-left-color: #3b82f6">
+      <p class="text-xs text-gray-500 mb-1">{KPI_LABEL}</p>
+      <p class="text-2xl font-bold text-brand-700">{KPI_VALUE}</p>
+      <p class="text-xs {POS_NEG_COLOR} mt-1"><i class="fa-solid fa-arrow-{up/down}"></i> {KPI_CHANGE}</p>
     </div>
     -->
   </div>
-
-  <!-- Core financial ratios row -->
-  <div class="grid grid-cols-3 md:grid-cols-6 gap-3">
-    <div class="metric-card p-3 text-center">
-      <div class="text-gray-500 text-xs">P/E TTM</div>
-      <div class="text-white font-bold">{PE_RATIO}x</div>
-      <div class="text-xs text-gray-600">{PE_TAG}</div>
-    </div>
-    <div class="metric-card p-3 text-center">
-      <div class="text-gray-500 text-xs">EV/EBITDA</div>
-      <div class="text-white font-bold">{EV_EBITDA}x</div>
-      <div class="text-xs text-gray-600">{EV_EBITDA_TAG}</div>
-    </div>
-    <div class="metric-card p-3 text-center">
-      <div class="text-gray-500 text-xs">FCF Yield</div>
-      <div class="text-white font-bold">{FCF_YIELD}%</div>
-      <div class="text-xs text-gray-600">{FCF_TAG}</div>
-    </div>
-    <div class="metric-card p-3 text-center">
-      <div class="text-gray-500 text-xs">Op Margin</div>
-      <div class="text-white font-bold">{OP_MARGIN}%</div>
-      <div class="text-xs text-gray-600">{OP_MARGIN_TAG}</div>
-    </div>
-    <div class="metric-card p-3 text-center">
-      <div class="text-gray-500 text-xs">Rev Growth</div>
-      <div class="{REV_GROWTH_COLOR} font-bold">{REV_GROWTH}%</div>
-      <div class="text-xs text-gray-600">{REV_GROWTH_TAG}</div>
-    </div>
-    <div class="metric-card p-3 text-center">
-      <div class="text-gray-500 text-xs">Net Debt/EBITDA</div>
-      <div class="text-white font-bold">{NET_DEBT_EBITDA}x</div>
-      <div class="text-xs text-gray-600">{NET_DEBT_TAG}</div>
-    </div>
-  </div>
 </section>
 
 <!-- ============================================================ -->
-<!-- SECTION 4: INVESTMENT THESIS & VARIANT VIEW                 -->
+<!-- SECTION 4: INVESTMENT THESIS & VARIANT VIEW                   -->
 <!-- ============================================================ -->
-<section id="section-thesis" class="card p-6">
-  <h2 class="text-xl font-bold text-white mb-5">
-    <i class="fas fa-lightbulb text-yellow-400 mr-2"></i>Investment Thesis & Variant View
-  </h2>
-
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <div>
-      <!-- Q1: Why Mispriced -->
-      <div class="mb-5">
-        <div class="text-blue-400 text-xs font-bold uppercase tracking-wider mb-2">Q1 — Why Mispriced</div>
-        <p class="text-gray-200 text-sm leading-relaxed">{VARIANT_VIEW_Q1}</p>
-      </div>
-      <!-- Q2: Inflection Point -->
-      <div class="mb-5">
-        <div class="text-emerald-400 text-xs font-bold uppercase tracking-wider mb-2">Q2 — Inflection Point</div>
-        <p class="text-gray-200 text-sm leading-relaxed">{VARIANT_VIEW_Q2}</p>
-      </div>
-      <!-- Q3: Upside Optionality -->
-      <div>
-        <div class="text-purple-400 text-xs font-bold uppercase tracking-wider mb-2">Q3 — Upside Optionality</div>
-        <p class="text-gray-200 text-sm leading-relaxed">{VARIANT_VIEW_Q3}</p>
-      </div>
-    </div>
-
-    <div>
-      <!-- Precision Risk Table -->
-      <div class="text-red-400 text-xs font-bold uppercase tracking-wider mb-3">⚡ Precision Risk Analysis</div>
-      <div class="space-y-3">
-        {RISK_ITEMS_HTML}
-        <!-- Each risk item: -->
-        <!--
-        <div class="bg-red-900/20 border border-red-800/50 rounded-lg p-4">
-          <div class="flex items-start justify-between gap-2 mb-2">
-            <div class="text-red-300 font-semibold text-sm">{RISK_NAME}</div>
-            <span class="text-red-400 text-xs font-bold whitespace-nowrap">P={RISK_PROB}%</span>
-          </div>
-          <div class="text-gray-300 text-xs mb-1"><span class="text-gray-500">Mechanism:</span> {RISK_MECHANISM}</div>
-          <div class="text-gray-300 text-xs mb-1"><span class="text-gray-500">EBITDA Impact:</span> {RISK_IMPACT}</div>
-          <div class="text-gray-400 text-xs"><span class="text-gray-500">Mitigant:</span> {RISK_MITIGANT}</div>
+<section id="section-thesis">
+  <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-scale-balanced mr-2 text-brand-400"></i>Investment Thesis & Variant View</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Bull / Strengths -->
+    <div class="card p-6 border-l-4 border-green-500">
+      <h3 class="text-lg font-bold text-green-700 mb-3"><i class="fa-solid fa-arrow-trend-up mr-2"></i>{BULL_HEADING}</h3>
+      <div class="space-y-3 text-sm text-gray-700">
+        <div class="bg-green-50 rounded-lg p-3">
+          <p class="font-semibold text-green-800 mb-1">{VARIANT_VIEW_LABEL}</p>
+          <p>{VARIANT_VIEW_CONTENT}</p>
+        </div>
+        {BULL_POINTS_HTML}
+        <!-- Each point:
+        <div>
+          <p class="font-semibold">{POINT_TITLE}</p>
+          <p>{POINT_CONTENT}</p>
         </div>
         -->
       </div>
     </div>
-  </div>
-</section>
-
-<!-- ============================================================ -->
-<!-- SECTION 5: DETAILED VALUATION METRICS                       -->
-<!-- ============================================================ -->
-<section id="section-valuation" class="card p-6">
-  <h2 class="text-xl font-bold text-white mb-5">
-    <i class="fas fa-calculator text-green-400 mr-2"></i>Valuation Metrics
-  </h2>
-
-  <table class="rounded-lg overflow-hidden">
-    <thead>
-      <tr>
-        <th>Metric</th>
-        <th>{TICKER}</th>
-        <th>5Y Avg</th>
-        <th>Sector Avg</th>
-        <th>vs Sector</th>
-        <th>Source</th>
-      </tr>
-    </thead>
-    <tbody>
-      {VALUATION_TABLE_ROWS}
-      <!-- Example row: -->
-      <!--
-      <tr>
-        <td class="text-gray-300">P/E (TTM)</td>
-        <td class="text-white font-semibold">28.5x</td>
-        <td class="text-gray-400">24.1x</td>
-        <td class="text-gray-400">22.3x</td>
-        <td class="text-amber-400">+28% Premium</td>
-        <td><span class="source-tag tag-api">[API]</span></td>
-      </tr>
-      -->
-    </tbody>
-  </table>
-
-  <!-- SOTP Summary (if multi-segment) -->
-  {SOTP_SECTION_IF_APPLICABLE}
-  <!--
-  <div class="mt-6 p-4 bg-gray-800/50 rounded-lg">
-    <div class="text-white text-sm font-bold mb-3">Sum-of-the-Parts Valuation</div>
-    <table class="rounded-lg overflow-hidden">
-      <thead><tr><th>Segment</th><th>Revenue</th><th>EBITDA</th><th>Multiple</th><th>Value</th><th>Notes</th></tr></thead>
-      <tbody>{SOTP_ROWS}</tbody>
-    </table>
-    <div class="mt-3 pt-3 border-t border-gray-700 grid grid-cols-3 gap-4 text-sm">
-      <div><span class="text-gray-400">Enterprise Value:</span> <span class="text-white font-bold">{TEV}</span></div>
-      <div><span class="text-gray-400">Less: Net Debt:</span> <span class="text-red-400 font-bold">({NET_DEBT})</span></div>
-      <div><span class="text-gray-400">Equity Value:</span> <span class="text-emerald-400 font-bold">{EQUITY_VALUE}</span></div>
+    <!-- Bear / Risks -->
+    <div class="card p-6 border-l-4 border-red-500">
+      <h3 class="text-lg font-bold text-red-700 mb-3"><i class="fa-solid fa-arrow-trend-down mr-2"></i>{BEAR_HEADING}</h3>
+      <div class="space-y-3 text-sm text-gray-700">
+        <div class="bg-red-50 rounded-lg p-3">
+          <p class="font-semibold text-red-800 mb-1">{KEY_RISK_LABEL}</p>
+          <p>{KEY_RISK_CONTENT}</p>
+        </div>
+        {BEAR_POINTS_HTML}
+      </div>
     </div>
   </div>
-  -->
 </section>
 
 <!-- ============================================================ -->
-<!-- SECTION 6: PEER COMPARISON TABLE                            -->
+<!-- SECTION 5: VALUATION METRICS                                  -->
 <!-- ============================================================ -->
-<section id="section-peers" class="card p-6">
-  <h2 class="text-xl font-bold text-white mb-5">
-    <i class="fas fa-users text-indigo-400 mr-2"></i>Peer Comparison
-  </h2>
+<section id="section-valuation">
+  <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-calculator mr-2 text-brand-400"></i>Valuation Metrics</h2>
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+    {VALUATION_TILES_HTML}
+    <!-- Each tile pattern: -->
+    <!--
+    <div class="card p-4 stat-card" style="border-left-color: #3b82f6">
+      <p class="text-xs text-gray-500">{METRIC_LABEL}</p>
+      <p class="text-xl font-bold">{METRIC_VALUE}</p>
+      <p class="text-xs text-gray-400">{METRIC_CONTEXT}</p>
+    </div>
+    -->
+  </div>
+</section>
 
-  <div class="overflow-x-auto">
-    <table class="rounded-lg overflow-hidden">
+<!-- ============================================================ -->
+<!-- SECTION 6: PEER COMPARISON TABLE                              -->
+<!-- ============================================================ -->
+<section id="section-peers">
+  <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-users mr-2 text-brand-400"></i>Peer Comparison</h2>
+  <div class="card overflow-x-auto">
+    <table class="w-full text-sm">
       <thead>
-        <tr>
-          <th>Company</th>
-          <th>Price</th>
-          <th>Mkt Cap</th>
-          <th>P/E</th>
-          <th>EV/EBITDA</th>
-          <th>Rev Growth</th>
-          <th>Op Margin</th>
-          <th>FCF Yield</th>
-          <th>R/R Score</th>
+        <tr class="bg-gray-50 text-gray-600 text-xs uppercase">
+          <th class="text-left p-4 font-semibold">Company</th>
+          <th class="text-right p-4 font-semibold">Mkt Cap</th>
+          <th class="text-right p-4 font-semibold">Revenue (FY)</th>
+          <th class="text-right p-4 font-semibold">Rev Growth</th>
+          <th class="text-right p-4 font-semibold">Op Margin</th>
+          <th class="text-right p-4 font-semibold">P/E</th>
+          <th class="text-right p-4 font-semibold">EV/EBITDA</th>
         </tr>
       </thead>
       <tbody>
         {PEER_TABLE_ROWS}
-        <!-- Subject company highlighted: -->
-        <!--
-        <tr class="bg-blue-900/20 border-l-2 border-blue-500">
-          <td class="text-blue-300 font-bold">{TICKER} ← You</td>
-          ...
-        </tr>
-        -->
+        <!-- Subject company row: class="bg-blue-50/60 border-b font-semibold" -->
+        <!-- Peer rows: class="border-b hover:bg-gray-50" -->
+        <!-- Positive growth: class="text-green-600" -->
       </tbody>
     </table>
   </div>
-  <p class="text-gray-500 text-xs mt-2">Peer data sourced from web research. {PEER_DATA_TAGS}</p>
 </section>
 
 <!-- ============================================================ -->
-<!-- SECTION 7: ANALYST PRICE TARGETS                            -->
+<!-- SECTION 7: ANALYST PRICE TARGETS                              -->
 <!-- ============================================================ -->
-<section id="section-analyst" class="card p-6">
-  <h2 class="text-xl font-bold text-white mb-5">
-    <i class="fas fa-chart-line text-cyan-400 mr-2"></i>Analyst Coverage
-  </h2>
-
-  <!-- Enhanced Mode: Full analyst table -->
-  <!-- Standard Mode: Consensus summary only -->
-  {ANALYST_CONTENT_HTML}
-
-  <!-- Consensus summary (always shown): -->
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
-    <div class="metric-card p-4 text-center">
-      <div class="text-gray-400 text-xs">Avg Target</div>
-      <div class="text-white text-xl font-bold">{CURRENCY_SYMBOL}{AVG_TARGET}</div>
-      <div class="{AVG_UPSIDE_COLOR} text-sm">{AVG_UPSIDE_PCT} upside</div>
+<section id="section-analyst">
+  <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-bullhorn mr-2 text-brand-400"></i>Analyst Price Targets</h2>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="card p-5 text-center">
+      <p class="text-xs text-gray-500 mb-1">Consensus Average</p>
+      <p class="text-3xl font-bold text-brand-600">{CURRENCY_SYMBOL}{AVG_TARGET}</p>
+      <p class="text-sm text-green-500 mt-1">{AVG_UPSIDE_PCT} upside</p>
     </div>
-    <div class="metric-card p-4 text-center">
-      <div class="text-gray-400 text-xs">High Target</div>
-      <div class="text-emerald-400 text-xl font-bold">{CURRENCY_SYMBOL}{HIGH_TARGET}</div>
+    <div class="card p-5 text-center">
+      <p class="text-xs text-gray-500 mb-1">Street High</p>
+      <p class="text-3xl font-bold text-green-600">{CURRENCY_SYMBOL}{HIGH_TARGET}</p>
+      <p class="text-sm text-green-500 mt-1">{HIGH_UPSIDE_PCT} upside</p>
     </div>
-    <div class="metric-card p-4 text-center">
-      <div class="text-gray-400 text-xs">Low Target</div>
-      <div class="text-red-400 text-xl font-bold">{CURRENCY_SYMBOL}{LOW_TARGET}</div>
-    </div>
-    <div class="metric-card p-4 text-center">
-      <div class="text-gray-400 text-xs">Analysts</div>
-      <div class="text-white text-xl font-bold">{NUM_ANALYSTS}</div>
-      <div class="text-xs text-gray-500">covering</div>
+    <div class="card p-5 text-center">
+      <p class="text-xs text-gray-500 mb-1">Street Low</p>
+      <p class="text-3xl font-bold text-red-600">{CURRENCY_SYMBOL}{LOW_TARGET}</p>
+      <p class="text-sm text-red-500 mt-1">{LOW_DOWNSIDE_PCT} downside</p>
     </div>
   </div>
-
   <!-- Rating distribution bar -->
-  <div class="flex items-center gap-2 text-xs">
-    <span class="text-gray-400 w-12">Buy</span>
-    <div class="flex-1 h-3 bg-gray-800 rounded-full overflow-hidden">
-      <div class="h-full bg-emerald-500 rounded-l-full" style="width: {BUY_PCT}%"></div>
+  <div class="card p-5 mt-4">
+    <div class="flex justify-between items-center mb-2">
+      <span class="text-sm font-semibold">Rating Distribution</span>
+      <span class="text-xs text-gray-400">{NUM_ANALYSTS} analysts</span>
     </div>
-    <span class="text-emerald-400 w-8">{BUY_COUNT}</span>
-  </div>
-  <div class="flex items-center gap-2 text-xs mt-1">
-    <span class="text-gray-400 w-12">Hold</span>
-    <div class="flex-1 h-3 bg-gray-800 rounded-full overflow-hidden">
-      <div class="h-full bg-amber-500" style="width: {HOLD_PCT}%"></div>
+    <div class="flex h-6 rounded-full overflow-hidden">
+      <div class="bg-green-600" style="width: {BUY_PCT}%" title="Buy"></div>
+      <div class="bg-gray-400" style="width: {HOLD_PCT}%" title="Hold"></div>
+      <div class="bg-red-500" style="width: {SELL_PCT}%" title="Sell"></div>
     </div>
-    <span class="text-amber-400 w-8">{HOLD_COUNT}</span>
-  </div>
-  <div class="flex items-center gap-2 text-xs mt-1">
-    <span class="text-gray-400 w-12">Sell</span>
-    <div class="flex-1 h-3 bg-gray-800 rounded-full overflow-hidden">
-      <div class="h-full bg-red-500 rounded-r-full" style="width: {SELL_PCT}%"></div>
+    <div class="flex justify-between text-xs text-gray-500 mt-2">
+      <span class="text-green-600 font-semibold">Buy: {BUY_COUNT} ({BUY_PCT}%)</span>
+      <span class="text-gray-600 font-semibold">Hold: {HOLD_COUNT} ({HOLD_PCT}%)</span>
+      <span class="text-gray-400">Sell: {SELL_COUNT} ({SELL_PCT}%)</span>
     </div>
-    <span class="text-red-400 w-8">{SELL_COUNT}</span>
+    {ANALYST_NOTES_HTML}
+    <!-- Optional: <div class="mt-3 p-3 bg-blue-50 rounded-lg text-xs text-gray-600"><p><strong>Recent upgrades:</strong> ...</p></div> -->
   </div>
 </section>
 
 <!-- ============================================================ -->
-<!-- SECTION 8: INTERACTIVE CHARTS                               -->
+<!-- SECTION 8: INTERACTIVE CHARTS                                 -->
 <!-- ============================================================ -->
-<section id="section-charts" class="card p-6">
-  <h2 class="text-xl font-bold text-white mb-5">
-    <i class="fas fa-chart-area text-pink-400 mr-2"></i>Interactive Charts
-  </h2>
-
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <!-- Chart A: 12-Month Price History -->
-    <div>
-      <div class="text-gray-400 text-sm font-semibold mb-3">12-Month Price History</div>
-      <div style="height: 220px;"><canvas id="priceChart"></canvas></div>
+<section id="section-charts">
+  <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-chart-bar mr-2 text-brand-400"></i>Financial Charts</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="card p-5">
+      <h3 class="text-sm font-semibold text-gray-700 mb-3">Annual Revenue & Operating Income</h3>
+      <canvas id="revenueChart" height="200"></canvas>
     </div>
-
-    <!-- Chart B: Revenue + Operating Income (8Q) -->
-    <div>
-      <div class="text-gray-400 text-sm font-semibold mb-3">Quarterly Revenue & Operating Income</div>
-      <div style="height: 220px;"><canvas id="revenueChart"></canvas></div>
+    <div class="card p-5">
+      <h3 class="text-sm font-semibold text-gray-700 mb-3">{CHART_B_TITLE}</h3>
+      <canvas id="segmentChart" height="200"></canvas>
     </div>
-
-    <!-- Chart C: Margin Trends (8Q) -->
-    <div>
-      <div class="text-gray-400 text-sm font-semibold mb-3">Margin Trends (%)</div>
-      <div style="height: 220px;"><canvas id="marginChart"></canvas></div>
-    </div>
-
-    <!-- Chart D: Optional (Peer P/E Comparison, etc.) -->
-    {OPTIONAL_CHART_D}
+  </div>
+  <div class="card p-5 mt-4">
+    <h3 class="text-sm font-semibold text-gray-700 mb-3">Stock Price vs Analyst Targets (52-Week)</h3>
+    <canvas id="priceChart" height="180"></canvas>
   </div>
 </section>
 
 <!-- ============================================================ -->
-<!-- SECTION 9: FINANCIAL DETAIL ANALYSIS                        -->
+<!-- SECTION 9: FINANCIAL DETAIL                                   -->
 <!-- ============================================================ -->
-<section id="section-financials" class="card p-6">
-  <h2 class="text-xl font-bold text-white mb-5">
-    <i class="fas fa-table text-orange-400 mr-2"></i>Financial Detail
-  </h2>
-
-  <!-- Quarterly Income Statement (8Q) -->
-  <div class="mb-6">
-    <div class="text-gray-300 text-sm font-semibold mb-3">Quarterly P&L (8 quarters)</div>
-    <div class="overflow-x-auto">
-      <table class="text-xs rounded-lg overflow-hidden">
-        <thead>
-          <tr>
-            <th>Quarter</th>
-            {QUARTER_HEADERS}
-          </tr>
-        </thead>
-        <tbody>
-          {QUARTERLY_ROWS}
-          <!-- Revenue row, Gross Profit row, Op Income row, Net Income row, EPS row -->
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- QoE Summary -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div class="bg-gray-800/50 rounded-lg p-4">
-      <div class="text-gray-300 text-sm font-semibold mb-3">Quality of Earnings</div>
+<section id="section-financials">
+  <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-file-invoice-dollar mr-2 text-brand-400"></i>Financial Detail Analysis</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    {FINANCIAL_DETAIL_CARDS_HTML}
+    <!-- Each card pattern: -->
+    <!--
+    <div class="card p-5">
+      <h3 class="text-sm font-bold text-brand-600 mb-3"><i class="fa-solid fa-chart-line mr-2"></i>{CARD_TITLE}</h3>
       <div class="space-y-2 text-sm">
-        <div class="flex justify-between">
-          <span class="text-gray-400">FCF Conversion (FCF/Net Income)</span>
-          <span class="text-white font-semibold">{FCF_CONVERSION}%</span>
-        </div>
-        <div class="flex justify-between">
-          <span class="text-gray-400">SBC as % of Revenue</span>
-          <span class="{SBC_COLOR} font-semibold">{SBC_PCT}%</span>
-        </div>
-        <div class="flex justify-between">
-          <span class="text-gray-400">Key Add-backs</span>
-          <span class="text-gray-300">{KEY_ADDBACKS}</span>
-        </div>
-      </div>
-      <p class="text-gray-400 text-xs mt-3">{QOE_ASSESSMENT}</p>
-    </div>
-
-    <div class="bg-gray-800/50 rounded-lg p-4">
-      <div class="text-gray-300 text-sm font-semibold mb-3">Capital Structure</div>
-      <div class="space-y-2 text-sm">
-        <div class="flex justify-between"><span class="text-gray-400">Total Debt</span><span class="text-white">{TOTAL_DEBT}</span></div>
-        <div class="flex justify-between"><span class="text-gray-400">Cash & Equivalents</span><span class="text-emerald-400">{CASH}</span></div>
-        <div class="flex justify-between"><span class="text-gray-400">Net Debt / (Cash)</span><span class="{NET_DEBT_COLOR}">{NET_DEBT_DISPLAY}</span></div>
-        <div class="flex justify-between"><span class="text-gray-400">Net Debt / EBITDA</span><span class="text-white">{NET_DEBT_EBITDA}x</span></div>
-        <div class="flex justify-between"><span class="text-gray-400">Debt Maturity</span><span class="text-gray-300">{DEBT_MATURITY_NOTE}</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">{LABEL}</span><span class="font-semibold">{VALUE}</span></div>
       </div>
     </div>
+    -->
+  </div>
+  <!-- Key Insight -->
+  <div class="card p-5 mt-4 bg-blue-50 border border-blue-200">
+    <p class="text-sm text-gray-700">{KEY_INSIGHT_HTML}</p>
   </div>
 </section>
 
 <!-- ============================================================ -->
-<!-- SECTION 10: PORTFOLIO STRATEGY & WHAT WOULD MAKE ME WRONG  -->
+<!-- SECTION 10: PORTFOLIO STRATEGY & EXECUTION                    -->
 <!-- ============================================================ -->
-<section id="section-strategy" class="card p-6">
-  <h2 class="text-xl font-bold text-white mb-5">
-    <i class="fas fa-shield-alt text-teal-400 mr-2"></i>What Would Make Me Wrong
-  </h2>
-
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div>
-      <div class="text-gray-300 text-sm font-bold mb-2">Core Assumption</div>
-      <p class="text-gray-200 text-sm leading-relaxed mb-4">{CORE_ASSUMPTION}</p>
-
-      <div class="text-gray-300 text-sm font-bold mb-2">Kill Switch (Exit Criteria)</div>
-      <ul class="space-y-1 text-sm text-gray-300">
-        {EXIT_CRITERIA_ITEMS}
-        <!-- <li class="flex items-start gap-2"><span class="text-red-400 mt-0.5">✗</span><span>{EXIT_CRITERION}</span></li> -->
-      </ul>
+<section id="section-strategy">
+  <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-chess-knight mr-2 text-brand-400"></i>Portfolio Strategy & Execution</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Scenario Positioning -->
+    <div class="card p-6">
+      <h3 class="text-sm font-bold text-gray-700 mb-4">Scenario Positioning</h3>
+      <div class="space-y-4 text-sm">
+        <div class="bg-green-50 rounded-lg p-4">
+          <p class="font-bold text-green-700">Bull (Probability {BULL_PROB}%)</p>
+          <p class="text-gray-600 mt-1">{BULL_STRATEGY}</p>
+        </div>
+        <div class="bg-blue-50 rounded-lg p-4">
+          <p class="font-bold text-blue-700">Base (Probability {BASE_PROB}%)</p>
+          <p class="text-gray-600 mt-1">{BASE_STRATEGY}</p>
+        </div>
+        <div class="bg-red-50 rounded-lg p-4">
+          <p class="font-bold text-red-700">Bear (Probability {BEAR_PROB}%)</p>
+          <p class="text-gray-600 mt-1">{BEAR_STRATEGY}</p>
+        </div>
+      </div>
     </div>
-
-    <div>
-      <div class="text-gray-300 text-sm font-bold mb-2">Monitoring Checklist</div>
-      <ul class="space-y-1 text-sm text-gray-400">
-        {MONITORING_ITEMS}
-      </ul>
-
-      <div class="mt-4 pt-4 border-t border-gray-700">
-        <div class="flex items-center gap-3">
-          <div class="{RR_BADGE_CLASS} px-4 py-2 rounded-lg text-center">
-            <div class="text-white text-xs">R/R Score</div>
-            <div class="text-white text-2xl font-black">{RR_SCORE}</div>
+    <!-- Execution Guidelines -->
+    <div class="card p-6">
+      <h3 class="text-sm font-bold text-gray-700 mb-4">Execution Guidelines</h3>
+      <div class="space-y-3 text-sm">
+        {EXECUTION_ITEMS_HTML}
+        <!-- Pattern:
+        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+          <div class="w-10 h-10 bg-brand-400 rounded-full flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-{icon} text-white text-xs"></i>
           </div>
           <div>
-            <div class="text-white font-bold">{VERDICT}</div>
-            <div class="text-gray-400 text-xs">Score &gt;3: Attractive | 1-3: Neutral | &lt;1: Unfavorable</div>
+            <p class="font-semibold text-gray-700">{LABEL}</p>
+            <p class="text-gray-500 text-xs">{DETAIL}</p>
           </div>
+        </div>
+        -->
+        <div class="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+          <p class="font-bold text-blue-800 text-xs mb-2">Key Monitoring Points</p>
+          <ul class="text-xs text-gray-600 space-y-1">
+            {MONITORING_ITEMS_HTML}
+          </ul>
         </div>
       </div>
     </div>
   </div>
-
-  <!-- Upcoming Catalysts -->
-  <div class="mt-6 pt-6 border-t border-gray-700">
-    <div class="text-gray-300 text-sm font-bold mb-3">📅 Upcoming Catalysts</div>
-    <div class="flex flex-wrap gap-3">
-      {CATALYST_BADGES}
-      <!-- <div class="bg-gray-800 border border-gray-600 rounded-lg px-4 py-2">
-        <span class="text-blue-400 text-xs font-semibold">{DATE}</span>
-        <span class="text-gray-200 text-xs ml-2">{EVENT}</span>
-        <span class="ml-2 text-xs {SIGNIFICANCE_COLOR}">●</span>
-      </div> -->
-    </div>
-  </div>
 </section>
-
-<!-- ============================================================ -->
-<!-- SECTION 11: FOOTER                                          -->
-<!-- ============================================================ -->
-<footer id="section-footer" class="card p-6 text-xs text-gray-500">
-  <div class="border-b border-gray-700 pb-4 mb-4">
-    <div class="text-red-400 font-semibold text-sm mb-2">⚠ Disclaimer</div>
-    <p>This analysis is for informational and educational purposes only and does not constitute financial advice, investment recommendation, or solicitation to buy or sell any security. All data is sourced from public information. Past performance does not guarantee future results. Always conduct your own due diligence and consult a licensed financial advisor before making investment decisions. The agent providing this analysis is an AI system and may contain errors.</p>
-  </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div>
-      <div class="text-gray-400 font-semibold mb-1">Data Sources</div>
-      <div class="text-gray-500">{DATA_SOURCES_LIST}</div>
-    </div>
-    <div>
-      <div class="text-gray-400 font-semibold mb-1">Source Tags Used</div>
-      <div class="flex flex-wrap gap-1">{SOURCE_TAGS_USED}</div>
-    </div>
-    <div>
-      <div class="text-gray-400 font-semibold mb-1">Generation Info</div>
-      <div>Generated: {ANALYSIS_DATETIME}</div>
-      <div>Mode: {DATA_MODE}</div>
-      <div>Ticker: {TICKER} | Market: {MARKET}</div>
-    </div>
-  </div>
-</footer>
 
 </main>
 
 <!-- ============================================================ -->
-<!-- CHART.JS INITIALIZATION                                     -->
+<!-- FOOTER                                                        -->
+<!-- ============================================================ -->
+<footer class="bg-gray-900 text-gray-400 mt-12">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div class="flex flex-col md:flex-row justify-between items-start gap-4">
+      <div>
+        <p class="text-xs mb-2"><strong class="text-gray-300">Disclaimer:</strong> This dashboard is for informational purposes only and does not constitute investment advice, a recommendation, or solicitation to buy or sell securities. All investment decisions should be made based on your own research and risk tolerance. Past performance does not guarantee future results.</p>
+        <p class="text-xs">Last Updated: {ANALYSIS_DATETIME} · Price: {CURRENCY_SYMBOL}{CURRENT_PRICE} ({TICKER})</p>
+      </div>
+      <div class="text-xs text-right">
+        <p>Sources: {DATA_SOURCES_LIST}</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ============================================================ -->
+<!-- CHART.JS INITIALIZATION (light theme)                         -->
 <!-- ============================================================ -->
 <script>
-const globalOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: { labels: { color: '#9ca3af', font: { size: 11 } } },
-    tooltip: { backgroundColor: '#1f2937', titleColor: '#f9fafb', bodyColor: '#d1d5db', borderColor: '#374151', borderWidth: 1 }
-  },
-  scales: {
-    x: { grid: { color: '#1f2937' }, ticks: { color: '#6b7280', font: { size: 10 } } },
-    y: { grid: { color: '#1f2937' }, ticks: { color: '#6b7280', font: { size: 10 } } }
-  }
-};
+const blue = 'rgba(59,130,246,';
+const green = 'rgba(52,168,83,';
+const yellow = 'rgba(251,188,5,';
+const red = 'rgba(234,67,53,';
+const gray = 'rgba(107,114,128,';
 
-// Chart A: Price History
-new Chart(document.getElementById('priceChart'), {
-  type: 'line',
-  data: {
-    labels: {PRICE_CHART_LABELS},
-    datasets: [{
-      label: '{TICKER} Price',
-      data: {PRICE_CHART_DATA},
-      borderColor: '#3b82f6',
-      backgroundColor: 'rgba(59,130,246,0.08)',
-      borderWidth: 2,
-      pointRadius: 0,
-      fill: true,
-      tension: 0.3
-    }]
-  },
-  options: { ...globalOptions }
-});
-
-// Chart B: Revenue + Operating Income
-new Chart(document.getElementById('revenueChart'), {
+// Chart A: Revenue & Operating Income
+new Chart(document.getElementById('revenueChart').getContext('2d'), {
   type: 'bar',
   data: {
     labels: {REVENUE_CHART_LABELS},
     datasets: [
-      {
-        label: 'Revenue',
-        data: {REVENUE_CHART_DATA},
-        backgroundColor: 'rgba(59,130,246,0.7)',
-        borderColor: '#3b82f6',
-        borderWidth: 1,
-        borderRadius: 3
-      },
-      {
-        label: 'Operating Income',
-        data: {OP_INCOME_CHART_DATA},
-        backgroundColor: 'rgba(16,185,129,0.7)',
-        borderColor: '#10b981',
-        borderWidth: 1,
-        borderRadius: 3
-      }
+      { label: 'Revenue', data: {REVENUE_CHART_DATA}, backgroundColor: blue + '0.55)', borderColor: blue + '1)', borderWidth: 1, borderRadius: 6, order: 2 },
+      { label: 'Op Income', type: 'line', data: {OP_INCOME_CHART_DATA}, borderColor: green + '1)', backgroundColor: green + '0.1)', borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: green + '1)', fill: false, order: 1 }
     ]
   },
-  options: { ...globalOptions }
+  options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, usePointStyle: true } } }, scales: { y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 }, callback: v => '{CURRENCY_PREFIX}' + v + '{UNIT_SUFFIX}' } }, x: { grid: { display: false }, ticks: { font: { size: 10 } } } } }
 });
 
-// Chart C: Margin Trends
-new Chart(document.getElementById('marginChart'), {
+// Chart B: Segment/Category breakdown
+new Chart(document.getElementById('segmentChart').getContext('2d'), {
+  type: 'bar',
+  data: {
+    labels: {SEGMENT_CHART_LABELS},
+    datasets: [{ label: '{SEGMENT_CHART_DATASET_LABEL}', data: {SEGMENT_CHART_DATA}, backgroundColor: [blue + '0.7)', green + '0.7)', yellow + '0.7)', blue + '0.35)', gray + '0.5)'], borderColor: [blue + '1)', green + '1)', yellow + '1)', blue + '0.6)', gray + '0.8)'], borderWidth: 1, borderRadius: 6 }]
+  },
+  options: { responsive: true, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 }, callback: v => '{CURRENCY_PREFIX}' + v + '{UNIT_SUFFIX}' } }, y: { grid: { display: false }, ticks: { font: { size: 10 } } } } }
+});
+
+// Chart C: Price vs Analyst Targets
+new Chart(document.getElementById('priceChart').getContext('2d'), {
   type: 'line',
   data: {
-    labels: {MARGIN_CHART_LABELS},
+    labels: {PRICE_CHART_LABELS},
     datasets: [
-      {
-        label: 'Gross Margin',
-        data: {GROSS_MARGIN_DATA},
-        borderColor: '#10b981',
-        backgroundColor: 'transparent',
-        borderWidth: 2,
-        pointRadius: 3,
-        tension: 0.3
-      },
-      {
-        label: 'Operating Margin',
-        data: {OP_MARGIN_DATA},
-        borderColor: '#3b82f6',
-        backgroundColor: 'transparent',
-        borderWidth: 2,
-        pointRadius: 3,
-        tension: 0.3
-      },
-      {
-        label: 'Net Margin',
-        data: {NET_MARGIN_DATA},
-        borderColor: '#f59e0b',
-        backgroundColor: 'transparent',
-        borderWidth: 2,
-        pointRadius: 3,
-        tension: 0.3
-      }
+      { label: '{TICKER} Price', data: {PRICE_CHART_DATA}, borderColor: blue + '1)', backgroundColor: blue + '0.06)', borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: blue + '1)', fill: true, tension: 0.3 },
+      { label: 'Bull Target ({CURRENCY_SYMBOL}{BULL_TARGET})', data: {BULL_LINE_DATA}, borderColor: green + '0.5)', borderWidth: 1.5, borderDash: [8, 4], pointRadius: 0, fill: false },
+      { label: 'Consensus ({CURRENCY_SYMBOL}{AVG_TARGET})', data: {CONSENSUS_LINE_DATA}, borderColor: yellow + '0.6)', borderWidth: 1.5, borderDash: [4, 4], pointRadius: 0, fill: false },
+      { label: 'Bear Target ({CURRENCY_SYMBOL}{BEAR_TARGET})', data: {BEAR_LINE_DATA}, borderColor: red + '0.5)', borderWidth: 1.5, borderDash: [8, 4], pointRadius: 0, fill: false }
     ]
   },
-  options: { ...globalOptions }
+  options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, usePointStyle: true } } }, scales: { y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 }, callback: v => '{CURRENCY_PREFIX}' + v } }, x: { grid: { display: false }, ticks: { font: { size: 10 } } } } }
 });
 </script>
 
@@ -728,18 +466,19 @@ new Chart(document.getElementById('marginChart'), {
 When generating a dashboard:
 
 1. Replace ALL `{PLACEHOLDER}` values with actual data from `analysis-result.json`
-2. For missing data (Grade D or not collected): replace with `<span class="text-gray-600">—</span>`
+2. For missing data (Grade D or not collected): replace with `<span class="text-gray-400">—</span>`
 3. Source tags: use `<span class="source-tag tag-{type}">[TAG]</span>` inline after values
-4. Chart data arrays: convert quarterly arrays to JS array syntax `[89.5, 94.9, ...]`
-5. Color classes: apply `text-emerald-400` for positive numbers, `text-red-400` for negative
-6. Data Confidence Indicator: use Enhanced or Standard template from `color-system.md`
-7. R/R Score badge: choose class based on score value (`rr-badge` >3, `rr-badge-neutral` 1-3, `rr-badge-negative` <1)
+4. Chart data arrays: convert to JS array syntax `[89.5, 94.9, ...]`
+5. Price change badge: positive → `bg-green-500/20 text-green-200`, negative → `bg-red-500/25 text-red-200`
+6. Positive metric changes: `text-green-600`, negative: `text-red-600`, neutral: `text-gray-500`
+7. `stat-card` border colors: use `#3b82f6` (blue) as default. Vary sparingly for visual rhythm.
+8. Company icon: use appropriate FontAwesome icon (e.g., `fa-brands fa-google`, `fas fa-microchip`)
 
 ## Missing Section Handling
 
 If any section's data is unavailable or insufficient, render:
 ```html
-<div class="text-gray-600 italic text-sm p-4 border border-gray-700 rounded-lg">
+<div class="text-gray-400 italic text-sm p-4 border border-gray-200 rounded-lg bg-gray-50">
   [Data unavailable — {reason}]
 </div>
 ```
