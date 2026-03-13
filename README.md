@@ -95,10 +95,22 @@ When connected, the agent pulls structured data directly from SEC filings:
 | Insider transactions | `get_insider_transactions` | Grade A |
 | SEC filings (10-K, 10-Q) | `get_sec_filings` | Grade A |
 
-**Without it:** web research + cross-referencing. Max confidence drops to Grade B. Still useful, just less precise.
+**Without MCP (or alongside it)**, the agent also pulls from major financial web sources:
+
+| Data | Source | Confidence |
+|------|--------|------------|
+| Price · Market cap · Ratios | Yahoo Finance, Google Finance, MarketWatch | Grade B |
+| Financial statements | SEC EDGAR (direct fetch) | Grade A |
+| Earnings results | PR Newswire, Business Wire, Seeking Alpha | Grade B |
+| Analyst price targets | TipRanks, MarketBeat | Grade B |
+| News · Qualitative context | Reuters, Bloomberg, CNBC, Financial Times | Qualitative |
+| Insider trading | SEC Form 4 (EDGAR), Finviz | Grade B |
+
+With MCP: API data (Grade A) + web sources for qualitative context.
+Without MCP: web-only, max confidence Grade B. Still fully functional.
 
 ```
-💡 Setup takes 5 minutes. See → docs/mcp-setup-guide.md
+💡 MCP setup takes 5 minutes. See → docs/mcp-setup-guide.md
 ```
 
 ---

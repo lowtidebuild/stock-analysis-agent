@@ -95,10 +95,22 @@ SEC 공시에서 구조화 데이터를 직접 수집합니다:
 | 내부자 거래 | `get_insider_transactions` | Grade A |
 | SEC 공시 (10-K, 10-Q) | `get_sec_filings` | Grade A |
 
-**연동 없이도:** 웹 리서치 + 교차검증으로 완전히 동작합니다. 최대 신뢰도 Grade B.
+**MCP 없이도 (또는 MCP와 함께)** 주요 금융 웹사이트에서 데이터를 수집합니다:
+
+| 데이터 | 출처 | 신뢰도 |
+|--------|------|--------|
+| 주가 · 시총 · 밸류에이션 | Yahoo Finance, Google Finance, MarketWatch | Grade B |
+| 재무제표 | SEC EDGAR (직접 수집) | Grade A |
+| 실적 발표 | PR Newswire, Business Wire, Seeking Alpha | Grade B |
+| 애널리스트 목표주가 | TipRanks, MarketBeat | Grade B |
+| 뉴스 · 정성적 맥락 | Reuters, Bloomberg, CNBC, Financial Times | 정성 |
+| 내부자 거래 | SEC Form 4 (EDGAR), Finviz | Grade B |
+
+MCP 연동 시: API 데이터 (Grade A) + 웹 소스 (정성적 보완).
+MCP 없이: 웹 전용, 최대 신뢰도 Grade B. 완전히 동작합니다.
 
 ```
-💡 설정은 5분이면 됩니다. → docs/mcp-setup-guide.ko.md 참고
+💡 MCP 설정은 5분이면 됩니다. → docs/mcp-setup-guide.ko.md 참고
 ```
 
 ---
