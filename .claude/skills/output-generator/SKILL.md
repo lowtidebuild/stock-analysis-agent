@@ -1,9 +1,9 @@
 # Output Generator — SKILL.md
 
-**Role**: Step 8 — Generate the final analysis output in the requested mode (B, C, D). Mode C delegates to dashboard-generator; Modes B, D are handled here.
+**Role**: Step 8 — Generate the final analysis output in the requested mode (A, B, C, D). Mode A delegates to briefing-generator; Mode C delegates to dashboard-generator; Modes B, D are handled here.
 **Triggered by**: CLAUDE.md after Analyst Agent (Step 7) completes
 **Reads**: `output/analysis-result.json`, appropriate mode template
-**Writes**: File (Mode B, D); Mode C delegates to dashboard-generator/SKILL.md
+**Writes**: File (Mode B, D); Mode A delegates to briefing-generator/SKILL.md; Mode C delegates to dashboard-generator/SKILL.md
 **References**: `mode-b-template.md`, `mode-d-template.md`, `scripts/docx-generator.py`
 
 ---
@@ -11,6 +11,7 @@
 ## Mode Routing
 
 ```
+output_mode = "A" → Mode A: HTML briefing (delegate to briefing-generator/SKILL.md)
 output_mode = "B" → Mode B: HTML file (this file, uses mode-b-template.md)
 output_mode = "C" → Mode C: HTML dashboard (delegate to dashboard-generator/SKILL.md)
 output_mode = "D" → Mode D: DOCX investment memo (this file, uses docx-generator.py)
@@ -107,17 +108,13 @@ Note: Mode D DOCX files include the disclaimer automatically via docx-generator.
 ## Source Tagging Reference
 
 Use these tags consistently throughout all output:
-- `[API]` — Financial Datasets MCP
-- `[FMP]` — FMP MCP (analyst data)
-- `[DART]` — Korea DART filing direct fetch
-- `[네이버]` — 네이버금융
-- `[KR-Web]` — Korean financial web sources (FnGuide, etc.)
-- `[Web]` — US/global web sources
-- `[Calculated]` — derived from tagged inputs via ratio-calculator.py
-- `[≈]` — cross-referenced (2+ sources within 5%)
-- `[1S]` — single source, unverified
-- `[Unverified]` — Grade D, displayed as "—" in output
-- `[Limited data]` — Grade C, used with caution
+- `[Filing]` — SEC filing (via Financial Datasets MCP) / DART 전자공시 (via DART OpenAPI) — 규제기관 원본
+- `[Portal]` — Yahoo Finance, MarketWatch, Finviz 등 US/글로벌 금융 포탈
+- `[KR-Portal]` — 네이버금융, FnGuide, KIND 등 한국 금융 포탈
+- `[Calc]` — 검증된 입력값으로부터 자체 계산 (P/E, EV/EBITDA 등)
+- `[Est]` — 애널리스트 컨센서스, 목표가, 추정 실적
+
+Grade D data is displayed as "—" in output (no tag needed).
 
 ---
 

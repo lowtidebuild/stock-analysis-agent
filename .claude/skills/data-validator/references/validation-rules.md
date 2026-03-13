@@ -81,8 +81,8 @@ When two independent sources disagree on the same data point:
 
 | Disagreement Level | Action |
 |-------------------|--------|
-| ≤5% difference | Grade B — use average or primary source value; note `[≈]` |
-| 5–15% difference | Grade C — use primary source; note `[1S]`; flag discrepancy |
+| ≤5% difference | Grade B — use average or primary source value |
+| 5–15% difference | Grade C — use primary source; flag discrepancy |
 | >15% difference | Grade D unless arithmetic explains the gap — display "—" |
 | Sources disagree on direction (positive vs negative) | Grade D — never guess which is right |
 
@@ -111,7 +111,7 @@ When two independent sources disagree on the same data point:
 
 4. **Foreign investor ownership (외국인 지분율)**: Available from KIND (kind.krx.co.kr). Note current % and trend (increasing/decreasing vs 6-month average).
 
-5. **Maximum confidence grade**: KR data sources cap at Grade B (Cross-Referenced). Grade A is reserved for API-verified data only. Since there is no Korean financial API equivalent to Financial Datasets MCP, Korean data is always at best Grade B.
+5. **DART = Grade A eligible**: DART 재무제표는 한국 금융감독원(FSS) 규제 공시 원본으로, SEC filing과 동등한 권위를 가진다. DART API 또는 DART 웹에서 가져온 공시 데이터는 산술 일관성 확인 시 Grade A. 네이버금융/FnGuide 등 aggregator-only 데이터는 max Grade B.
 
 6. **Korean company name → ticker resolution**: Company name → 6-digit code lookup via 네이버금융 search or KIND. Common examples:
    - 삼성전자 → 005930

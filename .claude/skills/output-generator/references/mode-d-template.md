@@ -63,11 +63,11 @@ The `docx-generator.py` reads these fields to build the formatted document.
   "financial_performance": {
     "narrative": "Revenue quality and margin analysis narrative...",
     "revenue_table": [
-      {"quarter": "Q1 FY2025", "revenue": "$124.3B", "yoy_growth": "5.1%", "source": "[API]"},
-      {"quarter": "Q2 FY2025", "revenue": "$95.4B",  "yoy_growth": "4.9%", "source": "[API]"}
+      {"quarter": "Q1 FY2025", "revenue": "$124.3B", "yoy_growth": "5.1%", "source": "[Filing]"},
+      {"quarter": "Q2 FY2025", "revenue": "$95.4B",  "yoy_growth": "4.9%", "source": "[Filing]"}
     ],
     "margin_table": [
-      {"quarter": "Q1 FY2025", "gross_margin": "46.9%", "op_margin": "31.2%", "net_margin": "24.1%", "source": "[API]"}
+      {"quarter": "Q1 FY2025", "gross_margin": "46.9%", "op_margin": "31.2%", "net_margin": "24.1%", "source": "[Filing]"}
     ],
     "cash_flow_table": [
       {"metric": "Operating CF", "ttm": "$118.3B", "prior_year": "$109.2B", "change": "+8.3%"},
@@ -76,21 +76,21 @@ The `docx-generator.py` reads these fields to build the formatted document.
       {"metric": "FCF Margin",   "ttm": "24.2%",    "prior_year": "22.9%",    "change": "+130bps"}
     ],
     "balance_sheet": [
-      {"item": "Cash & Equivalents", "value": "$65.2B",   "source": "[API]"},
-      {"item": "Total Debt",         "value": "$109.3B",  "source": "[API]"},
-      {"item": "Net Debt",           "value": "$44.1B",   "source": "[Calculated]"},
-      {"item": "Net Debt/EBITDA",    "value": "0.37x",    "source": "[Calculated]"},
-      {"item": "Shares Outstanding", "value": "15,441M",  "source": "[API]"}
+      {"item": "Cash & Equivalents", "value": "$65.2B",   "source": "[Filing]"},
+      {"item": "Total Debt",         "value": "$109.3B",  "source": "[Filing]"},
+      {"item": "Net Debt",           "value": "$44.1B",   "source": "[Calc]"},
+      {"item": "Net Debt/EBITDA",    "value": "0.37x",    "source": "[Calc]"},
+      {"item": "Shares Outstanding", "value": "15,441M",  "source": "[Filing]"}
     ],
-    "fcf_note": "SBC represents 2.8% of TTM revenue [API]. Working capital changes minimal. No major one-time items in TTM period."
+    "fcf_note": "SBC represents 2.8% of TTM revenue [Filing]. Working capital changes minimal. No major one-time items in TTM period."
   },
   "valuation_analysis": {
     "narrative": "Valuation context: what growth assumptions are implied by current price...",
     "valuation_table": [
-      {"metric": "P/E (NTM)", "current": "28.0x [API]", "sector_avg": "~22x", "5y_historical": "~25x", "assessment": "Premium"},
-      {"metric": "EV/EBITDA", "current": "—",            "sector_avg": "~16x", "5y_historical": "—",    "assessment": "[Unverified]"},
-      {"metric": "P/FCF",     "current": "22.3x [Calculated]", "sector_avg": "~20x", "5y_historical": "—", "assessment": "Slight premium"},
-      {"metric": "P/Sales",   "current": "7.2x [API]",  "sector_avg": "~5x",  "5y_historical": "~6x",  "assessment": "Premium"}
+      {"metric": "P/E (NTM)", "current": "28.0x [Filing]", "sector_avg": "~22x", "5y_historical": "~25x", "assessment": "Premium"},
+      {"metric": "EV/EBITDA", "current": "—",            "sector_avg": "~16x", "5y_historical": "—",    "assessment": "Grade D — excluded"},
+      {"metric": "P/FCF",     "current": "22.3x [Calc]", "sector_avg": "~20x", "5y_historical": "—", "assessment": "Slight premium"},
+      {"metric": "P/Sales",   "current": "7.2x [Filing]",  "sector_avg": "~5x",  "5y_historical": "~6x",  "assessment": "Premium"}
     ],
     "sotp_table": null
   },
@@ -113,7 +113,7 @@ The `docx-generator.py` reads these fields to build the formatted document.
       "mitigation": "Monitor: DOJ filing updates, EU DMA compliance precedent"
     }
   ],
-  "macro_risk": "FX headwind: 57% of revenue ex-Americas [API]. 10% USD strengthening reduces EPS by ~$0.45 (4.5% of FY2026 consensus EPS). Interest rate sensitivity minimal — net cash position after adjusting for operational debt.",
+  "macro_risk": "FX headwind: 57% of revenue ex-Americas [Filing]. 10% USD strengthening reduces EPS by ~$0.45 (4.5% of FY2026 consensus EPS). Interest rate sensitivity minimal — net cash position after adjusting for operational debt.",
   "investment_scenarios": {
     "narratives": {
       "bull": "Services revenue reaches 25% of total by FY2027 on Apple Intelligence monetization. iPhone cycle stable. Re-rating to 32x NTM P/E drives $225 target.",
@@ -122,26 +122,26 @@ The `docx-generator.py` reads these fields to build the formatted document.
     }
   },
   "peer_comparison": [
-    {"metric": "P/E",       "AAPL": "28.0x [API]", "MSFT": "32.5x", "GOOGL": "20.1x", "sector_avg": "~22x"},
-    {"metric": "EV/EBITDA", "AAPL": "— [Unverified]", "MSFT": "22.3x", "GOOGL": "14.8x", "sector_avg": "~16x"},
-    {"metric": "Rev Growth","AAPL": "5.1% [API]",  "MSFT": "17.6%", "GOOGL": "12.0%", "sector_avg": "~10%"},
-    {"metric": "Op Margin", "AAPL": "31.2% [API]", "MSFT": "44.8%", "GOOGL": "28.5%", "sector_avg": "~25%"},
-    {"metric": "FCF Yield", "AAPL": "4.5% [Calculated]", "MSFT": "2.3%", "GOOGL": "4.1%", "sector_avg": "~3%"}
+    {"metric": "P/E",       "AAPL": "28.0x [Filing]", "MSFT": "32.5x", "GOOGL": "20.1x", "sector_avg": "~22x"},
+    {"metric": "EV/EBITDA", "AAPL": "—", "MSFT": "22.3x", "GOOGL": "14.8x", "sector_avg": "~16x"},
+    {"metric": "Rev Growth","AAPL": "5.1% [Filing]",  "MSFT": "17.6%", "GOOGL": "12.0%", "sector_avg": "~10%"},
+    {"metric": "Op Margin", "AAPL": "31.2% [Filing]", "MSFT": "44.8%", "GOOGL": "28.5%", "sector_avg": "~25%"},
+    {"metric": "FCF Yield", "AAPL": "4.5% [Calc]", "MSFT": "2.3%", "GOOGL": "4.1%", "sector_avg": "~3%"}
   ],
   "peer_comparison_narrative": "Relative valuation assessment: premium vs. GOOGL justified by ecosystem lock-in and Services margin expansion. Discount vs. MSFT reflects lower growth rate. Key competitive threat: MSFT's enterprise AI adoption rate outpacing Apple Intelligence consumer monetization.",
   "management_governance": "Full Section 8 text (150-200 words). CEO tenure, guidance track record (last 4 quarters), capital allocation history...",
   "quality_of_earnings": {
     "ebitda_bridge": [
-      {"item": "Reported EBITDA",         "amount": "$125.0B", "note": "[API]"},
-      {"item": "Less: SBC",               "amount": "($12.9B)", "note": "2.8% of revenue [API]"},
+      {"item": "Reported EBITDA",         "amount": "$125.0B", "note": "[Filing]"},
+      {"item": "Less: SBC",               "amount": "($12.9B)", "note": "2.8% of revenue [Filing]"},
       {"item": "Less: Restructuring",     "amount": "($0.0B)",  "note": "None in TTM"},
       {"item": "Less: M&A Costs",         "amount": "($0.2B)",  "note": "One-time"},
-      {"item": "Less: Maintenance CapEx", "amount": "($6.5B)",  "note": "Estimated [Calculated]"},
+      {"item": "Less: Maintenance CapEx", "amount": "($6.5B)",  "note": "Estimated [Calc]"},
       {"item": "Adjusted Cash Earnings",  "amount": "$105.4B",  "note": "16% haircut vs. reported EBITDA"}
     ],
     "narrative": "FCF conversion quality analysis...",
     "fcf_conversion": "Operating CF / Net Income = 1.24x — strong accruals quality (>1.1x threshold). No unusual working capital changes.",
-    "earnings_sustainability": "Margins sustainable: hardware margins stable, Services margins expanding at 73% gross [API]. No significant one-time items inflate TTM EBITDA."
+    "earnings_sustainability": "Margins sustainable: hardware margins stable, Services margins expanding at 73% gross [Filing]. No significant one-time items inflate TTM EBITDA."
   },
   "what_would_make_me_wrong": [
     {
@@ -165,12 +165,12 @@ The `docx-generator.py` reads these fields to build the formatted document.
   ],
   "pre_mortem": "If this investment loses 30% over 12 months, the most likely cause would be a simultaneous hit from China revenue contraction exceeding 25% and a DOJ-mandated App Store commission reduction, compressing both revenue and multiple in the same fiscal year — a scenario we assign 8% probability but have not fully priced into our bear case.",
   "data_sources": [
-    {"data_category": "Revenue / Earnings",  "source": "Financial Datasets MCP",  "confidence": "A", "tag": "[API]"},
-    {"data_category": "Current Price",       "source": "get_current_stock_price", "confidence": "A", "tag": "[API]"},
-    {"data_category": "Analyst Estimates",   "source": "FMP MCP",                 "confidence": "B", "tag": "[FMP]"},
-    {"data_category": "Valuation Ratios",    "source": "ratio-calculator.py",     "confidence": "A", "tag": "[Calculated]"},
-    {"data_category": "Peer Data",           "source": "Financial Datasets MCP",  "confidence": "B", "tag": "[API]"},
-    {"data_category": "News / Qualitative",  "source": "Reuters / CNBC / Web",    "confidence": "C", "tag": "[Web]"}
+    {"data_category": "Revenue / Earnings",  "source": "Financial Datasets MCP (SEC filing data)",  "confidence": "A", "tag": "[Filing]"},
+    {"data_category": "Current Price",       "source": "get_current_stock_price (SEC filing data)", "confidence": "A", "tag": "[Filing]"},
+    {"data_category": "Analyst Estimates",   "source": "FMP MCP",                 "confidence": "B", "tag": "[Est]"},
+    {"data_category": "Valuation Ratios",    "source": "ratio-calculator.py",     "confidence": "A", "tag": "[Calc]"},
+    {"data_category": "Peer Data",           "source": "Financial Datasets MCP (SEC filing data)",  "confidence": "B", "tag": "[Filing]"},
+    {"data_category": "News / Qualitative",  "source": "Reuters / CNBC / Web",    "confidence": "C", "tag": "[Portal]"}
   ]
 }
 ```
@@ -230,7 +230,7 @@ into the JSON `sections` object — do NOT write a separate Markdown file.
 ### Revenue Trend (Last 8 Quarters)
 | Quarter | Revenue | YoY Growth | Source |
 |---------|---------|------------|--------|
-| {Q} | ${rev}B | {pct}% | {[tag]} |
+| {Q} | ${rev}B | {pct}% | {[Filing]/[Portal]} |
 | ... | | | |
 
 **Revenue Quality Analysis**: {Comment on organic vs. inorganic, geographic mix, product mix shifts, pricing power evidence}
@@ -238,7 +238,7 @@ into the JSON `sections` object — do NOT write a separate Markdown file.
 ### Profitability Trend
 | Quarter | Gross Margin | Op. Margin | Net Margin | Source |
 |---------|-------------|------------|------------|--------|
-| {Q} | {pct}% | {pct}% | {pct}% | {[tag]} |
+| {Q} | {pct}% | {pct}% | {pct}% | {[Filing]/[Portal]} |
 | ... | | | | |
 
 **Margin Analysis**: {Trend direction, key drivers, one-time items excluded or flagged}
@@ -258,8 +258,8 @@ into the JSON `sections` object — do NOT write a separate Markdown file.
 |------|-------|--------|
 | Cash & Equivalents | ${val}B | {[tag]} |
 | Total Debt | ${val}B | {[tag]} |
-| Net Debt | ${val}B | {[Calculated]} |
-| Net Debt/EBITDA | {val}x | {[Calculated]} |
+| Net Debt | ${val}B | {[Calc]} |
+| Net Debt/EBITDA | {val}x | {[Calc]} |
 | Shares Outstanding | {val}M | {[tag]} |
 
 ---
@@ -273,7 +273,7 @@ into the JSON `sections` object — do NOT write a separate Markdown file.
 |--------|---------|-----------|---------------|------------|
 | P/E (NTM) | {val}x {[tag]} | ~{val}x | ~{val}x | {Premium/Discount/In-line} |
 | EV/EBITDA | {val}x {[tag]} | ~{val}x | ~{val}x | {Premium/Discount/In-line} |
-| P/FCF | {val}x {[Calculated]} | ~{val}x | — | — |
+| P/FCF | {val}x {[Calc]} | ~{val}x | — | — |
 | P/Sales | {val}x {[tag]} | ~{val}x | — | — |
 | Dividend Yield | {val}% {[tag]} | ~{val}% | — | — |
 
@@ -454,7 +454,7 @@ Probability sum: {bull}% + {base}% + {bear}% = 100% ✓
 | Less: SBC | (${val}B) | {X}% of revenue [tag] |
 | Less: Restructuring | (${val}B) | One-time / recurring? |
 | Less: M&A Costs | (${val}B) | One-time |
-| Less: Maintenance CapEx | (${val}B) | Estimated [Calculated] |
+| Less: Maintenance CapEx | (${val}B) | Estimated [Calc] |
 | **Adjusted Cash Earnings** | **${val}B** | |
 | vs. Reported EBITDA | | {pct}% haircut |
 
@@ -495,12 +495,12 @@ Probability sum: {bull}% + {base}% + {bear}% = 100% ✓
 
 | Data Category | Source | Confidence | Tag |
 |--------------|--------|-----------|-----|
-| Revenue / Earnings | {SEC EDGAR / Financial Datasets MCP / DART} | {A/B/C} | {[API]/[DART]/[Web]} |
-| Current Price | {Yahoo Finance / get_current_stock_price} | {A/B} | {[API]/[Web]} |
-| Analyst Estimates | {FMP / TipRanks / MarketBeat} | {B/C} | {[FMP]/[Web]} |
-| Valuation Ratios | {Calculated / get_financial_metrics} | {A/B} | {[Calculated]/[API]} |
-| Peer Data | {Financial Datasets MCP / Web} | {B/C} | {[API]/[Web]} |
-| News / Qualitative | {Reuters / CNBC / Seeking Alpha} | {C} | {[Web]} |
+| Revenue / Earnings | {SEC EDGAR / Financial Datasets MCP / DART} | {A/B/C} | {[Filing]/[Portal]} |
+| Current Price | {Yahoo Finance / get_current_stock_price} | {A/B} | {[Filing]/[Portal]} |
+| Analyst Estimates | {FMP / TipRanks / MarketBeat} | {B/C} | {[Est]/[Portal]} |
+| Valuation Ratios | {Calculated / get_financial_metrics} | {A/B} | {[Calc]/[Filing]} |
+| Peer Data | {Financial Datasets MCP / Web} | {B/C} | {[Filing]/[Portal]} |
+| News / Qualitative | {Reuters / CNBC / Seeking Alpha} | {C} | {[Portal]} |
 
 **Data Exclusions**: {List any Grade D metrics excluded from this analysis, with reason}
 
@@ -523,7 +523,7 @@ Every section must pass this test: **Replace company name with a direct competit
 - If NO → acceptable (company-specific)
 
 ### Data Tagging Requirement
-- Every numerical claim must have a source tag: `[API]`, `[DART]`, `[Web]`, `[Calculated]`, `[FMP]`, `[≈]`, `[1S]`
+- Every numerical claim must have a source tag: `[Filing]`, `[Portal]`, `[KR-Portal]`, `[Calc]`, `[Est]`
 - Grade D data: never appears in the memo. Referenced only in Appendix exclusion list.
 
 ### Section Writing Order

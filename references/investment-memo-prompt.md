@@ -123,7 +123,7 @@ If data is unavailable (Grade D), it is excluded. The analyst notes the exclusio
 
 ### Attribution
 Every claim based on external data has a source tag. Claims without source tags are either:
-- Logical inferences from tagged data (acceptable, mark as [Calculated])
+- Logical inferences from tagged data (acceptable, mark as [Calc])
 - Analyst judgment/opinion (acceptable, label as "Analyst estimate:" or "Assessment:")
 - Fabrications (not acceptable — will be caught by the Critic quality check)
 

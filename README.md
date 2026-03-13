@@ -26,7 +26,17 @@ You type a ticker — US or Korean. You get a research-grade analysis complete w
 
 ---
 
-## 3 Output Modes
+## 4 Output Modes
+
+### 🔍 Mode A — Quick Briefing *(HTML)*
+**A** as in **A**t-a-glance. Quick verdict card + 180-day event timeline on a single page. Screening before deep dive.
+
+> **[See live example →](#)**
+
+### ⚖️ Mode B — Peer Comparison *(HTML)*
+**B** as in **B**enchmark. Side-by-side matrix for 2–5 tickers. R/R Score ranking, Best Pick with rationale, Key Differentiators.
+
+> **[See live example →](https://codepen.io/lowtidebuild/full/emdgGdW)**
 
 ### 📈 Mode C — Deep Dive Dashboard *(default)*
 **C** as in **C**hart. Interactive HTML — open in any browser. Built for quick decision-making.
@@ -44,6 +54,8 @@ You type a ticker — US or Korean. You get a research-grade analysis complete w
 | **Charts** | Revenue trend · margin history · price vs targets (Chart.js) |
 | **Quarterly Financials** | 8-quarter income statement · QoE bridge |
 | **Strategy** | Bull/Base/Bear positioning guide · key monitoring catalysts |
+
+> **[See live example →](https://codepen.io/lowtidebuild/full/vEXgYGL)**
 
 ### 📝 Mode D — Investment Memo *(DOCX)*
 **D** as in **D**ocument. Word document — 3,000+ words, 10 structured sections. Think Goldman Sachs equity research note.
@@ -63,8 +75,7 @@ You type a ticker — US or Korean. You get a research-grade analysis complete w
 | What Would Make Me Wrong | 3 assumptions · Pre-mortem paragraph |
 | Appendix | All data sources · Confidence grades · Exclusions |
 
-### ⚖️ Mode B — Peer Comparison *(HTML)*
-**B** as in **B**enchmark. Side-by-side matrix for 2–5 tickers. R/R Score ranking, Best Pick with rationale, Key Differentiators.
+> **[See live example →](https://docs.google.com/document/d/1PX4FIrb1a4nBeKj3L7HanoYBfG6hSwOS/edit?usp=sharing&ouid=105178834220477378953&rtpof=true&sd=true)**
 
 ---
 
@@ -114,21 +125,21 @@ Every number in the output carries a grade and source tag. You always know what 
 
 | Grade | Tag | Meaning | Example |
 |-------|-----|---------|---------|
-| **A** | *(none)* | Primary source, arithmetic consistent | SEC/DART API |
-| **B** | `[≈]` | 2+ sources agree within 5% | Web cross-reference |
-| **C** | `[1S]` | Single source, unverified | One web mention |
+| **A** | `[Filing]` | Primary filing source, arithmetic consistent | SEC/DART API |
+| **B** | `[Portal]` / `[KR-Portal]` | 2+ sources cross-referenced, within 5% | Web cross-reference |
+| **C** | *(Grade C note)* | Single source, unverified | One web mention |
 | **D** | `—` | Cannot verify → **shown as blank** | Never fabricated |
 
 ```
 US stock example (Enhanced Mode):
-  Revenue TTM: $402.8B [API]       ← Grade A, SEC filing via Financial Datasets
-  P/E Ratio: 28.0x [Calculated]   ← Derived from Grade A inputs
+  Revenue TTM: $402.8B [Filing]    ← Grade A, SEC filing via Financial Datasets
+  P/E Ratio: 28.0x [Calc]         ← Derived from Grade A inputs
   EV/EBITDA: —                    ← Grade D, excluded
 
 Korean stock example (DART-Enhanced):
-  매출액 TTM: 302.2조원 [DART-API]  ← Grade A, 금융감독원 DART OpenAPI
-  영업이익률: 9.2% [Calculated]     ← Derived from Grade A inputs
-  컨센서스 PER: 12.4x [≈]          ← Grade B, FnGuide + 네이버 cross-check
+  매출액 TTM: 302.2조원 [Filing]    ← Grade A, 금융감독원 DART OpenAPI
+  영업이익률: 9.2% [Calc]           ← Derived from Grade A inputs
+  컨센서스 PER: 12.4x [KR-Portal]  ← Grade B, FnGuide + 네이버 cross-check
 ```
 
 ---
@@ -287,6 +298,7 @@ Full support for KOSPI / KOSDAQ stocks with **Grade A financial data via DART Op
 - **Korean market overlay** — 외국인 지분율, 밸류업 프로그램, 자사주 소각 policy
 
 ```
+삼성전자 빠르게 봐줘    →  Mode A quick briefing (DART API Grade A data)
 삼성전자 심층 분석해줘  →  Mode C dashboard (DART API Grade A data)
 SK하이닉스 투자 메모     →  Mode D DOCX investment memo
 삼성전자 vs SK하이닉스  →  Mode B peer comparison

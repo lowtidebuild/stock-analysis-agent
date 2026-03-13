@@ -118,7 +118,7 @@ One letter grade (A/B/C/D) per metric key, matching keys in `key_metrics`:
 }
 ```
 
-Grade meanings: A=Verified, B=Cross-Referenced [≈], C=Single-Source [1S], D=Unverified (excluded)
+Grade meanings: A=규제기관 공시 원본+산술 일관성, B=2+소스 교차검증, C=단일 소스, D=검증 불가 (excluded)
 
 ---
 
@@ -179,10 +179,10 @@ Grade meanings: A=Verified, B=Cross-Referenced [≈], C=Single-Source [1S], D=Un
 List of source tags actually used in this analysis:
 
 ```json
-"data_sources_used": ["[API]", "[Calculated]", "[Web]", "[FMP]"]
+"data_sources_used": ["[Filing]", "[Calc]", "[Portal]", "[Est]"]
 ```
 
-Valid values: `[API]`, `[FMP]`, `[DART]`, `[네이버]`, `[Web]`, `[Calculated]`, `[KR-Web]`, `[≈]`, `[1S]`
+Valid values: `[Filing]`, `[Portal]`, `[KR-Portal]`, `[Calc]`, `[Est]`
 
 ---
 
@@ -244,6 +244,6 @@ Valid values: `[API]`, `[FMP]`, `[DART]`, `[네이버]`, `[Web]`, `[Calculated]`
     {"date": "2026-06-09", "event": "WWDC 2026", "significance": "medium", "leading_indicators": "Developer beta registrations"}
   ],
   "report_path": "output/reports/AAPL_C_EN_2026-03-12.html",
-  "data_sources_used": ["[API]", "[Calculated]", "[Web]", "[FMP]"]
+  "data_sources_used": ["[Filing]", "[Calc]", "[Portal]", "[Est]"]
 }
 ```

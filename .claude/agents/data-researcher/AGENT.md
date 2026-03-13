@@ -120,9 +120,9 @@ Every data point I extract is tagged at the point of extraction — not after:
 
 ```json
 {
-  "price": {"value": 175.50, "source": "get_current_stock_price", "tag": "[API]"},
-  "revenue_ttm": {"value": 395000, "source": "get_income_statements (4Q sum)", "tag": "[API]"},
-  "pe_ratio": {"value": 28.5, "source": "Yahoo Finance", "tag": "[Web]"}
+  "price": {"value": 175.50, "source": "get_current_stock_price", "tag": "[Filing]"},
+  "revenue_ttm": {"value": 395000, "source": "get_income_statements (4Q sum)", "tag": "[Filing]"},
+  "pe_ratio": {"value": 28.5, "source": "Yahoo Finance", "tag": "[Portal]"}
 }
 ```
 

@@ -113,7 +113,7 @@ Data Mode: Enhanced (MCP active) ✓
 | Analysis Type | Estimated Cost |
 |--------------|---------------|
 | Single stock (Full bundle — Mode C/D) | ~$0.28/analysis |
-| Single stock (Minimum bundle — Mode B) | ~$0.05/analysis |
+| Single stock (Minimum bundle — Mode A/B) | ~$0.05/analysis |
 | Peer comparison (3 stocks, full bundle) | ~$0.84/analysis |
 | Watchlist scan (10 tickers, price only) | ~$0.10/scan |
 
@@ -152,9 +152,9 @@ FMP calls (analyst data bundle) add approximately $0.01–$0.03 per analysis.
 
 If you prefer not to use MCP servers (or cannot access APIs), the agent works fully in Standard Mode:
 
-- All analysis outputs remain available (Mode B, C, D)
+- All analysis outputs remain available (Mode A, B, C, D)
 - Data confidence grades max at Grade B (vs. Grade A with MCP)
-- Source tags will show `[Web]`, `[≈]`, `[1S]` instead of `[API]`
+- Source tags will show `[Portal]` (Grade B) or single-source (Grade C) instead of `[Filing]`
 - Korean stocks are always Standard Mode regardless
 
 Standard Mode is suitable for most research purposes. Enhanced Mode adds speed and higher data confidence.

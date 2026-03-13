@@ -73,6 +73,7 @@ Based on output_mode and company_type, select which API calls to make in Step 3:
 
 | Output Mode | API Bundle |
 |-------------|-----------|
+| Mode A | Minimum bundle (current_price, financial_metrics, company_news limit=5) |
 | Mode B, C, D | Full standard bundle (10 calls) |
 
 From `api-endpoints.md`:
@@ -119,7 +120,7 @@ Write to `output/research-plan.json`:
   "output_language": "en",
   "analysis_date": "2026-03-12",
   "peer_tickers": ["MSFT", "GOOGL", "META", "AMZN"],
-  "analysis_framework_path": "references/analysis-framework-dashboard.md",
+  "analysis_framework_path": "references/analysis-framework-dashboard.md",  // Mode A: "references/analysis-framework-briefing.md"
   "tier1_calls": [
     "get_income_statements",
     "get_balance_sheets",

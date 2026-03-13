@@ -127,25 +127,27 @@ Read `.claude/skills/data-validator/SKILL.md`
 - Verify output: file exists AND overall_grade computed
 
 ### Steps 6 & 7 — Deep Analysis (Analyst Agent)
-**Dispatch Analyst Agent** for Mode C and Mode D:
+**Dispatch Analyst Agent** for Mode A, C, and D:
 - Read `.claude/agents/analyst/AGENT.md`
 - Load: validated-data.json, research-plan.json, appropriate framework file
+- Mode A: analyst produces lightweight `output/analysis-result.json` (verdict + timeline)
 - Mode B: execute inline (no subagent)
-- Mode C/D: analyst produces `output/analysis-result.json`
+- Mode C/D: analyst produces full `output/analysis-result.json`
 - Verify output: `output/analysis-result.json` exists AND rr_score is non-null
 
 ### Step 8 — Output Generation
+- **Mode A**: Apply `.claude/skills/briefing-generator/SKILL.md` → HTML file + chat summary
 - **Mode B**: Apply `.claude/skills/output-generator/SKILL.md` → HTML file
 - **Mode C**: Apply `.claude/skills/dashboard-generator/SKILL.md` → HTML file
 - **Mode D**: Apply `.claude/skills/output-generator/SKILL.md` → DOCX file (via docx-generator.py)
-- Verify output: file written to `output/reports/` (Modes B/C/D)
+- Verify output: file written to `output/reports/` (Modes A/B/C/D)
 
 ### Step 9 — Quality Check
 Read `.claude/skills/quality-checker/SKILL.md`
 - 5-item checklist (consistency, price+date, disclaimer, source tags, blank-over-wrong)
 - Auto-fix minor issues (1 attempt)
 - Persistent failures → inline [Quality flag] added
-- **Critic Agent dispatched** for Mode C and Mode D:
+- **Critic Agent dispatched** for Mode C and Mode D (NOT for Mode A):
   - Read `.claude/agents/critic/AGENT.md`
   - Critic runs 7-item review
   - If FAIL: feedback sent to Analyst for patch (max 1 feedback loop)
@@ -238,8 +240,8 @@ Write to `output/portfolio.json`.
 | Agent | Trigger | Inputs | Outputs | Max Dispatches |
 |-------|---------|--------|---------|---------------|
 | data-researcher | ≥3 tickers in Workflow 2 not in session cache | research-plan.json | tier1-raw.json + tier2-raw.json per ticker | 1 per workflow run |
-| analyst | Mode C or D (always); Mode B (inline, no dispatch) | validated-data.json, research-plan.json, framework file | analysis-result.json | 2 (original + patch) |
-| critic | Mode C/D (always); Mode B with ≥3 tickers | analysis-result.json, validated-data.json | quality-report.json | 1 per output (re-check after patch = 1 more) |
+| analyst | Mode A, C, or D (always); Mode B (inline, no dispatch) | validated-data.json, research-plan.json, framework file | analysis-result.json | 2 (original + patch) |
+| critic | Mode C/D (always); Mode B with ≥3 tickers; Mode A (skip) | analysis-result.json, validated-data.json | quality-report.json | 1 per output (re-check after patch = 1 more) |
 
 **Sub-agent file paths** (pass explicitly when dispatching):
 ```
@@ -252,7 +254,7 @@ critic receives: ["output/analysis-result.json", "output/validated-data.json"]
 
 ## Section 8 — Quality Gate Summary
 
-Quality check runs at Step 9 for all outputs. Critic adds 7-item review for Mode C/D.
+Quality check runs at Step 9 for all outputs. Mode A uses simplified 3-item check (no Critic). Critic adds 7-item review for Mode C/D.
 
 **5-item auto-check** (quality-checker/SKILL.md):
 1. Financial data consistency (sample 3 values)
@@ -350,7 +352,7 @@ During deep research (Steps 3–4) and analysis (Steps 6–7), individual operat
 ```
 IF data collection fails completely:
     → "데이터 수집에 실패했습니다. 현재 가용한 데이터: {list}. 이를 바탕으로 제한적 분석을 제공합니다."
-    → Proceed with available data, clearly labeled [Limited data]
+    → Proceed with available data, clearly noting limited coverage
     → Never return empty output
 
 IF analysis fails to meet quality threshold after 1 feedback loop:
@@ -367,6 +369,7 @@ IF analysis fails to meet quality threshold after 1 feedback loop:
 Project Root
 ├── CLAUDE.md                          ← You are here
 ├── references/
+│   ├── analysis-framework-briefing.md    ← Mode A framework
 │   ├── analysis-framework-comparison.md  ← Mode B framework
 │   ├── analysis-framework-dashboard.md   ← Mode C framework
 │   ├── analysis-framework-memo.md     ← Mode D framework
@@ -388,6 +391,7 @@ Project Root
 │   │   ├── latest.json                ← Always points to most recent snapshot
 │   │   └── {ticker}_{date}_snapshot.json  ← Versioned archive
 │   └── reports/
+│       ├── {ticker}_A_{lang}_{date}.html
 │       ├── {ticker}_C_{lang}_{date}.html
 │       ├── {ticker}_D_{lang}_{date}.docx
 │       └── {T1}_{T2}_{T3}_B_{lang}_{date}.html
@@ -400,6 +404,7 @@ Project Root
     │   ├── web-researcher/SKILL.md
     │   ├── data-validator/SKILL.md
     │   ├── data-manager/SKILL.md
+    │   ├── briefing-generator/SKILL.md
     │   ├── dashboard-generator/SKILL.md
     │   ├── output-generator/SKILL.md
     │   └── quality-checker/SKILL.md
@@ -411,21 +416,33 @@ Project Root
 
 ---
 
-## Section 11 — Source Tagging Reference
+## Section 11 — Source Tagging & Confidence Grading
 
-Every numerical value in analysis output must carry a source tag:
+Every numerical value in analysis output carries a **source tag** (where it came from) and a **confidence grade** (how reliable it is). These are independent dimensions.
 
-| Tag | Source | Confidence |
-|-----|--------|-----------|
-| `[API]` | Financial Datasets MCP | A |
-| `[FMP]` | FMP MCP (analyst data) | B |
-| `[DART]` | Korea DART filing | B |
-| `[네이버]` | 네이버금융 | B |
-| `[KR-Web]` | Korean financial web (FnGuide etc.) | C |
-| `[Web]` | US/global web sources | B–C |
-| `[Calculated]` | Derived from tagged inputs | A–B |
-| `[≈]` | Cross-referenced, 2+ sources ≤5% diff | B |
-| `[1S]` | Single source, unverified | C |
-| `[Unverified]` | Grade D — excluded | D → show "—" |
-| `[Limited data]` | Insufficient data, use with caution | C |
-| `[Analyst estimate]` | Analyst judgment, not reported data | Opinion |
+### Source Tags (출처 카테고리)
+
+Tags indicate provenance — where the data was fetched from. Tags do NOT determine grade.
+
+| Tag | Source |
+|-----|--------|
+| `[Filing]` | SEC filing (via Financial Datasets MCP) / DART 전자공시 (via DART OpenAPI) — 규제기관 원본 |
+| `[Portal]` | Yahoo Finance, MarketWatch, Finviz 등 US/글로벌 금융 포탈 |
+| `[KR-Portal]` | 네이버금융, FnGuide, KIND 등 한국 금융 포탈 |
+| `[Calc]` | 검증된 입력값으로부터 자체 계산 (P/E, EV/EBITDA 등) |
+| `[Est]` | 애널리스트 컨센서스, 목표가, 추정 실적 |
+
+Grade D metrics display as "—" (no tag needed).
+
+### Confidence Grades (품질 평가)
+
+Grades are assigned by the decision tree in `confidence-grading.md`, based on **source authority** — not delivery method.
+
+| Grade | Name | Criteria |
+|-------|------|----------|
+| A | Verified | 규제기관 공시 원본(SEC/DART) + 산술 일관성. 전달 방식(API/웹) 무관. 또는 Grade A 입력으로 자체 계산 + 일관성 |
+| B | Cross-Referenced | 2+ 독립 소스 ≤5% 차이, 또는 단일 aggregator가 공시와 교차확인됨 |
+| C | Single-Source | 단일 소스, 산술 일관성 있음 |
+| D | Unverified | 검증 불가, >15% 불일치, 또는 데이터 없음 → "—" 표시, 분석에서 제외 |
+
+**Note**: `[Filing]`이 Grade A인 이유는 SEC/DART 규제기관 원본이기 때문. Financial Datasets MCP와 DART OpenAPI는 이 원본에 대한 구조화된 접근 경로. API라는 전달 방식 자체가 등급을 결정하지 않는다.

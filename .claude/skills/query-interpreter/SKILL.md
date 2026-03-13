@@ -82,6 +82,7 @@ Apply this decision table:
 
 | User Signal | Output Mode |
 |------------|-------------|
+| "빠르게" / "간략하게" / "quick" / "brief" / "glance" / "스크리닝" / "한눈에" | A |
 | "비교" / "vs" / "compare" (multi-ticker) | B |
 | "심층" / "자세히" / "deep dive" / "detailed" / "full" | C |
 | "투자 메모" / "memo" / "investment memo" / "리포트" | D |
@@ -90,9 +91,9 @@ Apply this decision table:
 | Portfolio review | C per stock (abbreviated) |
 | Watchlist scan | A per stock (abbreviated) |
 
-**Mode confirmation** (optional, for Mode C and D):
-If Enhanced Mode is available and mode is C or D, briefly note:
-`"[{ticker}] 심층 분석 (Mode C/D) 진행합니다. API 데이터 + 웹 리서치를 결합합니다."`
+**Mode confirmation** (optional):
+- Mode A: `"[{ticker}] 퀵 브리핑 (Mode A) 진행합니다."`
+- Mode C/D with Enhanced: `"[{ticker}] 심층 분석 (Mode C/D) 진행합니다. API 데이터 + 웹 리서치를 결합합니다."`
 
 ### Step 1.5 — Output Language Detection
 
@@ -131,7 +132,7 @@ Output session state block:
 Ticker(s): {list}
 Market(s): {US/KR}
 Workflow: {1/2/3}
-Output Mode: {B/C/D}
+Output Mode: {A/B/C/D}
 Output Language: {en/ko}
 Company Type (pre-detected): {type or "unknown"}
 Peer tickers: {list or none}

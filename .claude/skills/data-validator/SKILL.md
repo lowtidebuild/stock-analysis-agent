@@ -47,7 +47,7 @@ Load: dart-api-raw.json    (DART OpenAPI — Grade A financials, always attempte
 Load: tier2-raw.json       (web — price from 네이버금융, consensus, qualitative)
 Primary financial source: dart-api-raw.json (if exists)
 Primary market data source: tier2 (네이버금융)
-Fallback: if dart-api-raw.json missing → tier2-raw.json only (max Grade B)
+Fallback: if dart-api-raw.json missing → tier2-raw.json only (aggregator-only, max Grade B)
 ```
 
 ### Step 5.2 — Layer 1: Arithmetic Consistency (ratio-calculator.py)
@@ -115,10 +115,10 @@ For each of the 10 key metrics from `validation-rules.md`:
 | FCF TTM | Calculated vs portal |
 
 **Cross-reference disagreement rules** (from `validation-rules.md`):
-- Difference ≤5% between 2+ sources → Grade B, tag `[≈]`
+- Difference ≤5% between 2+ sources → Grade B
 - Difference >5% but ≤10% between sources → Grade C, use lower estimate, flag
 - Difference >10% → Grade C, flag discrepancy, note both values in output
-- Only 1 source found → Grade C, tag `[1S]`
+- Only 1 source found → Grade C
 - 0 sources → Grade D → EXCLUDE
 
 For each metric, record:
@@ -130,7 +130,7 @@ For each metric, record:
   "source_values": [395000, 392000],
   "difference_pct": 0.76,
   "grade": "B",
-  "tag": "[≈]",
+  "tag": "[Filing]",
   "notes": "Two sources agree within 1%"
 }
 ```
@@ -153,21 +153,23 @@ Sanity alerts → log but do NOT automatically downgrade grade. Include in valid
 
 Using `confidence-grading.md` decision tree, assign final grade per metric:
 
-| Grade | Tag | Display | Condition |
-|-------|-----|---------|-----------|
-| A | (none) | Value as-is | SEC/DART direct + arithmetic consistent |
-| B | `[≈]` | Value as-is | 2 sources within 5%, or API + cross-check within 5% |
-| C | `[1S]` | Value with tag | 1 source only, arithmetic consistent |
-| D | `[Unverified]` | "—" | No sources, or >10% disagreement unresolved |
+| Grade | Display | Condition |
+|-------|---------|-----------|
+| A | Value as-is | 규제기관 공시 원본(SEC filing via API, DART via API/web) + 산술 일관성 |
+| B | Value as-is | 2+ 독립 소스 ≤5% 차이, 또는 단일 aggregator + 공시 교차확인 ≤5% |
+| C | Value with caveat | 단일 소스, 산술 일관성 있음 |
+| D | "—" | 검증 불가, 또는 >10% 불일치 미해결 |
+
+Source tags (`[Filing]`, `[Portal]`, `[KR-Portal]`, `[Calc]`, `[Est]`) indicate provenance only — see CLAUDE.md Section 11.
 
 **Korean stock rules**:
-- Financial statements (IS/BS/CF) from DART API → **Grade A**, tag `[DART-API]`
-- Price / market cap from 네이버금융 → Grade B, tag `[네이버]`
-- Analyst consensus from FnGuide/web → Grade B, tag `[KR-Web]`
+- Financial statements (IS/BS/CF) from DART API → **Grade A**, tag `[Filing]`
+- Price / market cap from 네이버금융 → Grade B, tag `[KR-Portal]`
+- Analyst consensus from FnGuide/web → Grade B, tag `[KR-Portal]`
 - 잠정실적 공시 in dart-api-raw.json disclosures → Grade B (preliminary, not yet filed)
 - If dart-api-raw.json missing (API failure fallback):
-  - DART web + 네이버금융 agree within 5% → Grade B, tag `[≈]`
-  - Single web source → Grade C, tag `[1S]`
+  - DART web + 네이버금융 agree within 5% → Grade B
+  - Single web source → Grade C
 
 ### Step 5.6 — Build Validated Data Object
 
@@ -184,37 +186,37 @@ Write `output/validated-data.json`:
     "price_at_analysis": {
       "value": 175.50,
       "grade": "A",
-      "tag": "[API]",
-      "sources": ["Financial Datasets MCP"],
+      "tag": "[Filing]",
+      "sources": ["Financial Datasets MCP (SEC filing data)"],
       "notes": ""
     },
     "market_cap": {
       "value": 2718000,
       "grade": "B",
-      "tag": "[≈]",
-      "sources": ["Calculated from API price + shares", "Yahoo Finance"],
+      "tag": "[Calc]",
+      "sources": ["Calculated from Filing price + shares", "Yahoo Finance"],
       "source_values": [2718000, 2710000],
       "difference_pct": 0.3,
       "notes": "Two sources agree within 0.3%"
     },
     "pe_ratio": {
       "value": 28.0,
-      "grade": "B",
-      "tag": "[Calculated]",
-      "sources": ["Calculated from API price + net_income_ttm"],
+      "grade": "A",
+      "tag": "[Calc]",
+      "sources": ["Calculated from Filing price + net_income_ttm"],
       "notes": "Arithmetic consistent with Yahoo Finance reported 27.9x"
     },
     "revenue_ttm": {
       "value": 395000,
       "grade": "A",
-      "tag": "[API]",
-      "sources": ["Financial Datasets MCP income_statements"],
+      "tag": "[Filing]",
+      "sources": ["Financial Datasets MCP income_statements (SEC filing data)"],
       "notes": "8 quarters of data available"
     },
     "ev_ebitda": {
       "value": null,
       "grade": "D",
-      "tag": "[Unverified]",
+      "tag": null,
       "sources": [],
       "exclusion_reason": "EBITDA TTM could not be verified from available sources"
     }

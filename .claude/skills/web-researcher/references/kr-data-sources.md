@@ -37,7 +37,7 @@ API key is read from `DART_API_KEY` environment variable (set in `.claude/settin
 - `recent_disclosures`: 최근 90일 공시 목록 (잠정실적, 사업보고서 등)
 - `corp_info`: 회사명, 대표이사, 업종
 
-**Tag**: `[DART-API]` → Grade A (primary-source structured data, equivalent to `[API]` for US stocks)
+**Tag**: `[Filing]` → Grade A (규제기관 공시 원본, SEC filing과 동등)
 
 **Confidence rule**:
 - DART API financial statements → Grade A (direct from regulator database)
@@ -140,12 +140,12 @@ Execute these searches in Standard Mode for KR stocks:
 
 ## Korean Stock Confidence Grade Notes
 
-- Financial statements (IS/BS/CF) from DART API → **Grade A**, tag `[DART-API]`
-- Price/market data: 네이버금융 → Grade B, tag `[네이버]`
-- Analyst consensus: FnGuide/web → Grade B, tag `[KR-Web]`
-- If DART API unavailable (fallback): DART web + 네이버금융 agree → Grade B `[≈]`; single source → Grade C `[1S]`
+- Financial statements (IS/BS/CF) from DART API → **Grade A**, tag `[Filing]`
+- Price/market data: 네이버금융 → Grade B, tag `[KR-Portal]`
+- Analyst consensus: FnGuide/web → Grade B, tag `[KR-Portal]`
+- If DART API unavailable (fallback): DART web + 네이버금융 agree → Grade B; single source → Grade C
 
-Tag Korean web sources with `[KR-Web]`. DART API sources tagged `[DART-API]` only.
+Tag Korean web sources with `[KR-Portal]`. DART sources (API or web) tagged `[Filing]`.
 
 ---
 

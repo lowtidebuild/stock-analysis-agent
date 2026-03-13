@@ -50,7 +50,7 @@ Read `investment-memo-prompt.md` BEFORE starting Mode D analysis. The philosophy
 
 **Required elements**:
 
-1. **Business description** — revenue model, primary revenue streams with approximate % breakdown. If exact % unavailable, note [Analyst estimate] and cite the basis.
+1. **Business description** — revenue model, primary revenue streams with approximate % breakdown. If exact % unavailable, note [Est] and cite the basis.
 
 2. **Competitive position** — market share [tag required], basis of competitive advantage. Every competitive advantage claim requires ONE supporting data point:
    - "Scale advantage" → cite cost per unit vs. nearest competitor [tag]
@@ -85,7 +85,7 @@ Read `investment-memo-prompt.md` BEFORE starting Mode D analysis. The philosophy
 
 6. **FCF quality** — SBC as % of revenue [tag], working capital changes, one-time charges. High SBC (>5% revenue) should be flagged.
 
-7. **Balance sheet snapshot** — Cash, Total Debt, Net Debt [Calculated], Net Debt/EBITDA [Calculated], Shares Outstanding
+7. **Balance sheet snapshot** — Cash, Total Debt, Net Debt [Calc], Net Debt/EBITDA [Calc], Shares Outstanding
 
 **Word count target**: 400–500 words (tables count toward word count)
 
@@ -101,7 +101,7 @@ Read `investment-memo-prompt.md` BEFORE starting Mode D analysis. The philosophy
 
 **Required elements**:
 
-1. **Core valuation metrics table** — P/E NTM, EV/EBITDA, P/FCF [Calculated], P/Sales. Compare to: Sector Average [tag], 5Y Historical Average [tag if available].
+1. **Core valuation metrics table** — P/E NTM, EV/EBITDA, P/FCF [Calc], P/Sales. Compare to: Sector Average [tag], 5Y Historical Average [tag if available].
 
 2. **Valuation context** — Explain the premium or discount:
    - If premium: what growth rate, margin expansion, or multiple must sustain?
@@ -153,7 +153,7 @@ FAIL example:
 → Applicable to NVDA, AMD, MSFT, GOOGL, META, and dozens of others. Pure genericness. FAIL.
 
 PASS example:
-> "The market prices AEHR at 8x EV/Revenue ($340M EV on $42M TTM revenue) implying only 15% growth — consistent with the view that SiC wafer testing demand has peaked post-EV subsidies. We disagree: our channel checks [1S] indicate Wolfspeed's 200mm Mohawk Valley fab (the largest SiC fab globally) is ramping faster than planned, with AEHR's FOX-P system being the only qualified tester for 200mm SiC production. Three AEHR customers representing ~60% of revenue are mid-ramp at this fab. Consensus models this as 2026 revenue; we believe revenue conversion begins Q4 2025 based on the 14-week qualification cycle noted in AEHR's Q2 conference call transcript [1S]. The mispricing reflects the Street's difficulty modeling multi-year fab ramp revenue curves for capital-equipment companies."
+> "The market prices AEHR at 8x EV/Revenue ($340M EV on $42M TTM revenue) implying only 15% growth — consistent with the view that SiC wafer testing demand has peaked post-EV subsidies. We disagree: our channel checks [Grade C] indicate Wolfspeed's 200mm Mohawk Valley fab (the largest SiC fab globally) is ramping faster than planned, with AEHR's FOX-P system being the only qualified tester for 200mm SiC production. Three AEHR customers representing ~60% of revenue are mid-ramp at this fab. Consensus models this as 2026 revenue; we believe revenue conversion begins Q4 2025 based on the 14-week qualification cycle noted in AEHR's Q2 conference call transcript [Grade C]. The mispricing reflects the Street's difficulty modeling multi-year fab ramp revenue curves for capital-equipment companies."
 → Company-specific data (Wolfspeed 200mm fab, FOX-P qualification, 14-week cycle), specific market assumption (15% growth, 2026 revenue), specific disagreement. PASS.
 
 ---
@@ -207,8 +207,8 @@ PASS:
 
 1. **Buyback math** (if buybacks active):
    - Shares outstanding trend: [Q-4] → [Current] → % reduction [tag]
-   - Buyback yield: (Buybacks TTM / Market Cap) × 100% [Calculated from tag]
-   - Effect: "Buybacks have reduced share count by X% over 4 quarters, adding ~Xpp to EPS growth mechanically [Calculated]"
+   - Buyback yield: (Buybacks TTM / Market Cap) × 100% [Calc from tag]
+   - Effect: "Buybacks have reduced share count by X% over 4 quarters, adding ~Xpp to EPS growth mechanically [Calc]"
    - Are buybacks value-accretive? (Buying below intrinsic value = good; buying overvalued stock = bad)
 
 2. **M&A track record** (if any acquisitions in past 3 years):
@@ -334,7 +334,7 @@ If material macro exposure:
 **Peer selection**:
 - Prefer direct business competitors over just sector peers
 - If peers were analyzed in the same session: use session data
-- If not: use web research data [Web] for peer metrics
+- If not: use web research data [Portal] for peer metrics
 
 **Word count target**: 200–300 words
 
@@ -377,7 +377,7 @@ If material macro exposure:
    | Less: Stock-Based Compensation [tag] | (${val}B) |
    | Less: Restructuring / Non-recurring [tag] | (${val}B) |
    | Less: M&A-related costs [tag] | (${val}B) |
-   | Less: Maintenance CapEx [Calculated] | (${val}B) |
+   | Less: Maintenance CapEx [Calc] | (${val}B) |
    | = Adjusted Cash Earnings | ${val}B |
    | Haircut vs. Reported | {pct}% |
 
@@ -392,8 +392,8 @@ If material macro exposure:
    - Trend in accrual ratio (operating CF - investing CF) / total assets → rising accruals = earnings quality concern
 
 4. **Maintenance CapEx estimation** (if not disclosed):
-   - Use: D&A × {industry-specific ratio} OR management commentary from conference calls [1S]
-   - Label as [Calculated / estimate] — not precise
+   - Use: D&A × {industry-specific ratio} OR management commentary from conference calls (Grade C)
+   - Label as [Calc / Est] — not precise
 
 **Word count target**: 200–250 words
 
@@ -438,7 +438,7 @@ For each:
 
 3. **Data mode**: Enhanced (Financial Datasets MCP + FMP MCP active) or Standard (web-only)
 
-4. **DART reference** (Korean stocks): filing date, period, URL if available [DART]
+4. **DART reference** (Korean stocks): filing date, period, URL if available [Filing]
 
 ---
 

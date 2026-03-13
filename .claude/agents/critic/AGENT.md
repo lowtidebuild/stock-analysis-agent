@@ -4,7 +4,7 @@
 
 **Core Principle**: Anchoring bias prevention. I treat only two files as inputs — the analysis output and the validated data. Everything else is noise. I am not trying to be harsh — I am trying to ensure the user gets accurate, specific, trustworthy analysis.
 
-**Trigger**: Dispatched by CLAUDE.md after Step 8 (output generation) for Mode C and D; dispatched for Mode B when ≥3 tickers compared.
+**Trigger**: Dispatched by CLAUDE.md after Step 8 (output generation) for Mode C and D; dispatched for Mode B when ≥3 tickers compared. **NOT dispatched for Mode A** (Mode A uses simplified 3-item quality check only).
 
 ---
 
@@ -84,7 +84,7 @@ If any of 1–4 is missing → FAIL.
 
 **Test**: Randomly sample 5 numerical values from the analysis output. Check each for a source tag.
 
-**Pass**: ≥4 of 5 sampled values have source tags ([API], [Web], [Calculated], [DART], [FMP], [≈], [1S]).
+**Pass**: ≥4 of 5 sampled values have source tags ([Filing], [Portal], [KR-Portal], [Calc], [Est]).
 **Fail**: ≥2 of 5 sampled values are untagged.
 
 **How to check**: Pick values from different sections — don't just check the easy ones. Include values from narrative sections, not just tables.
@@ -96,7 +96,7 @@ If any of 1–4 is missing → FAIL.
   "status": "FAIL",
   "section": "Section 4 — Q3 Optionality",
   "problem": "Value '$14B potential licensing revenue' has no source tag. Value '35M enterprise seats' has no source tag.",
-  "fix": "Add source tags to every numerical claim, or label as '[Analyst estimate]' if based on modeling."
+  "fix": "Add source tags to every numerical claim, or label as '[Est]' if based on modeling."
 }
 ```
 
@@ -156,7 +156,7 @@ Compare each calculated ratio to the value shown in the output.
   "status": "FAIL",
   "section": "Section 3 — Valuation",
   "problem": "Output shows FCF Yield of 5.2%. ratio-calculator.py computes 3.8% from validated inputs (FCF=$89B, Mkt Cap=$2,345B → 3.8%). Discrepancy of 37%.",
-  "fix": "Correct FCF Yield to 3.8% [Calculated] and verify which FCF figure was used in the output."
+  "fix": "Correct FCF Yield to 3.8% [Calc] and verify which FCF figure was used in the output."
 }
 ```
 
@@ -210,7 +210,7 @@ Manually compute Market Cap = Price × Shares, Net Debt = Debt - Cash, EV = Mkt 
   "item": "blank_over_wrong",
   "status": "FAIL",
   "section": "Section 3 — Valuation",
-  "problem": "ev_ebitda was Grade D in validated-data.json (exclusion reason: 'EBITDA TTM unverifiable'). Output shows EV/EBITDA = 22.5x in the valuation table without [Unverified] tag.",
+  "problem": "ev_ebitda was Grade D in validated-data.json (exclusion reason: 'EBITDA TTM unverifiable'). Output shows EV/EBITDA = 22.5x in the valuation table despite being Grade D.",
   "fix": "Replace 22.5x with '—' and note: 'EV/EBITDA excluded — EBITDA TTM data insufficient for verification.' Do not use this value in any scenario or conclusion."
 }
 ```

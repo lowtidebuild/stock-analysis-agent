@@ -55,7 +55,7 @@ ebitda_ttm, revenue_ttm, gross_margin, operating_margin, net_margin
 
 ---
 
-## Minimum Viable Call Bundle (Mode B)
+## Minimum Viable Call Bundle (Mode A/B)
 
 For quicker analysis where full depth not needed. Estimated cost: ~$0.05/stock.
 
@@ -78,7 +78,7 @@ These calls are only made if FMP MCP is configured. They supplement analyst data
 | Grades Summary | BUY/HOLD/SELL/STRONG BUY/STRONG SELL distribution | Section 7 |
 | Historical Grades | Individual analyst actions with name, firm, rating change, target change, date | Section 7 (full detail) |
 
-**If FMP not available**: Use web search `"{ticker} analyst price target consensus site:tipranks.com OR site:marketbeat.com` for analyst data. Tag as `[Web]`.
+**If FMP not available**: Use web search `"{ticker} analyst price target consensus site:tipranks.com OR site:marketbeat.com` for analyst data. Tag as `[Portal]`.
 
 ---
 

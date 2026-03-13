@@ -362,7 +362,7 @@ def main():
         "industry": corp_info.get("ind_tp"),
         "collection_timestamp": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
         "data_source": "DART OpenAPI (금융감독원 전자공시)",
-        "tag": "[DART-API]",
+        "tag": "[Filing]",
         "confidence_grade": "A",
         "note": "Structured data from DART OpenAPI — equivalent to SEC EDGAR API for US stocks",
         "collected_periods": collected,

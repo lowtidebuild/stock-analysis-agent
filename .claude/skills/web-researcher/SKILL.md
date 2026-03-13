@@ -73,18 +73,18 @@ python .claude/skills/web-researcher/scripts/dart-collector.py \
 - Search: `"{company}" 사업보고서 분기보고서 DART site:dart.fss.or.kr`
 - OR fetch: `https://dart.fss.or.kr/dsearch/main.do?maxResults=5&textCrpNm={company}`
 - Extract: 매출액, 영업이익, 당기순이익, EPS from most recent 분기보고서
-- Tag: `[KR-Web]`, Grade B (if confirmed by 네이버) or Grade C (single source)
+- Tag: `[KR-Portal]`, Grade B (if confirmed by 네이버) or Grade C (single source)
 
 **Step 4.4.2 — 네이버금융 (always run — price + market data)**:
 - Fetch: `https://finance.naver.com/item/main.naver?code={6digit_ticker}`
 - Extract: 현재가, 거래량, PER, PBR, EPS, 배당수익률, 외국인 지분율, 52주 고/저
-- Tag: `[네이버]`
+- Tag: `[KR-Portal]`
 - Note: 네이버금융 is the primary source for real-time price and market metrics (DART API does not provide price data)
 
 **Step 4.4.3 — FnGuide** (if consensus data needed):
 - Fetch: `http://comp.fnguide.com/SVO2/ASP/SVD_Main.asp?pGB=1&gicode=A{6digit_ticker}`
 - Extract: consensus EPS, revenue estimates, analyst target prices
-- Tag: `[KR-Web]`
+- Tag: `[KR-Portal]`
 
 **Step 4.4.4 — KIND** (수급/지분율):
 - Search: `"{company}" 외국인 지분율 기관 수급 site:kind.krx.co.kr`
@@ -109,16 +109,14 @@ When `data_mode = "enhanced"`, execute these additional searches AFTER Tier 1 AP
 
 For each piece of data extracted from web sources:
 
-**Tag assignment**:
-- Direct SEC EDGAR fetch → `[Web]` (or `[1S]` if single source)
-- Yahoo Finance, Google Finance, MarketWatch → `[Web]`
-- DART → `[DART]`
-- 네이버금융 → `[네이버]`
-- FnGuide → `[KR-Web]`
-- General web search results → `[1S]` (single source)
-- 2 sources agreeing (within 5%) → `[≈]`
+**Tag assignment** (tags indicate provenance; grades assigned by decision tree in confidence-grading.md):
+- Financial Datasets MCP / DART OpenAPI / DART web → `[Filing]` (규제기관 공시 원본)
+- Yahoo Finance, Google Finance, MarketWatch → `[Portal]`
+- 네이버금융, FnGuide, KIND → `[KR-Portal]`
+- Self-calculated ratios (P/E, EV/EBITDA etc.) → `[Calc]`
+- Analyst consensus, price targets → `[Est]`
 
-**Confidence rule**: If two major portals (Yahoo Finance + MarketWatch) show the same revenue number within 5% → tag `[≈]` Grade B. If only one source → `[1S]` Grade C.
+**Confidence rule**: 2+ independent portals agree within 5% → Grade B. Single source only → Grade C. Tags do not determine grade.
 
 ### Step 4.7 — Gap-Fill Priority
 
@@ -155,17 +153,17 @@ If still missing after targeted search → mark as Grade D (will be excluded fro
             "52w_high": 199.62,
             "52w_low": 164.08
           },
-          "tag": "[Web]",
+          "tag": "[Portal]",
           "confidence_grade": "B"
         }
       ]
     }
   ],
   "key_data_extracted": {
-    "price": {"value": 175.50, "source": "Yahoo Finance", "tag": "[Web]", "grade": "B"},
-    "market_cap": {"value": 2710000, "source": "Yahoo Finance + MarketWatch", "tag": "[≈]", "grade": "B"},
-    "revenue_ttm": {"value": 395000, "source": "SEC EDGAR 10-Q", "tag": "[Web]", "grade": "B"},
-    "pe_ratio": {"value": 28.0, "source": "Yahoo Finance", "tag": "[1S]", "grade": "C"}
+    "price": {"value": 175.50, "source": "Yahoo Finance", "tag": "[Portal]", "grade": "B"},
+    "market_cap": {"value": 2710000, "source": "Yahoo Finance + MarketWatch", "tag": "[Portal]", "grade": "B"},
+    "revenue_ttm": {"value": 395000, "source": "SEC EDGAR 10-Q", "tag": "[Portal]", "grade": "B"},
+    "pe_ratio": {"value": 28.0, "source": "Yahoo Finance", "tag": "[Portal]", "grade": "C"}
   },
   "news_items": [...],
   "analyst_coverage": {...},

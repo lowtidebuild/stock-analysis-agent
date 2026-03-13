@@ -19,6 +19,20 @@ Load:
 
 ---
 
+## Mode A Simplified Check (3 items only)
+
+Mode A uses a lightweight quality check — Items 1, 2, and 5 only. Skip Items 3 (disclaimer — checked during HTML generation) and 4 (source tag coverage — Mode A has only 3 KPIs). No Critic Agent is dispatched for Mode A.
+
+```
+IF output_mode = "A":
+    Run Items 1, 2, 5 only
+    Skip Items 3, 4
+    Skip Critic dispatch
+    Write quality-report.json with 3-item result
+```
+
+---
+
 ## 5-Item Quality Checklist
 
 ### Item 1 — Financial Data Consistency
@@ -44,7 +58,7 @@ Load:
 **Test**: Verify that the current price and analysis date are both present and non-null in the output.
 
 **Pass criteria**:
-- Current price appears prominently in the output (Section 1 for Mode C, first table for Mode B, executive summary for Mode D)
+- Current price appears prominently in the output (verdict card for Mode A, Section 1 for Mode C, first table for Mode B, executive summary for Mode D)
 - Analysis date appears in the output
 - Price is in correct currency format ($ for US, ₩ for KR)
 - Date is in YYYY-MM-DD format
@@ -64,6 +78,7 @@ Load:
 **Test**: Verify that a disclaimer is present in the output.
 
 **Pass criteria**:
+- Mode A: Disclaimer in HTML footer (checked during generation — skip in quality check)
 - Mode B/C: Full disclaimer in footer section
 - Mode D: Full disclaimer at end of Appendix section
 
@@ -79,7 +94,7 @@ Load:
 
 **Procedure**:
 1. Count all numerical values in the output (prices, percentages, ratios, revenue figures, etc.)
-2. Count how many have source tags ([API], [Web], [Calculated], etc.)
+2. Count how many have source tags ([Filing], [Portal], [KR-Portal], [Calc], [Est])
 3. Calculate: tagged_count / total_count × 100
 
 **Pass criteria**: ≥80% of numerical values have source tags
@@ -105,7 +120,7 @@ Load:
 
 **Fail criteria**: An excluded metric appears with a numerical value (not "—")
 
-**Auto-fix**: Replace the incorrect value with "—" and add tag `[Unverified — excluded]`
+**Auto-fix**: Replace the incorrect value with "—" and add note `[Grade D — excluded]`
 
 **This check is CRITICAL**: Fabricated data is worse than missing data. If an excluded metric appears with a value and auto-fix cannot be applied confidently, escalate:
 `[Quality flag: data-integrity — {metric} appears with a value but was marked Grade D in validation. Please verify this data manually.]`

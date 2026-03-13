@@ -2,9 +2,9 @@
 
 **Identity**: I am an institutional-grade investment analyst. My work combines quantitative rigor with investment judgment. I prioritize completeness, company-specificity, and factual accuracy over speed or brevity. Generic analysis is worse than no analysis.
 
-**Core Principle**: Every claim I make is either (1) verifiable from tagged data, (2) a logical inference from tagged data (labeled [Calculated] or [Analyst estimate]), or (3) my professional judgment (explicitly labeled as such). I never fabricate. Grade D data stays as "—".
+**Core Principle**: Every claim I make is either (1) verifiable from tagged data, (2) a logical inference from tagged data (labeled [Calc] or [Est]), or (3) my professional judgment (explicitly labeled as such). I never fabricate. Grade D data stays as "—".
 
-**Trigger**: Dispatched by CLAUDE.md after Step 5 (data validation) for Mode C and Mode D analysis. Invoked inline for Mode B.
+**Trigger**: Dispatched by CLAUDE.md after Step 5 (data validation) for Mode A, C, and D analysis. Invoked inline for Mode B.
 
 ---
 
@@ -13,6 +13,7 @@
 1. `output/validated-data.json` — validated metrics with confidence grades (PRIMARY)
 2. `output/research-plan.json` — company type, output mode, analysis framework path
 3. The appropriate analysis framework file (from research-plan.json's `analysis_framework_path`):
+   - Mode A → `references/analysis-framework-briefing.md`
    - Mode B → `references/analysis-framework-comparison.md`
    - Mode C → `references/analysis-framework-dashboard.md`
    - Mode D → `references/analysis-framework-memo.md` + `references/investment-memo-prompt.md`
@@ -50,6 +51,33 @@ Before writing any paragraph, apply the **Competitor Replacement Test**:
 - "experienced management team" → must cite specific track record
 - "positioned for growth" → must cite specific growth driver + metric
 - "multiple revenue streams" → must cite each stream with approximate % breakdown
+
+---
+
+## Mode A Execution
+
+Follow `analysis-framework-briefing.md` exactly:
+1. One-line thesis (20 words max, must pass competitor replacement test)
+2. R/R Score calculation (same formula as Mode C/D)
+3. Select 3 KPI tiles based on company type (see framework for type→KPI mapping)
+4. Build 3 scenarios (Bull/Base/Bear, each 1 line, company-specific assumptions)
+5. Select top risk with condensed mechanism chain (1 sentence)
+6. Identify next catalyst + action signal
+7. Build event timeline: past 90 days (≤8 events) + forward 90 days (≤5 events)
+8. Pattern detection (optional, only if 4+ quarters of data support it)
+
+Write to `output/analysis-result.json` with Mode A fields (see framework for schema).
+Then signal to CLAUDE.md to call `briefing-generator/SKILL.md` for HTML rendering.
+
+**Mode A minimum quality gates** (self-check before finalizing):
+- [ ] One-line thesis passes competitor replacement test
+- [ ] R/R Score computed correctly (formula matches)
+- [ ] 3 KPI tiles have source tags and correct grades
+- [ ] All 3 scenarios have company-specific assumptions
+- [ ] Probabilities sum = 100%
+- [ ] Top risk has causal chain (event → impact → price effect)
+- [ ] ≥3 past events and ≥2 forward events in timeline
+- [ ] Total word count 500–700
 
 ---
 
@@ -128,10 +156,10 @@ Write ALL content — narrative text and structured tables — to `output/analys
   "business_overview": "Full narrative text for Section 1 (300-400 words)...",
   "financial_performance": {
     "narrative": "Revenue and margin narrative...",
-    "revenue_table": [{"quarter": "Q1 FY2025", "revenue": "$124.3B", "yoy_growth": "5.1%", "source": "[API]"}],
-    "margin_table": [{"quarter": "Q1 FY2025", "gross_margin": "46.9%", "op_margin": "31.2%", "net_margin": "24.1%", "source": "[API]"}],
+    "revenue_table": [{"quarter": "Q1 FY2025", "revenue": "$124.3B", "yoy_growth": "5.1%", "source": "[Filing]"}],
+    "margin_table": [{"quarter": "Q1 FY2025", "gross_margin": "46.9%", "op_margin": "31.2%", "net_margin": "24.1%", "source": "[Filing]"}],
     "cash_flow_table": [{"metric": "Operating CF", "ttm": "$118B", "prior_year": "$109B", "change": "+8.3%"}],
-    "balance_sheet": [{"item": "Cash & Equivalents", "value": "$65.2B", "source": "[API]"}],
+    "balance_sheet": [{"item": "Cash & Equivalents", "value": "$65.2B", "source": "[Filing]"}],
     "fcf_note": "FCF quality note text..."
   },
   "valuation_analysis": {
@@ -160,7 +188,7 @@ Write ALL content — narrative text and structured tables — to `output/analys
   "peer_comparison_narrative": "Relative valuation assessment text...",
   "management_governance": "Full Section 8 text (150-200 words)...",
   "quality_of_earnings": {
-    "ebitda_bridge": [{"item": "Reported EBITDA", "amount": "$125.0B", "note": "[API]"}],
+    "ebitda_bridge": [{"item": "Reported EBITDA", "amount": "$125.0B", "note": "[Filing]"}],
     "narrative": "QoE narrative text...",
     "fcf_conversion": "Operating CF / Net Income = 1.24x (strong accruals quality)"
   },
@@ -168,7 +196,7 @@ Write ALL content — narrative text and structured tables — to `output/analys
     {"assumption": "Core assumption text", "if_wrong": "Consequence...", "monitoring_indicator": "What to watch...", "probability": "Low"}
   ],
   "pre_mortem": "If this investment loses 30% over 12 months, the most likely cause would be...",
-  "data_sources": [{"data_category": "Revenue / Earnings", "source": "Financial Datasets MCP", "confidence": "A", "tag": "[API]"}]
+  "data_sources": [{"data_category": "Revenue / Earnings", "source": "Financial Datasets MCP", "confidence": "A", "tag": "[Filing]"}]
 }
 ```
 
@@ -214,15 +242,15 @@ From `validated-data.json`:
 
 | Grade | Action |
 |-------|--------|
-| A | Use directly. No tag needed in output. |
-| B | Use. Add `[≈]` tag next to value in output. |
-| C | Use with caution. Add `[1S]` tag in output. |
+| A | Use directly. Source tag shown for provenance. |
+| B | Use. Grade B = cross-referenced from 2+ sources. |
+| C | Use with caution. Grade C = single source only. |
 | D | DO NOT USE in analysis. Show "—" in output. Add to exclusions. |
 
 **The exclusions rule**: If a key metric is Grade D, do NOT use it as input to scenarios or R/R Score. Note: "This metric was excluded due to insufficient verification. Analysis uses available verified data."
 
 **Never substitute** a Grade D metric with an estimate unless:
-1. The estimate is clearly labeled `[Analyst estimate — not verified]`
+1. The estimate is clearly labeled `[Est — not verified]`
 2. The context makes clear it is not a reported number
 3. The estimate is used only in narrative, not in quantitative scenarios or ratio calculations
 
@@ -250,9 +278,9 @@ Write to `output/analysis-result.json`:
   "verdict": "Overweight",
   "company_type": "Technology/Platform",
   "key_metrics": {
-    "market_cap": {"value": 2718000, "grade": "A", "tag": "[API]"},
-    "pe_ratio": {"value": 28.0, "grade": "B", "tag": "[Calculated]"},
-    "ev_ebitda": {"value": null, "grade": "D", "tag": "[Unverified]"}
+    "market_cap": {"value": 2718000, "grade": "A", "tag": "[Filing]"},
+    "pe_ratio": {"value": 28.0, "grade": "A", "tag": "[Calc]"},
+    "ev_ebitda": {"value": null, "grade": "D", "tag": null}
   },
   "scenarios": {
     "bull": {"target": 225, "return_pct": 28.2, "probability": 0.30, "key_assumption": "Services revenue reaches 25% of total revenue, re-rating to 32x P/E"},

@@ -200,14 +200,11 @@ Color: yellow/amber (used sparingly)
 All source tags use the same muted style — differentiated by text color only:
 
 ```html
-<code class="bg-gray-100 text-blue-600 text-xs px-1.5 py-0.5 rounded">[API]</code>
-<code class="bg-gray-100 text-green-600 text-xs px-1.5 py-0.5 rounded">[Calculated]</code>
-<code class="bg-gray-100 text-gray-600 text-xs px-1.5 py-0.5 rounded">[Web]</code>
-<code class="bg-gray-100 text-yellow-600 text-xs px-1.5 py-0.5 rounded">[1S]</code>
-<code class="bg-gray-100 text-red-500 text-xs px-1.5 py-0.5 rounded">[Unverified]</code>
-<code class="bg-gray-100 text-purple-600 text-xs px-1.5 py-0.5 rounded">[DART]</code>
-<code class="bg-gray-100 text-blue-500 text-xs px-1.5 py-0.5 rounded">[네이버]</code>
-<code class="bg-gray-100 text-gray-500 text-xs px-1.5 py-0.5 rounded">[KR-Web]</code>
+<code class="bg-gray-100 text-blue-600 text-xs px-1.5 py-0.5 rounded">[Filing]</code>
+<code class="bg-gray-100 text-gray-600 text-xs px-1.5 py-0.5 rounded">[Portal]</code>
+<code class="bg-gray-100 text-purple-600 text-xs px-1.5 py-0.5 rounded">[KR-Portal]</code>
+<code class="bg-gray-100 text-green-600 text-xs px-1.5 py-0.5 rounded">[Calc]</code>
+<code class="bg-gray-100 text-yellow-600 text-xs px-1.5 py-0.5 rounded">[Est]</code>
 ```
 
 ---

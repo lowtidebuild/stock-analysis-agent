@@ -167,7 +167,7 @@ After parsing:
 4. Run abbreviated Mode C analysis per stock (no redundant data collection if recently analyzed)
 5. Display portfolio summary + per-stock verdicts
 
-**KRW/USD conversion**: Search `KRW USD exchange rate` for current rate. Tag with `[Web]`.
+**KRW/USD conversion**: Search `KRW USD exchange rate` for current rate. Tag with `[Portal]`.
 
 ---
 

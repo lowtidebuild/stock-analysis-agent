@@ -75,7 +75,7 @@ For each valuation metric (P/E, EV/EBITDA):
 
 Example:
 - FAIL: "MSFT deserves a premium to GOOGL because it has better enterprise relationships"
-- PASS: "MSFT trades at 32x EV/EBITDA vs. GOOGL at 22x — a 45% premium justified in part by Azure's 29% growth [API] vs. GCP's 22% [Web], and MSFT's 20% higher operating margin. The remaining premium (~10x turns) requires sustaining current Copilot adoption rates."
+- PASS: "MSFT trades at 32x EV/EBITDA vs. GOOGL at 22x — a 45% premium justified in part by Azure's 29% growth [Filing] vs. GCP's 22% [Portal], and MSFT's 20% higher operating margin. The remaining premium (~10x turns) requires sustaining current Copilot adoption rates."
 
 ### Step 4 — R/R Score Ranking
 
@@ -111,7 +111,7 @@ Format:
 
 Example:
 - FAIL: "AAPL is the best pick due to its strong brand and ecosystem"
-- PASS: "AAPL is the preferred pick at current prices. At 28x P/E vs. MSFT's 35x, AAPL offers better valuation with comparable FCF yield (3.8% vs. 3.2% [API]), and iPhone services revenue growing 15% YoY provides more visible earnings than GOOGL's ad-cyclical revenue. Primary risk: China revenue (18% of total [API]) faces regulatory pressure. This is an opinion — not a buy recommendation."
+- PASS: "AAPL is the preferred pick at current prices. At 28x P/E vs. MSFT's 35x, AAPL offers better valuation with comparable FCF yield (3.8% vs. 3.2% [Filing]), and iPhone services revenue growing 15% YoY provides more visible earnings than GOOGL's ad-cyclical revenue. Primary risk: China revenue (18% of total [Filing]) faces regulatory pressure. This is an opinion — not a buy recommendation."
 
 ### Step 6 — Key Differentiators
 
@@ -123,9 +123,9 @@ Rules:
 - Must explain *why* the difference matters for valuation
 
 Example differentiators:
-1. "Margin structure: MSFT's software-heavy model generates 45% operating margins vs. GOOGL's 32% [API] — this ~13pp gap implies ~$40B/year in additional free cash flow at similar revenue"
-2. "Capital return: AAPL returned $90B via buybacks in FY2025 (6% of market cap [API]) vs. MSFT's $25B (1.1%) — AAPL's buyback yield provides structural EPS support at current valuation"
-3. "Growth quality: GOOGL's 15% revenue growth [Web] is primarily ad-driven (cyclical) vs. MSFT's 17% [API] which is 60% recurring enterprise contract revenue (defensive)"
+1. "Margin structure: MSFT's software-heavy model generates 45% operating margins vs. GOOGL's 32% [Filing] — this ~13pp gap implies ~$40B/year in additional free cash flow at similar revenue"
+2. "Capital return: AAPL returned $90B via buybacks in FY2025 (6% of market cap [Filing]) vs. MSFT's $25B (1.1%) — AAPL's buyback yield provides structural EPS support at current valuation"
+3. "Growth quality: GOOGL's 15% revenue growth [Portal] is primarily ad-driven (cyclical) vs. MSFT's 17% [Filing] which is 60% recurring enterprise contract revenue (defensive)"
 
 ---
 
@@ -150,7 +150,7 @@ If data is stale (> analysis_date freshness threshold):
 When one peer has higher data quality (Enhanced Mode) than others (Standard Mode):
 
 1. Tag each ticker's data mode in the header
-2. When drawing comparisons involving higher-grade data, note the advantage: "MSFT data from API [API] is higher confidence than GOOGL data from web [1S]"
+2. When drawing comparisons involving higher-grade data, note the advantage: "MSFT data from API [Filing] is higher confidence than GOOGL data from web (Grade C, single source)"
 3. Do NOT elevate the confidence of lower-grade data when comparing
 4. If a metric is Grade A for one peer but Grade C for another: in the winner column, add a note like "Winner: {TICKER} [higher confidence data]"
 
@@ -160,7 +160,7 @@ When one peer has higher data quality (Enhanced Mode) than others (Standard Mode
 
 All metric values in the comparison table must have source tags. Apply tags in the Metric header cell:
 
-`P/E (TTM) [≈]` — means the P/E values across the table all come from cross-referenced sources
+`P/E (TTM) [Grade B]` — means the P/E values across the table all come from cross-referenced sources (2+ sources agree)
 
 If different peers have different source grades for the same metric, apply the lowest grade to the column header and note the per-ticker grades in a footnote.
 

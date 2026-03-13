@@ -114,7 +114,7 @@ For each risk (3 risks minimum):
 
 **Valuation Metrics Table**:
 | Metric | Current | Sector Avg | Historical Avg | Assessment |
-(Sector avg and historical avg from web research; tag with [Web] if not API)
+(Sector avg and historical avg from web research; tag with [Portal] if not filing-sourced)
 
 **SOTP Analysis** (if ≥2 distinct segments):
 | Segment | Revenue TTM | Multiple | Implied EV | Notes |
@@ -152,7 +152,7 @@ Data from FMP MCP (if available) or web research:
 **Individual Analyst Actions** (if FMP available, last 6 months):
 | Analyst/Firm | Date | Action | Rating | Previous Target | New Target |
 
-If FMP not available: tag section with `[Web]` and note data source
+If FMP not available: tag section with `[Portal]` and note data source
 
 **Analyst Consensus vs. Our View**:
 - Where does our base case target diverge from analyst consensus?
