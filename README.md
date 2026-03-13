@@ -263,9 +263,10 @@ All generated files go under `output/` (gitignored):
 
 | File | Mode | Open with |
 |------|------|-----------|
+| `output/reports/{ticker}_A_*.html` | A — Quick Briefing | Any browser |
+| `output/reports/{tickers}_B_*.html` | B — Peer Comparison | Any browser |
 | `output/reports/{ticker}_C_*.html` | C — Dashboard | Any browser |
 | `output/reports/{ticker}_D_*.docx` | D — Investment Memo | Word / Google Docs / LibreOffice |
-| `output/reports/{tickers}_B_*.html` | B — Peer Comparison | Any browser |
 | `output/data/{ticker}/latest.json` | — | Snapshot for delta analysis |
 | `output/watchlist.json` | — | Watchlist registry |
 | `output/catalyst-calendar.json` | — | Upcoming events calendar |

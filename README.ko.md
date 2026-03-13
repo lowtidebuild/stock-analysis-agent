@@ -265,9 +265,10 @@ Ready. Send a ticker or question to begin.
 
 | 파일 | 모드 | 열기 |
 |------|------|------|
+| `output/reports/{ticker}_A_*.html` | A — 퀵 브리핑 | 브라우저 |
+| `output/reports/{tickers}_B_*.html` | B — 동종 비교 | 브라우저 |
 | `output/reports/{ticker}_C_*.html` | C — 대시보드 | 브라우저 |
 | `output/reports/{ticker}_D_*.docx` | D — 투자 메모 | Word / Google Docs / LibreOffice |
-| `output/reports/{tickers}_B_*.html` | B — 동종 비교 | 브라우저 |
 | `output/data/{ticker}/latest.json` | — | 델타 분석용 스냅샷 |
 | `output/watchlist.json` | — | 워치리스트 |
 | `output/catalyst-calendar.json` | — | 카탈리스트 캘린더 |
