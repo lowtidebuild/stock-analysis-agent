@@ -31,7 +31,7 @@ Claude Code 기반, 이중 데이터 파이프라인:
 ### 🔍 Mode A — 퀵 브리핑 *(HTML)*
 **A** as in **A**t-a-glance. 퀵 버딕트 카드 + 180일 이벤트 타임라인, 한 페이지. 심층 분석 전 스크리닝용.
 
-> **[결과물 예시 보기 →](#)**
+> **[결과물 예시 보기 →](https://codepen.io/lowtidebuild/full/RNGKxVx)**
 
 ### ⚖️ Mode B — 동종 비교 *(HTML)*
 **B** as in **B**enchmark. 나란히 비교 매트릭스 — 2~5개 종목. R/R Score 순위, 최선호 종목, 핵심 차이점 제시.

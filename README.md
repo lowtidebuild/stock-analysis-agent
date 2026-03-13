@@ -31,7 +31,7 @@ You type a ticker — US or Korean. You get a research-grade analysis complete w
 ### 🔍 Mode A — Quick Briefing *(HTML)*
 **A** as in **A**t-a-glance. Quick verdict card + 180-day event timeline on a single page. Screening before deep dive.
 
-> **[See live example →](#)**
+> **[See live example →](https://codepen.io/lowtidebuild/full/xbEgpdE)**
 
 ### ⚖️ Mode B — Peer Comparison *(HTML)*
 **B** as in **B**enchmark. Side-by-side matrix for 2–5 tickers. R/R Score ranking, Best Pick with rationale, Key Differentiators.
