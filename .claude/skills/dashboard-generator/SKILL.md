@@ -74,6 +74,8 @@ Populate each section of `html-template.md` with data from `analysis-result.json
 | `sections.precision_risks` | Section 4 | risk table rows |
 | `sections.valuation_metrics` | Section 5 | valuation table |
 | `sections.sotp` | Section 5 | SOTP section |
+| `sections.dcf_analysis` | Section 5 | DCF subsection (after SOTP) |
+| `sections.macro_context` | Section 4/6 | Macro Environment section |
 | `sections.peer_comparison` | Section 6 | peer table rows |
 | `sections.analyst_coverage` | Section 7 | analyst data |
 | `historical_prices` | Section 8 | Chart 1 data array |
@@ -160,6 +162,35 @@ Grade B → bg-blue-900 text-blue-300
 Grade C → bg-amber-900 text-amber-300
 Grade D → bg-red-900 text-red-300
 ```
+
+### DCF Valuation Rendering (if sections.dcf_analysis exists)
+
+Place AFTER the Valuation + SOTP section.
+
+HTML structure:
+- Subsection heading: "DCF Valuation"
+- Base case highlight: large text showing "${fair_value} ({upside_pct}%)" with color (green/red based on sign)
+- Sensitivity table: HTML <table> with WACC rows × terminal growth columns
+  - Header row: terminal growth rates
+  - Each cell: "${fair_value}" with color badge
+  - Green: upside > 10%, Gray: -10% to +10%, Red: downside > 10%
+- Bull/Bear line: "Bull: ${X} (+Y%) | Bear: ${X} (-Y%)"
+- Methodology note: small text below showing WACC, terminal growth, forecast years
+- If dcf_analysis is absent or null: omit entire subsection
+
+### Macro Context Rendering (if sections.macro_context exists)
+
+Place BETWEEN Precision Risk and Peer Comparison sections.
+
+HTML structure:
+- Section heading: "Macro Environment" with globe icon
+- Narrative paragraph(s)
+- Factor cards (horizontally laid out, 2-3 cards):
+  - Factor name (bold)
+  - Impact line (normal text)
+  - Confidence badge: High (green), Medium (amber), Low (gray)
+- If risk_slot_allocated is true: note with link to Precision Risk section
+- If macro_context is absent or null: omit entire section
 
 ### Step 8.6 — Missing Data Handling
 

@@ -105,6 +105,27 @@ From `us-data-sources.md` (US) or `kr-data-sources.md` (KR), select searches:
 
 **Standard Mode — KR** (see `kr-data-sources.md` for full 8-query list)
 
+### Step 2.5a — Macro Factor Determination (Mode C/D only)
+
+**Condition**: Only execute when `output_mode` is `"C"` or `"D"`. Skip entirely for Mode A and Mode B.
+
+1. Read `company_type` from the Step 2.2 classification result.
+2. Look up macro risk factors in `company-type-classification.md` → "Macro Risk Factors by Type" section for the matching `company_type`.
+3. Build macro search query using the template:
+   ```
+   "{sector}" macro risk factors economic outlook {YYYY}
+   ```
+   Substitute `{sector}` with the company's sector (from classification) and `{YYYY}` with the current year.
+4. **Korean stocks overlay**: If `market == "KR"`, also add Korean-specific macro factors:
+   - Append to the factor list: `["원/달러 환율", "한국은행 기준금리", "수출입 동향"]`
+   - Add an additional search query: `"{sector}" 거시경제 리스크 전망 {YYYY}`
+5. Set output fields:
+   - `macro_search_required`: `true`
+   - `macro_search`: the constructed query string (or list of queries if KR overlay applies)
+   - `macro_factors`: list of factor names from the classification lookup (+ KR overlay if applicable)
+
+If `company_type` is not found in the macro factors table, use the sector's closest match or default to `["GDP growth", "interest rates", "inflation"]`.
+
 ### Step 2.6 — Write Research Plan
 
 Write to `output/research-plan.json`:
@@ -144,7 +165,10 @@ Write to `output/research-plan.json`:
   ],
   "tier2_fetches": [
     "https://finance.yahoo.com/quote/AAPL/"
-  ]
+  ],
+  "macro_search_required": true,
+  "macro_search": "\"Technology\" macro risk factors economic outlook 2026",
+  "macro_factors": ["interest rates", "consumer spending", "USD strength", "semiconductor cycle"]
 }
 ```
 
@@ -161,6 +185,7 @@ Language: {en/ko}
 Peers: {list}
 Tier 1 calls: {N} API calls planned
 Tier 2 searches: {N} web searches planned
+Macro factors: {Yes (N factors) / Skipped (Mode A/B)}
 
 → Proceeding to Step 3 (Financial Data Collector) [Enhanced] or Step 4 (Web Researcher) [Standard]
 ```
@@ -173,6 +198,7 @@ Tier 2 searches: {N} web searches planned
 - [ ] Korean stock correctly routed to Standard Mode
 - [ ] Company type classified with confidence level
 - [ ] 3–5 peer tickers identified
+- [ ] Macro factors determined (Mode C/D) or skipped (Mode A/B)
 - [ ] Tier 1 API call list selected based on output_mode
 - [ ] Tier 2 search list built (≥5 searches for Standard Mode)
 - [ ] `output/research-plan.json` written (or per-ticker path for Workflow 2)

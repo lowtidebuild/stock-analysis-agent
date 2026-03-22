@@ -49,7 +49,8 @@ You type a ticker — US or Korean. You get a research-grade analysis complete w
 | **KPI Tiles** | P/E · EV/EBITDA · FCF Yield · Revenue Growth · Operating Margin |
 | **Variant View** | Q1–Q3: where the market is wrong, company-specific evidence |
 | **Precision Risk** | 3 risks × causal chain × EBITDA impact × mitigation |
-| **Valuation** | SOTP breakdown · comparable multiples |
+| **Macro Environment** | Macro factors affecting the stock · impact assessment · confidence badges |
+| **Valuation** | SOTP breakdown · comparable multiples · **DCF sensitivity table (3×3 WACC × terminal growth)** |
 | **Analyst Targets** | Consensus · high/low · rating distribution bar |
 | **Charts** | Revenue trend · margin history · price vs targets (Chart.js) |
 | **Quarterly Financials** | 8-quarter income statement · QoE bridge |
@@ -65,9 +66,10 @@ You type a ticker — US or Korean. You get a research-grade analysis complete w
 | Executive Summary | 1-sentence thesis · Verdict · R/R Score |
 | Business Overview | Revenue streams · Market share · TAM |
 | Financial Performance | 8-quarter tables · Margin trends · FCF |
-| Valuation Analysis | P/E · EV/EBITDA · SOTP breakdown |
+| Valuation Analysis | P/E · EV/EBITDA · SOTP breakdown · **DCF fair value + sensitivity table** |
 | **5-Question Variant View** | Where the market is wrong (most important section) |
 | Precision Risk Analysis | 3 risks × full mechanism chain + EBITDA impact |
+| Macro Risk Overlay | Top-down macro factors · sector sensitivity · quantified impact pathways |
 | Investment Scenarios | Bull / Base / Bear with R/R formula shown |
 | Peer Comparison | 5-metric table vs. 3–5 peers |
 | Management & Governance | CEO track record · Capital allocation |

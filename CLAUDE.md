@@ -99,6 +99,7 @@ Read `.claude/skills/market-router/SKILL.md`
 - Confirm MCP status
 - Classify company type
 - Identify peers (3–5)
+- Determine macro factors for Mode C/D (→ macro_search in research-plan.json)
 - Write `output/research-plan.json`
 - Verify output: `output/research-plan.json` exists
 
@@ -116,6 +117,7 @@ Read `.claude/skills/web-researcher/SKILL.md`
 - Korean: DART OpenAPI (dart-collector.py) first → 네이버금융 → FnGuide → KIND → general
 - Write `output/data/{ticker}/dart-api-raw.json` (Korean, if DART API available)
 - Write `output/data/{ticker}/tier2-raw.json`
+- Mode C/D: execute macro context search (→ macro_context in tier2-raw.json)
 - Verify output: tier2-raw.json exists
 
 ### Step 5 — Data Validation
@@ -133,6 +135,7 @@ Read `.claude/skills/data-validator/SKILL.md`
 - Mode A: analyst produces lightweight `output/analysis-result.json` (verdict + timeline)
 - Mode B: execute inline (no subagent)
 - Mode C/D: analyst produces full `output/analysis-result.json`
+- Mode C/D: analyst runs DCF valuation (dcf-calculator.py) and integrates macro context
 - Verify output: `output/analysis-result.json` exists AND rr_score is non-null
 
 ### Step 8 — Output Generation
@@ -167,6 +170,7 @@ Step 3 writes:  output/data/{ticker}/tier1-raw.json
 Step 4 writes:  output/data/{ticker}/tier2-raw.json
 Step 5 writes:  output/validated-data.json
 Step 7 writes:  output/analysis-result.json
+Step 7 also:  .claude/agents/analyst/scripts/dcf-calculator.py (called by analyst)
 Step 8 writes:  output/reports/{ticker}_{mode}_{lang}_{date}.{ext}
 Step 10 writes: output/data/{ticker}/{ticker}_{date}_snapshot.json
                 output/data/{ticker}/latest.json
@@ -291,6 +295,7 @@ Quality check runs at Step 9 for all outputs. Mode A uses simplified 3-item chec
 | Step 3 price call | 2 retries | If fails: switch to Standard Mode for this ticker |
 | Step 4 web searches | 1 retry with alternative query | If fails: mark metric as Grade D |
 | Step 5 ratio-calculator.py | N/A (Python script) | Manual calculation fallback (documented in data-validator/SKILL.md) |
+| Step 7 dcf-calculator.py | N/A (Python script) | Omit DCF section, deliver with R/R Score only |
 | Step 7 analyst | No retry | If fails: report error to user, offer Standard Mode downgrade |
 | Step 8 file write | 1 retry | Report error to user |
 
@@ -312,7 +317,8 @@ During deep research (Steps 3–4) and analysis (Steps 6–7), individual operat
 | Single WebSearch | 20 seconds | Abort, try alternative query or next search tool in fallback chain |
 | MCP API call | 15 seconds | Abort, retry once, then skip that data point |
 | Sub-agent (data-researcher) | 5 minutes | Abort agent, fall back to sequential collection |
-| Sub-agent (analyst) | 3 minutes | Abort agent, produce Mode B inline analysis instead |
+| Sub-agent (analyst) | 4 minutes | Abort agent, produce Mode B inline analysis instead |
+| DCF calculation (within analyst) | 30 seconds | Abort DCF, proceed with R/R Score only. Log: "DCF timed out — valuation uses scenario targets only" |
 | Sub-agent (critic) | 2 minutes | Abort agent, skip critic review, deliver with [No critic review] flag |
 | Entire Step 4 (web research) | 8 minutes | Abort remaining searches, proceed with data collected so far |
 | Entire pipeline (Steps 0–10) | 15 minutes | Checkpoint: save whatever data is collected, produce partial output |
@@ -411,6 +417,7 @@ Project Root
     └── agents/
         ├── data-researcher/AGENT.md
         ├── analyst/AGENT.md
+        │   └── scripts/dcf-calculator.py  ← DCF valuation calculator
         └── critic/AGENT.md
 ```
 

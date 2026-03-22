@@ -217,13 +217,56 @@ def calculate_ratios(inputs: dict) -> dict:
     return output
 
 
+INPUT_SCHEMA = {
+    "price":                {"type": "float", "required": False, "description": "Current stock price (USD or KRW)"},
+    "diluted_shares":       {"type": "float", "required": False, "description": "Diluted shares outstanding (millions)"},
+    "net_income_ttm":       {"type": "float", "required": False, "description": "TTM net income (millions)"},
+    "ebitda_ttm":           {"type": "float", "required": False, "description": "TTM EBITDA (millions)"},
+    "total_debt":           {"type": "float", "required": False, "description": "Total debt (millions), defaults to 0"},
+    "cash":                 {"type": "float", "required": False, "description": "Cash and equivalents (millions), defaults to 0"},
+    "operating_cf":         {"type": "float", "required": False, "description": "TTM operating cash flow (millions)"},
+    "capex":                {"type": "float", "required": False, "description": "TTM capital expenditure, positive number (millions), defaults to 0"},
+    "revenue_ttm":          {"type": "float", "required": False, "description": "TTM revenue (millions)"},
+    "operating_income_ttm": {"type": "float", "required": False, "description": "TTM operating income (millions)"},
+    "gross_profit_ttm":     {"type": "float", "required": False, "description": "TTM gross profit (millions)"},
+    "enterprise_value":     {"type": "float", "required": False, "description": "Override EV if pre-computed (millions)"},
+}
+
+OUTPUT_SCHEMA = {
+    "market_cap":       "float or null — price × diluted_shares (millions)",
+    "net_debt":         "float — total_debt - cash (millions)",
+    "enterprise_value": "float or null — market_cap + net_debt (millions)",
+    "eps_ttm":          "float or null — net_income_ttm / diluted_shares",
+    "pe_ratio":         "float or null",
+    "ev_ebitda":        "float or null",
+    "fcf_ttm":          "float or null — operating_cf - capex (millions)",
+    "fcf_yield":        "float or null — (fcf_ttm / market_cap) × 100 (%)",
+    "gross_margin":     "float or null — gross_profit_ttm / revenue_ttm × 100 (%)",
+    "operating_margin": "float or null — operating_income_ttm / revenue_ttm × 100 (%)",
+    "net_margin":       "float or null — net_income_ttm / revenue_ttm × 100 (%)",
+    "net_debt_ebitda":  "float or null",
+    "formulas":         "dict — human-readable formula string for each computed ratio",
+    "errors":           "list — list of error/warning messages",
+    "inputs_used":      "dict — echo of inputs used in calculation",
+}
+
+
 def main():
     sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description="Financial ratio calculator")
-    group = parser.add_mutually_exclusive_group(required=True)
+    group = parser.add_mutually_exclusive_group(required=False)
     group.add_argument("--input", help="Path to input JSON file")
     group.add_argument("--inline", help="Inline JSON string")
+    parser.add_argument("--schema", action="store_true", help="Print input/output JSON schema and exit")
     args = parser.parse_args()
+
+    if args.schema:
+        schema = {"input_fields": INPUT_SCHEMA, "output_fields": OUTPUT_SCHEMA}
+        print(json.dumps(schema, ensure_ascii=False, indent=2))
+        return
+
+    if not args.input and not args.inline:
+        parser.error("one of the arguments --input --inline --schema is required")
 
     if args.input:
         with open(args.input, "r", encoding="utf-8") as f:

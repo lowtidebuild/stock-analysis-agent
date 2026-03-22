@@ -122,6 +122,19 @@ Read `investment-memo-prompt.md` BEFORE starting Mode D analysis. The philosophy
 
 ---
 
+### Section 4a — DCF Valuation (Mode D only, US stocks v1)
+
+Include when dcf_analysis is present in analysis-result.json:
+- Show DCF fair value per scenario (Base with sensitivity table, Bull/Bear single-point)
+- Display 9-cell sensitivity table in document format
+- Show all assumptions explicitly: WACC derivation (beta, risk-free rate, ERP), terminal growth rate, forecast period
+- Compare DCF implied value to current price and to multiples-based valuation
+- Note: "DCF provides an independent valuation cross-check. Scenario targets (Bull/Base/Bear) remain the primary valuation framework."
+
+Word count: 200-300 words for narrative + sensitivity table
+
+---
+
 ## Section 5 — 5-Question Variant View
 
 **Purpose**: State the investment thesis as a specific disagreement with market consensus. This is the most important section.
@@ -277,6 +290,18 @@ If material macro exposure:
 - Commodity: volume and cost exposure, pass-through rate
 
 **Word count target**: 300–400 words
+
+---
+
+### Section 6a — Macro Risk Overlay (Mode D only)
+
+Include when macro_context is present in analysis-result.json:
+- 1-2 paragraphs on macro environment relevant to the investment thesis
+- List 2-3 macro factors with estimated impact on the company
+- If a macro risk was allocated to Precision Risk: reference it ("See Risk #N above")
+- If macro factors are contextual only: note that they inform the investment thesis but are not direct valuation inputs
+
+Word count: 100-200 words
 
 ---
 

@@ -106,6 +106,27 @@ Follow `analysis-framework-dashboard.md` exactly:
 5. Variant View Q1–Q3 (150–250 words each)
 6. Precision Risk table (3 risks, each with mechanism + EBITDA impact)
 7. Valuation + SOTP
+7a. **DCF Valuation (Mode C/D only, US stocks v1)**
+    - Extract DCF assumptions from your scenario analysis:
+      - `fcf_ttm` from validated-data.json
+      - `fcf_growth_rate` from your Base scenario revenue/margin assumptions
+      - `wacc` estimated from beta + risk-free rate + equity risk premium (sector default)
+      - `terminal_growth_rate` default 2.5%, sector override if appropriate
+      - `net_debt` from validated-data.json
+    - Run `dcf-calculator.py` (at `.claude/agents/analyst/scripts/dcf-calculator.py`):
+      - Base scenario: full run with 9-cell sensitivity table
+      - Bull/Bear scenarios: single-point DCF only (no sensitivity table)
+    - If DCF fails (WACC ≤ terminal growth, missing FCF, etc.): omit DCF section, deliver R/R Score as primary valuation. Log warning.
+    - Write results to `analysis-result.json` under `sections.dcf_analysis`
+    - **Timeout budget**: Execute DCF FIRST in the analysis phase. If DCF + scenario analysis approaches 3.5 minutes, skip remaining DCF scenarios and proceed with available results.
+7b. **Macro Context Integration (Mode C/D only)**
+    - Read `macro_context` from `output/data/{ticker}/tier2-raw.json`
+    - If macro_context is present and non-null:
+      - Integrate macro factors into Variant View considerations
+      - If any macro factor has a direct, quantifiable impact pathway on this ticker: allocate one Precision Risk slot to this macro risk with full mechanism chain
+      - If macro factors are contextual but not directly quantifiable: include in a `macro_context` narrative section only
+    - Write to `analysis-result.json` under `sections.macro_context`
+    - If macro_context is null or absent: skip this step entirely
 8. Peer comparison table (3–5 peers)
 9. Analyst coverage (from FMP or web)
 10. Charts data (prepare JSON arrays for Chart.js)
@@ -130,8 +151,10 @@ Section order:
 2. Business Overview & Competitive Position
 3. Financial Performance (tables + narrative)
 4. Valuation Analysis (SOTP if applicable)
+4a. **DCF Valuation**: Same as Mode C step 7a above. Write to `sections.dcf_analysis`.
 5. 5-Question Variant View (Q1–Q5, most important section)
 6. Precision Risk Analysis (3 risks with mechanisms)
+6a. **Macro Context Integration**: Same as Mode C step 7b above. Write to `sections.macro_context`.
 7. Investment Scenarios (3 scenarios, R/R Score with formula shown)
 8. Peer Comparison
 9. Management & Corporate Governance
@@ -177,6 +200,18 @@ Write ALL content — narrative text and structured tables — to `output/analys
     {"risk": "Risk name", "mechanism": "Full causal chain...", "ebitda_impact": "$4B (3.3% of TTM EBITDA)", "probability": "Medium", "mitigation": "Monitor X metric"}
   ],
   "macro_risk": "Macro risk overlay text...",
+  "dcf_analysis": {
+    "base": {"fair_value": 195.0, "upside_pct": 11.4, "sensitivity_table": "9-cell WACC × terminal growth"},
+    "bull": {"fair_value": 225.0, "upside_pct": 28.2},
+    "bear": {"fair_value": 145.0, "upside_pct": -17.1},
+    "methodology": "10-year FCF projection, WACC 8.5%, terminal growth 2.5%",
+    "assumptions_displayed": true
+  },
+  "macro_context": {
+    "narrative": "Macro overlay text...",
+    "factors": [{"factor": "Interest rates", "impact": "+/-X% on valuation multiple", "probability": "Medium"}],
+    "risk_slot_allocated": false
+  },
   "investment_scenarios": {
     "narratives": {
       "bull": "2-3 sentence bull narrative...",
@@ -302,6 +337,18 @@ Write to `output/analysis-result.json`:
     "peer_comparison": [...],
     "analyst_coverage": {...},
     "qoe_summary": {...},
+    "dcf_analysis": {
+      "base": {"fair_value": 195.0, "upside_pct": 11.4, "sensitivity_table": "9-cell WACC × terminal growth"},
+      "bull": {"fair_value": 225.0, "upside_pct": 28.2},
+      "bear": {"fair_value": 145.0, "upside_pct": -17.1},
+      "methodology": "10-year FCF projection, WACC 8.5%, terminal growth 2.5%",
+      "assumptions_displayed": true
+    },
+    "macro_context": {
+      "narrative": "Macro overlay text...",
+      "factors": [{"factor": "Interest rates", "impact": "+/-X% on valuation multiple", "probability": "Medium"}],
+      "risk_slot_allocated": false
+    },
     "portfolio_strategy": "...",
     "what_would_make_me_wrong": [...]
   },

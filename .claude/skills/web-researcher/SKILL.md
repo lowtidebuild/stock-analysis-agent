@@ -131,7 +131,59 @@ For each MISSING metric, attempt one additional targeted search:
 
 If still missing after targeted search → mark as Grade D (will be excluded from analysis).
 
-### Step 4.8 — Write tier2-raw.json
+### Step 4.8 — Macro Context Search (Mode C/D only)
+
+Check `output/research-plan.json` for `macro_search_required`. If `false` or absent, skip this step entirely.
+
+**Execution**:
+1. Read the `macro_search_query` field from `research-plan.json`
+2. Execute the query using the MCP search priority chain:
+   - `mcp__tavily__search` → `mcp__brave__search` → `WebSearch` → `WebFetch`
+3. **Timeout**: 20 seconds. If search fails or times out, log warning and proceed without macro data — do NOT stall the pipeline.
+
+**Extract from results**:
+
+| Field | Description |
+|-------|-------------|
+| `factor` | What macro force (e.g., "Fed rate cuts", "China tariffs", "USD/KRW depreciation") |
+| `narrative` | How it affects the sector/ticker — must be specific, not generic |
+| `timeline` | When impact occurs (e.g., "Q2 2026", "next 6 months", "immediate") |
+| `confidence` | High / Medium / Low — based on source authority and consensus |
+| `tag` | Source tag: `[News]`, `[Filing]`, or `[Est]` |
+
+**Write to tier2-raw.json** under a new `macro_context` field:
+
+```json
+"macro_context": {
+  "search_query": "the query executed",
+  "collection_timestamp": "ISO 8601",
+  "factors": [
+    {
+      "factor": "...",
+      "narrative": "...",
+      "timeline": "...",
+      "confidence": "High|Medium|Low",
+      "tag": "[News]|[Filing]|[Est]",
+      "sources": ["url1", "url2"]
+    }
+  ],
+  "macro_risks": [
+    {
+      "risk": "...",
+      "impact": "...",
+      "ticker_relevance": "...",
+      "monitoring": "..."
+    }
+  ]
+}
+```
+
+**Edge cases**:
+- If macro search returns no useful results → set `macro_context` to `null` (not an empty object)
+- If `macro_search_required` is `true` but `macro_search_query` is missing → skip and log warning
+- Always proceed to the next step regardless of macro search outcome
+
+### Step 4.9 — Write tier2-raw.json
 
 ```json
 {
@@ -168,7 +220,8 @@ If still missing after targeted search → mark as Grade D (will be excluded fro
   "news_items": [...],
   "analyst_coverage": {...},
   "insider_trades": [...],
-  "qualitative_context": "..."
+  "qualitative_context": "...",
+  "macro_context": null
 }
 ```
 
@@ -192,5 +245,6 @@ For peer comparison, run a parallel (or sequential) web research for each ticker
 - [ ] Confidence grades assigned (A/B/C/D)
 - [ ] 10 key metrics coverage check performed
 - [ ] Gap-fill targeted searches run for missing metrics
-- [ ] `output/data/{ticker}/tier2-raw.json` written
+- [ ] Macro context search executed (Mode C/D) or skipped (Mode A/B or macro_search_required=false)
+- [ ] `output/data/{ticker}/tier2-raw.json` written (includes `macro_context` field if applicable)
 - [ ] All news items dated and attributed

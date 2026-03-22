@@ -110,6 +110,21 @@ For each risk (3 risks minimum):
 - Probability: High (>40%), Medium (15–40%), Low (<15%)
 - Mitigation: specific monitoring indicator or hedge
 
+### Macro Context (Mode C only)
+
+**Trigger**: Only when `sections.macro_context` exists in analysis-result.json.
+
+Display:
+- **Section heading**: "Macro Environment"
+- **Narrative**: 1-2 paragraphs summarizing macro factors relevant to this stock
+- **Factor cards**: For each factor in `macro_context.factors`:
+  - Factor name (bold)
+  - Impact description (1 line)
+  - Confidence badge (High/Medium/Low)
+- If a macro risk was allocated a Precision Risk slot: note "(See Precision Risk #N for mechanism chain)"
+
+If macro_context is null or absent: omit this subsection entirely.
+
 ### Section 5 — Valuation + SOTP
 
 **Valuation Metrics Table**:
@@ -124,6 +139,19 @@ For each risk (3 risks minimum):
 **Implied Growth Rate Analysis**:
 If P/E available: calculate what EPS growth the current P/E implies (reverse Gordon Growth Model or simple P/E growth formula)
 Note if implied growth is achievable, too high, or too low based on historical rates
+
+### DCF Valuation (Mode C only, US stocks v1)
+
+**Trigger**: Only when `sections.dcf_analysis` exists in analysis-result.json (i.e., DCF was successfully computed).
+
+Display:
+- **Base Case DCF Fair Value**: ${fair_value} ({upside_pct}% vs current price)
+- **Sensitivity Table**: 3×3 HTML table — rows = WACC (low/mid/high), columns = terminal growth rate (low/mid/high). Each cell shows fair value + upside/downside %. Color-code: green (>10% upside), gray (-10% to +10%), red (>10% downside)
+- **Bull/Bear DCF**: Single-line per scenario — "Bull DCF: ${X} (+Y%)" / "Bear DCF: ${X} (-Y%)"
+- **Methodology note**: One line showing key assumptions (WACC, terminal growth, forecast years)
+- **Transparency**: All assumptions displayed. User can see exactly what drives the valuation.
+
+If dcf_analysis is null or absent: omit this subsection entirely. Do NOT show placeholder.
 
 ### Section 6 — Peer Comparison
 

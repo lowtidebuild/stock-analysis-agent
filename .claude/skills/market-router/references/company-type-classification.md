@@ -115,6 +115,41 @@ This file defines the 8 company types used for analysis focus customization. Rea
 
 ---
 
+## Macro Risk Factors by Type
+
+**Used by**: Market Router (Step 2) to select macro search queries for Mode C/D analysis. Web Researcher (Step 4) executes the macro search. Analyst Agent includes macro context in Precision Risk analysis.
+
+**Rule**: Macro searches execute for Mode C/D only. Mode A/B skip macro context.
+
+### Macro Factor Lookup Table
+
+| Type | Primary Macro Factors | Default Search Query Template |
+|------|----------------------|-------------------------------|
+| **Technology/Platform** | Interest rates (growth multiple sensitivity), AI/semiconductor capex cycle, US-China tech policy | `"{sector}" interest rates AI capex semiconductor regulation {YYYY}` |
+| **Industrial/Manufacturing** | Commodity input costs (steel, copper, oil), capex cycle, supply chain disruption, labor costs | `"{sector}" commodity prices capex cycle supply chain {YYYY}` |
+| **Financial** | Interest rate trajectory (NIM impact), credit cycle / delinquency trends, inflation expectations | `"interest rates" "credit cycle" bank NIM delinquency {YYYY}` |
+| **Biotech/Pharma** | FDA regulatory posture, drug pricing legislation, healthcare policy, patent cliff | `FDA "drug pricing" legislation pharmaceutical regulation {YYYY}` |
+| **Consumer** | Consumer spending / confidence, inflation (input costs + pricing power), credit conditions | `"consumer spending" inflation "retail sales" credit conditions {YYYY}` |
+| **Energy** | Oil/gas spot + strip prices, energy transition policy, OPEC+ decisions, carbon pricing | `"oil price" "energy policy" OPEC+ renewable transition {YYYY}` |
+
+### Korean Overlay Macro Factors
+
+Applied to ALL Korean companies in addition to their type-specific factors:
+
+| Factor | Search Query Addendum |
+|--------|----------------------|
+| KRW/USD exchange rate | `"원달러 환율" {YYYY} 전망` |
+| 외국인 매수/매도 동향 | `"외국인 투자" KOSPI {YYYY}` |
+| 한국 수출 지표 | `"한국 수출" 반도체 {YYYY}` |
+
+### Macro → Precision Risk Allocation Rule
+
+If a macro factor has a **direct, quantifiable impact pathway** on the ticker (e.g., "10% USD strengthening → Samsung export revenue decreases X%"), the Analyst MUST allocate one of the 3 Precision Risk slots to this macro risk with full mechanism chain.
+
+If the macro factors are **contextual but not directly quantifiable** for this specific ticker, include them in the `macro_context` narrative section only — do NOT consume a Precision Risk slot.
+
+---
+
 ## Multi-Segment Classification
 
 When a company spans multiple types, classify by PRIMARY revenue driver:
