@@ -303,6 +303,21 @@ Include when macro_context is present in analysis-result.json:
 
 Word count: 100-200 words
 
+### Section 6b — Macro Sensitivity Analysis (Mode D — if `sections.macro_sensitivity` exists)
+
+**Purpose**: Quantify how key economic variables affect the stock's valuation using FRED data.
+
+**Content** (150-200 words):
+1. Primary macro factor identification with current FRED value and source tag `[Macro]`
+2. 3-scenario sensitivity table (same format as dashboard card)
+3. Secondary factors with brief relevance notes
+4. Cross-reference: if a macro scenario was used in Precision Risk, reference it here
+5. Disclaimer on single-variable assumption
+
+**Tone**: Analytical, data-driven. Use exact numbers from FRED with dates.
+
+If `macro_sensitivity` is null or absent: omit this section entirely. Do NOT leave a placeholder.
+
 ---
 
 ## Section 7 — Investment Scenarios

@@ -316,6 +316,7 @@ During deep research (Steps 3–4) and analysis (Steps 6–7), individual operat
 | Single WebFetch | 30 seconds | Abort, log URL as failed, move to next source |
 | Single WebSearch | 20 seconds | Abort, try alternative query or next search tool in fallback chain |
 | MCP API call | 15 seconds | Abort, retry once, then skip that data point |
+| FRED collector (fred-collector.py) | 15 seconds | Abort, use stale cache or skip FRED. Proceed without structured macro data |
 | Sub-agent (data-researcher) | 5 minutes | Abort agent, fall back to sequential collection |
 | Sub-agent (analyst) | 4 minutes | Abort agent, produce Mode B inline analysis instead |
 | DCF calculation (within analyst) | 30 seconds | Abort DCF, proceed with R/R Score only. Log: "DCF timed out — valuation uses scenario targets only" |
@@ -388,6 +389,8 @@ Project Root
 │   ├── validated-data.json            ← Step 5 output (single ticker)
 │   ├── analysis-result.json           ← Step 7 output
 │   ├── quality-report.json            ← Step 9 output
+│   ├── data/macro/
+│   │   └── fred-snapshot.json            ← FRED cache (shared across tickers)
 │   ├── data/{ticker}/
 │   │   ├── tier1-raw.json             ← Step 3 output (US Enhanced only)
 │   │   ├── dart-api-raw.json          ← Step 4 output (KR DART-Enhanced only)
@@ -438,6 +441,7 @@ Tags indicate provenance — where the data was fetched from. Tags do NOT determ
 | `[KR-Portal]` | 네이버금융, FnGuide, KIND 등 한국 금융 포탈 |
 | `[Calc]` | 검증된 입력값으로부터 자체 계산 (P/E, EV/EBITDA 등) |
 | `[Est]` | 애널리스트 컨센서스, 목표가, 추정 실적 |
+| `[Macro]` | FRED (Federal Reserve Economic Data) 등 정부/중앙은행 경제 통계 |
 
 Grade D metrics display as "—" (no tag needed).
 
@@ -452,4 +456,4 @@ Grades are assigned by the decision tree in `confidence-grading.md`, based on **
 | C | Single-Source | 단일 소스, 산술 일관성 있음 |
 | D | Unverified | 검증 불가, >15% 불일치, 또는 데이터 없음 → "—" 표시, 분석에서 제외 |
 
-**Note**: `[Filing]`이 Grade A인 이유는 SEC/DART 규제기관 원본이기 때문. Financial Datasets MCP와 DART OpenAPI는 이 원본에 대한 구조화된 접근 경로. API라는 전달 방식 자체가 등급을 결정하지 않는다.
+**Note**: `[Filing]`과 `[Macro]`가 Grade A인 이유는 각각 규제기관(SEC/DART)과 정부기관(FRED/한국은행) 원본이기 때문. Financial Datasets MCP, DART OpenAPI, FRED API는 이 원본에 대한 구조화된 접근 경로. API라는 전달 방식 자체가 등급을 결정하지 않는다.

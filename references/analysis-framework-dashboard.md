@@ -125,6 +125,25 @@ Display:
 
 If macro_context is null or absent: omit this subsection entirely.
 
+### Macro Sensitivity Card (Mode C — if `sections.macro_sensitivity` exists)
+
+Display a card with:
+- **Header**: "Macro Sensitivity: {primary_factor}"
+- **Current value**: e.g., "10Y Treasury: 4.25% (as of 2026-03-24) [Macro]"
+- **3-row scenario table**:
+
+| Scenario | Value | Stock Impact | Mechanism |
+|----------|-------|-------------|-----------|
+| {change -} | {value} | {impact %} | {mechanism} |
+| Base | {current} | 0% | Current level |
+| {change +} | {value} | {impact %} | {mechanism} |
+
+- **Secondary factors**: Listed below table as footnotes (factor name, current value, relevance)
+- **Disclaimer**: "Single-variable sensitivity. Multiple variables move simultaneously in practice."
+- **Data source badge**: "[Macro] Grade A — FRED"
+
+If `macro_sensitivity` is null or absent: omit this card entirely.
+
 ### Section 5 — Valuation + SOTP
 
 **Valuation Metrics Table**:

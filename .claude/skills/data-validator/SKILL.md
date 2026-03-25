@@ -50,6 +50,13 @@ Primary market data source: tier2 (네이버금융)
 Fallback: if dart-api-raw.json missing → tier2-raw.json only (aggregator-only, max Grade B)
 ```
 
+**Macro data (all markets, Mode C/D)**:
+```
+Load: output/data/macro/fred-snapshot.json    (FRED macro data, if exists — shared cache)
+FRED macro data: [Macro] tag, Grade A (federal government source)
+If fred-snapshot.json missing or null: skip FRED validation, proceed with existing data
+```
+
 ### Step 5.2 — Layer 1: Arithmetic Consistency (ratio-calculator.py)
 
 Extract raw inputs from data sources, then run:
@@ -149,6 +156,30 @@ From `validation-rules.md` sanity range tables, check each ratio against sector-
 
 Sanity alerts → log but do NOT automatically downgrade grade. Include in validated output under `sanity_alerts`.
 
+### Step 5.4a — FRED Data Sanity Checks
+
+**Condition**: Only run if `macro_context.structured` exists in tier2-raw.json.
+
+| Check | Rule | On Failure |
+|-------|------|------------|
+| Yield curve | Flag if DGS10 < DGS2 (inverted) | Set `yield_curve_inverted: true` (informational, not an error) |
+| Fed Funds vs 10Y | Warn if abs(DFF - DGS10) > 300bp | Downgrade FRED data to Grade B |
+| CPI range | Must be -2% to 15% | Grade D → set to null |
+| GDP range | Must be -10% to 15% | Grade D → set to null |
+| USD/KRW range | Must be 800 to 2000 | Grade D → set to null |
+| WTI range | Must be $10 to $250 | Grade D → set to null |
+| UMCSENT range | Must be 20 to 120 | Grade D → set to null |
+
+**Cache freshness grading**:
+
+| Cache Age | Grade |
+|-----------|-------|
+| < 24 hours | A |
+| 24h – 7 days | B |
+| > 7 days | C (add `[stale]` tag) |
+
+Pass through validated `macro_context.structured` values to `validated-data.json`.
+
 ### Step 5.5 — Apply Confidence Grades
 
 Using `confidence-grading.md` decision tree, assign final grade per metric:
@@ -160,7 +191,7 @@ Using `confidence-grading.md` decision tree, assign final grade per metric:
 | C | Value with caveat | 단일 소스, 산술 일관성 있음 |
 | D | "—" | 검증 불가, 또는 >10% 불일치 미해결 |
 
-Source tags (`[Filing]`, `[Portal]`, `[KR-Portal]`, `[Calc]`, `[Est]`) indicate provenance only — see CLAUDE.md Section 11.
+Source tags (`[Filing]`, `[Portal]`, `[KR-Portal]`, `[Calc]`, `[Est]`, `[Macro]`) indicate provenance only — see CLAUDE.md Section 11.
 
 **Korean stock rules**:
 - Financial statements (IS/BS/CF) from DART API → **Grade A**, tag `[Filing]`

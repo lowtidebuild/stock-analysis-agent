@@ -131,15 +131,36 @@ For each MISSING metric, attempt one additional targeted search:
 
 If still missing after targeted search → mark as Grade D (will be excluded from analysis).
 
-### Step 4.8 — Macro Context Search (Mode C/D only)
+### Step 4.8 — Macro Context Collection (Mode C/D only)
 
 Check `output/research-plan.json` for `macro_search_required`. If `false` or absent, skip this step entirely.
 
-**Execution**:
-1. Read the `macro_search_query` field from `research-plan.json`
+**Phase 1 — FRED Structured Data (15-second budget)**:
+
+1. Run `fred-collector.py`:
+   ```bash
+   python .claude/skills/web-researcher/scripts/fred-collector.py \
+     --market {US|KR} \
+     --output output/data/macro/fred-snapshot.json
+   ```
+2. **Timeout**: 15 seconds. If times out or fails → log warning, proceed to Phase 2 without structured data.
+3. If successful, load `output/data/macro/fred-snapshot.json` and build `macro_context.structured`:
+   - Extract `common` fields: `risk_free_rate` (DGS10), `fed_funds_rate` (DFF), `yield_curve_spread`, `cpi_yoy` (CPIAUCSL), `gdp_growth` (A191RL1Q225SBEA), `unemployment` (UNRATE)
+   - Extract `sector_specific` fields based on `company_type` from research-plan.json:
+     - company_type contains "Financial" → include BAA10Y, DPRIME
+     - company_type contains "Energy" → include DCOILWTICO
+     - company_type contains "Consumer" → include RSAFS, UMCSENT
+     - company_type contains "Industrial"/"Manufacturing" → include INDPRO
+     - Others (Technology, Biotech, etc.) → common only
+   - If `market == "KR"` → include `kr_overlay.DEXKOUS` as `usd_krw`
+   - Tag: `[Macro]`, Grade: `A` (or `B` if cache is stale)
+
+**Phase 2 — Qualitative Web Search (20-second budget)**:
+
+1. Read the `macro_search` field from `research-plan.json`
 2. Execute the query using the MCP search priority chain:
    - `mcp__tavily__search` → `mcp__brave__search` → `WebSearch` → `WebFetch`
-3. **Timeout**: 20 seconds. If search fails or times out, log warning and proceed without macro data — do NOT stall the pipeline.
+3. **Timeout**: 20 seconds. If search fails or times out, log warning and proceed — do NOT stall the pipeline.
 
 **Extract from results**:
 
@@ -151,36 +172,54 @@ Check `output/research-plan.json` for `macro_search_required`. If `false` or abs
 | `confidence` | High / Medium / Low — based on source authority and consensus |
 | `tag` | Source tag: `[News]`, `[Filing]`, or `[Est]` |
 
-**Write to tier2-raw.json** under a new `macro_context` field:
+**Write to tier2-raw.json** under `macro_context`:
 
 ```json
 "macro_context": {
-  "search_query": "the query executed",
-  "collection_timestamp": "ISO 8601",
-  "factors": [
-    {
-      "factor": "...",
-      "narrative": "...",
-      "timeline": "...",
-      "confidence": "High|Medium|Low",
-      "tag": "[News]|[Filing]|[Est]",
-      "sources": ["url1", "url2"]
-    }
-  ],
-  "macro_risks": [
-    {
-      "risk": "...",
-      "impact": "...",
-      "ticker_relevance": "...",
-      "monitoring": "..."
-    }
-  ]
+  "structured": {
+    "source": "FRED",
+    "tag": "[Macro]",
+    "grade": "A",
+    "timestamp": "2026-03-25T09:00:00Z",
+    "risk_free_rate": 4.25,
+    "fed_funds_rate": 4.50,
+    "yield_curve_spread": 0.30,
+    "yield_curve_inverted": false,
+    "cpi_yoy": 2.8,
+    "gdp_growth": 2.1,
+    "unemployment": 3.9,
+    "sector_specific": {},
+    "kr_overlay": {}
+  },
+  "qualitative": {
+    "search_query": "the query executed",
+    "collection_timestamp": "ISO 8601",
+    "factors": [
+      {
+        "factor": "...",
+        "narrative": "...",
+        "timeline": "...",
+        "confidence": "High|Medium|Low",
+        "tag": "[News]|[Filing]|[Est]",
+        "sources": ["url1", "url2"]
+      }
+    ],
+    "macro_risks": [
+      {
+        "risk": "...",
+        "impact": "...",
+        "ticker_relevance": "...",
+        "monitoring": "..."
+      }
+    ]
+  }
 }
 ```
 
 **Edge cases**:
-- If macro search returns no useful results → set `macro_context` to `null` (not an empty object)
-- If `macro_search_required` is `true` but `macro_search_query` is missing → skip and log warning
+- If FRED fails AND web search fails → set `macro_context` to `null` (not an empty object)
+- If `macro_search_required` is `true` but `macro_search` is missing → skip and log warning
+- If `macro_context.structured` is present but `macro_context.qualitative` has no results → still include `structured` data
 - Always proceed to the next step regardless of macro search outcome
 
 ### Step 4.9 — Write tier2-raw.json

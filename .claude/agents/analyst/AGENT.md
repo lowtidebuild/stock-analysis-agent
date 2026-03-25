@@ -110,7 +110,11 @@ Follow `analysis-framework-dashboard.md` exactly:
     - Extract DCF assumptions from your scenario analysis:
       - `fcf_ttm` from validated-data.json
       - `fcf_growth_rate` from your Base scenario revenue/margin assumptions
-      - `wacc` estimated from beta + risk-free rate + equity risk premium (sector default)
+      - `wacc`: If `macro_context.structured.risk_free_rate` is available in validated data:
+        - Use FRED-based WACC: pass `risk_free_rate`, `beta` (from financial_metrics), `erp` (sector default 5-6%) to dcf-calculator.py
+        - Also pass `debt_to_value`, `cost_of_debt`, `tax_rate` from validated-data.json if available
+        - dcf-calculator.py will auto-calculate WACC from components
+      - If no FRED data: estimate `wacc` from beta + sector default risk-free rate + equity risk premium (existing behavior)
       - `terminal_growth_rate` default 2.5%, sector override if appropriate
       - `net_debt` from validated-data.json
     - Run `dcf-calculator.py` (at `.claude/agents/analyst/scripts/dcf-calculator.py`):
@@ -120,13 +124,31 @@ Follow `analysis-framework-dashboard.md` exactly:
     - Write results to `analysis-result.json` under `sections.dcf_analysis`
     - **Timeout budget**: Execute DCF FIRST in the analysis phase. If DCF + scenario analysis approaches 3.5 minutes, skip remaining DCF scenarios and proceed with available results.
 7b. **Macro Context Integration (Mode C/D only)**
-    - Read `macro_context` from `output/data/{ticker}/tier2-raw.json`
-    - If macro_context is present and non-null:
-      - Integrate macro factors into Variant View considerations
-      - If any macro factor has a direct, quantifiable impact pathway on this ticker: allocate one Precision Risk slot to this macro risk with full mechanism chain
-      - If macro factors are contextual but not directly quantifiable: include in a `macro_context` narrative section only
-    - Write to `analysis-result.json` under `sections.macro_context`
-    - If macro_context is null or absent: skip this step entirely
+    - Read `macro_context` from `output/data/{ticker}/tier2-raw.json` (or `output/validated-data.json`)
+    - **Structured data (FRED)**: If `macro_context.structured` is present:
+      - Use FRED values for quantitative macro references (e.g., "10Y yield at 4.25% [Macro]")
+      - Generate `macro_sensitivity` section:
+        - Identify primary macro factor for this company type (see sensitivity mapping below)
+        - Calculate 3 scenarios: factor ±50bp / ±$10 / ±10 points
+        - For each scenario: estimate stock impact % with mechanism chain
+      - Write `sections.macro_sensitivity` to `analysis-result.json`
+    - **Qualitative data (web)**: If `macro_context.qualitative` is present:
+      - Integrate qualitative factors into Variant View considerations
+      - If any factor has direct, quantifiable impact → allocate Precision Risk slot with full mechanism chain
+      - If factors are contextual → include in `macro_context` narrative section only
+    - Write `sections.macro_context` to `analysis-result.json`
+    - If `macro_context` is null or absent: skip this step entirely
+
+    **Macro sensitivity mapping by company type:**
+
+    | Company Type | Primary Factor | Scenario | Mechanism |
+    |---|---|---|---|
+    | Technology/Platform | DGS10 (10Y yield) | ±50bp | P/E multiple expansion/compression |
+    | Financial | DGS10 + BAA10Y | ±50bp rate, ±25bp spread | NIM impact → net income → stock |
+    | Energy | DCOILWTICO (WTI) | ±$10/barrel | Revenue → operating income → stock |
+    | Consumer | UMCSENT (sentiment) | ±10 points | Revenue growth adjustment → stock |
+    | Industrial | INDPRO (production) | ±2% | Order/revenue impact → stock |
+    | Biotech/Pharma | DGS10 | ±50bp | Growth multiple sensitivity |
 8. Peer comparison table (3–5 peers)
 9. Analyst coverage (from FMP or web)
 10. Charts data (prepare JSON arrays for Chart.js)

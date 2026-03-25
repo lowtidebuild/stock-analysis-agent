@@ -43,5 +43,8 @@ Desktop.ini
 *.swo
 *~
 
+# ── Task tracking ─────────────────────────────────────────────────────────
+TODOS.md
+
 # ── Claude session artifacts ────────────────────────────────────────────────
 .claude/projects/

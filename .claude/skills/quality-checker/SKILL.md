@@ -94,7 +94,7 @@ IF output_mode = "A":
 
 **Procedure**:
 1. Count all numerical values in the output (prices, percentages, ratios, revenue figures, etc.)
-2. Count how many have source tags ([Filing], [Portal], [KR-Portal], [Calc], [Est])
+2. Count how many have source tags ([Filing], [Portal], [KR-Portal], [Calc], [Est], [Macro])
 3. Calculate: tagged_count / total_count × 100
 
 **Pass criteria**: ≥80% of numerical values have source tags
