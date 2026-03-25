@@ -7,6 +7,7 @@
 Claude Code 기반, 이중 데이터 파이프라인:
 - 🇺🇸 **미국 주식** — [Financial Datasets API](https://financialdatasets.ai) → SEC 공시 직접 수집, Grade A 재무 데이터
 - 🇰🇷 **한국 주식** — [DART OpenAPI](https://opendart.fss.or.kr) → 금융감독원 직접 수집, Grade A 재무 데이터
+- 🌐 **매크로 컨텍스트** — [FRED API](https://fred.stlouisfed.org) → 연방준비제도 경제 데이터로 DCF 정밀화 & 섹터 민감도 분석 (Mode C/D)
 
 임의 숫자 생성 없음. 모든 수치에 출처 태그.
 
@@ -140,6 +141,7 @@ MCP 없이: 웹 전용, 최대 신뢰도 Grade B. 완전히 동작합니다.
 | 등급 | 태그 | 의미 | 예시 |
 |------|------|------|------|
 | **A** | `[Filing]` | 1차 공시 출처 검증 + 산술 일관성 | SEC/DART API |
+| **A** | `[Macro]` | 정부/중앙은행 경제 통계 | FRED API (연방준비제도) |
 | **B** | `[Portal]` / `[KR-Portal]` | 2개 이상 출처 교차검증, 5% 이내 | 웹 교차검증 |
 | **C** | *(Grade C 표기)* | 단일 출처, 미검증 | 웹 단일 출처 |
 | **D** | `—` | 검증 불가 → **빈칸으로 표시** | 절대 임의 생성 안 함 |
@@ -246,6 +248,16 @@ claude mcp add --transport http financial-datasets https://mcp.financialdatasets
 
 API 키 발급: [financialdatasets.ai](https://financialdatasets.ai)
 전체 설정 가이드: [docs/mcp-setup-guide.ko.md](docs/mcp-setup-guide.ko.md)
+
+### (선택) FRED API 연동 — Mode C/D 매크로 데이터
+
+[fred.stlouisfed.org](https://fred.stlouisfed.org/docs/api/api_key.html)에서 무료 API 키를 발급받아 `.env`에 추가:
+
+```
+FRED_API_KEY=발급받은_키_입력
+```
+
+10Y Treasury, Fed Funds Rate, CPI, GDP, 실업률 등 Grade A 경제 데이터를 수집합니다. WACC 정밀 계산과 매크로 민감도 분석에 사용. 없으면 웹 서치 매크로(Grade B/C)로 대체됩니다.
 
 ### DART API 연동 — 한국 주식 *(무료, 필수)*
 

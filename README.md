@@ -7,6 +7,7 @@
 Built on Claude Code with dual data pipelines:
 - 🇺🇸 **US stocks** — [Financial Datasets API](https://financialdatasets.ai) → real SEC filings, Grade A financial data
 - 🇰🇷 **Korean stocks** — [DART OpenAPI](https://opendart.fss.or.kr) → 금융감독원 직접 수집, Grade A financial data
+- 🌐 **Macro context** — [FRED API](https://fred.stlouisfed.org) → Fed economic data for DCF precision & sector sensitivity (Mode C/D)
 
 Zero hallucinated numbers. Every figure traces back to its source.
 
@@ -140,6 +141,7 @@ Every number in the output carries a grade and source tag. You always know what 
 | Grade | Tag | Meaning | Example |
 |-------|-----|---------|---------|
 | **A** | `[Filing]` | Primary filing source, arithmetic consistent | SEC/DART API |
+| **A** | `[Macro]` | Government economic statistics | FRED API (Fed Reserve) |
 | **B** | `[Portal]` / `[KR-Portal]` | 2+ sources cross-referenced, within 5% | Web cross-reference |
 | **C** | *(Grade C note)* | Single source, unverified | One web mention |
 | **D** | `—` | Cannot verify → **shown as blank** | Never fabricated |
@@ -244,6 +246,16 @@ claude mcp add --transport http financial-datasets https://mcp.financialdatasets
 
 Get your API key at [financialdatasets.ai](https://financialdatasets.ai).
 Full setup guide: [docs/mcp-setup-guide.md](docs/mcp-setup-guide.md)
+
+### (Optional) Connect FRED API — Macro Data for Mode C/D
+
+Get a free API key at [fred.stlouisfed.org](https://fred.stlouisfed.org/docs/api/api_key.html), then add to `.env`:
+
+```
+FRED_API_KEY=your_key_here
+```
+
+Adds Grade A economic data (10Y Treasury, Fed Funds Rate, CPI, GDP, unemployment) for WACC precision and macro sensitivity analysis. Without it, macro context falls back to web search (Grade B/C).
 
 ### Connect DART API — Korean Stocks *(free, required)*
 
