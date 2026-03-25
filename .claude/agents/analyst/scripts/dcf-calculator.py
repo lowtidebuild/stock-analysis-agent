@@ -33,11 +33,16 @@ INPUT_SCHEMA = {
     "diluted_shares":      {"type": "float",  "required": True,  "description": "Diluted shares outstanding (millions)"},
     "fcf_ttm":             {"type": "float",  "required": True,  "description": "TTM free cash flow (millions USD)"},
     "fcf_growth_rate":     {"type": "float",  "required": True,  "description": "Projected FCF annual growth rate (decimal, e.g., 0.12 = 12%)"},
-    "wacc":                {"type": "float",  "required": True,  "description": "Weighted average cost of capital (decimal, e.g., 0.08 = 8%)"},
+    "wacc":                {"type": "float",  "required": False, "description": "Weighted average cost of capital (decimal, e.g., 0.08 = 8%). If omitted, auto-calculated from component inputs.", "default": None},
+    "risk_free_rate":      {"type": "float",  "required": False, "description": "Risk-free rate from FRED DGS10 (decimal, e.g., 0.0425 = 4.25%)", "default": None},
+    "beta":                {"type": "float",  "required": False, "description": "Equity beta from financial metrics", "default": None},
+    "erp":                 {"type": "float",  "required": False, "description": "Equity risk premium (decimal, e.g., 0.055 = 5.5%)", "default": None},
+    "debt_to_value":       {"type": "float",  "required": False, "description": "D/V ratio (decimal, e.g., 0.3 = 30%)", "default": None},
+    "cost_of_debt":        {"type": "float",  "required": False, "description": "Pre-tax cost of debt (decimal, e.g., 0.05 = 5%)", "default": None},
     "terminal_growth_rate":{"type": "float",  "required": False, "description": "Perpetual growth rate after forecast (decimal), default 0.025", "default": 0.025},
     "forecast_years":      {"type": "int",    "required": False, "description": "Number of explicit forecast years, default 10", "default": 10},
     "net_debt":            {"type": "float",  "required": False, "description": "Net debt (millions USD) = total_debt - cash. Default 0", "default": 0},
-    "tax_rate":            {"type": "float",  "required": False, "description": "Effective tax rate (decimal). Not used in FCF-based DCF but logged", "default": None},
+    "tax_rate":            {"type": "float",  "required": False, "description": "Effective tax rate (decimal). Used in WACC calculation if debt components provided.", "default": None},
     "margin_expansion":    {"type": "float",  "required": False, "description": "Annual margin improvement (decimal, e.g., 0.005 = 0.5%/yr added to growth)", "default": 0},
     "sensitivity_wacc":    {"type": "list",   "required": False, "description": "WACC values for sensitivity table (3 values)", "default": "auto: [wacc-1%, wacc, wacc+1%]"},
     "sensitivity_tgr":     {"type": "list",   "required": False, "description": "Terminal growth rates for sensitivity (3 values)", "default": "auto: [tgr-0.5%, tgr, tgr+0.5%]"},
@@ -54,6 +59,7 @@ OUTPUT_SCHEMA = {
     "sensitivity_table":    "list of dicts — 3×3 grid: WACC rows × terminal growth columns",
     "assumptions":          "dict — all assumptions used, for transparency",
     "formulas":             "dict — human-readable formula strings",
+    "wacc_derivation":      "dict or null — how WACC was determined (method, components, calculated value)",
     "errors":               "list — warnings and errors",
 }
 
@@ -197,11 +203,51 @@ def calculate_dcf(inputs: dict) -> dict:
     fcf_ttm = inputs.get("fcf_ttm")
     fcf_growth_rate = inputs.get("fcf_growth_rate")
     wacc = inputs.get("wacc")
+    risk_free_rate = inputs.get("risk_free_rate")
+    beta = inputs.get("beta")
+    erp = inputs.get("erp")
+    debt_to_value = inputs.get("debt_to_value")
+    cost_of_debt = inputs.get("cost_of_debt")
     terminal_growth_rate = inputs.get("terminal_growth_rate", 0.025)
     forecast_years = inputs.get("forecast_years", 10)
     net_debt = inputs.get("net_debt", 0)
     tax_rate = inputs.get("tax_rate")
     margin_expansion = inputs.get("margin_expansion", 0)
+
+    # ── WACC Resolution ──
+    # Priority: explicit wacc > component-based > error
+    wacc_derivation = None
+
+    if wacc is not None:
+        wacc_derivation = {"method": "manual", "wacc": wacc}
+    elif risk_free_rate is not None and beta is not None and erp is not None:
+        cost_of_equity = risk_free_rate + beta * erp
+        if debt_to_value is not None and cost_of_debt is not None and tax_rate is not None:
+            equity_to_value = 1.0 - debt_to_value
+            wacc = (equity_to_value * cost_of_equity) + (debt_to_value * cost_of_debt * (1 - tax_rate))
+            wacc_derivation = {
+                "method": "FRED-based",
+                "risk_free_rate": risk_free_rate,
+                "risk_free_source": "FRED DGS10",
+                "beta": beta, "erp": erp,
+                "cost_of_equity": round(cost_of_equity, 5),
+                "debt_to_value": debt_to_value,
+                "cost_of_debt": cost_of_debt,
+                "tax_rate": tax_rate,
+                "calculated_wacc": round(wacc, 5),
+            }
+        else:
+            wacc = cost_of_equity
+            wacc_derivation = {
+                "method": "FRED-based (equity-only)",
+                "risk_free_rate": risk_free_rate,
+                "risk_free_source": "FRED DGS10",
+                "beta": beta, "erp": erp,
+                "cost_of_equity": round(cost_of_equity, 5),
+                "calculated_wacc": round(wacc, 5),
+                "note": "Debt components not provided — Cost of Equity used as WACC",
+            }
+        errors.append(f"INFO: WACC auto-calculated from FRED components: {wacc:.4f}")
 
     # Log assumptions for transparency
     assumptions = {
@@ -235,6 +281,7 @@ def calculate_dcf(inputs: dict) -> dict:
             "sensitivity_table": None,
             "assumptions": assumptions,
             "formulas": {},
+            "wacc_derivation": wacc_derivation,
             "errors": errors,
         }
 
@@ -273,6 +320,7 @@ def calculate_dcf(inputs: dict) -> dict:
         "sensitivity_table": sensitivity_table,
         "assumptions": assumptions,
         "formulas": result["formulas"],
+        "wacc_derivation": wacc_derivation,
         "errors": errors,
     }
 
