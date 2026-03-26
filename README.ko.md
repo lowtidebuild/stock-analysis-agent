@@ -4,7 +4,7 @@
 
 **미국 + 한국 주식 기관급 리서치를, 몇 분 안에.**
 
-Claude Code 기반, 이중 데이터 파이프라인:
+Claude Code 기반, 삼중 데이터 파이프라인:
 - 🇺🇸 **미국 주식** — [Financial Datasets API](https://financialdatasets.ai) → SEC 공시 직접 수집, Grade A 재무 데이터
 - 🇰🇷 **한국 주식** — [DART OpenAPI](https://opendart.fss.or.kr) → 금융감독원 직접 수집, Grade A 재무 데이터
 - 🌐 **매크로 컨텍스트** — [FRED API](https://fred.stlouisfed.org) → 연방준비제도 경제 데이터로 DCF 정밀화 & 섹터 민감도 분석 (Mode C/D)

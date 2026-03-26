@@ -4,7 +4,7 @@
 
 **Institutional-grade stock research for US and Korean equities — delivered in minutes.**
 
-Built on Claude Code with dual data pipelines:
+Built on Claude Code with triple data pipelines:
 - 🇺🇸 **US stocks** — [Financial Datasets API](https://financialdatasets.ai) → real SEC filings, Grade A financial data
 - 🇰🇷 **Korean stocks** — [DART OpenAPI](https://opendart.fss.or.kr) → 금융감독원 직접 수집, Grade A financial data
 - 🌐 **Macro context** — [FRED API](https://fred.stlouisfed.org) → Fed economic data for DCF precision & sector sensitivity (Mode C/D)
