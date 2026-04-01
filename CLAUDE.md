@@ -100,8 +100,9 @@ Read `.claude/skills/market-router/SKILL.md`
 - Classify company type
 - Identify peers (3–5)
 - Determine macro factors for Mode C/D (→ macro_search in research-plan.json)
-- Write `output/research-plan.json`
-- Verify output: `output/research-plan.json` exists
+- Initialize run-local artifact root (`output/runs/{run_id}/{ticker}/`) via `artifact-manager.py`
+- Write `output/runs/{run_id}/{ticker}/research-plan.json`
+- Verify output: run-local `research-plan.json` exists
 
 ### Step 3 — Financial Data Collection (Enhanced Mode only)
 Read `.claude/skills/financial-data-collector/SKILL.md`
@@ -125,18 +126,18 @@ Read `.claude/skills/data-validator/SKILL.md`
 - 3-layer fact-check (arithmetic + cross-reference + sanity)
 - Assign confidence grades A/B/C/D
 - Apply blank-over-wrong: Grade D → null + exclusion record
-- Write `output/validated-data.json`
+- Write `output/runs/{run_id}/{ticker}/validated-data.json`
 - Verify output: file exists AND overall_grade computed
 
 ### Steps 6 & 7 — Deep Analysis (Analyst Agent)
 **Dispatch Analyst Agent** for Mode A, C, and D:
 - Read `.claude/agents/analyst/AGENT.md`
-- Load: validated-data.json, research-plan.json, appropriate framework file
-- Mode A: analyst produces lightweight `output/analysis-result.json` (verdict + timeline)
+- Load: run-local validated-data.json, research-plan.json, appropriate framework file
+- Mode A: analyst produces lightweight `output/runs/{run_id}/{ticker}/analysis-result.json` (verdict + timeline)
 - Mode B: execute inline (no subagent)
-- Mode C/D: analyst produces full `output/analysis-result.json`
+- Mode C/D: analyst produces full `output/runs/{run_id}/{ticker}/analysis-result.json`
 - Mode C/D: analyst runs DCF valuation (dcf-calculator.py) and integrates macro context
-- Verify output: `output/analysis-result.json` exists AND rr_score is non-null
+- Verify output: run-local `analysis-result.json` exists AND rr_score is non-null
 
 ### Step 8 — Output Generation
 - **Mode A**: Apply `.claude/skills/briefing-generator/SKILL.md` → HTML file + chat summary
@@ -165,13 +166,14 @@ Read `.claude/skills/data-manager/SKILL.md` (Part A)
 
 ### Data Handoff File Paths (critical — verify each before proceeding)
 ```
-Step 2 writes:  output/research-plan.json
+Step 2 writes:  output/runs/{run_id}/{ticker}/research-plan.json
 Step 3 writes:  output/data/{ticker}/tier1-raw.json
 Step 4 writes:  output/data/{ticker}/tier2-raw.json
-Step 5 writes:  output/validated-data.json
-Step 7 writes:  output/analysis-result.json
+Step 5 writes:  output/runs/{run_id}/{ticker}/validated-data.json
+Step 7 writes:  output/runs/{run_id}/{ticker}/analysis-result.json
 Step 7 also:  .claude/agents/analyst/scripts/dcf-calculator.py (called by analyst)
 Step 8 writes:  output/reports/{ticker}_{mode}_{lang}_{date}.{ext}
+Step 9 writes:  output/runs/{run_id}/{ticker}/quality-report.json
 Step 10 writes: output/data/{ticker}/{ticker}_{date}_snapshot.json
                 output/data/{ticker}/latest.json
 ```
@@ -199,7 +201,7 @@ Steps:
 
 **File namespace for Workflow 2**:
 - Each ticker uses `output/data/{ticker}/` directory
-- Do NOT use shared `output/validated-data.json` (prevents collision)
+- Do NOT use deprecated shared `output/validated-data.json` (prevents collision)
 - Analyst reads from each ticker's namespaced validated-data
 
 **Session reuse rule**: If AAPL was analyzed 30 minutes ago, do not re-collect AAPL data for a new comparison — reuse `output/data/AAPL/tier1-raw.json` and `output/data/AAPL/tier2-raw.json`.
@@ -243,15 +245,15 @@ Write to `output/portfolio.json`.
 
 | Agent | Trigger | Inputs | Outputs | Max Dispatches |
 |-------|---------|--------|---------|---------------|
-| data-researcher | ≥3 tickers in Workflow 2 not in session cache | research-plan.json | tier1-raw.json + tier2-raw.json per ticker | 1 per workflow run |
-| analyst | Mode A, C, or D (always); Mode B (inline, no dispatch) | validated-data.json, research-plan.json, framework file | analysis-result.json | 2 (original + patch) |
-| critic | Mode C/D (always); Mode B with ≥3 tickers; Mode A (skip) | analysis-result.json, validated-data.json | quality-report.json | 1 per output (re-check after patch = 1 more) |
+| data-researcher | ≥3 tickers in Workflow 2 not in session cache | run-local research-plan.json | tier1-raw.json + tier2-raw.json per ticker | 1 per workflow run |
+| analyst | Mode A, C, or D (always); Mode B (inline, no dispatch) | run-local validated-data.json, run-local research-plan.json, framework file | run-local analysis-result.json | 2 (original + patch) |
+| critic | Mode C/D (always); Mode B with ≥3 tickers; Mode A (skip) | run-local analysis-result.json, run-local validated-data.json | run-local quality-report.json | 1 per output (re-check after patch = 1 more) |
 
 **Sub-agent file paths** (pass explicitly when dispatching):
 ```
-data-researcher receives: ["output/research-plan.json", "{ticker list}"]
-analyst receives: ["output/validated-data.json", "output/research-plan.json", "{framework path}"]
-critic receives: ["output/analysis-result.json", "output/validated-data.json"]
+data-researcher receives: ["output/runs/{run_id}/{ticker}/research-plan.json", "{ticker list}"]
+analyst receives: ["output/runs/{run_id}/{ticker}/validated-data.json", "output/runs/{run_id}/{ticker}/research-plan.json", "{framework path}"]
+critic receives: ["output/runs/{run_id}/{ticker}/analysis-result.json", "output/runs/{run_id}/{ticker}/validated-data.json"]
 ```
 
 ---
@@ -385,10 +387,14 @@ Project Root
 │   ├── watchlist.json
 │   ├── portfolio.json
 │   ├── catalyst-calendar.json
-│   ├── research-plan.json             ← Step 2 output
-│   ├── validated-data.json            ← Step 5 output (single ticker)
-│   ├── analysis-result.json           ← Step 7 output
-│   ├── quality-report.json            ← Step 9 output
+│   ├── runs/
+│   │   └── {run_id}/
+│   │       ├── run-manifest.json
+│   │       └── {ticker}/
+│   │           ├── research-plan.json     ← Step 2 output
+│   │           ├── validated-data.json    ← Step 5 output
+│   │           ├── analysis-result.json   ← Step 7 output
+│   │           └── quality-report.json    ← Step 9 output
 │   ├── data/macro/
 │   │   └── fred-snapshot.json            ← FRED cache (shared across tickers)
 │   ├── data/{ticker}/
@@ -437,6 +443,7 @@ Tags indicate provenance — where the data was fetched from. Tags do NOT determ
 | Tag | Source |
 |-----|--------|
 | `[Filing]` | SEC filing (via Financial Datasets MCP) / DART 전자공시 (via DART OpenAPI) — 규제기관 원본 |
+| `[Company]` | 회사 IR, 실적 보도자료, 실적 컨퍼런스콜 — 발행사 원문이지만 규제기관 공시는 아님 |
 | `[Portal]` | Yahoo Finance, MarketWatch, Finviz 등 US/글로벌 금융 포탈 |
 | `[KR-Portal]` | 네이버금융, FnGuide, KIND 등 한국 금융 포탈 |
 | `[Calc]` | 검증된 입력값으로부터 자체 계산 (P/E, EV/EBITDA 등) |
@@ -456,4 +463,12 @@ Grades are assigned by the decision tree in `confidence-grading.md`, based on **
 | C | Single-Source | 단일 소스, 산술 일관성 있음 |
 | D | Unverified | 검증 불가, >15% 불일치, 또는 데이터 없음 → "—" 표시, 분석에서 제외 |
 
-**Note**: `[Filing]`과 `[Macro]`가 Grade A인 이유는 각각 규제기관(SEC/DART)과 정부기관(FRED/한국은행) 원본이기 때문. Financial Datasets MCP, DART OpenAPI, FRED API는 이 원본에 대한 구조화된 접근 경로. API라는 전달 방식 자체가 등급을 결정하지 않는다.
+**Canonical metadata contract**: every verified metric should carry `grade`, `source_type`, `source_authority`, `display_tag`, and `sources`. Legacy tags such as `[KR-Web]`, `[DART-API]`, `[Calculated]`, or `[≈]` must be normalized before output generation.
+
+**Note**: `[Filing]`과 `[Macro]`가 Grade A가 될 수 있는 이유는 각각 규제기관(SEC/DART)과 정부기관(FRED/한국은행) 원본이기 때문입니다. 반면 회사 IR 자료는 원문이라도 `[Company]`로 분리해 규제 공시와 구분합니다. API라는 전달 방식 자체가 등급을 결정하지 않습니다.
+
+## Security
+
+- **NEVER** read, cat, print, or access `.env` files directly
+- **NEVER** output API keys, secrets, or credentials in responses
+- When debugging environment issues, ask the user to verify env vars are set — do not read them yourself

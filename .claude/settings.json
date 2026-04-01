@@ -1,5 +1,15 @@
 {
   "permissions": {
+    "deny": [
+      "Read(.env*)",
+      "Edit(.env*)",
+      "Write(.env*)",
+      "Bash(cat .env*)",
+      "Bash(less .env*)",
+      "Bash(more .env*)",
+      "Bash(head .env*)",
+      "Bash(tail .env*)"
+    ],
     "allow": [
       "Read(//c/Users/lowtidebuild/.claude/projects/c--Users-lowtidebuild-Desktop-VS-Code-stock-analysis-agent/b0651e8c-347d-4870-be03-eeaf5bdf04f0/tool-results/**)",
       "Bash(python3 -c \":*)",
@@ -26,10 +36,25 @@
       "Bash(python -m py_compile .claude/skills/data-manager/scripts/delta-comparator.py)",
       "Bash(python .claude/skills/data-validator/scripts/ratio-calculator.py --inline '{\"\"price\"\": 175.50, \"\"diluted_shares\"\": 15500, \"\"net_income_ttm\"\": 97000, \"\"ebitda_ttm\"\": 125000, \"\"total_debt\"\": 110000, \"\"cash\"\": 65000, \"\"operating_cf\"\": 120000, \"\"capex\"\": 11000, \"\"revenue_ttm\"\": 395000, \"\"operating_income_ttm\"\": 118000, \"\"gross_profit_ttm\"\": 180000}')",
       "Bash(mkdir -p \"c:\\\\Users\\\\lowtidebuild\\\\Desktop\\\\VS Code\\\\stock-analysis-agent\\\\output\")",
-      "Bash(\"c:\\\\Users\\\\lowtidebuild\\\\Desktop\\\\VS Code\\\\stock-analysis-agent\\\\output\\\\.gitkeep\")"
+      "Bash(\"c:\\\\Users\\\\lowtidebuild\\\\Desktop\\\\VS Code\\\\stock-analysis-agent\\\\output\\\\.gitkeep\")",
+      "Edit(/.claude/skills/data-validator/**)",
+      "Bash(echo \"=== TEST 2: WACC <= terminal growth \\(Blank-Over-Wrong\\) ===\")",
+      "Edit(/.claude/skills/market-router/**)",
+      "Edit(/.claude/skills/web-researcher/**)",
+      "Edit(/.claude/skills/dashboard-generator/**)",
+      "Bash(python3 .claude/agents/analyst/scripts/dcf-calculator.py --inline '{:*)",
+      "Bash(grep -c '$370.00' TSLA_C_ko_2026-03-22.html)",
+      "Bash(echo \"Bull $550:\")",
+      "Bash(grep -c '$550' TSLA_C_ko_2026-03-22.html)",
+      "Bash(echo \"Base $420:\")",
+      "Bash(grep -c '$420' TSLA_C_ko_2026-03-22.html)",
+      "Bash(cp output/analysis-result.json \"output/data/TSLA/TSLA_2026-03-22_snapshot.json\")",
+      "Bash(cp output/analysis-result.json \"output/data/TSLA/latest.json\")",
+      "Read(//Users/lowtidebuild/코딩 프로젝트/stock-analysis-agent/**)"
     ],
     "additionalDirectories": [
-      "c:\\Users\\lowtidebuild\\Desktop\\VS Code\\stock-analysis-agent\\output"
+      "c:\\Users\\lowtidebuild\\Desktop\\VS Code\\stock-analysis-agent\\output",
+      "/Users/lowtidebuild/코딩 프로젝트/stock-analysis-agent/.claude/agents/analyst"
     ]
   }
 }
