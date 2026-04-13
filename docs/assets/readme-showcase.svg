@@ -1,150 +1,143 @@
 <svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="bg" x1="120" y1="60" x2="1460" y2="820" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#07111F"/>
-      <stop offset="0.52" stop-color="#0A1F3B"/>
-      <stop offset="1" stop-color="#123E73"/>
+    <linearGradient id="bg" x1="110" y1="70" x2="1470" y2="830" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#07131F"/>
+      <stop offset="0.5" stop-color="#0A1D36"/>
+      <stop offset="1" stop-color="#12345B"/>
     </linearGradient>
-    <linearGradient id="panelBlue" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1D4ED8"/>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2563EB"/>
       <stop offset="1" stop-color="#38BDF8"/>
     </linearGradient>
-    <linearGradient id="panelGreen" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#059669"/>
       <stop offset="1" stop-color="#34D399"/>
     </linearGradient>
-    <linearGradient id="panelOrange" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="orange" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#EA580C"/>
       <stop offset="1" stop-color="#FDBA74"/>
     </linearGradient>
-    <linearGradient id="panelSlate" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#111827"/>
-      <stop offset="1" stop-color="#334155"/>
-    </linearGradient>
-    <filter id="blurGlow" x="-200" y="-200" width="2000" height="1300" filterUnits="userSpaceOnUse">
-      <feGaussianBlur stdDeviation="70"/>
+    <filter id="glow" x="-220" y="-220" width="2040" height="1340" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="82"/>
     </filter>
-    <filter id="cardShadow" x="0" y="0" width="1600" height="900" filterUnits="userSpaceOnUse">
+    <filter id="shadow" x="0" y="0" width="1600" height="900" filterUnits="userSpaceOnUse">
       <feOffset dy="18"/>
-      <feGaussianBlur stdDeviation="20"/>
-      <feColorMatrix type="matrix" values="0 0 0 0 0.0117 0 0 0 0 0.0392 0 0 0 0 0.0941 0 0 0 0.20 0"/>
+      <feGaussianBlur stdDeviation="22"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0118 0 0 0 0 0.0392 0 0 0 0 0.0941 0 0 0 0.22 0"/>
     </filter>
   </defs>
 
   <rect width="1600" height="900" rx="40" fill="url(#bg)"/>
 
-  <g opacity="0.72" filter="url(#blurGlow)">
-    <circle cx="257" cy="222" r="122" fill="#38BDF8"/>
-    <circle cx="1290" cy="178" r="110" fill="#2563EB"/>
-    <circle cx="1398" cy="722" r="132" fill="#FB923C"/>
-    <circle cx="1010" cy="640" r="150" fill="#10B981"/>
+  <g opacity="0.75" filter="url(#glow)">
+    <circle cx="278" cy="198" r="128" fill="#38BDF8"/>
+    <circle cx="1298" cy="170" r="110" fill="#2563EB"/>
+    <circle cx="1350" cy="720" r="138" fill="#FB923C"/>
+    <circle cx="1010" cy="660" r="144" fill="#10B981"/>
   </g>
 
-  <rect x="70" y="72" width="1460" height="756" rx="32" fill="white" fill-opacity="0.03" stroke="white" stroke-opacity="0.09"/>
+  <rect x="68" y="68" width="1464" height="764" rx="34" fill="white" fill-opacity="0.04" stroke="white" stroke-opacity="0.10"/>
 
-  <g>
-    <text x="112" y="152" fill="#7DD3FC" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700" letter-spacing="4">STOCK ANALYSIS AGENT</text>
-    <text x="112" y="245" fill="white" font-family="Inter, Arial, sans-serif" font-size="64" font-weight="800">Institutional stock research,</text>
-    <text x="112" y="320" fill="white" font-family="Inter, Arial, sans-serif" font-size="64" font-weight="800">without invented numbers.</text>
-    <text x="112" y="390" fill="#BFDBFE" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="500">US + Korean equities. Source-tagged metrics. Scenario-driven outputs.</text>
-    <text x="112" y="432" fill="#BFDBFE" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="500">From quick briefings to shareable investment memos.</text>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="112" y="148" fill="#7DD3FC" font-size="22" font-weight="700" letter-spacing="4">STOCK ANALYSIS AGENT</text>
+    <text x="112" y="236" fill="white" font-size="66" font-weight="800">Institutional research</text>
+    <text x="112" y="310" fill="white" font-size="66" font-weight="800">without invented numbers.</text>
+    <text x="112" y="382" fill="#BFDBFE" font-size="28" font-weight="500">US and Korean equities with source-tagged metrics,</text>
+    <text x="112" y="422" fill="#BFDBFE" font-size="28" font-weight="500">scenario analysis, valuation, and memo-ready outputs.</text>
 
-    <rect x="112" y="478" width="150" height="44" rx="22" fill="white" fill-opacity="0.10" stroke="white" stroke-opacity="0.18"/>
-    <text x="145" y="507" fill="white" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700">SEC + DART</text>
+    <rect x="112" y="474" width="168" height="46" rx="23" fill="white" fill-opacity="0.10" stroke="white" stroke-opacity="0.18"/>
+    <text x="146" y="504" fill="white" font-size="20" font-weight="700">SEC + DART</text>
 
-    <rect x="276" y="478" width="174" height="44" rx="22" fill="white" fill-opacity="0.10" stroke="white" stroke-opacity="0.18"/>
-    <text x="309" y="507" fill="white" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700">Mode A / B / C / D</text>
+    <rect x="294" y="474" width="190" height="46" rx="23" fill="white" fill-opacity="0.10" stroke="white" stroke-opacity="0.18"/>
+    <text x="326" y="504" fill="white" font-size="20" font-weight="700">Mode A / B / C / D</text>
 
-    <rect x="466" y="478" width="182" height="44" rx="22" fill="white" fill-opacity="0.10" stroke="white" stroke-opacity="0.18"/>
-    <text x="500" y="507" fill="white" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700">Blank &gt; Wrong</text>
+    <rect x="498" y="474" width="180" height="46" rx="23" fill="white" fill-opacity="0.10" stroke="white" stroke-opacity="0.18"/>
+    <text x="536" y="504" fill="white" font-size="20" font-weight="700">Blank &gt; Wrong</text>
   </g>
 
-  <g filter="url(#cardShadow)">
-    <rect x="112" y="582" width="180" height="122" rx="24" fill="white" fill-opacity="0.96"/>
-    <text x="138" y="624" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="1.5">DATA CONFIDENCE</text>
-    <text x="138" y="674" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="40" font-weight="800">Grade A</text>
-    <rect x="138" y="688" width="108" height="8" rx="4" fill="#DCEAFE"/>
-    <rect x="138" y="688" width="90" height="8" rx="4" fill="#2563EB"/>
+  <g filter="url(#shadow)" font-family="Segoe UI, Arial, sans-serif">
+    <rect x="112" y="576" width="192" height="126" rx="24" fill="white" fill-opacity="0.96"/>
+    <text x="138" y="618" fill="#64748B" font-size="15" font-weight="700" letter-spacing="1.2">DATA CONFIDENCE</text>
+    <text x="138" y="670" fill="#0F172A" font-size="36" font-weight="800">Grade A</text>
+    <rect x="138" y="682" width="112" height="8" rx="4" fill="#DBEAFE"/>
+    <rect x="138" y="682" width="92" height="8" rx="4" fill="#2563EB"/>
 
-    <rect x="310" y="582" width="180" height="122" rx="24" fill="white" fill-opacity="0.96"/>
-    <text x="336" y="624" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="1.5">DECISION ENGINE</text>
-    <text x="336" y="674" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="40" font-weight="800">R/R Score</text>
-    <rect x="336" y="688" width="120" height="8" rx="4" fill="#DCFCE7"/>
-    <rect x="336" y="688" width="98" height="8" rx="4" fill="#059669"/>
+    <rect x="324" y="576" width="192" height="126" rx="24" fill="white" fill-opacity="0.96"/>
+    <text x="350" y="618" fill="#64748B" font-size="15" font-weight="700" letter-spacing="1.2">DECISION ENGINE</text>
+    <text x="350" y="670" fill="#0F172A" font-size="36" font-weight="800">R/R Score</text>
+    <rect x="350" y="682" width="120" height="8" rx="4" fill="#DCFCE7"/>
+    <rect x="350" y="682" width="98" height="8" rx="4" fill="#059669"/>
 
-    <rect x="508" y="582" width="180" height="122" rx="24" fill="white" fill-opacity="0.96"/>
-    <text x="534" y="624" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="1.5">OUTPUT RANGE</text>
-    <text x="534" y="674" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="40" font-weight="800">HTML + DOCX</text>
-    <rect x="534" y="688" width="126" height="8" rx="4" fill="#FFEDD5"/>
-    <rect x="534" y="688" width="102" height="8" rx="4" fill="#EA580C"/>
+    <rect x="536" y="576" width="192" height="126" rx="24" fill="white" fill-opacity="0.96"/>
+    <text x="562" y="618" fill="#64748B" font-size="15" font-weight="700" letter-spacing="1.2">DELIVERY FORMATS</text>
+    <text x="562" y="656" fill="#0F172A" font-size="30" font-weight="800">HTML dashboards</text>
+    <text x="562" y="686" fill="#0F172A" font-size="30" font-weight="800">and DOCX memos</text>
   </g>
 
-  <g filter="url(#cardShadow)">
-    <rect x="790" y="116" width="690" height="430" rx="30" fill="white"/>
-    <rect x="790" y="116" width="690" height="64" rx="30" fill="#F8FAFC"/>
-    <circle cx="830" cy="148" r="8" fill="#F87171"/>
-    <circle cx="856" cy="148" r="8" fill="#FBBF24"/>
-    <circle cx="882" cy="148" r="8" fill="#34D399"/>
-    <rect x="920" y="132" width="230" height="32" rx="16" fill="#E2E8F0"/>
-    <text x="944" y="153" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700">Mode C - Deep Dive Dashboard</text>
+  <g filter="url(#shadow)" font-family="Segoe UI, Arial, sans-serif">
+    <rect x="796" y="112" width="688" height="444" rx="30" fill="white"/>
+    <rect x="796" y="112" width="688" height="64" rx="30" fill="#F8FAFC"/>
+    <circle cx="836" cy="144" r="8" fill="#F87171"/>
+    <circle cx="862" cy="144" r="8" fill="#FBBF24"/>
+    <circle cx="888" cy="144" r="8" fill="#34D399"/>
+    <rect x="926" y="128" width="260" height="32" rx="16" fill="#E2E8F0"/>
+    <text x="950" y="149" fill="#475569" font-size="16" font-weight="700">Mode C - Deep Dive Dashboard</text>
 
-    <rect x="824" y="206" width="286" height="104" rx="24" fill="url(#panelBlue)"/>
-    <text x="850" y="246" fill="white" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">Bull / Base / Bear</text>
-    <text x="850" y="286" fill="white" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="800">R/R 2.7</text>
-    <rect x="979" y="233" width="98" height="28" rx="14" fill="white" fill-opacity="0.18"/>
-    <text x="1003" y="252" fill="white" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700">Attractive</text>
+    <rect x="828" y="206" width="290" height="116" rx="24" fill="url(#blue)"/>
+    <text x="854" y="246" fill="white" font-size="18" font-weight="700">Scenario Engine</text>
+    <text x="854" y="290" fill="white" font-size="42" font-weight="800">R/R 2.7</text>
+    <rect x="984" y="230" width="104" height="30" rx="15" fill="white" fill-opacity="0.18"/>
+    <text x="1008" y="250" fill="white" font-size="14" font-weight="700">Attractive</text>
+    <text x="854" y="308" fill="#DBEAFE" font-size="15" font-weight="600">Bull / Base / Bear with weighted returns</text>
 
-    <rect x="1128" y="206" width="316" height="104" rx="24" fill="#F8FAFC"/>
-    <text x="1154" y="246" fill="#334155" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">Valuation Snapshot</text>
-    <rect x="1154" y="266" width="120" height="12" rx="6" fill="#DBEAFE"/>
-    <rect x="1288" y="266" width="92" height="12" rx="6" fill="#E2E8F0"/>
-    <rect x="1154" y="288" width="198" height="12" rx="6" fill="#BFDBFE"/>
-    <rect x="1154" y="232" width="76" height="24" rx="12" fill="#EFF6FF"/>
-    <text x="1176" y="249" fill="#2563EB" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="700">DCF</text>
+    <rect x="1138" y="206" width="312" height="116" rx="24" fill="#F8FAFC"/>
+    <text x="1164" y="246" fill="#334155" font-size="18" font-weight="700">Valuation Snapshot</text>
+    <rect x="1164" y="230" width="74" height="24" rx="12" fill="#EFF6FF"/>
+    <text x="1187" y="246" fill="#2563EB" font-size="13" font-weight="700">DCF</text>
+    <rect x="1164" y="266" width="122" height="12" rx="6" fill="#DBEAFE"/>
+    <rect x="1298" y="266" width="94" height="12" rx="6" fill="#E2E8F0"/>
+    <rect x="1164" y="288" width="198" height="12" rx="6" fill="#BFDBFE"/>
+    <rect x="1164" y="310" width="174" height="12" rx="6" fill="#E2E8F0"/>
 
-    <rect x="824" y="334" width="184" height="176" rx="24" fill="#F8FAFC"/>
-    <text x="848" y="366" fill="#334155" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700">KPI Tiles</text>
-    <rect x="848" y="386" width="64" height="48" rx="16" fill="#EFF6FF"/>
-    <rect x="924" y="386" width="60" height="48" rx="16" fill="#ECFDF5"/>
-    <rect x="848" y="446" width="64" height="48" rx="16" fill="#FEF3C7"/>
-    <rect x="924" y="446" width="60" height="48" rx="16" fill="#F1F5F9"/>
-    <text x="866" y="414" fill="#2563EB" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="800">P/E</text>
-    <text x="938" y="414" fill="#059669" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="800">FCF</text>
-    <text x="859" y="474" fill="#D97706" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="800">Rev</text>
-    <text x="936" y="474" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="800">OM</text>
+    <rect x="828" y="344" width="190" height="176" rx="24" fill="#F8FAFC"/>
+    <text x="852" y="376" fill="#334155" font-size="16" font-weight="700">KPI Tiles</text>
+    <rect x="852" y="394" width="68" height="48" rx="16" fill="#EFF6FF"/>
+    <rect x="932" y="394" width="62" height="48" rx="16" fill="#ECFDF5"/>
+    <rect x="852" y="454" width="68" height="48" rx="16" fill="#FEF3C7"/>
+    <rect x="932" y="454" width="62" height="48" rx="16" fill="#F1F5F9"/>
+    <text x="870" y="423" fill="#2563EB" font-size="14" font-weight="800">P/E</text>
+    <text x="946" y="423" fill="#059669" font-size="14" font-weight="800">FCF</text>
+    <text x="864" y="483" fill="#D97706" font-size="14" font-weight="800">Rev</text>
+    <text x="944" y="483" fill="#475569" font-size="14" font-weight="800">OM</text>
 
-    <rect x="1028" y="334" width="416" height="176" rx="24" fill="#F8FAFC"/>
-    <text x="1054" y="366" fill="#334155" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700">Trend + Target Path</text>
-    <path d="M1074 470C1110 430 1148 438 1188 402C1220 372 1262 380 1294 338C1328 296 1372 284 1405 262" stroke="#2563EB" stroke-width="8" stroke-linecap="round"/>
-    <path d="M1074 458C1108 444 1146 446 1188 432C1220 420 1262 416 1294 404C1330 392 1370 382 1408 374" stroke="#93C5FD" stroke-width="8" stroke-linecap="round"/>
-    <line x1="1074" y1="486" x2="1408" y2="486" stroke="#CBD5E1" stroke-width="4" stroke-linecap="round"/>
-    <line x1="1074" y1="486" x2="1074" y2="226" stroke="#CBD5E1" stroke-width="4" stroke-linecap="round"/>
+    <rect x="1038" y="344" width="412" height="176" rx="24" fill="#F8FAFC"/>
+    <text x="1064" y="376" fill="#334155" font-size="16" font-weight="700">Trend and Target Path</text>
+    <path d="M1086 474C1120 434 1158 440 1196 404C1226 376 1268 382 1300 340C1332 300 1374 288 1406 266" stroke="#2563EB" stroke-width="8" stroke-linecap="round"/>
+    <path d="M1086 460C1120 446 1158 448 1196 434C1228 422 1268 418 1300 406C1334 394 1372 384 1408 376" stroke="#93C5FD" stroke-width="8" stroke-linecap="round"/>
+    <line x1="1086" y1="490" x2="1410" y2="490" stroke="#CBD5E1" stroke-width="4" stroke-linecap="round"/>
+    <line x1="1086" y1="490" x2="1086" y2="232" stroke="#CBD5E1" stroke-width="4" stroke-linecap="round"/>
   </g>
 
-  <g filter="url(#cardShadow)">
-    <rect x="722" y="494" width="366" height="240" rx="28" fill="white"/>
-    <rect x="722" y="494" width="366" height="54" rx="28" fill="#F8FAFC"/>
-    <text x="748" y="528" fill="#0F172A" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="800">Mode B - Peer Comparison</text>
-    <rect x="748" y="572" width="126" height="34" rx="17" fill="url(#panelGreen)"/>
-    <text x="776" y="595" fill="white" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="800">Best Pick</text>
-    <rect x="748" y="624" width="314" height="18" rx="9" fill="#E2E8F0"/>
-    <rect x="748" y="654" width="274" height="18" rx="9" fill="#DBEAFE"/>
-    <rect x="748" y="684" width="234" height="18" rx="9" fill="#DCFCE7"/>
-    <rect x="960" y="572" width="102" height="34" rx="17" fill="#F1F5F9"/>
-    <text x="987" y="595" fill="#475569" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700">2-5 names</text>
+  <g filter="url(#shadow)" font-family="Segoe UI, Arial, sans-serif">
+    <rect x="722" y="584" width="358" height="168" rx="28" fill="white"/>
+    <rect x="722" y="584" width="358" height="54" rx="28" fill="#F8FAFC"/>
+    <text x="748" y="618" fill="#0F172A" font-size="18" font-weight="800">Mode B - Peer Comparison</text>
+    <rect x="748" y="656" width="128" height="34" rx="17" fill="url(#green)"/>
+    <text x="776" y="679" fill="white" font-size="16" font-weight="800">Best Pick</text>
+    <rect x="958" y="656" width="96" height="34" rx="17" fill="#F1F5F9"/>
+    <text x="983" y="679" fill="#475569" font-size="15" font-weight="700">2 to 5 names</text>
+    <rect x="748" y="708" width="306" height="16" rx="8" fill="#E2E8F0"/>
+    <rect x="748" y="734" width="262" height="16" rx="8" fill="#DBEAFE"/>
   </g>
 
-  <g filter="url(#cardShadow)">
-    <rect x="1122" y="482" width="308" height="276" rx="28" fill="white"/>
-    <rect x="1122" y="482" width="308" height="54" rx="28" fill="#FFF7ED"/>
-    <text x="1148" y="516" fill="#9A3412" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="800">Mode D - Investment Memo</text>
-    <rect x="1148" y="558" width="96" height="26" rx="13" fill="url(#panelOrange)"/>
-    <text x="1175" y="576" fill="white" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="800">DOCX</text>
-    <rect x="1148" y="604" width="256" height="14" rx="7" fill="#E2E8F0"/>
-    <rect x="1148" y="632" width="236" height="14" rx="7" fill="#E2E8F0"/>
-    <rect x="1148" y="660" width="246" height="14" rx="7" fill="#E2E8F0"/>
-    <rect x="1148" y="688" width="188" height="14" rx="7" fill="#E2E8F0"/>
-    <rect x="1148" y="720" width="104" height="8" rx="4" fill="#FDBA74"/>
-    <rect x="1264" y="720" width="84" height="8" rx="4" fill="#FED7AA"/>
+  <g filter="url(#shadow)" font-family="Segoe UI, Arial, sans-serif">
+    <rect x="1108" y="584" width="322" height="192" rx="28" fill="white"/>
+    <rect x="1108" y="584" width="322" height="54" rx="28" fill="#FFF7ED"/>
+    <text x="1134" y="618" fill="#9A3412" font-size="18" font-weight="800">Mode D - Investment Memo</text>
+    <rect x="1134" y="654" width="92" height="28" rx="14" fill="url(#orange)"/>
+    <text x="1161" y="673" fill="white" font-size="14" font-weight="800">DOCX</text>
+    <text x="1134" y="708" fill="#7C2D12" font-size="16" font-weight="700">Long-form memo for sharing and archive.</text>
+    <rect x="1134" y="726" width="262" height="12" rx="6" fill="#E2E8F0"/>
+    <rect x="1134" y="750" width="238" height="12" rx="6" fill="#E2E8F0"/>
   </g>
 </svg>

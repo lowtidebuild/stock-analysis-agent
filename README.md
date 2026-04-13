@@ -59,6 +59,22 @@ Type a ticker and the agent produces research that feels closer to a buy-side no
 
 ---
 
+## Supported Workflows
+
+The agent is designed for research tasks rather than quote lookups. One natural-language prompt routes into one of these workflows:
+
+| Workflow | Use it for | Example prompt | Primary output |
+|----------|------------|----------------|----------------|
+| Single-stock analysis | default deep research on one ticker | `Analyze NVDA` | Mode C dashboard |
+| Quick screen | a fast first pass before deeper work | `Analyze AAPL in Mode A` | Mode A briefing |
+| Peer comparison | ranking 2-5 names under one framework | `NVDA vs AMD vs INTC` | Mode B comparison |
+| Investment memo | a formal, shareable write-up | `AAPL investment memo` | Mode D DOCX |
+| Watchlist / delta | monitoring what changed since the last run | `Scan my watchlist` / `Compare NVDA to the last analysis` | refreshed artifacts + delta context |
+
+If you only need a live quote, use a market data app instead. This repo is intentionally optimized for full analysis.
+
+---
+
 ## Output Modes
 
 <p align="center">
@@ -72,14 +88,45 @@ Type a ticker and the agent produces research that feels closer to a buy-side no
 | **C — Deep Dive Dashboard** | HTML | default deep research | KPIs, valuation, charts, risks, macro, scenarios |
 | **D — Investment Memo** | DOCX | formal shareable memo | 3,000+ words in a structured research note |
 
+### Live Examples
+
+The original mode examples are preserved here as direct links so they stay attached to the mode descriptions instead of getting buried near the top of the page.
+
+| Mode | Example |
+|------|---------|
+| **Mode A** | [Quick Briefing HTML](https://codepen.io/lowtidebuild/full/xbEgpdE) |
+| **Mode B** | [Peer Comparison HTML](https://codepen.io/lowtidebuild/full/emdgGdW) |
+| **Mode C** | [Deep Dive Dashboard HTML](https://codepen.io/lowtidebuild/full/vEXgYGL) |
+| **Mode D** | [Investment Memo DOCX](https://docs.google.com/document/d/1PX4FIrb1a4nBeKj3L7HanoYBfG6hSwOS/edit?usp=sharing&ouid=105178834220477378953&rtpof=true&sd=true) |
+
+Mode D opens as a Google Docs preview because GitHub does not render `.docx` files inline.
+
 <details>
 <summary><strong>See the detailed structure for each mode</strong></summary>
 
 ### 🔍 Mode A — Quick Briefing
-**A** as in **A**t-a-glance. A one-page screen for fast triage.
+**A** as in **A**t-a-glance. A one-page HTML screen for fast triage. ~500 words, 2–3 minutes.
+
+| Section | Contents |
+|---------|----------|
+| **One-Line Thesis** | single sentence — must pass the competitor replacement test |
+| **Verdict Badge** | Overweight / Neutral / Underweight + R/R Score (color-coded) |
+| **KPI Tiles** | 3 metrics chosen by company type (e.g. Tech: P/E · Revenue Growth · FCF Yield) |
+| **Scenario Snapshot** | Bull / Base / Bear targets · probabilities · returns |
+| **Event Timeline** | 180-day catalyst calendar — earnings · product launches · regulatory events |
+| **Go-Deeper Prompt** | one-click upgrade to Mode C or Mode D |
 
 ### ⚖️ Mode B — Peer Comparison
-**B** as in **B**enchmark. Built for 2-5 tickers under one evaluation frame.
+**B** as in **B**enchmark. 2–5 tickers evaluated under one consistent frame. 800–1,200 words.
+
+| Section | Contents |
+|---------|----------|
+| **Comparison Matrix** | valuation · growth · profitability · balance sheet — Winner column per row |
+| **R/R Score Ranking** | weighted score per ticker, sorted best → worst |
+| **Per-Ticker Variant View** | Q1 + Q2 short form — consensus disagreement + primary catalyst |
+| **Best Pick** | reasoned recommendation · why this peer wins on risk-adjusted basis |
+| **Relative Valuation** | premium / discount vs peer median with mechanism |
+| **Consistency Rule** | same metric set across all peers · missing → "—" (never substituted) |
 
 ### 📈 Mode C — Deep Dive Dashboard *(default)*
 **C** as in **C**hart. An HTML dashboard designed for fast investment decision-making.
@@ -145,6 +192,8 @@ The pipeline is straightforward:
 
 ## Data Confidence System
 
+Confidence grades are part of the product, not a hidden implementation detail. Missing values are deliberate when verification fails.
+
 | Grade | Tag | Meaning | Example |
 |-------|-----|---------|---------|
 | **A** | `[Filing]` | primary regulatory filing source + arithmetic consistency | SEC / DART API |
@@ -188,6 +237,20 @@ R/R Score = (Bull_return% × Bull_prob + Base_return% × Base_prob)
 
 ## Quick Start
 
+### Before you start
+
+- Claude Code installed locally
+- Python 3.8+ for helper scripts
+- `python-docx` if you want Mode D DOCX output
+
+### Recommended setup path
+
+| Goal | Configure | Why it matters |
+|------|-----------|----------------|
+| Best US-stock coverage | Financial Datasets MCP | SEC-based structured financials, real-time price, insider trades |
+| Better macro context in Mode C/D | `FRED_API_KEY` | Treasury, Fed, CPI, GDP, unemployment |
+| Korean-stock analysis | `DART_API_KEY` | regulator financials and recent disclosures |
+
 ### 1. Install the basics
 
 ```bash
@@ -195,7 +258,10 @@ npm install -g @anthropic-ai/claude-code
 pip install python-docx
 git clone https://github.com/lowtidebuild/stock-analysis-agent.git
 cd stock-analysis-agent
+cp .env.example .env
 ```
+
+`cp .env.example .env` gives you a convenient place to store optional local keys such as `FRED_API_KEY`.
 
 ### 2. Connect Grade A US data *(strongly recommended)*
 
@@ -219,13 +285,15 @@ This adds Grade A macro inputs such as the 10Y Treasury, Fed Funds Rate, CPI, GD
 
 ### 4. Connect DART API *(free and effectively required for Korean stocks)*
 
-Add to `.claude/settings.local.json`:
+Add to the `env` block in `.claude/settings.local.json`:
 
 ```json
 "env": { "DART_API_KEY": "your_key_here" }
 ```
 
 Get a key at [opendart.fss.or.kr](https://opendart.fss.or.kr)
+
+If you prefer project-local secrets over shell variables, keep them together in this same `env` block.
 
 ### 5. Run
 
@@ -238,7 +306,7 @@ claude
 ```text
 === Stock Analysis Agent ===
 Data Mode (US):  {Enhanced (MCP active) / Standard (Web-only)}
-Data Mode (KR):  DART-Enhanced (Grade A)
+Data Mode (KR):  DART API (Grade A financials) + Naver Finance (price)
 Date: {YYYY-MM-DD}
 Ready. Send a ticker or question to begin.
 ```
@@ -247,18 +315,28 @@ Ready. Send a ticker or question to begin.
 
 ## Common Prompts
 
-```text
-Analyze NVDA
-005930 심층 분석
-AAPL investment memo
-삼성전자 투자 메모 써줘
-NVDA vs AMD vs INTC
-삼성전자 vs SK하이닉스 비교
-Scan my watchlist
-Compare NVDA to the last analysis
-```
+| Goal | Example prompt |
+|------|----------------|
+| Default deep dive | `Analyze NVDA` |
+| Korean single-stock analysis | `005930 심층 분석` |
+| Formal memo | `AAPL investment memo` / `삼성전자 투자 메모 써줘` |
+| Peer comparison | `NVDA vs AMD vs INTC` / `삼성전자 vs SK하이닉스 비교` |
+| Watchlist scan | `Scan my watchlist` |
+| Delta comparison | `Compare NVDA to the last analysis` |
 
-Price-only queries are not supported. Ask for analysis instead, such as `"Analyze AAPL"` or `"삼성전자 분석해줘"`.
+Price-only queries are not supported. Ask for analysis instead, such as `Analyze AAPL` or `삼성전자 분석해줘`.
+
+---
+
+## Generated Artifacts
+
+Each run leaves both a human-readable report and machine-readable checkpoints. That makes it easy to inspect validation, compare against the previous snapshot, or automate follow-up workflows.
+
+| Path family | What it stores |
+|-------------|----------------|
+| `output/reports/` | final HTML / DOCX deliverables |
+| `output/runs/{run_id}/{ticker}/` | run-local research plan, validated data, analysis result, QA report |
+| `output/data/{ticker}/` | reusable snapshots for delta analysis and watchlist refreshes |
 
 ---
 
