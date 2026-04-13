@@ -77,16 +77,40 @@ If you only need a live quote, use a market data app instead. This repo is inten
 
 ## Output Modes
 
-<p align="center">
-  <img src="docs/assets/readme-modes.svg" alt="Stock Analysis Agent output modes" width="100%">
-</p>
+If you are not sure which one to pick, start with **Mode C**. It is the default full-analysis path.
 
-| Mode | Format | Best for | Output |
-|------|--------|----------|--------|
-| **A — Quick Briefing** | HTML | fast screening | verdict card + 180-day event timeline |
-| **B — Peer Comparison** | HTML | comparing 2-5 tickers | side-by-side matrix + ranking + best pick |
-| **C — Deep Dive Dashboard** | HTML | default deep research | KPIs, valuation, charts, risks, macro, scenarios |
-| **D — Investment Memo** | DOCX | formal shareable memo | 3,000+ words in a structured research note |
+<table>
+  <tr>
+    <th align="left">Mode</th>
+    <th align="left">Choose This When</th>
+    <th align="left">What You Get</th>
+    <th align="left">Best For</th>
+  </tr>
+  <tr>
+    <td valign="top"><strong>A — Quick Briefing</strong><br/>Fastest pass</td>
+    <td valign="top">You want a first screen before spending time on a full write-up.</td>
+    <td valign="top">HTML verdict card<br/>180-day catalyst timeline<br/>3 KPI tiles</td>
+    <td valign="top">Fast triage and go / no-go decisions</td>
+  </tr>
+  <tr>
+    <td valign="top"><strong>B — Peer Comparison</strong><br/>Relative ranking</td>
+    <td valign="top">You need to compare 2-5 names under one consistent framework.</td>
+    <td valign="top">HTML comparison matrix<br/>R/R ranking<br/>best-pick call</td>
+    <td valign="top">Choosing the strongest name in a peer set</td>
+  </tr>
+  <tr>
+    <td valign="top"><strong>C — Deep Dive Dashboard</strong><br/>Default mode</td>
+    <td valign="top">You want the main investment case, valuation, risks, and strategy in one view.</td>
+    <td valign="top">HTML dashboard<br/>KPIs, charts, valuation, macro, scenarios</td>
+    <td valign="top">Day-to-day deep research</td>
+  </tr>
+  <tr>
+    <td valign="top"><strong>D — Investment Memo</strong><br/>Most formal</td>
+    <td valign="top">You need a shareable long-form document for review, discussion, or archive.</td>
+    <td valign="top">DOCX memo<br/>3,000+ word structured note<br/>full thesis + appendix</td>
+    <td valign="top">Formal write-ups you can circulate</td>
+  </tr>
+</table>
 
 ### Live Examples
 

@@ -77,16 +77,40 @@
 
 ## 결과물 모드
 
-<p align="center">
-  <img src="docs/assets/readme-modes.svg" alt="Stock Analysis Agent output modes" width="100%">
-</p>
+어떤 모드로 시작할지 애매하면 **Mode C**부터 보면 됩니다. 기본 심층 분석 경로입니다.
 
-| Mode | 포맷 | 가장 잘 쓰이는 순간 | 핵심 산출물 |
-|------|------|-------------------|------------|
-| **A — Quick Briefing** | HTML | 빠르게 스크리닝할 때 | 퀵 버딕트 카드, 180일 이벤트 타임라인 |
-| **B — Peer Comparison** | HTML | 2~5개 종목 비교할 때 | 비교 매트릭스, R/R Score 순위, 최선호 종목 |
-| **C — Deep Dive Dashboard** | HTML | 기본 심층 분석 | KPI, 밸류에이션, 차트, 리스크, 매크로, 시나리오 |
-| **D — Investment Memo** | DOCX | 공유용 정식 투자 메모가 필요할 때 | 3,000+ 단어, 구조화된 리서치 노트 |
+<table>
+  <tr>
+    <th align="left">Mode</th>
+    <th align="left">이럴 때 고르세요</th>
+    <th align="left">받게 되는 결과물</th>
+    <th align="left">특히 잘 맞는 상황</th>
+  </tr>
+  <tr>
+    <td valign="top"><strong>A — Quick Briefing</strong><br/>가장 빠른 1차 판단</td>
+    <td valign="top">전체 리포트에 시간을 쓰기 전에 먼저 빠르게 걸러보고 싶을 때</td>
+    <td valign="top">HTML 버딕트 카드<br/>180일 카탈리스트 타임라인<br/>핵심 KPI 3개</td>
+    <td valign="top">빠른 스크리닝과 go / no-go 판단</td>
+  </tr>
+  <tr>
+    <td valign="top"><strong>B — Peer Comparison</strong><br/>상대 비교 특화</td>
+    <td valign="top">2~5개 종목을 같은 기준으로 비교해서 우선순위를 정하고 싶을 때</td>
+    <td valign="top">HTML 비교 매트릭스<br/>R/R 순위<br/>최선호 종목 추천</td>
+    <td valign="top">동종업계 안에서 무엇이 가장 나은지 고를 때</td>
+  </tr>
+  <tr>
+    <td valign="top"><strong>C — Deep Dive Dashboard</strong><br/>기본값</td>
+    <td valign="top">투자 논리, 밸류에이션, 리스크, 전략을 한 번에 보고 싶을 때</td>
+    <td valign="top">HTML 대시보드<br/>KPI, 차트, 밸류에이션, 매크로, 시나리오</td>
+    <td valign="top">평소 심층 리서치 대부분</td>
+  </tr>
+  <tr>
+    <td valign="top"><strong>D — Investment Memo</strong><br/>가장 정식 문서형</td>
+    <td valign="top">공유, 검토, 보관용으로 긴 형식의 문서가 필요할 때</td>
+    <td valign="top">DOCX 투자 메모<br/>3,000+ 단어 구조화 노트<br/>전체 논지 + 부록</td>
+    <td valign="top">돌려보기 좋은 정식 투자 메모</td>
+  </tr>
+</table>
 
 ### 예시 링크
 
