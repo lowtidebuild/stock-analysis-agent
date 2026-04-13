@@ -85,43 +85,37 @@ If you are not sure which one to pick, start with **Mode C**. It is the default 
     <th align="left">Choose This When</th>
     <th align="left">What You Get</th>
     <th align="left">Best For</th>
+    <th align="left">Example</th>
   </tr>
   <tr>
     <td valign="top"><strong>A — Quick Briefing</strong><br/>Fastest pass</td>
     <td valign="top">You want a first screen before spending time on a full write-up.</td>
     <td valign="top">HTML verdict card<br/>180-day catalyst timeline<br/>3 KPI tiles</td>
     <td valign="top">Fast triage and go / no-go decisions</td>
+    <td valign="top"><a href="https://codepen.io/lowtidebuild/full/xbEgpdE">Open example</a></td>
   </tr>
   <tr>
     <td valign="top"><strong>B — Peer Comparison</strong><br/>Relative ranking</td>
     <td valign="top">You need to compare 2-5 names under one consistent framework.</td>
     <td valign="top">HTML comparison matrix<br/>R/R ranking<br/>best-pick call</td>
     <td valign="top">Choosing the strongest name in a peer set</td>
+    <td valign="top"><a href="https://codepen.io/lowtidebuild/full/emdgGdW">Open example</a></td>
   </tr>
   <tr>
     <td valign="top"><strong>C — Deep Dive Dashboard</strong><br/>Default mode</td>
     <td valign="top">You want the main investment case, valuation, risks, and strategy in one view.</td>
     <td valign="top">HTML dashboard<br/>KPIs, charts, valuation, macro, scenarios</td>
     <td valign="top">Day-to-day deep research</td>
+    <td valign="top"><a href="https://codepen.io/lowtidebuild/full/vEXgYGL">Open example</a></td>
   </tr>
   <tr>
     <td valign="top"><strong>D — Investment Memo</strong><br/>Most formal</td>
     <td valign="top">You need a shareable long-form document for review, discussion, or archive.</td>
     <td valign="top">DOCX memo<br/>3,000+ word structured note<br/>full thesis + appendix</td>
     <td valign="top">Formal write-ups you can circulate</td>
+    <td valign="top"><a href="https://docs.google.com/document/d/1PX4FIrb1a4nBeKj3L7HanoYBfG6hSwOS/edit?usp=sharing&ouid=105178834220477378953&rtpof=true&sd=true">Open example</a></td>
   </tr>
 </table>
-
-### Live Examples
-
-The original mode examples are preserved here as direct links so they stay attached to the mode descriptions instead of getting buried near the top of the page.
-
-| Mode | Example |
-|------|---------|
-| **Mode A** | [Quick Briefing HTML](https://codepen.io/lowtidebuild/full/xbEgpdE) |
-| **Mode B** | [Peer Comparison HTML](https://codepen.io/lowtidebuild/full/emdgGdW) |
-| **Mode C** | [Deep Dive Dashboard HTML](https://codepen.io/lowtidebuild/full/vEXgYGL) |
-| **Mode D** | [Investment Memo DOCX](https://docs.google.com/document/d/1PX4FIrb1a4nBeKj3L7HanoYBfG6hSwOS/edit?usp=sharing&ouid=105178834220477378953&rtpof=true&sd=true) |
 
 Mode D opens as a Google Docs preview because GitHub does not render `.docx` files inline.
 

@@ -85,43 +85,37 @@
     <th align="left">이럴 때 고르세요</th>
     <th align="left">받게 되는 결과물</th>
     <th align="left">특히 잘 맞는 상황</th>
+    <th align="left">예시</th>
   </tr>
   <tr>
     <td valign="top"><strong>A — Quick Briefing</strong><br/>가장 빠른 1차 판단</td>
     <td valign="top">전체 리포트에 시간을 쓰기 전에 먼저 빠르게 걸러보고 싶을 때</td>
     <td valign="top">HTML 버딕트 카드<br/>180일 카탈리스트 타임라인<br/>핵심 KPI 3개</td>
     <td valign="top">빠른 스크리닝과 go / no-go 판단</td>
+    <td valign="top"><a href="https://codepen.io/lowtidebuild/full/RNGKxVx">예시 열기</a></td>
   </tr>
   <tr>
     <td valign="top"><strong>B — Peer Comparison</strong><br/>상대 비교 특화</td>
     <td valign="top">2~5개 종목을 같은 기준으로 비교해서 우선순위를 정하고 싶을 때</td>
     <td valign="top">HTML 비교 매트릭스<br/>R/R 순위<br/>최선호 종목 추천</td>
     <td valign="top">동종업계 안에서 무엇이 가장 나은지 고를 때</td>
+    <td valign="top"><a href="https://codepen.io/lowtidebuild/full/azmpmGJ">예시 열기</a></td>
   </tr>
   <tr>
     <td valign="top"><strong>C — Deep Dive Dashboard</strong><br/>기본값</td>
     <td valign="top">투자 논리, 밸류에이션, 리스크, 전략을 한 번에 보고 싶을 때</td>
     <td valign="top">HTML 대시보드<br/>KPI, 차트, 밸류에이션, 매크로, 시나리오</td>
     <td valign="top">평소 심층 리서치 대부분</td>
+    <td valign="top"><a href="https://codepen.io/lowtidebuild/full/azmpbNx">예시 열기</a></td>
   </tr>
   <tr>
     <td valign="top"><strong>D — Investment Memo</strong><br/>가장 정식 문서형</td>
     <td valign="top">공유, 검토, 보관용으로 긴 형식의 문서가 필요할 때</td>
     <td valign="top">DOCX 투자 메모<br/>3,000+ 단어 구조화 노트<br/>전체 논지 + 부록</td>
     <td valign="top">돌려보기 좋은 정식 투자 메모</td>
+    <td valign="top"><a href="https://docs.google.com/document/d/1md5xHBSE71kRkinSsn2sqPQlc91QaYxo/edit?usp=sharing&ouid=105178834220477378953&rtpof=true&sd=true">예시 열기</a></td>
   </tr>
 </table>
-
-### 예시 링크
-
-기존 output mode 예시가 상단에만 묻히지 않도록, `결과물 모드` 섹션 안에 직접 링크를 다시 붙였습니다.
-
-| Mode | 예시 |
-|------|------|
-| **Mode A** | [Quick Briefing HTML](https://codepen.io/lowtidebuild/full/RNGKxVx) |
-| **Mode B** | [Peer Comparison HTML](https://codepen.io/lowtidebuild/full/azmpmGJ) |
-| **Mode C** | [Deep Dive Dashboard HTML](https://codepen.io/lowtidebuild/full/azmpbNx) |
-| **Mode D** | [Investment Memo DOCX](https://docs.google.com/document/d/1md5xHBSE71kRkinSsn2sqPQlc91QaYxo/edit?usp=sharing&ouid=105178834220477378953&rtpof=true&sd=true) |
 
 Mode D는 GitHub에서 `.docx`를 바로 미리보기하기 어려워서 Google Docs 미리보기 링크로 열리게 했습니다.
 
