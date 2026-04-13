@@ -1,46 +1,88 @@
-# 📊 주식 분석 에이전트
+<div align="center">
+  <h1>Stock Analysis Agent</h1>
+  <p><strong>미국 주식 + 한국 주식을 위한 기관급 리서치 엔진</strong></p>
+  <p>Claude Code 기반. Grade A 데이터 우선. 모든 수치에 출처 태그. 몇 분 안에 끝나는 투자 리서치.</p>
+  <p><a href="README.md">English</a> · 한국어</p>
+</div>
 
-> **Language / 언어**: [English](README.md) | 한국어
+<p align="center">
+  <img alt="Claude Code" src="https://img.shields.io/badge/Claude_Code-Orchestrated-111827?style=for-the-badge&logo=anthropic&logoColor=white">
+  <img alt="US equities" src="https://img.shields.io/badge/US_Stocks-SEC_Grade_A-0f766e?style=for-the-badge">
+  <img alt="Korean equities" src="https://img.shields.io/badge/KR_Stocks-DART_Grade_A-1d4ed8?style=for-the-badge">
+  <img alt="No fabricated numbers" src="https://img.shields.io/badge/Numbers-Source_Tagged-f59e0b?style=for-the-badge">
+</p>
 
-**미국 + 한국 주식 기관급 리서치를, 몇 분 안에.**
+<p align="center">
+  <a href="https://codepen.io/lowtidebuild/full/RNGKxVx"><img alt="Mode A example" src="https://img.shields.io/badge/Mode_A-Quick_Briefing-0f172a?style=for-the-badge&logo=googlechrome&logoColor=white"></a>
+  <a href="https://codepen.io/lowtidebuild/full/azmpmGJ"><img alt="Mode B example" src="https://img.shields.io/badge/Mode_B-Peer_Comparison-1f2937?style=for-the-badge&logo=googlechrome&logoColor=white"></a>
+  <a href="https://codepen.io/lowtidebuild/full/azmpbNx"><img alt="Mode C example" src="https://img.shields.io/badge/Mode_C-Deep_Dive_Dashboard-0f766e?style=for-the-badge&logo=googlechrome&logoColor=white"></a>
+  <a href="https://docs.google.com/document/d/1md5xHBSE71kRkinSsn2sqPQlc91QaYxo/edit?usp=sharing&ouid=105178834220477378953&rtpof=true&sd=true"><img alt="Mode D example" src="https://img.shields.io/badge/Mode_D-Investment_Memo-f97316?style=for-the-badge&logo=googledocs&logoColor=white"></a>
+</p>
 
-Claude Code 기반, 삼중 데이터 파이프라인:
-- 🇺🇸 **미국 주식** — [Financial Datasets API](https://financialdatasets.ai) → SEC 공시 직접 수집, Grade A 재무 데이터
-- 🇰🇷 **한국 주식** — [DART OpenAPI](https://opendart.fss.or.kr) → 금융감독원 직접 수집, Grade A 재무 데이터
-- 🌐 **매크로 컨텍스트** — [FRED API](https://fred.stlouisfed.org) → 연방준비제도 경제 데이터로 DCF 정밀화 & 섹터 민감도 분석 (Mode C/D)
+> **핵심 원칙**: 빈칸 > 틀린 숫자. 검증할 수 없는 수치는 `"—"`로 남기고, 절대 임의 생성하지 않습니다.
 
-임의 숫자 생성 없음. 모든 수치에 출처 태그.
+<p align="center">
+  <img src="docs/assets/readme-showcase.svg" alt="Stock Analysis Agent showcase" width="100%">
+</p>
 
 ---
 
-## 이게 뭘 해주는 건가요?
+## 한눈에 보기
 
-티커 하나 입력하면 — 미국이든 한국이든 — 바이사이드 애널리스트가 쓰는 수준의 리서치가 나옵니다:
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <strong>🇺🇸 미국 주식</strong><br/>
+      Financial Datasets API 연동 시 SEC 공시 기반 Grade A 재무 데이터 수집<br/><br/>
+      실시간 주가, 8분기 재무, 내부자 거래, 공시 직접 연결
+    </td>
+    <td width="33%" valign="top">
+      <strong>🇰🇷 한국 주식</strong><br/>
+      DART OpenAPI로 금융감독원 재무제표를 항상 직접 수집<br/><br/>
+      네이버금융, FnGuide, KIND를 함께 붙여 시장 맥락까지 보강
+    </td>
+    <td width="33%" valign="top">
+      <strong>🧠 분석 레이어</strong><br/>
+      시나리오 분석, Variant View, 정밀 리스크, DCF, 피어 비교를 한 번에 생성<br/><br/>
+      모든 수치에 등급과 출처 태그 부여
+    </td>
+  </tr>
+</table>
 
-- **시나리오 분석** — 강세/기본/약세, 확률 가중 R/R Score
-- **차별적 관점 (Variant View)** — 시장이 틀린 이유, 구체적 근거로 (제네릭 분석 금지)
-- **정밀 리스크 분석** — 모든 리스크에 인과 체인 필수: 이벤트 → P&L 임팩트 → 주가 효과
-- **출처 태그 데이터** — 모든 수치가 출처를 가짐. 임의 생성 없음.
-- **한국 시장 오버레이** — 외국인 지분율, 밸류업 프로그램, DART 공시 직접 연동
+이 에이전트는 티커 하나를 입력하면 단순 요약이 아니라, 바이사이드 애널리스트가 쓰는 형식의 리서치를 만듭니다.
 
-> **핵심 원칙**: 빈칸 > 틀린 숫자. 검증할 수 없는 수치는 "—"으로 표시하고, 절대 임의로 생성하지 않습니다.
+- **시나리오 분석**: 강세 / 기본 / 약세와 확률 가중 `R/R Score`
+- **Variant View**: 시장이 왜 틀렸는지, 회사 특수적인 근거로 설명
+- **Precision Risk Analysis**: 이벤트 → P&L 임팩트 → 주가 영향의 인과 체인 강제
+- **출처 태그 데이터**: 모든 수치가 원천을 따라가도록 설계
+- **한국 시장 오버레이**: 외국인 지분율, 밸류업, 공시 흐름까지 포함
 
 ---
 
-## 4가지 출력 모드
+## 결과물 모드
 
-### 🔍 Mode A — 퀵 브리핑 *(HTML)*
-**A** as in **A**t-a-glance. 퀵 버딕트 카드 + 180일 이벤트 타임라인, 한 페이지. 심층 분석 전 스크리닝용.
+<p align="center">
+  <img src="docs/assets/readme-modes.svg" alt="Stock Analysis Agent output modes" width="100%">
+</p>
 
-> **[결과물 예시 보기 →](https://codepen.io/lowtidebuild/full/RNGKxVx)**
+| Mode | 포맷 | 가장 잘 쓰이는 순간 | 핵심 산출물 |
+|------|------|-------------------|------------|
+| **A — Quick Briefing** | HTML | 빠르게 스크리닝할 때 | 퀵 버딕트 카드, 180일 이벤트 타임라인 |
+| **B — Peer Comparison** | HTML | 2~5개 종목 비교할 때 | 비교 매트릭스, R/R Score 순위, 최선호 종목 |
+| **C — Deep Dive Dashboard** | HTML | 기본 심층 분석 | KPI, 밸류에이션, 차트, 리스크, 매크로, 시나리오 |
+| **D — Investment Memo** | DOCX | 공유용 정식 투자 메모가 필요할 때 | 3,000+ 단어, 구조화된 리서치 노트 |
 
-### ⚖️ Mode B — 동종 비교 *(HTML)*
-**B** as in **B**enchmark. 나란히 비교 매트릭스 — 2~5개 종목. R/R Score 순위, 최선호 종목, 핵심 차이점 제시.
+<details>
+<summary><strong>Mode별 상세 구성 보기</strong></summary>
 
-> **[결과물 예시 보기 →](https://codepen.io/lowtidebuild/full/azmpmGJ)**
+### 🔍 Mode A — 퀵 브리핑
+**A** as in **A**t-a-glance. 한 페이지에서 빠르게 판단하는 스크리닝 결과물입니다.
+
+### ⚖️ Mode B — 동종 비교
+**B** as in **B**enchmark. 2~5개 종목을 같은 프레임으로 비교해 상대 매력을 보여줍니다.
 
 ### 📈 Mode C — 심층 대시보드 *(기본값)*
-**C** as in **C**hart. HTML 파일 — 브라우저에서 바로 열기. 빠른 의사결정용으로 최적화.
+**C** as in **C**hart. 브라우저에서 바로 열어 의사결정용으로 보기 좋은 HTML 대시보드입니다.
 
 | 섹션 | 내용 |
 |------|------|
@@ -51,42 +93,181 @@ Claude Code 기반, 삼중 데이터 파이프라인:
 | **차별적 관점** | Q1–Q3: 시장이 틀린 이유, 회사 고유 근거 |
 | **정밀 리스크** | 3가지 리스크 × 인과 체인 × EBITDA 임팩트 × 완화책 |
 | **매크로 환경** | 종목에 영향을 미치는 매크로 팩터 · 영향도 평가 · 신뢰도 배지 |
-| **밸류에이션** | SOTP 분해 · 동종업계 배수 비교 · **DCF 감응도 테이블 (3×3 WACC × 영구성장률)** |
-| **애널리스트 의견** | 컨센서스 · 최고/최저 목표가 · 투자의견 분포 바 |
-| **차트** | 매출 추이 · 마진 이력 · 주가 vs 목표가 (Chart.js) |
+| **밸류에이션** | SOTP 분해 · 동종업계 배수 비교 · **DCF 감응도 테이블** |
+| **애널리스트 의견** | 컨센서스 · 최고/최저 목표가 · 투자의견 분포 |
+| **차트** | 매출 추이 · 마진 이력 · 주가 vs 목표가 |
 | **분기 재무** | 8분기 손익계산서 · 이익의 질 브릿지 |
-| **포트폴리오 전략** | 강세/기본/약세 포지셔닝 가이드 · 주요 모니터링 촉매 |
+| **포트폴리오 전략** | 강세/기본/약세 포지셔닝 가이드 · 모니터링 촉매 |
 
-> **[결과물 예시 보기 →](https://codepen.io/lowtidebuild/full/azmpbNx)**
-
-### 📝 Mode D — 투자 메모 *(DOCX)*
-**D** as in **D**ocument. Word 문서 — 3,000단어 이상, 10개 구조화 섹션. Goldman Sachs 에쿼티 리서치 노트 스타일.
+### 📝 Mode D — 투자 메모
+**D** as in **D**ocument. Word 문서 기반의 정식 리서치 노트입니다.
 
 | 섹션 | 내용 |
 |------|------|
 | 개요 | 1문장 투자 논거 · 투자의견 · R/R Score |
 | 사업 개요 | 매출 구조 · 시장점유율 · TAM |
 | 재무 성과 | 8분기 테이블 · 마진 추이 · FCF |
-| 밸류에이션 | P/E · EV/EBITDA · SOTP 분해 · **DCF 내재가치 + 감응도 테이블** |
-| **5가지 차별적 관점** | 시장이 틀린 이유 (가장 중요한 섹션) |
+| 밸류에이션 | P/E · EV/EBITDA · SOTP · **DCF 내재가치 + 감응도** |
+| **5가지 차별적 관점** | 시장이 틀린 이유 |
 | 정밀 리스크 분석 | 3가지 리스크 × 완전 인과 체인 + EBITDA 임팩트 |
-| 매크로 리스크 오버레이 | 탑다운 매크로 팩터 · 섹터 민감도 · 정량화된 영향 경로 |
-| 투자 시나리오 | 강세/기본/약세 · R/R 공식 표시 |
-| 동종업계 비교 | 5개 지표 × 3–5개 피어사 테이블 |
+| 매크로 리스크 오버레이 | 탑다운 매크로 팩터 · 섹터 민감도 · 영향 경로 |
+| 투자 시나리오 | 강세 / 기본 / 약세 · R/R 공식 표시 |
+| 동종업계 비교 | 5개 지표 × 3~5개 피어사 |
 | 경영진 & 지배구조 | CEO 실적 · 자본 배분 이력 |
 | 이익의 질 | EBITDA 브릿지 · FCF 전환율 · SBC 차감 |
-| 내가 틀릴 경우 | 핵심 가정 3가지 · 프리모텀 단락 |
+| 내가 틀릴 경우 | 핵심 가정 3가지 · 프리모텀 |
 | 부록 | 데이터 출처 · 신뢰도 등급 · 제외 항목 |
 
-> **[결과물 예시 보기 →](https://docs.google.com/document/d/1md5xHBSE71kRkinSsn2sqPQlc91QaYxo/edit?usp=sharing&ouid=105178834220477378953&rtpof=true&sd=true)**
+</details>
 
 ---
 
-## 데이터 출처 — 미국 주식
+## 리서치 파이프라인
 
-> **강력히 권장합니다.** [Financial Datasets API](https://financialdatasets.ai) 연동 시 Grade A 데이터 수집.
+```mermaid
+flowchart LR
+    Q[질문 입력<br/>예: NVDA 분석해줘] --> R[시장 라우팅<br/>US / KR]
+    R --> C[데이터 수집<br/>SEC / DART / Web]
+    C --> V[검증 및 신뢰도 부여<br/>A / B / C / D]
+    V --> A[애널리스트 레이어<br/>Variant View · DCF · Risk]
+    A --> O[출력 생성<br/>Mode A / B / C / D]
+```
 
-SEC 공시에서 구조화 데이터를 직접 수집합니다:
+작동 방식은 단순합니다.
+
+1. 티커와 요청 의도를 해석합니다.
+2. 미국이면 SEC 중심, 한국이면 DART 중심으로 데이터를 모읍니다.
+3. 검증을 거쳐 등급을 매깁니다.
+4. 애널리스트 레이어가 밸류에이션, 리스크, 차별적 관점을 씁니다.
+5. HTML 또는 DOCX 결과물로 렌더링합니다.
+
+---
+
+## 데이터 신뢰도 체계
+
+| 등급 | 태그 | 의미 | 예시 |
+|------|------|------|------|
+| **A** | `[Filing]` | 규제기관 공시 원본 + 산술 일관성 | SEC / DART API |
+| **A** | `[Macro]` | 정부 / 중앙은행 경제 통계 | FRED API |
+| **B** | `[Company]` | 회사 IR, 실적 발표, 컨퍼런스콜 | 회사 IR / 뉴스룸 |
+| **B** | `[Portal]` / `[KR-Portal]` | 2개 이상 출처 교차검증 | 웹 교차검증 |
+| **C** | `Grade C` | 단일 출처, 미검증 | 웹 단일 출처 |
+| **D** | `—` | 검증 불가 → 빈칸 처리 | 절대 임의 생성 안 함 |
+
+```text
+미국 주식 예시:
+  Revenue TTM: $402.8B [Filing]
+  P/E Ratio: 28.0x [Calc]
+  EV/EBITDA: —
+
+한국 주식 예시:
+  매출액 TTM: 302.2조원 [Filing]
+  영업이익률: 9.2% [Calc]
+  컨센서스 PER: 12.4x [KR-Portal]
+```
+
+---
+
+## R/R Score
+
+모든 분석은 시나리오 가중 업사이드와 다운사이드를 하나의 숫자로 요약합니다.
+
+```text
+R/R Score = (강세 수익률% × 강세 확률 + 기본 수익률% × 기본 확률)
+            ──────────────────────────────────────────────────────
+                         |약세 수익률% × 약세 확률|
+```
+
+| 점수 | 신호 | 일반적 투자의견 |
+|------|------|----------------|
+| **3.0 초과** | 🟢 매력적 | 비중확대 |
+| **1.0 – 3.0** | 🟡 중립 | 중립 / 관찰 |
+| **1.0 미만** | 🔴 비매력적 | 비중축소 |
+
+---
+
+## 빠른 시작
+
+### 1. 기본 설치
+
+```bash
+npm install -g @anthropic-ai/claude-code
+pip install python-docx
+git clone https://github.com/lowtidebuild/stock-analysis-agent.git
+cd stock-analysis-agent
+```
+
+### 2. 미국 주식 Grade A 데이터 연결 *(강력 권장)*
+
+```bash
+claude mcp add --transport http financial-datasets https://mcp.financialdatasets.ai/ \
+  --header "X-API-KEY: 여기에_API_키_입력"
+```
+
+API 키 발급: [financialdatasets.ai](https://financialdatasets.ai)  
+설정 가이드: [docs/mcp-setup-guide.ko.md](docs/mcp-setup-guide.ko.md)
+
+### 3. FRED API 연결 *(선택, Mode C/D 매크로 정밀화)*
+
+`.env`에 추가:
+
+```bash
+FRED_API_KEY=발급받은_키_입력
+```
+
+10Y Treasury, Fed Funds Rate, CPI, GDP, 실업률 같은 Grade A 거시 데이터를 붙입니다.
+
+### 4. DART API 연결 *(한국 주식용 무료, 사실상 필수)*
+
+`.claude/settings.local.json`에 추가:
+
+```json
+"env": { "DART_API_KEY": "발급받은_키_입력" }
+```
+
+API 키 발급: [opendart.fss.or.kr](https://opendart.fss.or.kr)
+
+### 5. 실행
+
+```bash
+claude
+```
+
+시작 시 `CLAUDE.md`를 자동으로 읽고, 아래 같은 상태 블록이 표시됩니다.
+
+```text
+=== Stock Analysis Agent ===
+Data Mode (US):  {Enhanced (MCP active) / Standard (Web-only)}
+Data Mode (KR):  DART-Enhanced (Grade A)
+Date: {YYYY-MM-DD}
+Ready. Send a ticker or question to begin.
+```
+
+---
+
+## 자주 쓰는 프롬프트
+
+```text
+삼성전자 분석해줘
+NVDA 심층 분석
+005930 투자 메모 써줘
+TSLA investment memo
+삼성전자 vs SK하이닉스 비교
+AAPL vs MSFT vs GOOGL
+워치리스트 스캔해줘
+NVDA 지난번 분석이랑 비교해줘
+```
+
+단순 가격 조회는 지원하지 않습니다. `"삼성전자 분석해줘"`처럼 요청하면 전체 분석을 생성합니다.
+
+---
+
+<details>
+<summary><strong>데이터 출처 상세 보기 — 미국 주식</strong></summary>
+
+> **강력히 권장합니다.** [Financial Datasets API](https://financialdatasets.ai) 연동 시 Grade A 데이터 수집이 가능합니다.
+
+SEC 공시에서 구조화 데이터를 직접 수집합니다.
 
 | 데이터 | 수집 방법 | 신뢰도 |
 |--------|----------|--------|
@@ -98,7 +279,7 @@ SEC 공시에서 구조화 데이터를 직접 수집합니다:
 | 내부자 거래 | `get_insider_transactions` | Grade A |
 | SEC 공시 (10-K, 10-Q) | `get_sec_filings` | Grade A |
 
-**MCP 없이도 (또는 MCP와 함께)** 주요 금융 웹사이트에서 데이터를 수집합니다:
+MCP 없이도 주요 금융 웹 소스를 함께 활용합니다.
 
 | 데이터 | 출처 | 신뢰도 |
 |--------|------|--------|
@@ -109,199 +290,45 @@ SEC 공시에서 구조화 데이터를 직접 수집합니다:
 | 뉴스 · 정성적 맥락 | Reuters, Bloomberg, CNBC, Financial Times | 정성 |
 | 내부자 거래 | SEC Form 4 (EDGAR), Finviz | Grade B |
 
-MCP 연동 시: API 데이터 (Grade A) + 웹 소스 (정성적 보완).
-MCP 없이: 웹 전용, 최대 신뢰도 Grade B. 완전히 동작합니다.
+</details>
 
-```
-💡 MCP 설정은 5분이면 됩니다. → docs/mcp-setup-guide.ko.md 참고
-```
+<details>
+<summary><strong>데이터 출처 상세 보기 — 한국 주식</strong></summary>
 
----
-
-## 데이터 출처 — 한국 주식
-
-한국 주식은 **DART OpenAPI**(무료)를 통해 금융감독원에서 구조화 재무제표를 항상 직접 수집합니다. 미국 SEC EDGAR API의 한국판입니다.
+한국 주식은 **DART OpenAPI**를 통해 금융감독원에서 구조화 재무제표를 항상 직접 수집합니다.
 
 | 데이터 | 출처 | 신뢰도 |
 |--------|------|--------|
 | 연결 재무제표 (IS/BS/CF) | DART OpenAPI `fnlttSinglAcntAll` | Grade A |
 | 기업 기본정보 (corp_code, 대표이사) | DART OpenAPI `company` | Grade A |
 | 최근 공시 목록 (90일) | DART OpenAPI `list` | Grade A |
-| 현재가 · PER · PBR · 외국인지분율 | 네이버금융 (시장 데이터용 항상 수집) | Grade B |
+| 현재가 · PER · PBR · 외국인지분율 | 네이버금융 | Grade B |
 | 애널리스트 컨센서스 | FnGuide / 웹 검색 | Grade B |
 
-[opendart.fss.or.kr](https://opendart.fss.or.kr)에서 무료 API 키를 발급받아 `.claude/settings.local.json → env → DART_API_KEY`에 입력하세요.
+한국 주식은 DART 재무제표 + 네이버금융 시장 데이터 + FnGuide/KIND 맥락을 합쳐 분석합니다.
 
----
+</details>
 
-## 데이터 신뢰도 체계
+<details>
+<summary><strong>출력 파일과 모드 구조 보기</strong></summary>
 
-출력의 모든 수치에 등급과 출처 태그가 붙습니다. 무엇을 신뢰해야 하는지 항상 알 수 있습니다.
+모든 생성 파일은 `output/` 아래에 저장됩니다.
 
-| 등급 | 태그 | 의미 | 예시 |
-|------|------|------|------|
-| **A** | `[Filing]` | 1차 공시 출처 검증 + 산술 일관성 | SEC/DART API |
-| **A** | `[Macro]` | 정부/중앙은행 경제 통계 | FRED API (연방준비제도) |
-| **B** | `[Portal]` / `[KR-Portal]` | 2개 이상 출처 교차검증, 5% 이내 | 웹 교차검증 |
-| **C** | *(Grade C 표기)* | 단일 출처, 미검증 | 웹 단일 출처 |
-| **D** | `—` | 검증 불가 → **빈칸으로 표시** | 절대 임의 생성 안 함 |
+| 파일 | 설명 |
+|------|------|
+| `output/runs/{run_id}/{ticker}/research-plan.json` | run-local 리서치 플랜 |
+| `output/runs/{run_id}/{ticker}/validated-data.json` | run-local 검증 데이터 |
+| `output/runs/{run_id}/{ticker}/analysis-result.json` | run-local 구조화 분석 결과 |
+| `output/runs/{run_id}/{ticker}/quality-report.json` | run-local 품질 점검 결과 |
+| `output/reports/{ticker}_A_*.html` | Mode A 퀵 브리핑 |
+| `output/reports/{tickers}_B_*.html` | Mode B 동종 비교 |
+| `output/reports/{ticker}_C_*.html` | Mode C 심층 대시보드 |
+| `output/reports/{ticker}_D_*.docx` | Mode D 투자 메모 |
+| `output/data/{ticker}/latest.json` | 델타 분석용 스냅샷 포인터 |
+| `output/watchlist.json` | 워치리스트 |
+| `output/catalyst-calendar.json` | 카탈리스트 캘린더 |
 
-```
-미국 주식 예시 (Enhanced Mode):
-  Revenue TTM: $402.8B [Filing]    ← Grade A, SEC 공시 via Financial Datasets
-  P/E Ratio: 28.0x [Calc]         ← Grade A 입력값으로 계산
-  EV/EBITDA: —                    ← Grade D, 제외
-
-한국 주식 예시 (DART-Enhanced):
-  매출액 TTM: 302.2조원 [Filing]    ← Grade A, 금융감독원 DART OpenAPI
-  영업이익률: 9.2% [Calc]           ← Grade A 입력값으로 계산
-  컨센서스 PER: 12.4x [KR-Portal]  ← Grade B, FnGuide + 네이버 교차검증
-```
-
----
-
-## 사용 방법
-
-### 단일 종목 분석
-
-```
-삼성전자 분석해줘
-NVDA 심층 분석
-005930 투자 메모 써줘
-TSLA investment memo
-LG에너지솔루션 분석해줘
-SK하이닉스 분석해줘
-```
-
-### 동종 비교
-
-```
-삼성전자 vs SK하이닉스 비교
-NVDA vs AMD vs INTC
-AAPL vs MSFT vs GOOGL
-삼성전자, LG전자, SK하이닉스 비교해줘
-```
-
-### 포트폴리오 & 워치리스트
-
-```
-AAPL 워치리스트 추가
-삼성전자 워치리스트 추가
-워치리스트 스캔해줘
-포트폴리오 분석해줘
-카탈리스트 캘린더 보여줘
-NVDA 지난번 분석이랑 비교해줘
-```
-
-### 단순 가격 질문
-
-이 에이전트는 단순 가격 조회는 지원하지 않습니다. 빠른 가격 확인은 네이버금융 또는 Yahoo Finance를 이용하세요.
-"삼성전자 분석해줘"처럼 요청하면 전체 심층 분석을 받을 수 있습니다.
-
----
-
-## R/R Score — 위험보상비율, 하나의 숫자로
-
-모든 분석이 시나리오 가중 업사이드 대 다운사이드를 하나의 점수로 요약합니다.
-
-```
-R/R Score = (강세 수익률% × 강세 확률 + 기본 수익률% × 기본 확률)
-            ──────────────────────────────────────────────────────
-                         |약세 수익률% × 약세 확률|
-```
-
-**예시**: 강세 +25% × 30% + 기본 +12% × 50% = 업사이드 가중치 13.5
-          약세 -25% × 20% = 다운사이드 가중치 5.0
-          **R/R Score = 13.5 / 5.0 = 2.7 → 🟡 중립**
-
-| 점수 | 신호 | 일반적 투자의견 |
-|------|------|---------------|
-| **3.0 초과** | 🟢 매력적 | 비중확대 |
-| **1.0 – 3.0** | 🟡 중립 | 중립 / 관찰 |
-| **1.0 미만** | 🔴 비매력적 | 비중축소 |
-
----
-
-## 빠른 시작
-
-### 사전 준비
-
-```bash
-# 1. Claude Code 설치
-npm install -g @anthropic-ai/claude-code
-
-# 2. Mode D (Word 문서 출력)용 Python 라이브러리
-pip install python-docx
-
-# 3. 저장소 복제
-git clone https://github.com/lowtidebuild/stock-analysis-agent.git
-cd stock-analysis-agent
-```
-
-### (강력 권장) Financial Datasets API 연동 — 미국 주식
-
-```bash
-# MCP 등록 — 5분이면 완료, 미국 주식 데이터 품질이 크게 달라집니다
-claude mcp add --transport http financial-datasets https://mcp.financialdatasets.ai/ \
-  --header "X-API-KEY: 여기에_API_키_입력"
-```
-
-API 키 발급: [financialdatasets.ai](https://financialdatasets.ai)
-전체 설정 가이드: [docs/mcp-setup-guide.ko.md](docs/mcp-setup-guide.ko.md)
-
-### (선택) FRED API 연동 — Mode C/D 매크로 데이터
-
-[fred.stlouisfed.org](https://fred.stlouisfed.org/docs/api/api_key.html)에서 무료 API 키를 발급받아 `.env`에 추가:
-
-```
-FRED_API_KEY=발급받은_키_입력
-```
-
-10Y Treasury, Fed Funds Rate, CPI, GDP, 실업률 등 Grade A 경제 데이터를 수집합니다. WACC 정밀 계산과 매크로 민감도 분석에 사용. 없으면 웹 서치 매크로(Grade B/C)로 대체됩니다.
-
-### DART API 연동 — 한국 주식 *(무료, 필수)*
-
-[opendart.fss.or.kr](https://opendart.fss.or.kr)에서 무료 API 키를 발급받아 `.claude/settings.local.json`에 추가:
-
-```json
-"env": { "DART_API_KEY": "발급받은_키_입력" }
-```
-
-### 실행
-
-```bash
-claude
-```
-
-Claude Code가 시작 시 `CLAUDE.md`를 자동으로 읽습니다:
-
-```
-=== Stock Analysis Agent ===
-Data Mode (US):  Enhanced (MCP active)     ← SEC 공시 Grade A 데이터 연동됨
-Data Mode (KR):  DART-Enhanced (Grade A)   ← 금융감독원 Grade A 데이터 연동됨
-Date: 2026-03-12
-Ready. Send a ticker or question to begin.
-```
-
----
-
-## 출력 파일
-
-모든 생성 파일은 `output/` 아래에 저장됩니다 (gitignore 처리):
-
-| 파일 | 모드 | 열기 |
-|------|------|------|
-| `output/reports/{ticker}_A_*.html` | A — 퀵 브리핑 | 브라우저 |
-| `output/reports/{tickers}_B_*.html` | B — 동종 비교 | 브라우저 |
-| `output/reports/{ticker}_C_*.html` | C — 대시보드 | 브라우저 |
-| `output/reports/{ticker}_D_*.docx` | D — 투자 메모 | Word / Google Docs / LibreOffice |
-| `output/data/{ticker}/latest.json` | — | 델타 분석용 스냅샷 |
-| `output/watchlist.json` | — | 워치리스트 |
-| `output/catalyst-calendar.json` | — | 카탈리스트 캘린더 |
-
----
-
-## 미국 주식 모드 비교
+미국 주식은 Financial Datasets API 연결 여부에 따라 아래 두 모드로 동작합니다.
 
 | | Enhanced Mode 🟢 | Standard Mode 🟡 |
 |-|-----------------|-----------------|
@@ -312,58 +339,42 @@ Ready. Send a ticker or question to begin.
 | **최대 신뢰도** | **Grade A** | Grade B |
 | **비용** | 분석당 약 $0.05–$0.28 | 무료 |
 
-한국 주식은 항상 DART OpenAPI(Grade A 재무제표) + 네이버금융(Grade B 주가)을 사용합니다. DART API는 무료이므로 별도 모드 구분 없음.
+</details>
 
----
+<details>
+<summary><strong>프로젝트 구조 보기</strong></summary>
 
-## 한국 주식 지원
-
-KOSPI / KOSDAQ 종목 완전 지원 — **DART OpenAPI로 Grade A 재무 데이터 항상 직접 수집**.
-
-- **DART OpenAPI** — 금융감독원에서 직접 연결 재무제표 수집 (IS/BS/CF, 공시 목록). 무료, 항상 사용.
-- **네이버금융** — 실시간 주가, PER/PBR, 외국인 지분율 (시장 데이터용 항상 수집)
-- **FnGuide / KIND** — 애널리스트 컨센서스, 수급 데이터
-- **한국어 출력** — 한국어로 요청하면 한국어로 분석 생성
-- **한국 시장 오버레이** — 외국인 지분율, 밸류업 프로그램, 자사주 소각 정책
-
-```
-삼성전자 빠르게 봐줘    →  Mode A 퀵 브리핑 (DART API Grade A 데이터)
-삼성전자 심층 분석해줘  →  Mode C 대시보드 (DART API Grade A 데이터)
-SK하이닉스 투자 메모    →  Mode D DOCX 투자 메모
-삼성전자 vs SK하이닉스  →  Mode B 동종 비교
-```
-
----
-
-## 프로젝트 구조
-
-```
+```text
 stock-analysis-agent/
-├── CLAUDE.md                    ← 마스터 오케스트레이터 (시작 시 자동 로드)
-├── references/                  ← 각 모드별 분석 프레임워크
-│   ├── analysis-framework-comparison.md
-│   ├── analysis-framework-dashboard.md
-│   └── analysis-framework-memo.md
+├── CLAUDE.md
+├── README.md
+├── README.ko.md
 ├── docs/
-│   ├── mcp-setup-guide.md       ← Financial Datasets API 설정 (영어)
-│   └── mcp-setup-guide.ko.md   ← Financial Datasets API 설정 (한국어)
-├── output/                      ← 생성 파일 (gitignore 처리)
-│   ├── reports/                 ← HTML / DOCX 분석 결과
-│   └── data/                    ← 종목별 원시 데이터 + 스냅샷
+│   ├── assets/
+│   ├── mcp-setup-guide.md
+│   └── mcp-setup-guide.ko.md
+├── references/
+├── output/
+│   ├── reports/
+│   └── data/
+├── evals/
+├── tools/
 └── .claude/
-    ├── skills/                  ← SKILL.md 10개 (단계별 파이프라인)
-    └── agents/                  ← analyst · critic · data-researcher
+    ├── skills/
+    └── agents/
 ```
+
+</details>
 
 ---
 
 ## 면책 조항
 
-**이 도구는 정보 제공 목적으로만 사용됩니다. 투자 조언, 매수/매도 권유 또는 투자 수익 보장을 구성하지 않습니다.**
+**이 도구는 정보 제공 목적으로만 사용됩니다. 투자 조언, 매수/매도 권유, 수익 보장을 구성하지 않습니다.**
 
-- 모든 분석은 AI 생성이며 오류가 포함될 수 있습니다
-- 실행 전 시간에 민감한 데이터를 1차 출처에서 확인하세요
-- 과거 성과 데이터는 미래 결과를 예측하지 않습니다
-- 투자 결정 전 자격을 갖춘 금융 전문가와 상담하세요
+- 모든 분석은 AI 생성 결과이며 오류가 포함될 수 있습니다.
+- 시간 민감한 데이터는 실행 전 1차 출처에서 다시 확인해야 합니다.
+- 과거 성과는 미래 결과를 예측하지 않습니다.
+- 실제 투자 결정 전 자격을 갖춘 금융 전문가와 상담하세요.
 
-반임의 생성 방지 시스템(Grade D → "—")은 데이터 오류 위험을 줄이지만 완전히 없애지는 않습니다. 실행 전 모든 출력을 독립적으로 검증하세요.
+반임의 생성 방지 시스템은 데이터 오류 위험을 줄이지만 완전히 없애지는 않습니다. 실행 전 모든 출력을 독립적으로 검증하세요.

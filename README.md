@@ -1,216 +1,182 @@
-# 📊 Stock Analysis Agent
+<div align="center">
+  <h1>Stock Analysis Agent</h1>
+  <p><strong>Institutional-grade research for US and Korean equities</strong></p>
+  <p>Built on Claude Code. Grade A data first. Every number is source-tagged. Full research output in minutes.</p>
+  <p>English · <a href="README.ko.md">한국어</a></p>
+</div>
 
-> **Language / 언어**: English | [한국어](README.ko.md)
+<p align="center">
+  <img alt="Claude Code" src="https://img.shields.io/badge/Claude_Code-Orchestrated-111827?style=for-the-badge&logo=anthropic&logoColor=white">
+  <img alt="US equities" src="https://img.shields.io/badge/US_Stocks-SEC_Grade_A-0f766e?style=for-the-badge">
+  <img alt="Korean equities" src="https://img.shields.io/badge/KR_Stocks-DART_Grade_A-1d4ed8?style=for-the-badge">
+  <img alt="No fabricated numbers" src="https://img.shields.io/badge/Numbers-Source_Tagged-f59e0b?style=for-the-badge">
+</p>
 
-**Institutional-grade stock research for US and Korean equities — delivered in minutes.**
+<p align="center">
+  <a href="https://codepen.io/lowtidebuild/full/xbEgpdE"><img alt="Mode A example" src="https://img.shields.io/badge/Mode_A-Quick_Briefing-0f172a?style=for-the-badge&logo=googlechrome&logoColor=white"></a>
+  <a href="https://codepen.io/lowtidebuild/full/emdgGdW"><img alt="Mode B example" src="https://img.shields.io/badge/Mode_B-Peer_Comparison-1f2937?style=for-the-badge&logo=googlechrome&logoColor=white"></a>
+  <a href="https://codepen.io/lowtidebuild/full/vEXgYGL"><img alt="Mode C example" src="https://img.shields.io/badge/Mode_C-Deep_Dive_Dashboard-0f766e?style=for-the-badge&logo=googlechrome&logoColor=white"></a>
+  <a href="https://docs.google.com/document/d/1PX4FIrb1a4nBeKj3L7HanoYBfG6hSwOS/edit?usp=sharing&ouid=105178834220477378953&rtpof=true&sd=true"><img alt="Mode D example" src="https://img.shields.io/badge/Mode_D-Investment_Memo-f97316?style=for-the-badge&logo=googledocs&logoColor=white"></a>
+</p>
 
-Built on Claude Code with triple data pipelines:
-- 🇺🇸 **US stocks** — [Financial Datasets API](https://financialdatasets.ai) → real SEC filings, Grade A financial data
-- 🇰🇷 **Korean stocks** — [DART OpenAPI](https://opendart.fss.or.kr) → 금융감독원 직접 수집, Grade A financial data
-- 🌐 **Macro context** — [FRED API](https://fred.stlouisfed.org) → Fed economic data for DCF precision & sector sensitivity (Mode C/D)
+> **Core principle**: Blank beats wrong. If a figure cannot be verified, it stays as `"—"` instead of being invented.
 
-Zero hallucinated numbers. Every figure traces back to its source.
+<p align="center">
+  <img src="docs/assets/readme-showcase.svg" alt="Stock Analysis Agent showcase" width="100%">
+</p>
 
 ---
 
-## What Does This Do?
+## At A Glance
 
-You type a ticker — US or Korean. You get a research-grade analysis complete with:
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <strong>🇺🇸 US Stocks</strong><br/>
+      Financial Datasets API unlocks SEC-based Grade A financial data<br/><br/>
+      Live price, 8-quarter financials, insider transactions, and filings in one flow
+    </td>
+    <td width="33%" valign="top">
+      <strong>🇰🇷 Korean Stocks</strong><br/>
+      DART OpenAPI pulls structured financials directly from the regulator<br/><br/>
+      Naver Finance, FnGuide, and KIND enrich the market context
+    </td>
+    <td width="33%" valign="top">
+      <strong>🧠 Analysis Layer</strong><br/>
+      Scenario analysis, Variant View, precision risk, DCF, and peer comparison<br/><br/>
+      Every number ships with confidence grades and source tags
+    </td>
+  </tr>
+</table>
 
-- **Scenario analysis** (Bull / Base / Bear) with probability-weighted R/R Score
-- **Variant View** — where the market is wrong and why (company-specific, not generic)
-- **Precision Risk Analysis** — every risk has a mechanism chain: event → P&L impact → stock price effect
-- **Source-tagged data** — every number traces back to its origin. Nothing fabricated.
-- **Korean market overlay** — 외국인 지분율, 밸류업 프로그램, DART 공시 직접 연동
+Type a ticker and the agent produces research that feels closer to a buy-side note than a chatbot summary.
 
-> **Core principle**: Blank beats wrong. If a number can't be verified, it shows as "—" — never made up.
+- **Scenario analysis**: Bull / Base / Bear with a probability-weighted `R/R Score`
+- **Variant View**: where the market is wrong, backed by company-specific evidence
+- **Precision Risk Analysis**: event → P&L impact → stock price effect
+- **Source-tagged data**: every number traces back to an origin
+- **Korean market overlay**: foreign ownership, value-up policies, disclosure flow
 
 ---
 
-## 4 Output Modes
+## Output Modes
 
-### 🔍 Mode A — Quick Briefing *(HTML)*
-**A** as in **A**t-a-glance. Quick verdict card + 180-day event timeline on a single page. Screening before deep dive.
+<p align="center">
+  <img src="docs/assets/readme-modes.svg" alt="Stock Analysis Agent output modes" width="100%">
+</p>
 
-> **[See live example →](https://codepen.io/lowtidebuild/full/xbEgpdE)**
+| Mode | Format | Best for | Output |
+|------|--------|----------|--------|
+| **A — Quick Briefing** | HTML | fast screening | verdict card + 180-day event timeline |
+| **B — Peer Comparison** | HTML | comparing 2-5 tickers | side-by-side matrix + ranking + best pick |
+| **C — Deep Dive Dashboard** | HTML | default deep research | KPIs, valuation, charts, risks, macro, scenarios |
+| **D — Investment Memo** | DOCX | formal shareable memo | 3,000+ words in a structured research note |
 
-### ⚖️ Mode B — Peer Comparison *(HTML)*
-**B** as in **B**enchmark. Side-by-side matrix for 2–5 tickers. R/R Score ranking, Best Pick with rationale, Key Differentiators.
+<details>
+<summary><strong>See the detailed structure for each mode</strong></summary>
 
-> **[See live example →](https://codepen.io/lowtidebuild/full/emdgGdW)**
+### 🔍 Mode A — Quick Briefing
+**A** as in **A**t-a-glance. A one-page screen for fast triage.
+
+### ⚖️ Mode B — Peer Comparison
+**B** as in **B**enchmark. Built for 2-5 tickers under one evaluation frame.
 
 ### 📈 Mode C — Deep Dive Dashboard *(default)*
-**C** as in **C**hart. Interactive HTML — open in any browser. Built for quick decision-making.
+**C** as in **C**hart. An HTML dashboard designed for fast investment decision-making.
 
 | Section | Contents |
 |---------|----------|
-| **Header** | Company name · live price · market cap · 52W range · YIR links |
+| **Header** | Company name · live price · market cap · 52W range · IR / filing links |
 | **Scenario Cards** | 🐂 Bull / 📊 Base / 🐻 Bear price targets · probabilities |
-| **R/R Score Badge** | Weighted risk/reward score → Attractive / Neutral / Unfavorable |
+| **R/R Score Badge** | Weighted risk/reward score |
 | **KPI Tiles** | P/E · EV/EBITDA · FCF Yield · Revenue Growth · Operating Margin |
-| **Variant View** | Q1–Q3: where the market is wrong, company-specific evidence |
-| **Precision Risk** | 3 risks × causal chain × EBITDA impact × mitigation |
-| **Macro Environment** | Macro factors affecting the stock · impact assessment · confidence badges |
-| **Valuation** | SOTP breakdown · comparable multiples · **DCF sensitivity table (3×3 WACC × terminal growth)** |
-| **Analyst Targets** | Consensus · high/low · rating distribution bar |
-| **Charts** | Revenue trend · margin history · price vs targets (Chart.js) |
+| **Variant View** | Q1-Q3: where the market is wrong, with company-specific proof |
+| **Precision Risk** | 3 risks × mechanism chain × EBITDA impact × mitigation |
+| **Macro Environment** | macro factors · impact assessment · confidence badges |
+| **Valuation** | SOTP · comps · **DCF sensitivity table** |
+| **Analyst Targets** | consensus · high/low · rating distribution |
+| **Charts** | revenue trend · margin history · price vs targets |
 | **Quarterly Financials** | 8-quarter income statement · QoE bridge |
-| **Strategy** | Bull/Base/Bear positioning guide · key monitoring catalysts |
+| **Strategy** | positioning guide · key catalysts |
 
-> **[See live example →](https://codepen.io/lowtidebuild/full/vEXgYGL)**
+### 📝 Mode D — Investment Memo
+**D** as in **D**ocument. A Word document for full write-ups and sharing.
 
-### 📝 Mode D — Investment Memo *(DOCX)*
-**D** as in **D**ocument. Word document — 3,000+ words, 10 structured sections. Think Goldman Sachs equity research note.
-
-| Section | Content |
-|---------|---------|
-| Executive Summary | 1-sentence thesis · Verdict · R/R Score |
-| Business Overview | Revenue streams · Market share · TAM |
-| Financial Performance | 8-quarter tables · Margin trends · FCF |
-| Valuation Analysis | P/E · EV/EBITDA · SOTP breakdown · **DCF fair value + sensitivity table** |
-| **5-Question Variant View** | Where the market is wrong (most important section) |
+| Section | Contents |
+|---------|----------|
+| Executive Summary | one-line thesis · verdict · R/R Score |
+| Business Overview | revenue mix · market share · TAM |
+| Financial Performance | 8-quarter tables · margin trends · FCF |
+| Valuation | P/E · EV/EBITDA · SOTP · **DCF fair value + sensitivity** |
+| **5-Question Variant View** | where the market is wrong |
 | Precision Risk Analysis | 3 risks × full mechanism chain + EBITDA impact |
-| Macro Risk Overlay | Top-down macro factors · sector sensitivity · quantified impact pathways |
-| Investment Scenarios | Bull / Base / Bear with R/R formula shown |
-| Peer Comparison | 5-metric table vs. 3–5 peers |
-| Management & Governance | CEO track record · Capital allocation |
-| Quality of Earnings | EBITDA Bridge · FCF conversion · SBC haircut |
-| What Would Make Me Wrong | 3 assumptions · Pre-mortem paragraph |
-| Appendix | All data sources · Confidence grades · Exclusions |
+| Macro Risk Overlay | top-down factors · sector sensitivity · impact pathways |
+| Investment Scenarios | Bull / Base / Bear with the R/R formula |
+| Peer Comparison | 5 metrics vs. 3-5 peers |
+| Management & Governance | CEO track record · capital allocation |
+| Quality of Earnings | EBITDA bridge · FCF conversion · SBC haircut |
+| What Would Make Me Wrong | 3 assumptions · pre-mortem |
+| Appendix | data sources · confidence grades · exclusions |
 
-> **[See live example →](https://docs.google.com/document/d/1PX4FIrb1a4nBeKj3L7HanoYBfG6hSwOS/edit?usp=sharing&ouid=105178834220477378953&rtpof=true&sd=true)**
-
----
-
-## Data Sources — US Stocks
-
-> **Strongly recommended.** Connect [Financial Datasets API](https://financialdatasets.ai) for Grade A data.
-
-When connected, the agent pulls structured data directly from SEC filings:
-
-| Data | API Call | Confidence |
-|------|----------|------------|
-| Real-time price | `get_current_stock_price` | Grade A |
-| 8 quarters income statement | `get_income_statements` | Grade A |
-| Balance sheet (8 quarters) | `get_balance_sheets` | Grade A |
-| Cash flow (8 quarters) | `get_cash_flow_statements` | Grade A |
-| Analyst price targets | FMP MCP | Grade B |
-| Insider transactions | `get_insider_transactions` | Grade A |
-| SEC filings (10-K, 10-Q) | `get_sec_filings` | Grade A |
-
-**Without MCP (or alongside it)**, the agent also pulls from major financial web sources:
-
-| Data | Source | Confidence |
-|------|--------|------------|
-| Price · Market cap · Ratios | Yahoo Finance, Google Finance, MarketWatch | Grade B |
-| Financial statements | SEC EDGAR (direct fetch) | Grade A |
-| Earnings results | PR Newswire, Business Wire, Seeking Alpha | Grade B |
-| Analyst price targets | TipRanks, MarketBeat | Grade B |
-| News · Qualitative context | Reuters, Bloomberg, CNBC, Financial Times | Qualitative |
-| Insider trading | SEC Form 4 (EDGAR), Finviz | Grade B |
-
-With MCP: API data (Grade A) + web sources for qualitative context.
-Without MCP: web-only, max confidence Grade B. Still fully functional.
-
-```
-💡 MCP setup takes 5 minutes. See → docs/mcp-setup-guide.md
-```
+</details>
 
 ---
 
-## Data Sources — Korean Stocks
+## Research Pipeline
 
-The agent always pulls structured financial statements directly from 금융감독원 via **DART OpenAPI** (free).
+```mermaid
+flowchart LR
+    Q[User asks<br/>Example: Analyze NVDA] --> R[Market routing<br/>US / KR]
+    R --> C[Data collection<br/>SEC / DART / Web]
+    C --> V[Validation and grading<br/>A / B / C / D]
+    V --> A[Analyst layer<br/>Variant View · DCF · Risk]
+    A --> O[Output rendering<br/>Mode A / B / C / D]
+```
 
-| Data | Source | Confidence |
-|------|--------|------------|
-| 연결 재무제표 (IS/BS/CF) | DART OpenAPI `fnlttSinglAcntAll` | Grade A |
-| 기업 기본정보 (corp_code, CEO) | DART OpenAPI `company` | Grade A |
-| 최근 공시 목록 (90일) | DART OpenAPI `list` | Grade A |
-| 현재가 · PER · PBR · 외국인지분율 | 네이버금융 (always fetched for market data) | Grade B |
-| 애널리스트 컨센서스 | FnGuide / 웹 검색 | Grade B |
+The pipeline is straightforward:
 
-Get your free DART API key at [opendart.fss.or.kr](https://opendart.fss.or.kr) and add it to `.claude/settings.local.json → env → DART_API_KEY`. It's the Korean equivalent of SEC EDGAR's API.
+1. Interpret the ticker and intent.
+2. Route to US or Korean data collection.
+3. Validate and grade each metric.
+4. Generate valuation, risk, and differentiated insight.
+5. Render HTML or DOCX outputs.
 
 ---
 
 ## Data Confidence System
 
-Every number in the output carries a grade and source tag. You always know what to trust.
-
 | Grade | Tag | Meaning | Example |
 |-------|-----|---------|---------|
-| **A** | `[Filing]` | Primary filing source, arithmetic consistent | SEC/DART API |
-| **A** | `[Macro]` | Government economic statistics | FRED API (Fed Reserve) |
-| **B** | `[Portal]` / `[KR-Portal]` | 2+ sources cross-referenced, within 5% | Web cross-reference |
-| **C** | *(Grade C note)* | Single source, unverified | One web mention |
-| **D** | `—` | Cannot verify → **shown as blank** | Never fabricated |
+| **A** | `[Filing]` | primary regulatory filing source + arithmetic consistency | SEC / DART API |
+| **A** | `[Macro]` | government / central bank statistics | FRED API |
+| **B** | `[Company]` | company IR material, earnings release, transcript | company IR / newsroom |
+| **B** | `[Portal]` / `[KR-Portal]` | 2+ sources cross-checked | web cross-reference |
+| **C** | `Grade C` | single-source, unverified | one web mention |
+| **D** | `—` | cannot verify → shown as blank | never fabricated |
 
-```
-US stock example (Enhanced Mode):
-  Revenue TTM: $402.8B [Filing]    ← Grade A, SEC filing via Financial Datasets
-  P/E Ratio: 28.0x [Calc]         ← Derived from Grade A inputs
-  EV/EBITDA: —                    ← Grade D, excluded
+```text
+US example:
+  Revenue TTM: $402.8B [Filing]
+  P/E Ratio: 28.0x [Calc]
+  EV/EBITDA: —
 
-Korean stock example (DART-Enhanced):
-  매출액 TTM: 302.2조원 [Filing]    ← Grade A, 금융감독원 DART OpenAPI
-  영업이익률: 9.2% [Calc]           ← Derived from Grade A inputs
-  컨센서스 PER: 12.4x [KR-Portal]  ← Grade B, FnGuide + 네이버 cross-check
+Korean example:
+  Revenue TTM: 302.2T KRW [Filing]
+  Operating Margin: 9.2% [Calc]
+  Consensus PER: 12.4x [KR-Portal]
 ```
 
 ---
 
-## How to Use
+## R/R Score
 
-### Single Stock Analysis
+Every analysis reduces scenario-weighted upside versus downside into a single number.
 
-```
-NVDA 분석해줘
-Analyze TSLA
-005930 심층 분석
-AAPL investment memo
-삼성전자 투자 메모 써줘
-SK하이닉스 분석해줘
-```
-
-### Peer Comparison
-
-```
-NVDA vs AMD vs INTC
-삼성전자 vs SK하이닉스 비교
-AAPL vs MSFT vs GOOGL
-```
-
-### Portfolio & Watchlist
-
-```
-AAPL 워치리스트 추가
-워치리스트 스캔해줘
-포트폴리오 분석해줘
-카탈리스트 캘린더 보여줘
-NVDA 지난번 분석이랑 비교해줘
-```
-
-### Price-Only Queries
-
-This agent doesn't do price lookups. For a quick price check, use Yahoo Finance or Perplexity.
-Type `"AAPL 분석해줘"` to get the full research instead.
-
----
-
-## R/R Score — Risk/Reward in One Number
-
-Every analysis computes a single score that summarizes the scenario-weighted upside vs. downside.
-
-```
+```text
 R/R Score = (Bull_return% × Bull_prob + Base_return% × Base_prob)
             ─────────────────────────────────────────────────────
                        |Bear_return% × Bear_prob|
 ```
-
-**Example**: Bull +25% × 30% + Base +12% × 50% = 13.5 upside weighted
-            Bear -25% × 20% = 5.0 downside weighted
-            **R/R Score = 13.5 / 5.0 = 2.7 → Neutral**
 
 | Score | Signal | Typical Verdict |
 |-------|--------|-----------------|
@@ -222,146 +188,193 @@ R/R Score = (Bull_return% × Bull_prob + Base_return% × Base_prob)
 
 ## Quick Start
 
-### Prerequisites
+### 1. Install the basics
 
 ```bash
-# 1. Claude Code
 npm install -g @anthropic-ai/claude-code
-
-# 2. Python library for Mode D (Word document output)
 pip install python-docx
-
-# 3. Clone this repo
 git clone https://github.com/lowtidebuild/stock-analysis-agent.git
 cd stock-analysis-agent
 ```
 
-### (Strongly Recommended) Connect Financial Datasets API — US Stocks
+### 2. Connect Grade A US data *(strongly recommended)*
 
 ```bash
-# Register the MCP — takes 5 minutes, makes a huge difference for US stocks
 claude mcp add --transport http financial-datasets https://mcp.financialdatasets.ai/ \
   --header "X-API-KEY: your_api_key_here"
 ```
 
-Get your API key at [financialdatasets.ai](https://financialdatasets.ai).
-Full setup guide: [docs/mcp-setup-guide.md](docs/mcp-setup-guide.md)
+Get a key at [financialdatasets.ai](https://financialdatasets.ai)  
+Setup guide: [docs/mcp-setup-guide.md](docs/mcp-setup-guide.md)
 
-### (Optional) Connect FRED API — Macro Data for Mode C/D
+### 3. Connect FRED API *(optional, for macro precision in Mode C/D)*
 
-Get a free API key at [fred.stlouisfed.org](https://fred.stlouisfed.org/docs/api/api_key.html), then add to `.env`:
+Add to `.env`:
 
-```
+```bash
 FRED_API_KEY=your_key_here
 ```
 
-Adds Grade A economic data (10Y Treasury, Fed Funds Rate, CPI, GDP, unemployment) for WACC precision and macro sensitivity analysis. Without it, macro context falls back to web search (Grade B/C).
+This adds Grade A macro inputs such as the 10Y Treasury, Fed Funds Rate, CPI, GDP, and unemployment.
 
-### Connect DART API — Korean Stocks *(free, required)*
+### 4. Connect DART API *(free and effectively required for Korean stocks)*
 
-Get a free API key at [opendart.fss.or.kr](https://opendart.fss.or.kr), then add it to `.claude/settings.local.json`:
+Add to `.claude/settings.local.json`:
 
 ```json
 "env": { "DART_API_KEY": "your_key_here" }
 ```
 
-### Run
+Get a key at [opendart.fss.or.kr](https://opendart.fss.or.kr)
+
+### 5. Run
 
 ```bash
 claude
 ```
 
-Claude Code reads `CLAUDE.md` automatically. You'll see:
+`CLAUDE.md` is loaded automatically at startup, and the session will show a state block like:
 
-```
+```text
 === Stock Analysis Agent ===
-Data Mode (US):  Enhanced (MCP active)     ← Grade A data from SEC filings
-Data Mode (KR):  DART-Enhanced (Grade A)   ← Grade A data from 금융감독원
-Date: 2026-03-12
+Data Mode (US):  {Enhanced (MCP active) / Standard (Web-only)}
+Data Mode (KR):  DART-Enhanced (Grade A)
+Date: {YYYY-MM-DD}
 Ready. Send a ticker or question to begin.
 ```
 
 ---
 
-## Output Files
+## Common Prompts
 
-All generated files go under `output/` (gitignored):
+```text
+Analyze NVDA
+005930 심층 분석
+AAPL investment memo
+삼성전자 투자 메모 써줘
+NVDA vs AMD vs INTC
+삼성전자 vs SK하이닉스 비교
+Scan my watchlist
+Compare NVDA to the last analysis
+```
 
-| File | Mode | Open with |
-|------|------|-----------|
-| `output/reports/{ticker}_A_*.html` | A — Quick Briefing | Any browser |
-| `output/reports/{tickers}_B_*.html` | B — Peer Comparison | Any browser |
-| `output/reports/{ticker}_C_*.html` | C — Dashboard | Any browser |
-| `output/reports/{ticker}_D_*.docx` | D — Investment Memo | Word / Google Docs / LibreOffice |
-| `output/data/{ticker}/latest.json` | — | Snapshot for delta analysis |
-| `output/watchlist.json` | — | Watchlist registry |
-| `output/catalyst-calendar.json` | — | Upcoming events calendar |
+Price-only queries are not supported. Ask for analysis instead, such as `"Analyze AAPL"` or `"삼성전자 분석해줘"`.
 
 ---
 
-## US Stock Mode Comparison
+<details>
+<summary><strong>See detailed data sources — US stocks</strong></summary>
+
+> **Strongly recommended.** Connecting [Financial Datasets API](https://financialdatasets.ai) unlocks Grade A data collection.
+
+Structured data pulled directly from SEC filings:
+
+| Data | API Call | Confidence |
+|------|----------|------------|
+| Real-time price | `get_current_stock_price` | Grade A |
+| 8-quarter income statement | `get_income_statements` | Grade A |
+| Balance sheet (8 quarters) | `get_balance_sheets` | Grade A |
+| Cash flow (8 quarters) | `get_cash_flow_statements` | Grade A |
+| Analyst price targets | FMP MCP | Grade B |
+| Insider transactions | `get_insider_transactions` | Grade A |
+| SEC filings (10-K, 10-Q) | `get_sec_filings` | Grade A |
+
+Major web sources used alongside or without MCP:
+
+| Data | Source | Confidence |
+|------|--------|------------|
+| Price · Market cap · Ratios | Yahoo Finance, Google Finance, MarketWatch | Grade B |
+| Financial statements | SEC EDGAR (direct fetch) | Grade A |
+| Earnings results | PR Newswire, Business Wire, Seeking Alpha | Grade B |
+| Analyst price targets | TipRanks, MarketBeat | Grade B |
+| News · Qualitative context | Reuters, Bloomberg, CNBC, Financial Times | Qualitative |
+| Insider trading | SEC Form 4 (EDGAR), Finviz | Grade B |
+
+</details>
+
+<details>
+<summary><strong>See detailed data sources — Korean stocks</strong></summary>
+
+Korean stocks always pull structured financial statements directly from **DART OpenAPI**.
+
+| Data | Source | Confidence |
+|------|--------|------------|
+| Consolidated financials (IS/BS/CF) | DART OpenAPI `fnlttSinglAcntAll` | Grade A |
+| Company metadata (corp_code, CEO) | DART OpenAPI `company` | Grade A |
+| Recent disclosures (90 days) | DART OpenAPI `list` | Grade A |
+| Price · PER · PBR · foreign ownership | Naver Finance | Grade B |
+| Analyst consensus | FnGuide / web research | Grade B |
+
+The Korean workflow combines DART financials with Naver Finance market data and FnGuide / KIND context.
+
+</details>
+
+<details>
+<summary><strong>See outputs, file paths, and mode comparison</strong></summary>
+
+All generated files live under `output/`.
+
+| File | Purpose |
+|------|---------|
+| `output/runs/{run_id}/{ticker}/research-plan.json` | run-local research plan |
+| `output/runs/{run_id}/{ticker}/validated-data.json` | run-local validated data |
+| `output/runs/{run_id}/{ticker}/analysis-result.json` | run-local structured analysis |
+| `output/runs/{run_id}/{ticker}/quality-report.json` | run-local QA report |
+| `output/reports/{ticker}_A_*.html` | Mode A quick briefing |
+| `output/reports/{tickers}_B_*.html` | Mode B peer comparison |
+| `output/reports/{ticker}_C_*.html` | Mode C dashboard |
+| `output/reports/{ticker}_D_*.docx` | Mode D investment memo |
+| `output/data/{ticker}/latest.json` | snapshot pointer for delta analysis |
+| `output/watchlist.json` | watchlist registry |
+| `output/catalyst-calendar.json` | catalyst calendar |
+
+US stocks operate in two modes depending on whether Financial Datasets API is connected:
 
 | | Enhanced Mode 🟢 | Standard Mode 🟡 |
-|-|-----------------|--------------------|
+|-|-----------------|-----------------|
 | **Requires** | Financial Datasets API key | Nothing extra |
-| **Data source** | SEC filings via structured API | Web research + scraping |
-| **Price data** | Real-time, Grade A | Web-sourced, Grade B |
-| **Financials** | 8 quarters, machine-readable | Web-scraped, may vary |
+| **Data source** | structured SEC API | web research + scraping |
+| **Price data** | real-time, Grade A | web-sourced, Grade B |
+| **Financials** | 8 quarters, machine-readable | web-scraped, may vary |
 | **Max grade** | **Grade A** | Grade B |
-| **Cost** | ~$0.05–$0.28/analysis | Free |
+| **Cost** | ~$0.05-$0.28 per analysis | Free |
 
-Korean stocks always use DART OpenAPI (Grade A financials) + 네이버금융 (Grade B price). DART API is free — no mode distinction needed.
+</details>
 
----
+<details>
+<summary><strong>See the project structure</strong></summary>
 
-## Korean Stock Support
-
-Full support for KOSPI / KOSDAQ stocks with **Grade A financial data via DART OpenAPI**.
-
-- **DART OpenAPI** — structured 재무제표 directly from 금융감독원 (IS/BS/CF, 공시 목록). Free API, always used.
-- **네이버금융** — real-time price, PER/PBR, 외국인 지분율 (always fetched for market data)
-- **FnGuide / KIND** — analyst consensus, 수급 data
-- **Korean-language output** — all analysis in Korean when you ask in Korean
-- **Korean market overlay** — 외국인 지분율, 밸류업 프로그램, 자사주 소각 policy
-
-```
-삼성전자 빠르게 봐줘    →  Mode A quick briefing (DART API Grade A data)
-삼성전자 심층 분석해줘  →  Mode C dashboard (DART API Grade A data)
-SK하이닉스 투자 메모     →  Mode D DOCX investment memo
-삼성전자 vs SK하이닉스  →  Mode B peer comparison
-```
-
----
-
-## Project Structure
-
-```
+```text
 stock-analysis-agent/
-├── CLAUDE.md                    ← Master orchestrator (Claude reads this on start)
-├── references/                  ← Analysis frameworks for each mode
-│   ├── analysis-framework-comparison.md
-│   ├── analysis-framework-dashboard.md
-│   └── analysis-framework-memo.md
+├── CLAUDE.md
+├── README.md
+├── README.ko.md
 ├── docs/
-│   ├── mcp-setup-guide.md       ← Financial Datasets API setup (English)
-│   └── mcp-setup-guide.ko.md   ← Financial Datasets API setup (Korean)
-├── output/                      ← Generated files (gitignored)
-│   ├── reports/                 ← HTML / DOCX analysis outputs
-│   └── data/                    ← Raw data + snapshots per ticker
+│   ├── assets/
+│   ├── mcp-setup-guide.md
+│   └── mcp-setup-guide.ko.md
+├── references/
+├── output/
+│   ├── reports/
+│   └── data/
+├── evals/
+├── tools/
 └── .claude/
-    ├── skills/                  ← 10 SKILL.md files (step-by-step pipeline)
-    └── agents/                  ← analyst · critic · data-researcher
+    ├── skills/
+    └── agents/
 ```
+
+</details>
 
 ---
 
 ## Disclaimer
 
-**This tool is for informational purposes only. It does not constitute investment advice, a solicitation to buy or sell any security, or a guarantee of investment returns.**
+**This tool is for informational purposes only. It is not investment advice, a solicitation to buy or sell securities, or a guarantee of returns.**
 
-- All analysis is AI-generated and may contain errors
-- Verify time-sensitive data with primary sources before acting
-- Past performance data does not predict future results
-- Always consult a qualified financial advisor before making investment decisions
+- All analysis is AI-generated and may contain errors.
+- Verify time-sensitive data with primary sources before acting.
+- Past performance does not predict future results.
+- Consult a qualified financial professional before making investment decisions.
 
-The anti-hallucination system (Grade D → "—") reduces but does not eliminate the risk of data errors. Independently verify all outputs before acting on them.
+The anti-hallucination system reduces but does not eliminate data risk. Independently verify all outputs before acting on them.
