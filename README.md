@@ -1,67 +1,90 @@
 <div align="center">
-  <h1>Stock Analysis Agent</h1>
-  <p><strong>Institutional-grade research for US and Korean equities</strong></p>
-  <p>Built on Claude Code. Grade A data first. Every number is source-tagged. Full research output in minutes.</p>
-  <p>English · <a href="README.ko.md">한국어</a></p>
+
+# Stock Analysis Agent
+
+### Institutional-grade research for US & Korean equities — without the invented numbers.
+
+**Claude Code** orchestrates a full buy-side pipeline: SEC & DART filings first, every metric source-tagged, a confidence grade on every cell. From ticker to memo in minutes.
+
+<sub>**English** · [한국어](README.ko.md)</sub>
+
+<br/>
+
+<img alt="Claude Code" src="https://img.shields.io/badge/Claude_Code-Orchestrated-111827?style=for-the-badge&logo=anthropic&logoColor=white">
+<img alt="US equities" src="https://img.shields.io/badge/US_Stocks-SEC_Grade_A-0f766e?style=for-the-badge">
+<img alt="Korean equities" src="https://img.shields.io/badge/KR_Stocks-DART_Grade_A-1d4ed8?style=for-the-badge">
+<img alt="No fabricated numbers" src="https://img.shields.io/badge/Numbers-Source_Tagged-f59e0b?style=for-the-badge">
+
+<br/>
+
+<a href="https://codepen.io/lowtidebuild/full/xbEgpdE"><img alt="Mode A" src="https://img.shields.io/badge/Mode_A-Quick_Briefing-0f172a?style=for-the-badge&logo=googlechrome&logoColor=white"></a>
+<a href="https://codepen.io/lowtidebuild/full/emdgGdW"><img alt="Mode B" src="https://img.shields.io/badge/Mode_B-Peer_Comparison-1f2937?style=for-the-badge&logo=googlechrome&logoColor=white"></a>
+<a href="https://codepen.io/lowtidebuild/full/vEXgYGL"><img alt="Mode C" src="https://img.shields.io/badge/Mode_C-Deep_Dive-0f766e?style=for-the-badge&logo=googlechrome&logoColor=white"></a>
+<a href="https://docs.google.com/document/d/1PX4FIrb1a4nBeKj3L7HanoYBfG6hSwOS/edit?usp=sharing&ouid=105178834220477378953&rtpof=true&sd=true"><img alt="Mode D" src="https://img.shields.io/badge/Mode_D-Investment_Memo-f97316?style=for-the-badge&logo=googledocs&logoColor=white"></a>
+
+<br/><br/>
+
+<img src="docs/assets/readme-showcase.svg" alt="Stock Analysis Agent showcase" width="94%">
+
 </div>
-
-<p align="center">
-  <img alt="Claude Code" src="https://img.shields.io/badge/Claude_Code-Orchestrated-111827?style=for-the-badge&logo=anthropic&logoColor=white">
-  <img alt="US equities" src="https://img.shields.io/badge/US_Stocks-SEC_Grade_A-0f766e?style=for-the-badge">
-  <img alt="Korean equities" src="https://img.shields.io/badge/KR_Stocks-DART_Grade_A-1d4ed8?style=for-the-badge">
-  <img alt="No fabricated numbers" src="https://img.shields.io/badge/Numbers-Source_Tagged-f59e0b?style=for-the-badge">
-</p>
-
-<p align="center">
-  <a href="https://codepen.io/lowtidebuild/full/xbEgpdE"><img alt="Mode A example" src="https://img.shields.io/badge/Mode_A-Quick_Briefing-0f172a?style=for-the-badge&logo=googlechrome&logoColor=white"></a>
-  <a href="https://codepen.io/lowtidebuild/full/emdgGdW"><img alt="Mode B example" src="https://img.shields.io/badge/Mode_B-Peer_Comparison-1f2937?style=for-the-badge&logo=googlechrome&logoColor=white"></a>
-  <a href="https://codepen.io/lowtidebuild/full/vEXgYGL"><img alt="Mode C example" src="https://img.shields.io/badge/Mode_C-Deep_Dive_Dashboard-0f766e?style=for-the-badge&logo=googlechrome&logoColor=white"></a>
-  <a href="https://docs.google.com/document/d/1PX4FIrb1a4nBeKj3L7HanoYBfG6hSwOS/edit?usp=sharing&ouid=105178834220477378953&rtpof=true&sd=true"><img alt="Mode D example" src="https://img.shields.io/badge/Mode_D-Investment_Memo-f97316?style=for-the-badge&logo=googledocs&logoColor=white"></a>
-</p>
-
-> **Core principle**: Blank beats wrong. If a figure cannot be verified, it stays as `"—"` instead of being invented.
-
-<p align="center">
-  <img src="docs/assets/readme-showcase.svg" alt="Stock Analysis Agent showcase" width="92%">
-</p>
 
 ---
 
-## At A Glance
+## Why this exists
+
+Most stock-research chatbots happily invent P/E ratios, hallucinate revenue, and cite sources that don't say what they claim. This agent is built on the opposite assumption.
+
+> **Blank beats wrong.** If a figure cannot be verified against a primary source, it stays as `—`. No exceptions.
+
+Five principles hold the system together:
+
+| | Principle | What it means in practice |
+|---|---|---|
+| **1** | **Blank > Wrong** | Grade D values render as `—`. The model never fills a gap it cannot prove. |
+| **2** | **No Source, No Number** | Every numerical claim carries a `[Filing]`, `[Portal]`, `[Calc]`… tag. |
+| **3** | **Company-Specificity** | Variant views must fail the competitor-replacement test — generic analysis is worse than none. |
+| **4** | **Adaptive Data** | Enhanced (MCP) when keys are live, Standard (web) when they aren't. Both ship. |
+| **5** | **Mechanism Required** | Every risk has a causal chain: `event → P&L impact → stock price`. |
+
+---
+
+## What you get
+
+Type a ticker. Get a buy-side note — not a chatbot summary.
 
 <table>
   <tr>
-    <td width="33%" valign="top">
-      <strong>🇺🇸 US Stocks</strong><br/>
-      Financial Datasets API unlocks SEC-based Grade A financial data<br/><br/>
-      Live price, 8-quarter financials, insider transactions, and filings in one flow
+    <td width="33%" valign="top" align="center">
+      <h3>🇺🇸 US Stocks</h3>
+      <strong>SEC-grade financials</strong><br/><br/>
+      Financial Datasets API unlocks Grade A data: live price, 8-quarter statements, insider transactions, and filings — straight from the source of record.
     </td>
-    <td width="33%" valign="top">
-      <strong>🇰🇷 Korean Stocks</strong><br/>
-      DART OpenAPI pulls structured financials directly from the regulator<br/><br/>
-      Naver Finance, FnGuide, and KIND enrich the market context
+    <td width="33%" valign="top" align="center">
+      <h3>🇰🇷 Korean Stocks</h3>
+      <strong>DART-grade financials</strong><br/><br/>
+      DART OpenAPI pulls regulator-filed statements directly. Naver Finance, FnGuide, and KIND layer on real-time market context.
     </td>
-    <td width="33%" valign="top">
-      <strong>🧠 Analysis Layer</strong><br/>
-      Scenario analysis, Variant View, precision risk, DCF, and peer comparison<br/><br/>
-      Every number ships with confidence grades and source tags
+    <td width="33%" valign="top" align="center">
+      <h3>🧠 Analysis Layer</h3>
+      <strong>Buy-side discipline</strong><br/><br/>
+      Scenario analysis, Variant View, precision risk, DCF, peer comparison — every number shipped with a confidence grade and source tag.
     </td>
   </tr>
 </table>
 
-Type a ticker and the agent produces research that feels closer to a buy-side note than a chatbot summary.
+What lands in the report:
 
-- **Scenario analysis**: Bull / Base / Bear with a probability-weighted `R/R Score`
-- **Variant View**: where the market is wrong, backed by company-specific evidence
-- **Precision Risk Analysis**: event → P&L impact → stock price effect
-- **Source-tagged data**: every number traces back to an origin
-- **Korean market overlay**: foreign ownership, value-up policies, disclosure flow
+- 📊 **Scenario analysis** — Bull / Base / Bear with a probability-weighted `R/R Score`
+- 🎯 **Variant View** — where the market is wrong, backed by company-specific evidence
+- ⚠️ **Precision Risk** — event → P&L impact → stock price effect (no hand-waving)
+- 🔖 **Source-tagged data** — every number traces back to its origin
+- 🇰🇷 **Korean market overlay** — foreign ownership, value-up policies, disclosure flow
 
 ---
 
-## Supported Workflows
+## Workflows
 
-The agent is designed for research tasks rather than quote lookups. One natural-language prompt routes into one of these workflows:
+Built for research, not quote lookups. One natural-language prompt routes into the right workflow:
 
 | Workflow | Use it for | Example prompt | Primary output |
 |----------|------------|----------------|----------------|
@@ -71,13 +94,13 @@ The agent is designed for research tasks rather than quote lookups. One natural-
 | Investment memo | a formal, shareable write-up | `AAPL investment memo` | Mode D DOCX |
 | Watchlist / delta | monitoring what changed since the last run | `Scan my watchlist` / `Compare NVDA to the last analysis` | refreshed artifacts + delta context |
 
-If you only need a live quote, use a market data app instead. This repo is intentionally optimized for full analysis.
+> Need just a quote? Use a market-data app. This repo is built for the work that comes *after* the price check.
 
 ---
 
 ## Output Modes
 
-If you are not sure which one to pick, start with **Mode C**. It is the default full-analysis path.
+Not sure which to pick? Start with **Mode C** — it's the default full-analysis path.
 
 <table>
   <tr>
@@ -117,7 +140,7 @@ If you are not sure which one to pick, start with **Mode C**. It is the default 
   </tr>
 </table>
 
-Mode D opens as a Google Docs preview because GitHub does not render `.docx` files inline.
+<sub>Mode D opens as a Google Docs preview — GitHub does not render `.docx` inline.</sub>
 
 <details>
 <summary><strong>See the detailed structure for each mode</strong></summary>
@@ -191,26 +214,26 @@ Mode D opens as a Google Docs preview because GitHub does not render `.docx` fil
 
 ```mermaid
 flowchart LR
-    Q[User asks<br/>Example: Analyze NVDA] --> R[Market routing<br/>US / KR]
-    R --> C[Data collection<br/>SEC / DART / Web]
-    C --> V[Validation and grading<br/>A / B / C / D]
-    V --> A[Analyst layer<br/>Variant View · DCF · Risk]
-    A --> O[Output rendering<br/>Mode A / B / C / D]
+    Q[🗣️ User asks<br/>e.g. Analyze NVDA] --> R[🧭 Market routing<br/>US / KR]
+    R --> C[📥 Data collection<br/>SEC · DART · Web]
+    C --> V[✅ Validation + grading<br/>A / B / C / D]
+    V --> A[🧠 Analyst layer<br/>Variant View · DCF · Risk]
+    A --> O[📄 Output rendering<br/>Mode A / B / C / D]
 ```
 
-The pipeline is straightforward:
+Five stages, no shortcuts:
 
-1. Interpret the ticker and intent.
-2. Route to US or Korean data collection.
-3. Validate and grade each metric.
-4. Generate valuation, risk, and differentiated insight.
-5. Render HTML or DOCX outputs.
+1. **Interpret** the ticker and user intent.
+2. **Route** to US (SEC) or Korean (DART) data collection.
+3. **Validate** every metric and assign a confidence grade.
+4. **Analyze** — valuation, risk, and differentiated insight.
+5. **Render** HTML dashboard or DOCX memo.
 
 ---
 
 ## Data Confidence System
 
-Confidence grades are part of the product, not a hidden implementation detail. Missing values are deliberate when verification fails.
+Confidence grades are **part of the product**, not a hidden implementation detail. A missing value is a deliberate signal, not a failure.
 
 | Grade | Tag | Meaning | Example |
 |-------|-----|---------|---------|
@@ -235,9 +258,9 @@ Korean example:
 
 ---
 
-## R/R Score
+## R/R Score — one number, honest math
 
-Every analysis reduces scenario-weighted upside versus downside into a single number.
+Every analysis reduces scenario-weighted upside versus downside into a single headline number.
 
 ```text
 R/R Score = (Bull_return% × Bull_prob + Base_return% × Base_prob)
@@ -255,19 +278,19 @@ R/R Score = (Bull_return% × Bull_prob + Base_return% × Base_prob)
 
 ## Quick Start
 
-### Before you start
+### Prerequisites
 
-- Claude Code installed locally
-- Python 3.8+ for helper scripts
-- `python-docx` if you want Mode D DOCX output
+- **Claude Code** installed locally
+- **Python 3.8+** for helper scripts
+- **`python-docx`** for Mode D DOCX output
 
-### Recommended setup path
+### Setup path — pick what you need
 
 | Goal | Configure | Why it matters |
 |------|-----------|----------------|
-| Best US-stock coverage | Financial Datasets MCP | SEC-based structured financials, real-time price, insider trades |
-| Better macro context in Mode C/D | `FRED_API_KEY` | Treasury, Fed, CPI, GDP, unemployment |
-| Korean-stock analysis | `DART_API_KEY` | regulator financials and recent disclosures |
+| 🇺🇸 Best US coverage | Financial Datasets MCP | SEC-based structured financials, real-time price, insider trades |
+| 📊 Macro precision (Mode C/D) | `FRED_API_KEY` | Treasury, Fed, CPI, GDP, unemployment |
+| 🇰🇷 Korean stocks | `DART_API_KEY` | Regulator financials and recent disclosures |
 
 ### 1. Install the basics
 
