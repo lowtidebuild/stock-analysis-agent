@@ -40,19 +40,19 @@
 
   <g font-family="Segoe UI, Arial, sans-serif">
     <text x="112" y="148" fill="#7DD3FC" font-size="22" font-weight="700" letter-spacing="4">STOCK ANALYSIS AGENT</text>
-    <text x="112" y="236" fill="white" font-size="66" font-weight="800">Institutional research</text>
-    <text x="112" y="310" fill="white" font-size="66" font-weight="800">without invented numbers.</text>
-    <text x="112" y="382" fill="#BFDBFE" font-size="28" font-weight="500">US and Korean equities with source-tagged metrics,</text>
-    <text x="112" y="422" fill="#BFDBFE" font-size="28" font-weight="500">scenario analysis, valuation, and memo-ready outputs.</text>
+    <text x="112" y="228" fill="white" font-size="58" font-weight="800">Institutional research</text>
+    <text x="112" y="294" fill="white" font-size="58" font-weight="800">without invented numbers.</text>
+    <text x="112" y="360" fill="#BFDBFE" font-size="25" font-weight="500">US and Korean equities with source-tagged metrics,</text>
+    <text x="112" y="396" fill="#BFDBFE" font-size="25" font-weight="500">scenario analysis, valuation, and memo-ready outputs.</text>
 
     <rect x="112" y="474" width="168" height="46" rx="23" fill="white" fill-opacity="0.10" stroke="white" stroke-opacity="0.18"/>
-    <text x="146" y="504" fill="white" font-size="20" font-weight="700">SEC + DART</text>
+    <text x="196" y="500" fill="white" font-size="19" font-weight="700" text-anchor="middle">SEC + DART</text>
 
     <rect x="294" y="474" width="190" height="46" rx="23" fill="white" fill-opacity="0.10" stroke="white" stroke-opacity="0.18"/>
-    <text x="326" y="504" fill="white" font-size="20" font-weight="700">Mode A / B / C / D</text>
+    <text x="389" y="500" fill="white" font-size="18" font-weight="700" text-anchor="middle">Mode A / B / C / D</text>
 
     <rect x="498" y="474" width="180" height="46" rx="23" fill="white" fill-opacity="0.10" stroke="white" stroke-opacity="0.18"/>
-    <text x="536" y="504" fill="white" font-size="20" font-weight="700">Blank &gt; Wrong</text>
+    <text x="588" y="500" fill="white" font-size="19" font-weight="700" text-anchor="middle">Blank &gt; Wrong</text>
   </g>
 
   <g filter="url(#shadow)" font-family="Segoe UI, Arial, sans-serif">

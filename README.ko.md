@@ -22,7 +22,7 @@
 > **핵심 원칙**: 빈칸 > 틀린 숫자. 검증할 수 없는 수치는 `"—"`로 남기고, 절대 임의 생성하지 않습니다.
 
 <p align="center">
-  <img src="docs/assets/readme-showcase.svg" alt="Stock Analysis Agent showcase" width="100%">
+  <img src="docs/assets/readme-showcase.svg" alt="Stock Analysis Agent showcase" width="92%">
 </p>
 
 ---

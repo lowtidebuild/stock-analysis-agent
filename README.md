@@ -22,7 +22,7 @@
 > **Core principle**: Blank beats wrong. If a figure cannot be verified, it stays as `"—"` instead of being invented.
 
 <p align="center">
-  <img src="docs/assets/readme-showcase.svg" alt="Stock Analysis Agent showcase" width="100%">
+  <img src="docs/assets/readme-showcase.svg" alt="Stock Analysis Agent showcase" width="92%">
 </p>
 
 ---
