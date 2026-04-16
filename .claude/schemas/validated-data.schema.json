@@ -1,0 +1,146 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Validated Data",
+  "type": "object",
+  "required": [
+    "ticker",
+    "market",
+    "data_mode",
+    "validation_timestamp",
+    "overall_grade",
+    "run_context",
+    "validated_metrics",
+    "grade_summary",
+    "exclusions"
+  ],
+  "properties": {
+    "ticker": {
+      "type": "string"
+    },
+    "market": {
+      "type": "string",
+      "enum": ["US", "KR"]
+    },
+    "data_mode": {
+      "type": "string",
+      "enum": ["enhanced", "standard"]
+    },
+    "validation_timestamp": {
+      "type": "string"
+    },
+    "overall_grade": {
+      "type": "string",
+      "enum": ["A", "B", "C", "D"]
+    },
+    "run_context": {
+      "type": "object",
+      "required": ["run_id", "artifact_root", "ticker"],
+      "properties": {
+        "run_id": {
+          "type": "string"
+        },
+        "artifact_root": {
+          "type": "string"
+        },
+        "ticker": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "validated_metrics": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["grade", "sources"],
+        "properties": {
+          "value": {},
+          "grade": {
+            "type": "string",
+            "enum": ["A", "B", "C", "D"]
+          },
+          "source_type": {
+            "type": ["string", "null"],
+            "enum": [
+              "filing",
+              "company_release",
+              "portal_global",
+              "portal_kr",
+              "calculated",
+              "estimate",
+              "macro",
+              "internal",
+              null
+            ]
+          },
+          "source_authority": {
+            "type": ["string", "null"]
+          },
+          "display_tag": {
+            "type": ["string", "null"],
+            "enum": [
+              "[Filing]",
+              "[Company]",
+              "[Portal]",
+              "[KR-Portal]",
+              "[Calc]",
+              "[Est]",
+              "[Macro]",
+              null
+            ]
+          },
+          "tag": {
+            "type": ["string", "null"]
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "source_values": {
+            "type": ["array", "null"]
+          },
+          "notes": {
+            "type": ["string", "null"]
+          },
+          "unit": {
+            "type": ["string", "null"]
+          },
+          "currency": {
+            "type": ["string", "null"]
+          },
+          "approximate": {
+            "type": ["boolean", "null"]
+          },
+          "as_of_date": {
+            "type": ["string", "null"],
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+          },
+          "period_end": {
+            "type": ["string", "null"],
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+          },
+          "exclusion_reason": {
+            "type": ["string", "null"]
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "grade_summary": {
+      "type": "object",
+      "properties": {
+        "A": { "type": "number" },
+        "B": { "type": "number" },
+        "C": { "type": "number" },
+        "D": { "type": "number" }
+      },
+      "additionalProperties": true
+    },
+    "exclusions": {
+      "type": "array"
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Analysis Patch",
+  "type": "object",
+  "required": [
+    "ticker",
+    "output_mode",
+    "run_context",
+    "patch_plan_path",
+    "source_analysis_result_path",
+    "target_analysis_result_path",
+    "task_ids",
+    "updated_paths",
+    "render_required",
+    "preserve_untouched_sections",
+    "updates",
+    "applied_by",
+    "applied_at"
+  ],
+  "properties": {
+    "ticker": {
+      "type": "string"
+    },
+    "output_mode": {
+      "type": "string",
+      "enum": ["A", "B", "C", "D"]
+    },
+    "run_context": {
+      "type": "object",
+      "required": ["run_id", "artifact_root", "ticker"],
+      "properties": {
+        "run_id": { "type": "string" },
+        "artifact_root": { "type": "string" },
+        "ticker": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "patch_plan_path": {
+      "type": "string"
+    },
+    "source_analysis_result_path": {
+      "type": "string"
+    },
+    "target_analysis_result_path": {
+      "type": "string"
+    },
+    "task_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "updated_paths": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "render_required": {
+      "type": "boolean"
+    },
+    "preserve_untouched_sections": {
+      "type": "boolean",
+      "const": true
+    },
+    "updates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["task_id", "path", "value", "rationale"],
+        "properties": {
+          "task_id": { "type": "string" },
+          "path": { "type": "string" },
+          "value": {},
+          "rationale": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "applied_by": {
+      "type": "string"
+    },
+    "applied_at": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,150 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Analysis Result",
+  "type": "object",
+  "required": [
+    "ticker",
+    "market",
+    "data_mode",
+    "output_mode",
+    "analysis_date",
+    "run_context",
+    "key_metrics",
+    "scenarios",
+    "rr_score",
+    "verdict"
+  ],
+  "properties": {
+    "ticker": {
+      "type": "string"
+    },
+    "company_name": {
+      "type": "string"
+    },
+    "market": {
+      "type": "string",
+      "enum": ["US", "KR"]
+    },
+    "data_mode": {
+      "type": "string",
+      "enum": ["enhanced", "standard"]
+    },
+    "output_mode": {
+      "type": "string",
+      "enum": ["A", "B", "C", "D"]
+    },
+    "output_language": {
+      "type": ["string", "null"],
+      "enum": ["en", "ko", null]
+    },
+    "analysis_date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "price_at_analysis": {
+      "type": ["number", "null"]
+    },
+    "currency": {
+      "type": ["string", "null"]
+    },
+    "run_context": {
+      "type": "object",
+      "required": ["run_id", "artifact_root", "ticker"],
+      "properties": {
+        "run_id": {
+          "type": "string"
+        },
+        "artifact_root": {
+          "type": "string"
+        },
+        "ticker": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "key_metrics": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["grade", "sources"],
+        "properties": {
+          "value": {},
+          "grade": {
+            "type": "string",
+            "enum": ["A", "B", "C", "D"]
+          },
+          "source_type": {
+            "type": ["string", "null"]
+          },
+          "display_tag": {
+            "type": ["string", "null"]
+          },
+          "tag": {
+            "type": ["string", "null"]
+          },
+          "sources": {
+            "type": "array"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "scenarios": {
+      "type": "object",
+      "required": ["bull", "base", "bear"],
+      "properties": {
+        "bull": {
+          "type": "object",
+          "required": ["target", "probability", "key_assumption"],
+          "properties": {
+            "target": { "type": ["number", "null"] },
+            "return_pct": { "type": ["number", "string", "null"] },
+            "probability": { "type": "number", "minimum": 0, "maximum": 1 },
+            "key_assumption": { "type": "string" }
+          },
+          "additionalProperties": true
+        },
+        "base": {
+          "type": "object",
+          "required": ["target", "probability", "key_assumption"],
+          "properties": {
+            "target": { "type": ["number", "null"] },
+            "return_pct": { "type": ["number", "string", "null"] },
+            "probability": { "type": "number", "minimum": 0, "maximum": 1 },
+            "key_assumption": { "type": "string" }
+          },
+          "additionalProperties": true
+        },
+        "bear": {
+          "type": "object",
+          "required": ["target", "probability", "key_assumption"],
+          "properties": {
+            "target": { "type": ["number", "null"] },
+            "return_pct": { "type": ["number", "string", "null"] },
+            "probability": { "type": "number", "minimum": 0, "maximum": 1 },
+            "key_assumption": { "type": "string" }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "rr_score": {
+      "type": ["number", "null"]
+    },
+    "verdict": {
+      "type": "string"
+    },
+    "top_risks": {
+      "type": ["array", "null"]
+    },
+    "upcoming_catalysts": {
+      "type": ["array", "null"]
+    },
+    "sections": {
+      "type": ["object", "null"]
+    }
+  },
+  "additionalProperties": true
+}

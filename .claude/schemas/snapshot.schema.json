@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Snapshot",
+  "type": "object",
+  "required": [
+    "ticker",
+    "analysis_date",
+    "output_mode",
+    "run_context",
+    "key_metrics",
+    "scenarios",
+    "rr_score",
+    "verdict"
+  ],
+  "properties": {
+    "ticker": {
+      "type": "string"
+    },
+    "market": {
+      "type": ["string", "null"],
+      "enum": ["US", "KR", null]
+    },
+    "analysis_date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "output_mode": {
+      "type": "string",
+      "enum": ["A", "B", "C", "D"]
+    },
+    "run_context": {
+      "type": "object",
+      "required": ["run_id", "artifact_root", "ticker"],
+      "properties": {
+        "run_id": {
+          "type": "string"
+        },
+        "artifact_root": {
+          "type": "string"
+        },
+        "ticker": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "price_at_analysis": {
+      "type": ["number", "null"]
+    },
+    "currency": {
+      "type": ["string", "null"]
+    },
+    "key_metrics": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["grade", "sources"],
+        "properties": {
+          "value": {},
+          "grade": {
+            "type": "string",
+            "enum": ["A", "B", "C", "D"]
+          },
+          "display_tag": {
+            "type": ["string", "null"]
+          },
+          "tag": {
+            "type": ["string", "null"]
+          },
+          "sources": {
+            "type": "array"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "scenarios": {
+      "type": "object"
+    },
+    "rr_score": {
+      "type": ["number", "null"]
+    },
+    "verdict": {
+      "type": "string"
+    },
+    "top_risks": {
+      "type": ["array", "null"]
+    },
+    "upcoming_catalysts": {
+      "type": ["array", "null"]
+    },
+    "report_path": {
+      "type": ["string", "null"]
+    }
+  },
+  "additionalProperties": true
+}

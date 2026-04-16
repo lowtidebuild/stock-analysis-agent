@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Research Plan",
+  "type": "object",
+  "required": [
+    "ticker",
+    "market",
+    "data_mode",
+    "output_mode",
+    "output_language",
+    "analysis_date",
+    "run_context",
+    "analysis_framework_path"
+  ],
+  "properties": {
+    "ticker": {
+      "type": "string"
+    },
+    "market": {
+      "type": "string",
+      "enum": ["US", "KR"]
+    },
+    "data_mode": {
+      "type": "string",
+      "enum": ["enhanced", "standard"]
+    },
+    "output_mode": {
+      "type": "string",
+      "enum": ["A", "B", "C", "D"]
+    },
+    "output_language": {
+      "type": "string",
+      "enum": ["en", "ko"]
+    },
+    "analysis_date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "company_type": {
+      "type": "string"
+    },
+    "peer_tickers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "analysis_framework_path": {
+      "type": "string"
+    },
+    "tier1_calls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tier2_searches": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tier2_fetches": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "macro_search_required": {
+      "type": "boolean"
+    },
+    "macro_search": {},
+    "macro_factors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "run_context": {
+      "type": "object",
+      "required": ["run_id", "artifact_root", "ticker"],
+      "properties": {
+        "run_id": {
+          "type": "string"
+        },
+        "artifact_root": {
+          "type": "string"
+        },
+        "ticker": {
+          "type": "string"
+        },
+        "reports_dir": {
+          "type": "string"
+        },
+        "compatibility_mirror_enabled": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

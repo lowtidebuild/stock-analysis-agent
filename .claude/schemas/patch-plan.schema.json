@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Analyst Patch Plan",
+  "type": "object",
+  "required": [
+    "ticker",
+    "output_mode",
+    "run_context",
+    "current_recheck_count",
+    "remaining_recheck_budget",
+    "pending_fix_count",
+    "ready_for_redelivery",
+    "loop_state",
+    "tasks"
+  ],
+  "properties": {
+    "ticker": {
+      "type": "string"
+    },
+    "output_mode": {
+      "type": "string",
+      "enum": ["A", "B", "C", "D"]
+    },
+    "run_context": {
+      "type": "object",
+      "required": ["run_id", "artifact_root", "ticker"],
+      "properties": {
+        "run_id": { "type": "string" },
+        "artifact_root": { "type": "string" },
+        "ticker": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "quality_report_path": {
+      "type": ["string", "null"]
+    },
+    "analysis_result_path": {
+      "type": ["string", "null"]
+    },
+    "report_output_path": {
+      "type": ["string", "null"]
+    },
+    "critic_overall": {
+      "type": ["string", "null"],
+      "enum": ["PASS", "PASS_WITH_FLAGS", "FAIL", null]
+    },
+    "current_recheck_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "remaining_recheck_budget": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "pending_fix_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "ready_for_redelivery": {
+      "type": "boolean"
+    },
+    "loop_state": {
+      "type": "string",
+      "enum": ["patch_and_recheck", "patch_or_deliver_with_flags", "ready_for_delivery"]
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "task_id",
+          "priority",
+          "section",
+          "problem",
+          "requested_fix",
+          "analysis_targets",
+          "report_targets",
+          "edit_scope",
+          "render_step_required"
+        ],
+        "properties": {
+          "task_id": { "type": "string" },
+          "priority": { "type": "integer", "minimum": 1 },
+          "source_item": { "type": ["string", "null"] },
+          "section": { "type": ["string", "null"] },
+          "problem": { "type": ["string", "null"] },
+          "requested_fix": { "type": ["string", "null"] },
+          "analysis_targets": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "report_targets": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "edit_scope": {
+            "type": "string",
+            "enum": ["analysis_json_and_render", "report_render_only"]
+          },
+          "render_step_required": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": ["array", "null"],
+            "items": { "type": "string" }
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,143 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Patch Loop Result",
+  "type": "object",
+  "required": [
+    "ticker",
+    "output_mode",
+    "run_context",
+    "source_patch_plan_path",
+    "analysis_patch_path",
+    "analysis_result_path",
+    "quality_report_path",
+    "render",
+    "recheck",
+    "next_patch_plan",
+    "quality_gate",
+    "completed_by",
+    "completed_at"
+  ],
+  "properties": {
+    "ticker": {
+      "type": "string"
+    },
+    "output_mode": {
+      "type": "string",
+      "enum": ["A", "B", "C", "D"]
+    },
+    "run_context": {
+      "type": "object",
+      "required": ["run_id", "artifact_root", "ticker"],
+      "properties": {
+        "run_id": { "type": "string" },
+        "artifact_root": { "type": "string" },
+        "ticker": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "source_patch_plan_path": { "type": "string" },
+    "analysis_patch_path": { "type": "string" },
+    "analysis_result_path": { "type": "string" },
+    "quality_report_path": { "type": "string" },
+    "render": {
+      "type": "object",
+      "required": ["required", "status", "engine", "report_output_path"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "status": {
+          "type": "string",
+          "enum": ["not_requested", "rendered", "manual_render_required", "render_failed"]
+        },
+        "engine": { "type": ["string", "null"] },
+        "report_output_path": { "type": ["string", "null"] },
+        "rendered_at": { "type": ["string", "null"] },
+        "notes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    },
+    "recheck": {
+      "type": "object",
+      "required": [
+        "status",
+        "critic_overall_before",
+        "critic_overall_after",
+        "remaining_fail_count",
+        "quality_report_updated"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["not_run", "applied"]
+        },
+        "critic_overall_before": {
+          "type": ["string", "null"],
+          "enum": ["PASS", "PASS_WITH_FLAGS", "FAIL", null]
+        },
+        "critic_overall_after": {
+          "type": ["string", "null"],
+          "enum": ["PASS", "PASS_WITH_FLAGS", "FAIL", null]
+        },
+        "remaining_fail_count": { "type": "integer", "minimum": 0 },
+        "quality_report_updated": { "type": "boolean" },
+        "recheck_payload_path": { "type": "string" },
+        "remaining_fail_items": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    },
+    "next_patch_plan": {
+      "type": "object",
+      "required": ["path", "pending_fix_count", "ready_for_redelivery", "loop_state"],
+      "properties": {
+        "path": { "type": "string" },
+        "pending_fix_count": { "type": "integer", "minimum": 0 },
+        "ready_for_redelivery": { "type": "boolean" },
+        "loop_state": {
+          "type": "string",
+          "enum": ["patch_and_recheck", "patch_or_deliver_with_flags", "ready_for_delivery"]
+        }
+      },
+      "additionalProperties": true
+    },
+    "quality_gate": {
+      "type": "object",
+      "required": ["overall_result", "delivery_gate_result", "critic_overall", "delivery_ready"],
+      "properties": {
+        "overall_result": {
+          "type": "string",
+          "enum": ["PASS", "PASS_WITH_FLAGS", "CRITICAL_FLAG", "FAIL"]
+        },
+        "delivery_gate_result": {
+          "type": "string",
+          "enum": ["PASS", "BLOCKED"]
+        },
+        "critic_overall": {
+          "type": ["string", "null"],
+          "enum": ["PASS", "PASS_WITH_FLAGS", "FAIL", null]
+        },
+        "blocking_items": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "non_blocking_items": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "historical_only_items": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "delivery_ready": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "completed_by": { "type": "string" },
+    "completed_at": { "type": "string" }
+  },
+  "additionalProperties": true
+}

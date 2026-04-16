@@ -1,0 +1,227 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Quality Report",
+  "type": "object",
+  "required": [
+    "ticker",
+    "output_mode",
+    "check_timestamp",
+    "overall_result",
+    "run_context",
+    "items",
+    "delivery_gate"
+  ],
+  "properties": {
+    "ticker": {
+      "type": "string"
+    },
+    "output_mode": {
+      "type": "string",
+      "enum": ["A", "B", "C", "D"]
+    },
+    "check_timestamp": {
+      "type": "string"
+    },
+    "overall_result": {
+      "type": "string",
+      "enum": ["PASS", "PASS_WITH_FLAGS", "CRITICAL_FLAG", "FAIL"]
+    },
+    "core_overall_result": {
+      "type": ["string", "null"],
+      "enum": ["PASS", "PASS_WITH_FLAGS", "CRITICAL_FLAG", "FAIL", null]
+    },
+    "run_context": {
+      "type": "object",
+      "required": ["run_id", "artifact_root", "ticker"],
+      "properties": {
+        "run_id": {
+          "type": "string"
+        },
+        "artifact_root": {
+          "type": "string"
+        },
+        "ticker": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "critic_review": {
+      "type": ["object", "null"],
+      "required": ["reviewer", "review_timestamp", "overall", "items"],
+      "properties": {
+        "reviewer": {
+          "type": "string"
+        },
+        "review_timestamp": {
+          "type": "string"
+        },
+        "overall": {
+          "type": "string",
+          "enum": ["PASS", "PASS_WITH_FLAGS", "FAIL"]
+        },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["item", "status"],
+            "properties": {
+              "item": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": ["PASS", "PASS_WITH_FLAGS", "FAIL", "SKIP"]
+              },
+              "section": {
+                "type": ["string", "null"]
+              },
+              "problem": {
+                "type": ["string", "null"]
+              },
+              "fix": {
+                "type": ["string", "null"]
+              },
+              "notes": {
+                "type": ["string", "null"]
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "recheck_count": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "recheck_history": {
+          "type": ["array", "null"],
+          "items": {
+            "type": "object",
+            "required": ["review_timestamp", "updated_items", "remaining_fail_items"],
+            "properties": {
+              "review_timestamp": {
+                "type": "string"
+              },
+              "updated_items": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "remaining_fail_items": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "delivery_gate": {
+      "type": "object",
+      "required": [
+        "result",
+        "ready_for_delivery",
+        "blocking_items",
+        "non_blocking_items",
+        "historical_only_items",
+        "critic_overall",
+        "critic_delivery_impact"
+      ],
+      "properties": {
+        "result": {
+          "type": "string",
+          "enum": ["PASS", "BLOCKED"]
+        },
+        "ready_for_delivery": {
+          "type": "boolean"
+        },
+        "blocking_items": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "non_blocking_items": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "historical_only_items": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "critic_overall": {
+          "type": ["string", "null"],
+          "enum": ["PASS", "PASS_WITH_FLAGS", "FAIL", null]
+        },
+        "critic_delivery_impact": {
+          "type": "string",
+          "enum": ["none", "historical_flag_only", "non_blocking_flag", "delivery_blocking_flag"]
+        }
+      },
+      "additionalProperties": true
+    },
+    "feedback_for_analyst": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "object",
+        "required": ["section", "problem", "fix"],
+        "properties": {
+          "section": {
+            "type": "string"
+          },
+          "problem": {
+            "type": "string"
+          },
+          "fix": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "items": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["PASS", "PASS_WITH_FLAGS", "CRITICAL_FLAG", "FAIL", "SKIP"]
+          },
+          "delivery_impact": {
+            "type": ["string", "null"],
+            "enum": ["none", "historical_flag_only", "non_blocking_flag", "delivery_blocking_flag", null]
+          },
+          "notes": {
+            "type": ["array", "null"],
+            "items": { "type": "string" }
+          },
+          "errors": {
+            "type": ["array", "null"],
+            "items": { "type": "string" }
+          },
+          "sampled_values": {
+            "type": ["array", "null"]
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "auto_fixes_applied": {
+      "type": ["array", "null"]
+    },
+    "inline_flags_added": {
+      "type": ["array", "null"]
+    },
+    "generated_by": {
+      "type": ["string", "null"]
+    }
+  },
+  "additionalProperties": true
+}
