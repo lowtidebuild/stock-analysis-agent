@@ -23,7 +23,14 @@ import urllib.request
 import urllib.parse
 import xml.etree.ElementTree as ET
 import zipfile
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+# Repo-root import for the trust-boundary sanitizer (CLAUDE.md §12).
+_REPO_ROOT = Path(__file__).resolve().parents[4]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+from tools.prompt_injection_filter import SANITIZER_VERSION, sanitize_record  # noqa: E402
 
 DART_BASE = "https://opendart.fss.or.kr/api"
 
@@ -389,6 +396,19 @@ def main():
             for label, info in periods.items()
         },
         "recent_disclosures": disclosures,
+    }
+
+    # Trust-boundary sanitization (CLAUDE.md §12) — required before any
+    # downstream agent reads this artifact. DART account names and
+    # disclosure titles are filer-controlled text and have to be treated
+    # as untrusted data.
+    output, sanitization_findings = sanitize_record(output)
+    output["_sanitization"] = {
+        "tool": "tools/prompt_injection_filter.py",
+        "version": SANITIZER_VERSION,
+        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "redactions": len(sanitization_findings),
+        "findings": sanitization_findings,
     }
 
     # Write output

@@ -2,18 +2,19 @@
 """
 docx-generator.py — Mode D Investment Memo DOCX Generator
 
-Reads output/analysis-result.json and produces a professionally formatted
+Reads a run-local analysis-result.json and produces a professionally formatted
 Word document (.docx) with all 10 sections, financial tables, and source tags.
 
 Usage:
     python docx-generator.py
-    python docx-generator.py --input output/analysis-result.json
-    python docx-generator.py --input output/analysis-result.json --output output/reports/AAPL_D_EN_2026-03-12.docx
+    python docx-generator.py --input output/runs/<run_id>/<ticker>/analysis-result.json
+    python docx-generator.py --input output/runs/<run_id>/<ticker>/analysis-result.json --output output/reports/AAPL_D_EN_2026-03-12.docx
 """
 
 import json
 import sys
 import os
+import pathlib
 import argparse
 from datetime import datetime
 
@@ -698,10 +699,16 @@ def generate_docx(data: dict, output_path: str) -> str:
 # ---------------------------------------------------------------------------
 
 def main():
+    # Repo-root import for env-var-aware path resolution.
+    _repo_root = pathlib.Path(__file__).resolve().parents[4]
+    if str(_repo_root) not in sys.path:
+        sys.path.insert(0, str(_repo_root))
+    from tools.paths import data_path  # noqa: E402
+
     parser = argparse.ArgumentParser(description="Generate Mode D Investment Memo as DOCX")
     parser.add_argument(
-        "--input", default="output/analysis-result.json",
-        help="Path to analysis-result.json (default: output/analysis-result.json)"
+        "--input", default=str(data_path("analysis-result.json")),
+        help="Path to a run-local analysis-result.json"
     )
     parser.add_argument(
         "--output", default=None,
@@ -722,7 +729,7 @@ def main():
         ticker    = data.get("ticker", "UNKNOWN")
         lang      = (data.get("output_language") or "en").upper()
         date_str  = data.get("analysis_date", datetime.now().strftime("%Y-%m-%d"))
-        output_path = f"output/reports/{ticker}_D_{lang}_{date_str}.docx"
+        output_path = str(data_path("reports", f"{ticker}_D_{lang}_{date_str}.docx"))
 
     generate_docx(data, output_path)
     return 0

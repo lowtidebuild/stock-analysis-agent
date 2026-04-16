@@ -1,5 +1,6 @@
 # ── Design & Private Docs ──────────────────────────────────────────────────
-stock-analysis-agent-design-v2.md
+# Project-specific private filenames live in .git/info/exclude (local-only,
+# not pushed) so they are not advertised in the public repository.
 
 # ── Runtime Output ─────────────────────────────────────────────────────────
 output/
@@ -43,8 +44,6 @@ Desktop.ini
 *.swo
 *~
 
-# ── Task tracking ─────────────────────────────────────────────────────────
-TODOS.md
-
 # ── Claude session artifacts ────────────────────────────────────────────────
 .claude/projects/
+.claude/worktrees/
