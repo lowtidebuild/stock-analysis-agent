@@ -26,6 +26,12 @@ import time
 import urllib.request
 import urllib.parse
 from datetime import datetime, timezone
+from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parents[4]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+from tools.prompt_injection_filter import SANITIZER_VERSION, sanitize_record  # noqa: E402
 
 FRED_BASE = "https://api.stlouisfed.org/fred/series/observations"
 
@@ -229,6 +235,18 @@ def build_snapshot(series_data, errors, include_kr=False):
     return snapshot
 
 
+def attach_sanitization_metadata(record):
+    cleaned, sanitization_findings = sanitize_record(record)
+    cleaned["_sanitization"] = {
+        "tool": "tools/prompt_injection_filter.py",
+        "version": SANITIZER_VERSION,
+        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "redactions": len(sanitization_findings),
+        "findings": sanitization_findings,
+    }
+    return cleaned
+
+
 def main():
     parser = argparse.ArgumentParser(description="FRED API macroeconomic data collector")
     parser.add_argument("--output", required=True, help="Output JSON file path")
@@ -278,6 +296,7 @@ def main():
         if cached_data:
             cached_data["api_status"] = "failed_using_stale"
             cached_data["errors"] = errors
+            cached_data = attach_sanitization_metadata(cached_data)
             os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
             with open(args.output, "w", encoding="utf-8") as f:
                 json.dump(cached_data, f, ensure_ascii=False, indent=2)
@@ -295,7 +314,9 @@ def main():
             sys.exit(1)
 
     # Build and write snapshot
-    snapshot = build_snapshot(series_data, errors, include_kr=include_kr)
+    snapshot = attach_sanitization_metadata(
+        build_snapshot(series_data, errors, include_kr=include_kr)
+    )
     os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
     with open(args.output, "w", encoding="utf-8") as f:
         json.dump(snapshot, f, ensure_ascii=False, indent=2)
