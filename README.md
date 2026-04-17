@@ -24,7 +24,7 @@
 
 <br/><br/>
 
-<img src="docs/assets/readme-showcase.svg" alt="Stock Analysis Agent showcase" width="94%">
+<img src="docs/assets/readme-showcase.svg" alt="Stock Analysis Agent showcase" width="82%">
 
 </div>
 
