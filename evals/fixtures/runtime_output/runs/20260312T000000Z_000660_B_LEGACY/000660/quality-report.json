@@ -1,0 +1,131 @@
+{
+  "ticker": "000660",
+  "output_mode": "B",
+  "check_timestamp": "2026-03-28T14:44:24Z",
+  "overall_result": "PASS_WITH_FLAGS",
+  "run_context": {
+    "run_id": "20260312T000000Z_000660_B_LEGACY",
+    "artifact_root": "output/runs/20260312T000000Z_000660_B_LEGACY/000660",
+    "ticker": "000660",
+    "reports_dir": "output/reports",
+    "snapshot_dir": "output/data/000660",
+    "migration_mode": "legacy_promotion"
+  },
+  "items": {
+    "legacy_migration": {
+      "status": "PASS_WITH_FLAGS",
+      "notes": [
+        "Original quality-report.json was not preserved in the legacy sample namespace.",
+        "This synthetic report documents that the sample was normalized into the canonical run-local contract."
+      ],
+      "delivery_impact": "historical_flag_only"
+    },
+    "schema_validation": {
+      "status": "PASS",
+      "notes": [
+        "Run-local migrated artifacts are expected to pass schema validation after generation."
+      ],
+      "delivery_impact": "none"
+    },
+    "financial_consistency": {
+      "status": "PASS",
+      "sampled_values": [
+        {
+          "metric": "price_at_analysis",
+          "output_value": 955000.0,
+          "source_value": 955000.0,
+          "match": true
+        },
+        {
+          "metric": "market_cap",
+          "output_value": 680.6,
+          "source_value": 680.6,
+          "match": true
+        },
+        {
+          "metric": "operating_margin",
+          "output_value": 48.59,
+          "source_value": 48.59,
+          "match": true
+        }
+      ],
+      "delivery_impact": "none"
+    },
+    "price_and_date": {
+      "status": "PASS",
+      "price_found": 955000.0,
+      "date_found": "2026-03-12",
+      "delivery_impact": "none"
+    },
+    "blank_over_wrong": {
+      "status": "PASS",
+      "excluded_metrics_checked": [
+        "gross_margin",
+        "fcf_ttm",
+        "fcf_yield",
+        "net_debt_ebitda"
+      ],
+      "violations_found": 0,
+      "delivery_impact": "none"
+    },
+    "contract_validation": {
+      "status": "PASS",
+      "artifacts": {
+        "research-plan": {
+          "status": "PASS",
+          "error_count": 0,
+          "errors": []
+        },
+        "validated-data": {
+          "status": "PASS",
+          "error_count": 0,
+          "errors": []
+        },
+        "analysis-result": {
+          "status": "PASS",
+          "error_count": 0,
+          "errors": []
+        }
+      },
+      "delivery_impact": "none"
+    },
+    "semantic_consistency": {
+      "status": "PASS",
+      "error_count": 0,
+      "delivery_impact": "none"
+    },
+    "verdict_policy": {
+      "status": "PASS",
+      "delivery_impact": "none"
+    },
+    "cross_artifact_consistency": {
+      "status": "PASS",
+      "error_count": 0,
+      "delivery_impact": "none"
+    }
+  },
+  "delivery_gate": {
+    "result": "PASS",
+    "ready_for_delivery": true,
+    "blocking_items": [],
+    "non_blocking_items": [],
+    "historical_only_items": [
+      "legacy_migration"
+    ],
+    "critic_overall": null,
+    "critic_delivery_impact": "none"
+  },
+  "auto_fixes_applied": [
+    "Normalized legacy source tags to canonical metadata contract",
+    "Backfilled run_context into every migrated artifact"
+  ],
+  "inline_flags_added": [],
+  "generated_by": "quality-report-builder",
+  "migration": {
+    "migrated_at": "2026-03-27T21:45:04Z",
+    "source_path": null,
+    "notes": [
+      "Synthetic quality report generated because no legacy quality artifact existed for this ticker"
+    ]
+  }
+}

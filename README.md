@@ -241,6 +241,7 @@ Confidence grades are **part of the product**, not a hidden implementation detai
 | **A** | `[Macro]` | government / central bank statistics | FRED API |
 | **B** | `[Company]` | company IR material, earnings release, transcript | company IR / newsroom |
 | **B** | `[Portal]` / `[KR-Portal]` | 2+ sources cross-checked | web cross-reference |
+| **B/C** | `[Portal]` | yfinance fallback; Grade B when cross-confirmed, Grade C when standalone | yfinance supplement |
 | **C** | `Grade C` | single-source, unverified | one web mention |
 | **D** | `—` | cannot verify → shown as blank | never fabricated |
 
@@ -289,6 +290,7 @@ R/R Score = (Bull_return% × Bull_prob + Base_return% × Base_prob)
 | Goal | Configure | Why it matters |
 |------|-----------|----------------|
 | 🇺🇸 Best US coverage | Financial Datasets MCP | SEC-based structured financials, real-time price, insider trades |
+| 🔄 Middle fallback | yfinance | Stable Python fallback for price/basics — no API key, used before raw web scraping |
 | 📊 Macro precision (Mode C/D) | `FRED_API_KEY` | Treasury, Fed, CPI, GDP, unemployment |
 | 🇰🇷 Korean stocks | `DART_API_KEY` | Regulator financials and recent disclosures |
 
@@ -296,11 +298,13 @@ R/R Score = (Bull_return% × Bull_prob + Base_return% × Base_prob)
 
 ```bash
 npm install -g @anthropic-ai/claude-code
-pip install python-docx
+pip install -r requirements.txt
 git clone https://github.com/lowtidebuild/stock-analysis-agent.git
 cd stock-analysis-agent
 cp .env.example .env
 ```
+
+`requirements.txt` installs the shared helper-script dependencies, including `python-docx` and `yfinance`.
 
 `cp .env.example .env` gives you a convenient place to store optional local keys such as `FRED_API_KEY`.
 
@@ -346,8 +350,8 @@ claude
 
 ```text
 === Stock Analysis Agent ===
-Data Mode (US):  {Enhanced (MCP active) / Standard (Web-only)}
-Data Mode (KR):  DART API (Grade A financials) + Naver Finance (price)
+Data Mode (US):  {Enhanced (MCP active) / Standard (yfinance + Web)}
+Data Mode (KR):  DART API (Grade A financials) + Naver Finance (price) + yfinance fallback
 Date: {YYYY-MM-DD}
 Ready. Send a ticker or question to begin.
 ```
@@ -398,16 +402,19 @@ Structured data pulled directly from SEC filings:
 | Insider transactions | `get_insider_transactions` | Grade A |
 | SEC filings (10-K, 10-Q) | `get_sec_filings` | Grade A |
 
-Major web sources used alongside or without MCP:
+Major fallbacks used alongside or without MCP:
 
 | Data | Source | Confidence |
 |------|--------|------------|
+| Price · Market cap · basic ratios fallback | yfinance | Grade B/C |
 | Price · Market cap · Ratios | Yahoo Finance, Google Finance, MarketWatch | Grade B |
 | Financial statements | SEC EDGAR (direct fetch) | Grade A |
 | Earnings results | PR Newswire, Business Wire, Seeking Alpha | Grade B |
 | Analyst price targets | TipRanks, MarketBeat | Grade B |
 | News · Qualitative context | Reuters, Bloomberg, CNBC, Financial Times | Qualitative |
 | Insider trading | SEC Form 4 (EDGAR), Finviz | Grade B |
+
+When Financial Datasets MCP is unavailable, Standard Mode tries yfinance first and only then falls back to direct web search / scraping.
 
 </details>
 
@@ -422,9 +429,12 @@ Korean stocks always pull structured financial statements directly from **DART O
 | Company metadata (corp_code, CEO) | DART OpenAPI `company` | Grade A |
 | Recent disclosures (90 days) | DART OpenAPI `list` | Grade A |
 | Price · PER · PBR · foreign ownership | Naver Finance | Grade B |
+| Fallback price · PER · PBR · EPS · 52W range | yfinance (`.KS` / `.KQ`) | Grade B/C |
 | Analyst consensus | FnGuide / web research | Grade B |
 
-The Korean workflow combines DART financials with Naver Finance market data and FnGuide / KIND context.
+Naver Finance remains the primary KR market-data source; yfinance only fills gaps if the Naver fetch fails or required fields are missing.
+
+The Korean workflow combines DART financials with Naver Finance market data, yfinance fallback coverage, and FnGuide / KIND context.
 
 </details>
 
@@ -451,10 +461,10 @@ US stocks operate in two modes depending on whether Financial Datasets API is co
 
 | | Enhanced Mode 🟢 | Standard Mode 🟡 |
 |-|-----------------|-----------------|
-| **Requires** | Financial Datasets API key | Nothing extra |
-| **Data source** | structured SEC API | web research + scraping |
-| **Price data** | real-time, Grade A | web-sourced, Grade B |
-| **Financials** | 8 quarters, machine-readable | web-scraped, may vary |
+| **Requires** | Financial Datasets API key | No API key; yfinance first, web search if needed |
+| **Data source** | structured SEC API | yfinance + web research |
+| **Price data** | real-time, Grade A | yfinance / web-sourced, Grade B/C |
+| **Financials** | 8 quarters, machine-readable | yfinance statements + web fallback, may vary |
 | **Max grade** | **Grade A** | Grade B |
 | **Cost** | ~$0.05-$0.28 per analysis | Free |
 

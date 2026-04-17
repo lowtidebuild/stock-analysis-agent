@@ -1,6 +1,6 @@
 # HTML Dashboard Template — Mode C
 
-This file provides the complete structural skeleton for the Mode C Deep Dive Dashboard. Claude reads this file, then populates all `{PLACEHOLDER}` values with actual data from `output/analysis-result.json` and `output/validated-data.json`.
+This file provides the complete structural skeleton for the Mode C Deep Dive Dashboard. Claude reads this file, then populates all `{PLACEHOLDER}` values with actual data from run-local `analysis-result.json` and run-local `validated-data.json`.
 
 **Design**: Professional light theme with company-branded header. White cards, subtle shadows, Inter font. Green/red for semantic values only.
 

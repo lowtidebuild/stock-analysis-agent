@@ -1,0 +1,56 @@
+{
+  "cases": [
+    {
+      "id": "migrated_legacy_nvda_run_should_pass",
+      "kind": "run_dir",
+      "path": "output/runs/20260313T000000Z_NVDA_A_LEGACY",
+      "expect_valid": true
+    },
+    {
+      "id": "migrated_legacy_005930_run_should_pass",
+      "kind": "run_dir",
+      "path": "output/runs/20260312T000000Z_005930_B_LEGACY",
+      "expect_valid": true
+    },
+    {
+      "id": "migrated_legacy_000660_run_should_pass",
+      "kind": "run_dir",
+      "path": "output/runs/20260312T000000Z_000660_B_LEGACY",
+      "expect_valid": true
+    },
+    {
+      "id": "migrated_legacy_mu_run_should_pass",
+      "kind": "run_dir",
+      "path": "output/runs/20260312T000000Z_MU_B_LEGACY",
+      "expect_valid": true
+    },
+    {
+      "id": "run_local_fixture_should_pass",
+      "kind": "run_dir",
+      "path": "output/runs/20260328T000000Z_AAPL_C",
+      "expect_valid": true
+    },
+    {
+      "id": "legacy_kr_validated_data_should_fail_metadata_contract",
+      "kind": "artifact",
+      "artifact_type": "validated-data",
+      "path": "output/data/005930/validated-data.json",
+      "expect_valid": false,
+      "required_error_substrings": [
+        "run_context",
+        "non-canonical display_tag"
+      ]
+    },
+    {
+      "id": "legacy_mode_c_analysis_should_fail_structure_contract",
+      "kind": "artifact",
+      "artifact_type": "analysis-result",
+      "path": "output/analysis-result.json",
+      "expect_valid": false,
+      "required_error_substrings": [
+        "run_context",
+        "Mode C completeness"
+      ]
+    }
+  ]
+}

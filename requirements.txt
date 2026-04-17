@@ -1,0 +1,2 @@
+python-docx
+yfinance>=0.2.40

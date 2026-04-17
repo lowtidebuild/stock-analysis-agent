@@ -1,0 +1,354 @@
+{
+  "ticker": "005930",
+  "company_name": "삼성전자",
+  "market": "KR",
+  "data_mode": "standard",
+  "validation_timestamp": "2026-03-12T16:10:00+09:00",
+  "overall_grade": "B",
+  "validated_metrics": {
+    "price": {
+      "value": 190000,
+      "currency": "KRW",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide",
+        "investing.com"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "market_cap": {
+      "value": 1238,
+      "unit": "조원",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide (12,380,701억원)",
+        "investing.com (1,245.81조원)"
+      ],
+      "notes": "tier2-raw.json had unit error (123.8→1,238조원). Corrected via cross-reference.",
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": true
+    },
+    "revenue_ttm": {
+      "value": 333.6,
+      "unit": "조원",
+      "grade": "A",
+      "tag": "[Filing]",
+      "sources": [
+        "DART OpenAPI (333,605,938백만원)",
+        "FnGuide (3,336,059억원)"
+      ],
+      "source_type": "filing",
+      "source_authority": "regulatory",
+      "display_tag": "[Filing]",
+      "approximate": false
+    },
+    "operating_income_ttm": {
+      "value": 43.6,
+      "unit": "조원",
+      "grade": "A",
+      "tag": "[Filing]",
+      "sources": [
+        "DART OpenAPI (43,601,051백만원)",
+        "FnGuide (436,011억원)"
+      ],
+      "source_type": "filing",
+      "source_authority": "regulatory",
+      "display_tag": "[Filing]",
+      "approximate": false
+    },
+    "net_income_ttm": {
+      "value": 45.2,
+      "unit": "조원",
+      "grade": "A",
+      "tag": "[Filing]",
+      "sources": [
+        "DART OpenAPI (45,206,805백만원)",
+        "FnGuide (452,068억원)"
+      ],
+      "source_type": "filing",
+      "source_authority": "regulatory",
+      "display_tag": "[Filing]",
+      "approximate": false
+    },
+    "ebitda_ttm": {
+      "value": 90.5,
+      "unit": "조원",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide (905,276억원)"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "eps": {
+      "value": 6564,
+      "currency": "KRW",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "per": {
+      "value": 18.27,
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "forward_2026e": 8.14,
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "ev_ebitda": {
+      "value": 8.78,
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "pbr": {
+      "value": 1.87,
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "revenue_growth_yoy": {
+      "value": 10.88,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[Calc]",
+      "sources": [
+        "DART 2024 vs 2025"
+      ],
+      "source_type": "calculated",
+      "source_authority": "derived",
+      "display_tag": "[Calc]",
+      "approximate": false
+    },
+    "gross_margin": {
+      "value": 39.4,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "operating_margin": {
+      "value": 13.07,
+      "unit": "percent",
+      "grade": "A",
+      "tag": "[Filing]",
+      "sources": [
+        "DART (43.6/333.6=13.07%)",
+        "FnGuide"
+      ],
+      "source_type": "filing",
+      "source_authority": "regulatory",
+      "display_tag": "[Filing]",
+      "approximate": false
+    },
+    "net_margin": {
+      "value": 13.27,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "roe": {
+      "value": 10.85,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": true
+    },
+    "roa": {
+      "value": 8.36,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": true
+    },
+    "fcf_ttm": {
+      "value": 37.8,
+      "unit": "조원",
+      "grade": "A",
+      "tag": "[Filing]",
+      "sources": [
+        "DART (OCF 85.3조 - CapEx 47.5조)"
+      ],
+      "source_type": "filing",
+      "source_authority": "regulatory",
+      "display_tag": "[Filing]",
+      "approximate": false
+    },
+    "fcf_yield": {
+      "value": 3.05,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[Calc]",
+      "sources": [
+        "FCF 37.8조/MarketCap 1,238조"
+      ],
+      "source_type": "calculated",
+      "source_authority": "derived",
+      "display_tag": "[Calc]",
+      "approximate": false
+    },
+    "net_debt_ebitda": {
+      "value": -0.36,
+      "grade": "A",
+      "tag": "[Filing]",
+      "sources": [
+        "DART (Net Debt -32.7조 / EBITDA 90.5조)"
+      ],
+      "notes": "Net cash position. Total debt 25.2조 - Cash 57.9조 = -32.7조",
+      "source_type": "filing",
+      "source_authority": "regulatory",
+      "display_tag": "[Filing]",
+      "approximate": false
+    },
+    "dividend_yield": {
+      "value": 0.88,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "foreign_ownership": {
+      "value": 49.77,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide",
+        "WebSearch"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": true
+    },
+    "analyst_target": {
+      "value": 244095,
+      "currency": "KRW",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "investing.com consensus"
+      ],
+      "upside_pct": 28.5,
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    }
+  },
+  "grade_summary": {
+    "A": 6,
+    "B": 16,
+    "C": 0,
+    "D": 0
+  },
+  "exclusions": [],
+  "sanity_alerts": [
+    "Operating margin 13.07% reflects conglomerate structure — semiconductor division margin is 40%+"
+  ],
+  "run_context": {
+    "run_id": "20260312T000000Z_005930_B_LEGACY",
+    "artifact_root": "output/runs/20260312T000000Z_005930_B_LEGACY/005930",
+    "ticker": "005930",
+    "reports_dir": "output/reports",
+    "snapshot_dir": "output/data/005930",
+    "migration_mode": "legacy_promotion"
+  },
+  "migration": {
+    "migrated_at": "2026-03-27T21:45:04Z",
+    "source_path": "output/data/005930/validated-data.json",
+    "notes": [
+      "Validated metrics normalized to canonical source metadata contract",
+      "price: inferred source_type=portal_kr",
+      "market_cap: converted legacy approximation tag [≈]",
+      "market_cap: inferred source_type=portal_kr",
+      "revenue_ttm: inferred source_type=filing",
+      "operating_income_ttm: inferred source_type=filing",
+      "net_income_ttm: inferred source_type=filing",
+      "ebitda_ttm: inferred source_type=portal_kr",
+      "eps: inferred source_type=portal_kr",
+      "per: inferred source_type=portal_kr",
+      "ev_ebitda: inferred source_type=portal_kr",
+      "pbr: inferred source_type=portal_kr",
+      "revenue_growth_yoy: inferred source_type=calculated",
+      "gross_margin: inferred source_type=portal_kr",
+      "operating_margin: inferred source_type=filing",
+      "net_margin: inferred source_type=portal_kr",
+      "roe: converted legacy approximation tag [≈]",
+      "roe: inferred source_type=portal_kr",
+      "roa: converted legacy approximation tag [≈]",
+      "roa: inferred source_type=portal_kr",
+      "fcf_ttm: inferred source_type=filing",
+      "fcf_yield: inferred source_type=calculated",
+      "net_debt_ebitda: inferred source_type=filing",
+      "dividend_yield: inferred source_type=portal_kr",
+      "foreign_ownership: converted legacy approximation tag [≈]",
+      "foreign_ownership: inferred source_type=portal_kr",
+      "analyst_target: inferred source_type=portal_kr"
+    ]
+  }
+}

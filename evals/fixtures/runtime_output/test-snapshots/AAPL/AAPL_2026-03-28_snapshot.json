@@ -1,0 +1,184 @@
+{
+  "ticker": "AAPL",
+  "company_name": "Apple Inc.",
+  "market": "US",
+  "data_mode": "enhanced",
+  "output_mode": "C",
+  "output_language": "en",
+  "analysis_date": "2026-03-28",
+  "price_at_analysis": 192.4,
+  "currency": "USD",
+  "run_context": {
+    "run_id": "20260328T000000Z_AAPL_C",
+    "ticker": "AAPL",
+    "artifact_root": "output/runs/20260328T000000Z_AAPL_C/AAPL"
+  },
+  "key_metrics": {
+    "market_cap": {
+      "value": 2962960,
+      "unit": "millions_usd",
+      "grade": "A",
+      "source_type": "calculated",
+      "source_authority": "derived",
+      "display_tag": "[Calc]",
+      "tag": "[Calc]",
+      "sources": [
+        "Calculated from filing-backed price and diluted shares"
+      ]
+    },
+    "pe_ratio": {
+      "value": 28.26,
+      "grade": "A",
+      "source_type": "calculated",
+      "source_authority": "derived",
+      "display_tag": "[Calc]",
+      "tag": "[Calc]",
+      "sources": [
+        "Calculated from filing-backed price and EPS"
+      ]
+    },
+    "fcf_yield": {
+      "value": 3.46,
+      "unit": "percent",
+      "grade": "A",
+      "source_type": "calculated",
+      "source_authority": "derived",
+      "display_tag": "[Calc]",
+      "tag": "[Calc]",
+      "sources": [
+        "Calculated from filing-backed FCF and market cap"
+      ]
+    },
+    "revenue_growth_yoy": {
+      "value": 6.8,
+      "unit": "percent",
+      "grade": "A",
+      "source_type": "filing",
+      "source_authority": "regulatory",
+      "display_tag": "[Filing]",
+      "tag": "[Filing]",
+      "sources": [
+        "Financial Datasets MCP income_statements (SEC filing data)"
+      ]
+    },
+    "operating_margin": {
+      "value": 31.5,
+      "unit": "percent",
+      "grade": "A",
+      "source_type": "calculated",
+      "source_authority": "derived",
+      "display_tag": "[Calc]",
+      "tag": "[Calc]",
+      "sources": [
+        "Calculated from filing-backed operating income and revenue"
+      ]
+    }
+  },
+  "scenarios": {
+    "bull": {
+      "target": 230,
+      "return_pct": 19.5,
+      "probability": 0.25,
+      "key_assumption": "Services growth re-accelerates on a higher attach rate for on-device AI bundles."
+    },
+    "base": {
+      "target": 210,
+      "return_pct": 9.1,
+      "probability": 0.5,
+      "key_assumption": "Hardware replacement stays stable while Services mix expands modestly."
+    },
+    "bear": {
+      "target": 163.5,
+      "return_pct": -15.0,
+      "probability": 0.25,
+      "key_assumption": "China demand softens and gross margin compresses before AI monetization offsets it."
+    }
+  },
+  "rr_score": 2.52,
+  "verdict": "Neutral",
+  "top_risks": [
+    "China demand slowdown",
+    "Regulatory pressure on App Store economics",
+    "AI feature monetization lag"
+  ],
+  "upcoming_catalysts": [
+    {
+      "date": "2026-05-02",
+      "event_type": "earnings",
+      "description": "FY2Q 2026 earnings",
+      "significance": "high"
+    },
+    {
+      "date": "2026-06-09",
+      "event_type": "product",
+      "description": "WWDC 2026 AI feature refresh",
+      "significance": "high"
+    }
+  ],
+  "sections": {
+    "variant_view_q1": "The market still values Apple primarily through replacement-cycle volatility even though the Services mix is now large enough to smooth gross profit and working-capital swings more than in prior iPhone downturns.",
+    "variant_view_q2": "The most credible mind-changing catalyst is not a headline AI launch but a quarter where Services margin and attach-rate data show that on-device AI features convert into paid ecosystem spend.",
+    "variant_view_q3": "Optionality is concentrated in premium bundle monetization across devices, where Apple can layer AI upgrades onto an installed base it already controls rather than funding third-party distribution from scratch.",
+    "precision_risks": [
+      {
+        "risk": "China revenue pressure",
+        "mechanism": "A 5-pt volume miss in Greater China lowers hardware absorption and trims Services cross-sell.",
+        "ebitda_impact": "$6B equivalent gross profit risk",
+        "probability": "Medium",
+        "mitigation": "Track channel inventory and regional pricing actions."
+      },
+      {
+        "risk": "App Store regulation",
+        "mechanism": "Commission pressure narrows high-margin Services contribution and compresses blended gross margin.",
+        "ebitda_impact": "$3-4B annualized",
+        "probability": "Medium",
+        "mitigation": "Watch policy scope and alternative billing adoption."
+      },
+      {
+        "risk": "AI monetization lag",
+        "mechanism": "If AI features stay free without raising hardware ASPs or bundle ARPU, valuation upside from ecosystem monetization fades.",
+        "ebitda_impact": "multiple compression before earnings catch-up",
+        "probability": "Medium",
+        "mitigation": "Monitor paid feature packaging and retention."
+      }
+    ],
+    "valuation_metrics": [
+      {
+        "metric": "P/E",
+        "current": "28.3x [Calc]",
+        "sector_avg": "~29x [Portal]",
+        "assessment": "In line"
+      }
+    ],
+    "peer_comparison": [
+      {
+        "ticker": "MSFT",
+        "metric": "P/E",
+        "value": "31x [Portal]"
+      },
+      {
+        "ticker": "GOOGL",
+        "metric": "P/E",
+        "value": "24x [Portal]"
+      }
+    ],
+    "portfolio_strategy": "Treat the name as a quality compounder where position sizing should expand only if Services and cash conversion continue to offset hardware cyclicality.",
+    "what_would_make_me_wrong": [
+      "Services growth slips below low double digits for two consecutive quarters.",
+      "China channel inventory builds without offsetting margin support elsewhere.",
+      "AI feature launches fail to improve attach rates or upgrade intent."
+    ],
+    "macro_context": {
+      "narrative": "Rates remain the cleanest macro variable because Apple is priced as a durable growth franchise rather than a deep-value cash flow stream.",
+      "factors": [
+        {
+          "factor": "10Y Treasury yield",
+          "impact": "Higher discount rates compress long-duration equity multiples.",
+          "probability": "Medium"
+        }
+      ]
+    }
+  },
+  "snapshot_saved_at": "2026-03-27T22:16:52.343562Z",
+  "snapshot_source_artifact": "output/runs/20260328T000000Z_AAPL_C/AAPL/analysis-result.json"
+}

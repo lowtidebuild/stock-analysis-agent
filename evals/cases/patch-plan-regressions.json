@@ -1,0 +1,150 @@
+{
+  "cases": [
+    {
+      "id": "patch_plan_needs_patch_contract_valid",
+      "kind": "artifact",
+      "path": "evals/fixtures/patch-plan-aapl-needs-patch.json",
+      "artifact_type": "patch-plan",
+      "expect_valid": true,
+      "assertions": {
+        "equals": {
+          "ticker": "AAPL",
+          "output_mode": "D",
+          "critic_overall": "FAIL",
+          "loop_state": "patch_and_recheck",
+          "pending_fix_count": 2
+        },
+        "required_paths": [
+          "run_context.run_id",
+          "tasks[0].analysis_targets[0]",
+          "tasks[1].analysis_targets[0]"
+        ],
+        "contains": [
+          {
+            "path": "tasks[0].analysis_targets",
+            "value": "sections.precision_risks"
+          },
+          {
+            "path": "tasks[1].analysis_targets",
+            "value": "sections.quality_of_earnings"
+          }
+        ]
+      }
+    },
+    {
+      "id": "patch_plan_ready_contract_valid",
+      "kind": "artifact",
+      "path": "evals/fixtures/patch-plan-aapl-ready.json",
+      "artifact_type": "patch-plan",
+      "expect_valid": true,
+      "assertions": {
+        "equals": {
+          "ticker": "AAPL",
+          "output_mode": "D",
+          "critic_overall": "PASS",
+          "pending_fix_count": 0,
+          "ready_for_redelivery": true,
+          "loop_state": "ready_for_delivery"
+        },
+        "list_lengths": [
+          {
+            "path": "tasks",
+            "equals": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "patch_plan_invalid_loop_state_is_rejected",
+      "kind": "artifact",
+      "path": "evals/fixtures/patch-plan-aapl-invalid.json",
+      "artifact_type": "patch-plan",
+      "expect_valid": false,
+      "required_error_substrings": [
+        "$.pending_fix_count",
+        "$.ready_for_redelivery",
+        "$.loop_state",
+        "$.tasks[0].edit_scope",
+        "$.tasks[1].render_step_required",
+        "$.tasks[1].analysis_targets"
+      ]
+    },
+    {
+      "id": "patch_plan_tracks_critic_fixture_identity",
+      "kind": "comparison",
+      "left": {
+        "path": "evals/fixtures/quality-report-critic-valid.json"
+      },
+      "right": {
+        "path": "evals/fixtures/patch-plan-aapl-needs-patch.json"
+      },
+      "expect_valid": true,
+      "assertions": {
+        "path_pairs_equal": [
+          {
+            "left": "ticker",
+            "right": "ticker"
+          },
+          {
+            "left": "output_mode",
+            "right": "output_mode"
+          },
+          {
+            "left": "run_context.run_id",
+            "right": "run_context.run_id"
+          },
+          {
+            "left": "run_context.ticker",
+            "right": "run_context.ticker"
+          }
+        ]
+      }
+    },
+    {
+      "id": "patch_plan_mode_a_top_risk_maps_to_top_risks",
+      "kind": "artifact",
+      "path": "output/runs/20260313T000000Z_NVDA_A_LEGACY/NVDA/patch-plan.json",
+      "artifact_type": "patch-plan",
+      "expect_valid": true,
+      "assertions": {
+        "equals": {
+          "ticker": "NVDA",
+          "output_mode": "A",
+          "report_output_path": "output/reports/NVDA_A_en_2026-03-13.html",
+          "tasks[0].render_step_required": true
+        },
+        "contains": [
+          {
+            "path": "tasks[0].analysis_targets",
+            "value": "top_risks"
+          }
+        ]
+      }
+    },
+    {
+      "id": "patch_plan_mode_b_differentiator_maps_to_comparison_inputs",
+      "kind": "artifact",
+      "path": "output/runs/20260312T000000Z_005930_B_LEGACY/005930/patch-plan.json",
+      "artifact_type": "patch-plan",
+      "expect_valid": true,
+      "assertions": {
+        "equals": {
+          "ticker": "005930",
+          "output_mode": "B",
+          "report_output_path": "output/reports/005930_000660_MU_B_KR_2026-03-12.html",
+          "tasks[0].render_step_required": true
+        },
+        "contains": [
+          {
+            "path": "tasks[0].analysis_targets",
+            "value": "top_risks"
+          },
+          {
+            "path": "tasks[0].analysis_targets",
+            "value": "upcoming_catalysts"
+          }
+        ]
+      }
+    }
+  ]
+}

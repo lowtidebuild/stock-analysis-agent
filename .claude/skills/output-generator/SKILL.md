@@ -1,10 +1,10 @@
 # Output Generator — SKILL.md
 
-**Role**: Step 8 — Generate the final analysis output in the requested mode (A, B, C, D). Mode A delegates to briefing-generator; Mode C delegates to dashboard-generator; Modes B, D are handled here.
+**Role**: Step 8 — Generate the final analysis output in the requested mode (A, B, C, D). Mode A delegates to briefing-generator; Mode B uses `scripts/render-comparison.py`; Mode C delegates to dashboard-generator; Mode D uses `scripts/docx-generator.py`.
 **Triggered by**: CLAUDE.md after Analyst Agent (Step 7) completes
-**Reads**: `output/analysis-result.json`, appropriate mode template
+**Reads**: `output/runs/{run_id}/{ticker}/analysis-result.json`, appropriate mode template
 **Writes**: File (Mode B, D); Mode A delegates to briefing-generator/SKILL.md; Mode C delegates to dashboard-generator/SKILL.md
-**References**: `mode-b-template.md`, `mode-d-template.md`, `scripts/docx-generator.py`
+**References**: `mode-b-template.md`, `mode-d-template.md`, `scripts/render-comparison.py`, `scripts/docx-generator.py`
 
 ---
 
@@ -12,7 +12,7 @@
 
 ```
 output_mode = "A" → Mode A: HTML briefing (delegate to briefing-generator/SKILL.md)
-output_mode = "B" → Mode B: HTML file (this file, uses mode-b-template.md)
+output_mode = "B" → Mode B: HTML file (this file, uses mode-b-template.md + scripts/render-comparison.py)
 output_mode = "C" → Mode C: HTML dashboard (delegate to dashboard-generator/SKILL.md)
 output_mode = "D" → Mode D: DOCX investment memo (this file, uses docx-generator.py)
 ```
@@ -22,6 +22,18 @@ output_mode = "D" → Mode D: DOCX investment memo (this file, uses docx-generat
 ## Mode B — Comparative Matrix (HTML File)
 
 Load `mode-b-template.md`. Populate from each ticker's `output/data/{ticker}/validated-data.json`.
+
+Preferred scripted path:
+
+```bash
+python .claude/skills/output-generator/scripts/render-comparison.py \
+  --input output/runs/{run_id}/{ticker}/analysis-result.json \
+  --output output/reports/{tickers}_B_{lang}_{YYYY-MM-DD}.html
+```
+
+`render-comparison.py` resolves peer `analysis-result.json` / `validated-data.json` files from
+the run-local artifact root first, then falls back to peer-specific run-local legacy promotions,
+and finally to `output/data/{ticker}/validated-data.json` if needed.
 
 **Pre-output checks**:
 1. Same metric set applied to all peers?
@@ -41,7 +53,7 @@ Report file path to user.
 Mode D produces a Word document (.docx) with professional formatting — section headings,
 financial tables, scenario matrix, risk table, EBITDA bridge, and source tags throughout.
 
-**Step 1 — Ensure all section content is in `output/analysis-result.json`**
+**Step 1 — Ensure all section content is in run-local `analysis-result.json`**
 
 The Analyst Agent must write all narrative and table data into `analysis-result.json`
 `sections` object before this step runs. See `mode-d-template.md` for the required
@@ -51,7 +63,7 @@ JSON structure for each section.
 
 ```bash
 python .claude/skills/output-generator/scripts/docx-generator.py \
-  --input output/analysis-result.json \
+  --input output/runs/{run_id}/{ticker}/analysis-result.json \
   --output output/reports/{ticker}_D_{lang}_{YYYY-MM-DD}.docx
 ```
 
@@ -109,6 +121,7 @@ Note: Mode D DOCX files include the disclaimer automatically via docx-generator.
 
 Use these tags consistently throughout all output:
 - `[Filing]` — SEC filing (via Financial Datasets MCP) / DART 전자공시 (via DART OpenAPI) — 규제기관 원본
+- `[Company]` — issuer-published IR release / earnings call / newsroom item (authoritative issuer source, but not a regulatory filing)
 - `[Portal]` — Yahoo Finance, MarketWatch, Finviz 등 US/글로벌 금융 포탈
 - `[KR-Portal]` — 네이버금융, FnGuide, KIND 등 한국 금융 포탈
 - `[Calc]` — 검증된 입력값으로부터 자체 계산 (P/E, EV/EBITDA 등)

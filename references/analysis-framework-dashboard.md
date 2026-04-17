@@ -17,10 +17,10 @@ Mode C produces a full interactive HTML dashboard — the most visually rich out
 
 ## Required Inputs
 
-- `output/validated-data.json` — validated metrics with confidence grades
+- run-local `validated-data.json` — validated metrics with confidence grades
 - `output/data/{ticker}/tier1-raw.json` — 8 quarters of financial data (Enhanced Mode)
 - `output/data/{ticker}/tier2-raw.json` — web research results
-- `output/analysis-result.json` — will be written as output of this step
+- run-local `analysis-result.json` — will be written as output of this step
 - Company type from `company-type-classification.md`
 
 ---

@@ -1,0 +1,348 @@
+{
+  "ticker": "000660",
+  "company_name": "SK하이닉스",
+  "market": "KR",
+  "data_mode": "standard",
+  "validation_timestamp": "2026-03-12T16:10:00+09:00",
+  "overall_grade": "B",
+  "validated_metrics": {
+    "price": {
+      "value": 955000,
+      "currency": "KRW",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "market_cap": {
+      "value": 680.6,
+      "unit": "조원",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide (6,806,308억원)"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "revenue_ttm": {
+      "value": 97.15,
+      "unit": "조원",
+      "grade": "B",
+      "tag": "[Company]",
+      "sources": [
+        "FnGuide (971,467억원)",
+        "SK Hynix Newsroom"
+      ],
+      "source_type": "company_release",
+      "source_authority": "issuer",
+      "display_tag": "[Company]",
+      "approximate": true
+    },
+    "operating_income_ttm": {
+      "value": 47.21,
+      "unit": "조원",
+      "grade": "B",
+      "tag": "[Company]",
+      "sources": [
+        "FnGuide (472,063억원)",
+        "SK Hynix Newsroom"
+      ],
+      "source_type": "company_release",
+      "source_authority": "issuer",
+      "display_tag": "[Company]",
+      "approximate": true
+    },
+    "net_income_ttm": {
+      "value": 42.95,
+      "unit": "조원",
+      "grade": "B",
+      "tag": "[Company]",
+      "sources": [
+        "FnGuide (429,479억원)",
+        "SK Hynix Newsroom"
+      ],
+      "source_type": "company_release",
+      "source_authority": "issuer",
+      "display_tag": "[Company]",
+      "approximate": true
+    },
+    "eps": {
+      "value": 58955,
+      "currency": "KRW",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "per": {
+      "value": 16.2,
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "forward_2026e": 5.15,
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "ev_ebitda": {
+      "value": 7.75,
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "pbr": {
+      "value": 5.7,
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "revenue_growth_yoy": {
+      "value": 46.8,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[Calc]",
+      "sources": [
+        "FnGuide 2025 vs DART 2024"
+      ],
+      "source_type": "calculated",
+      "source_authority": "derived",
+      "display_tag": "[Calc]",
+      "approximate": false
+    },
+    "gross_margin": {
+      "value": null,
+      "grade": "D",
+      "tag": null,
+      "sources": [],
+      "notes": "Not available from FnGuide snapshot",
+      "source_type": null,
+      "source_authority": null,
+      "display_tag": null,
+      "approximate": false,
+      "exclusion_reason": "Not available from FnGuide snapshot"
+    },
+    "operating_margin": {
+      "value": 48.59,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "net_margin": {
+      "value": 44.18,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "roe": {
+      "value": 44.15,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "roa": {
+      "value": 29.02,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "fcf_ttm": {
+      "value": null,
+      "grade": "D",
+      "tag": null,
+      "sources": [],
+      "notes": "OCF not available from current sources",
+      "source_type": null,
+      "source_authority": null,
+      "display_tag": null,
+      "approximate": false,
+      "exclusion_reason": "OCF not available from current sources"
+    },
+    "fcf_yield": {
+      "value": null,
+      "grade": "D",
+      "tag": null,
+      "sources": [],
+      "source_type": null,
+      "source_authority": null,
+      "display_tag": null,
+      "approximate": false,
+      "exclusion_reason": "Legacy migration marked this metric unverifiable"
+    },
+    "net_debt_ebitda": {
+      "value": null,
+      "grade": "D",
+      "tag": null,
+      "sources": [],
+      "notes": "Year-end cash/debt breakdown unavailable",
+      "source_type": null,
+      "source_authority": null,
+      "display_tag": null,
+      "approximate": false,
+      "exclusion_reason": "Year-end cash/debt breakdown unavailable"
+    },
+    "dividend_yield": {
+      "value": 0.31,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "foreign_ownership": {
+      "value": 53.7,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "analyst_target": {
+      "value": 1313600,
+      "currency": "KRW",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide consensus"
+      ],
+      "upside_pct": 37.5,
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    }
+  },
+  "grade_summary": {
+    "A": 0,
+    "B": 17,
+    "C": 0,
+    "D": 4
+  },
+  "exclusions": [
+    {
+      "metric": "gross_margin",
+      "reason": "FnGuide snapshot에서 직접 확인 불가",
+      "display": "—"
+    },
+    {
+      "metric": "fcf_ttm",
+      "reason": "연간 OCF 데이터 미수집",
+      "display": "—"
+    },
+    {
+      "metric": "fcf_yield",
+      "reason": "FCF 미확인",
+      "display": "—"
+    },
+    {
+      "metric": "net_debt_ebitda",
+      "reason": "연말 현금/부채 구성 미확인",
+      "display": "—"
+    }
+  ],
+  "sanity_alerts": [],
+  "run_context": {
+    "run_id": "20260312T000000Z_000660_B_LEGACY",
+    "artifact_root": "output/runs/20260312T000000Z_000660_B_LEGACY/000660",
+    "ticker": "000660",
+    "reports_dir": "output/reports",
+    "snapshot_dir": "output/data/000660",
+    "migration_mode": "legacy_promotion"
+  },
+  "migration": {
+    "migrated_at": "2026-03-27T21:45:04Z",
+    "source_path": "output/data/000660/validated-data.json",
+    "notes": [
+      "Validated metrics normalized to canonical source metadata contract",
+      "price: inferred source_type=portal_kr",
+      "market_cap: inferred source_type=portal_kr",
+      "revenue_ttm: converted legacy approximation tag [≈]",
+      "revenue_ttm: inferred source_type=company_release",
+      "operating_income_ttm: converted legacy approximation tag [≈]",
+      "operating_income_ttm: inferred source_type=company_release",
+      "net_income_ttm: converted legacy approximation tag [≈]",
+      "net_income_ttm: inferred source_type=company_release",
+      "eps: inferred source_type=portal_kr",
+      "per: inferred source_type=portal_kr",
+      "ev_ebitda: inferred source_type=portal_kr",
+      "pbr: inferred source_type=portal_kr",
+      "revenue_growth_yoy: inferred source_type=calculated",
+      "gross_margin: Grade D metric should include exclusion_reason",
+      "operating_margin: inferred source_type=portal_kr",
+      "net_margin: inferred source_type=portal_kr",
+      "roe: inferred source_type=portal_kr",
+      "roa: inferred source_type=portal_kr",
+      "fcf_ttm: Grade D metric should include exclusion_reason",
+      "fcf_yield: Grade D metric should include exclusion_reason",
+      "net_debt_ebitda: Grade D metric should include exclusion_reason",
+      "dividend_yield: inferred source_type=portal_kr",
+      "foreign_ownership: inferred source_type=portal_kr",
+      "analyst_target: inferred source_type=portal_kr"
+    ]
+  }
+}

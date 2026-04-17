@@ -1,0 +1,305 @@
+{
+  "ticker": "MU",
+  "company_name": "Micron Technology",
+  "market": "US",
+  "data_mode": "standard",
+  "validation_timestamp": "2026-03-12T16:10:00Z",
+  "overall_grade": "B",
+  "validated_metrics": {
+    "price": {
+      "value": 403.72,
+      "currency": "USD",
+      "grade": "B",
+      "tag": "[Portal]",
+      "sources": [
+        "StockAnalysis.com",
+        "Robinhood"
+      ],
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    },
+    "market_cap": {
+      "value": 454390,
+      "unit": "million_usd",
+      "grade": "B",
+      "tag": "[Portal]",
+      "sources": [
+        "StockAnalysis.com"
+      ],
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    },
+    "revenue_ttm": {
+      "value": 42312,
+      "unit": "million_usd",
+      "grade": "B",
+      "tag": "[Portal]",
+      "sources": [
+        "StockAnalysis.com"
+      ],
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    },
+    "net_income_ttm": {
+      "value": 11909,
+      "unit": "million_usd",
+      "grade": "B",
+      "tag": "[Portal]",
+      "sources": [
+        "StockAnalysis.com"
+      ],
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    },
+    "eps_ttm": {
+      "value": 10.52,
+      "currency": "USD",
+      "grade": "B",
+      "tag": "[Portal]",
+      "sources": [
+        "StockAnalysis.com"
+      ],
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    },
+    "pe_ratio": {
+      "value": 38.24,
+      "grade": "B",
+      "tag": "[Portal]",
+      "sources": [
+        "StockAnalysis.com",
+        "Robinhood"
+      ],
+      "forward": 9.47,
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    },
+    "ev_ebitda": {
+      "value": 21.22,
+      "grade": "B",
+      "tag": "[Portal]",
+      "sources": [
+        "StockAnalysis.com"
+      ],
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    },
+    "pb_ratio": {
+      "value": 8.02,
+      "grade": "B",
+      "tag": "[Portal]",
+      "sources": [
+        "StockAnalysis.com",
+        "GuruFocus"
+      ],
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    },
+    "revenue_growth_yoy": {
+      "value": 48.9,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[Calc]",
+      "sources": [
+        "FY2025 vs FY2024"
+      ],
+      "source_type": "calculated",
+      "source_authority": "derived",
+      "display_tag": "[Calc]",
+      "approximate": false
+    },
+    "gross_margin": {
+      "value": 45.31,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[Portal]",
+      "sources": [
+        "StockAnalysis.com"
+      ],
+      "notes": "Q1 FY2026 quarterly: 56.8%",
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    },
+    "operating_margin": {
+      "value": 32.45,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[Portal]",
+      "sources": [
+        "StockAnalysis.com"
+      ],
+      "notes": "Q1 FY2026 quarterly: 47%",
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    },
+    "net_margin": {
+      "value": 28.11,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[Portal]",
+      "sources": [
+        "StockAnalysis.com"
+      ],
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    },
+    "roe": {
+      "value": 22.55,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[Portal]",
+      "sources": [
+        "StockAnalysis.com"
+      ],
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    },
+    "roa": {
+      "value": 10.93,
+      "unit": "percent",
+      "grade": "C",
+      "tag": "[Portal]",
+      "sources": [
+        "StockAnalysis.com"
+      ],
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    },
+    "fcf_ttm": {
+      "value": 4652,
+      "unit": "million_usd",
+      "grade": "B",
+      "tag": "[Portal]",
+      "sources": [
+        "StockAnalysis.com"
+      ],
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    },
+    "fcf_yield": {
+      "value": 1.02,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[Calc]",
+      "sources": [
+        "FCF/MarketCap"
+      ],
+      "source_type": "calculated",
+      "source_authority": "derived",
+      "display_tag": "[Calc]",
+      "approximate": false
+    },
+    "net_debt_ebitda": {
+      "value": -0.02,
+      "grade": "B",
+      "tag": "[Calc]",
+      "sources": [
+        "Net debt -$478M"
+      ],
+      "notes": "Net cash position",
+      "source_type": "calculated",
+      "source_authority": "derived",
+      "display_tag": "[Calc]",
+      "approximate": false
+    },
+    "dividend_yield": {
+      "value": 0.11,
+      "unit": "percent",
+      "grade": "C",
+      "tag": "[Portal]",
+      "sources": [
+        "StockAnalysis.com"
+      ],
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    },
+    "analyst_target": {
+      "value": 438.44,
+      "currency": "USD",
+      "grade": "C",
+      "tag": "[Portal]",
+      "sources": [
+        "TipRanks (27 analysts)"
+      ],
+      "upside_pct": 8.6,
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    }
+  },
+  "grade_summary": {
+    "A": 0,
+    "B": 16,
+    "C": 3,
+    "D": 0
+  },
+  "exclusions": [],
+  "sanity_alerts": [
+    "Trailing P/E 38.24x vs Forward P/E 9.47x — very wide gap reflects expected earnings explosion from HBM cycle"
+  ],
+  "run_context": {
+    "run_id": "20260312T000000Z_MU_B_LEGACY",
+    "artifact_root": "output/runs/20260312T000000Z_MU_B_LEGACY/MU",
+    "ticker": "MU",
+    "reports_dir": "output/reports",
+    "snapshot_dir": "output/data/MU",
+    "migration_mode": "legacy_promotion"
+  },
+  "migration": {
+    "migrated_at": "2026-03-27T21:45:04Z",
+    "source_path": "output/data/MU/validated-data.json",
+    "notes": [
+      "Validated metrics normalized to canonical source metadata contract",
+      "price: inferred source_type=portal_global",
+      "market_cap: inferred source_type=portal_global",
+      "revenue_ttm: inferred source_type=portal_global",
+      "net_income_ttm: inferred source_type=portal_global",
+      "eps_ttm: inferred source_type=portal_global",
+      "pe_ratio: inferred source_type=portal_global",
+      "ev_ebitda: inferred source_type=portal_global",
+      "pb_ratio: inferred source_type=portal_global",
+      "revenue_growth_yoy: inferred source_type=calculated",
+      "gross_margin: inferred source_type=portal_global",
+      "operating_margin: inferred source_type=portal_global",
+      "net_margin: inferred source_type=portal_global",
+      "roe: inferred source_type=portal_global",
+      "roa: inferred source_type=portal_global",
+      "fcf_ttm: inferred source_type=portal_global",
+      "fcf_yield: inferred source_type=calculated",
+      "net_debt_ebitda: inferred source_type=calculated",
+      "dividend_yield: inferred source_type=portal_global",
+      "analyst_target: inferred source_type=portal_global"
+    ]
+  }
+}

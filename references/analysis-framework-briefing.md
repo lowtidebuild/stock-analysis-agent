@@ -19,8 +19,8 @@ Mode A produces a single-page HTML briefing — the fastest output mode. It comb
 
 ## Required Inputs
 
-- `output/validated-data.json` — validated metrics with confidence grades
-- `output/research-plan.json` — company type, output mode, analysis framework path
+- run-local `validated-data.json` — validated metrics with confidence grades
+- run-local `research-plan.json` — company type, output mode, analysis framework path
 - `output/data/{ticker}/tier2-raw.json` — web research results (for timeline events)
 - `output/data/{ticker}/tier1-raw.json` — (Enhanced Mode only, for precise metrics)
 - `output/data/{ticker}/dart-api-raw.json` — (Korean stocks only)

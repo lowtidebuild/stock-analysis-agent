@@ -1,0 +1,82 @@
+{
+  "ticker": "AAPL",
+  "output_mode": "C",
+  "check_timestamp": "2026-03-28T14:44:24Z",
+  "overall_result": "PASS",
+  "run_context": {
+    "run_id": "20260328T000000Z_AAPL_C",
+    "ticker": "AAPL",
+    "artifact_root": "output/runs/20260328T000000Z_AAPL_C/AAPL"
+  },
+  "items": {
+    "financial_consistency": {
+      "status": "PASS",
+      "delivery_impact": "none"
+    },
+    "price_and_date": {
+      "status": "PASS",
+      "delivery_impact": "none"
+    },
+    "disclaimer": {
+      "status": "PASS",
+      "delivery_impact": "none"
+    },
+    "source_tags": {
+      "status": "PASS",
+      "coverage_pct": 92.0,
+      "delivery_impact": "none"
+    },
+    "blank_over_wrong": {
+      "status": "PASS",
+      "violations_found": 0,
+      "delivery_impact": "none"
+    },
+    "contract_validation": {
+      "status": "PASS",
+      "artifacts": {
+        "research-plan": {
+          "status": "PASS",
+          "error_count": 0,
+          "errors": []
+        },
+        "validated-data": {
+          "status": "PASS",
+          "error_count": 0,
+          "errors": []
+        },
+        "analysis-result": {
+          "status": "PASS",
+          "error_count": 0,
+          "errors": []
+        }
+      },
+      "delivery_impact": "none"
+    },
+    "semantic_consistency": {
+      "status": "PASS",
+      "error_count": 0,
+      "delivery_impact": "none"
+    },
+    "verdict_policy": {
+      "status": "PASS",
+      "delivery_impact": "none"
+    },
+    "cross_artifact_consistency": {
+      "status": "PASS",
+      "error_count": 0,
+      "delivery_impact": "none"
+    }
+  },
+  "delivery_gate": {
+    "result": "PASS",
+    "ready_for_delivery": true,
+    "blocking_items": [],
+    "non_blocking_items": [],
+    "historical_only_items": [],
+    "critic_overall": null,
+    "critic_delivery_impact": "none"
+  },
+  "auto_fixes_applied": [],
+  "inline_flags_added": [],
+  "generated_by": "quality-report-builder"
+}

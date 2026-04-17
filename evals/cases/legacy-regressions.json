@@ -1,0 +1,90 @@
+{
+  "cases": [
+    {
+      "id": "legacy_kr_validated_data_should_fail_metadata_contract",
+      "kind": "artifact",
+      "artifact_type": "validated-data",
+      "path": "output/data/005930/validated-data.json",
+      "expect_valid": false,
+      "required_error_substrings": [
+        "run_context",
+        "non-canonical display_tag"
+      ],
+      "assertions": {
+        "equals": {
+          "validated_metrics.revenue_ttm.tag": "[DART-API]",
+          "validated_metrics.market_cap.tag": "[≈]"
+        }
+      }
+    },
+    {
+      "id": "legacy_nwsa_validated_data_should_fail_single_source_tags",
+      "kind": "artifact",
+      "artifact_type": "validated-data",
+      "path": "output/data/NWSA/validated-data.json",
+      "expect_valid": false,
+      "required_error_substrings": [
+        "[1S]",
+        "run_context",
+        "[Unverified]"
+      ],
+      "assertions": {
+        "equals": {
+          "validated_metrics.pe_ttm.tag": "[1S]",
+          "validated_metrics.pb_ratio.tag": "[Unverified]"
+        },
+        "list_lengths": [
+          {
+            "path": "exclusions",
+            "equals": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "legacy_tri_validated_data_should_fail_press_release_mix",
+      "kind": "artifact",
+      "artifact_type": "validated-data",
+      "path": "output/data/TRI/validated-data.json",
+      "expect_valid": false,
+      "required_error_substrings": [
+        "[1S]",
+        "run_context",
+        "[Unverified]"
+      ],
+      "assertions": {
+        "equals": {
+          "validated_metrics.revenue_ttm_m.tag": "[≈]",
+          "validated_metrics.net_debt_ebitda.tag": "[Unverified]"
+        },
+        "list_lengths": [
+          {
+            "path": "exclusions",
+            "equals": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "legacy_tsla_mode_c_analysis_should_fail_structure_contract",
+      "kind": "artifact",
+      "artifact_type": "analysis-result",
+      "path": "output/analysis-result.json",
+      "expect_valid": false,
+      "required_error_substrings": [
+        "run_context",
+        "Mode C completeness"
+      ],
+      "assertions": {
+        "equals": {
+          "output_mode": "C",
+          "ticker": "TSLA"
+        },
+        "required_paths": [
+          "scenarios.base.probability",
+          "key_metrics.market_cap.tag"
+        ]
+      }
+    }
+  ]
+}

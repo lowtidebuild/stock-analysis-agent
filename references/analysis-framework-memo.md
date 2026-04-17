@@ -13,10 +13,10 @@ Read `investment-memo-prompt.md` BEFORE starting Mode D analysis. The philosophy
 ## Pre-Analysis Setup
 
 ### Inputs Required
-1. `output/validated-data.json` — with confidence grades
+1. Run-local `validated-data.json` — with confidence grades
 2. `output/data/{ticker}/tier1-raw.json` (Enhanced Mode) or `output/data/{ticker}/tier2-raw.json` (Standard Mode)
 3. Company type from `company-type-classification.md`
-4. Research plan from `output/research-plan.json`
+4. Research plan from run-local `research-plan.json`
 
 ### Writing Protocol
 - Write sections **sequentially** from Section 1 to Section 10
@@ -484,7 +484,7 @@ For each:
 
 ## Mode D Output Protocol
 
-1. Write ALL content (narrative + tables) into `output/analysis-result.json → sections` following the JSON schema in `mode-d-template.md`
+1. Write ALL content (narrative + tables) into run-local `analysis-result.json → sections` following the JSON schema in `mode-d-template.md`
 2. Signal to output-generator (Step 8) to call `docx-generator.py`
 3. Final file: `output/reports/{ticker}_D_{lang}_{YYYY-MM-DD}.docx`
 4. Report file path to user

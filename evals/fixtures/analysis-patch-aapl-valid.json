@@ -1,0 +1,52 @@
+{
+  "ticker": "AAPL",
+  "output_mode": "C",
+  "run_context": {
+    "run_id": "20260328T000000Z_AAPL_C",
+    "ticker": "AAPL",
+    "artifact_root": "output/runs/20260328T000000Z_AAPL_C/AAPL"
+  },
+  "patch_plan_path": "output/runs/20260328T000000Z_AAPL_C/AAPL/patch-plan.json",
+  "source_analysis_result_path": "output/runs/20260328T000000Z_AAPL_C/AAPL/analysis-result.json",
+  "target_analysis_result_path": "output/runs/20260328T000000Z_AAPL_C/AAPL/analysis-result.json",
+  "task_ids": [
+    "01_mechanism_test"
+  ],
+  "updated_paths": [
+    "$.sections.precision_risks"
+  ],
+  "render_required": true,
+  "preserve_untouched_sections": true,
+  "updates": [
+    {
+      "task_id": "01_mechanism_test",
+      "path": "$.sections.precision_risks",
+      "value": [
+        {
+          "risk": "China revenue pressure",
+          "mechanism": "A 5-pt volume miss in Greater China lowers hardware absorption and trims Services cross-sell.",
+          "ebitda_impact": "$6B equivalent gross profit risk",
+          "probability": "Medium",
+          "mitigation": "Track channel inventory and regional pricing actions."
+        },
+        {
+          "risk": "App Store regulation",
+          "mechanism": "A 15-20% commission reset would trim high-margin Services revenue, reduce EBITDA by roughly $4B annually, and compress the valuation multiple by 1-2 turns in the downside case.",
+          "ebitda_impact": "~$4B annualized EBITDA plus 1-2x multiple compression risk",
+          "probability": "Medium",
+          "mitigation": "Watch policy scope, alternative billing adoption, and Services attach-rate resilience."
+        },
+        {
+          "risk": "AI monetization lag",
+          "mechanism": "If AI features stay free without raising hardware ASPs or bundle ARPU, valuation upside from ecosystem monetization fades.",
+          "ebitda_impact": "multiple compression before earnings catch-up",
+          "probability": "Medium",
+          "mitigation": "Monitor paid feature packaging and retention."
+        }
+      ],
+      "rationale": "Implements the critic-requested revenue-to-EBITDA-to-multiple chain in the App Store regulation risk."
+    }
+  ],
+  "applied_by": "analyst-patch-executor",
+  "applied_at": "2026-03-28T02:10:00Z"
+}

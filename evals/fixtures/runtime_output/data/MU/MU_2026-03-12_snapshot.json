@@ -1,0 +1,21 @@
+{
+  "ticker": "MU",
+  "company_name": "Micron Technology",
+  "analysis_date": "2026-03-12",
+  "data_mode": "standard",
+  "output_mode": "B",
+  "price_at_analysis": 403.72,
+  "currency": "USD",
+  "market_cap_M_usd": 454390,
+  "pe_ratio": 38.24,
+  "ev_ebitda": 21.22,
+  "pb_ratio": 8.02,
+  "roe": 22.55,
+  "operating_margin": 32.45,
+  "revenue_ttm_M_usd": 42312,
+  "rr_score": 1.82,
+  "verdict": "중립",
+  "analyst_target": 438.44,
+  "workflow": 2,
+  "peer_tickers": ["005930", "000660"]
+}

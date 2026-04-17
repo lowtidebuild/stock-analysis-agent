@@ -1,0 +1,42 @@
+{
+  "ticker": "NVDA",
+  "output_mode": "A",
+  "run_context": {
+    "run_id": "20260313T000000Z_NVDA_A_LEGACY",
+    "artifact_root": "output/runs/20260313T000000Z_NVDA_A_LEGACY/NVDA",
+    "ticker": "NVDA",
+    "reports_dir": "output/reports",
+    "snapshot_dir": "output/data/NVDA",
+    "migration_mode": "legacy_promotion"
+  },
+  "quality_report_path": "/tmp/nvda-quality-report-with-critic.json",
+  "analysis_result_path": "output/runs/20260313T000000Z_NVDA_A_LEGACY/NVDA/analysis-result.json",
+  "report_output_path": "output/reports/NVDA_A_en_2026-03-13.html",
+  "critic_overall": "FAIL",
+  "current_recheck_count": 0,
+  "remaining_recheck_budget": 1,
+  "pending_fix_count": 1,
+  "ready_for_redelivery": false,
+  "loop_state": "patch_and_recheck",
+  "tasks": [
+    {
+      "task_id": "01_mechanism_test",
+      "priority": 1,
+      "source_item": "mechanism_test",
+      "section": "Section 1 — Top Risk",
+      "problem": "Top risk is missing a full causal chain from event to valuation impact.",
+      "requested_fix": "Replace the top risk with a one-line chain that links AI server order pushout to revenue deceleration, margin pressure, and multiple compression.",
+      "analysis_targets": [
+        "top_risks"
+      ],
+      "report_targets": [
+        "Section 1 — Top Risk"
+      ],
+      "edit_scope": "analysis_json_and_render",
+      "render_step_required": true,
+      "notes": [
+        "Patch only the failing section; preserve all previously passing critic items."
+      ]
+    }
+  ]
+}

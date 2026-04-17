@@ -1,0 +1,42 @@
+{
+  "ticker": "000660",
+  "company_name": "SK하이닉스",
+  "market": "KR",
+  "data_mode": "standard",
+  "company_type": "Semiconductor/Memory",
+  "company_type_confidence": "HIGH",
+  "output_mode": "B",
+  "output_language": "ko",
+  "analysis_date": "2026-03-12",
+  "peer_tickers": [
+    "005930",
+    "MU"
+  ],
+  "analysis_framework_path": "references/analysis-framework-comparison.md",
+  "tier1_calls": [],
+  "tier2_searches": [
+    "\"SK하이닉스\" 2026 실적 매출 영업이익 HBM",
+    "\"SK하이닉스\" HBM3E HBM4 고대역폭메모리 점유율 2026",
+    "\"SK하이닉스\" 주가 목표가 애널리스트 컨센서스",
+    "\"000660\" PER EV/EBITDA 밸류에이션",
+    "\"SK하이닉스\" DRAM NAND 메모리 시장 전망 2026"
+  ],
+  "tier2_fetches": [
+    "https://finance.naver.com/item/main.naver?code=000660"
+  ],
+  "run_context": {
+    "run_id": "20260312T000000Z_000660_B_LEGACY",
+    "artifact_root": "output/runs/20260312T000000Z_000660_B_LEGACY/000660",
+    "ticker": "000660",
+    "reports_dir": "output/reports",
+    "snapshot_dir": "output/data/000660",
+    "migration_mode": "legacy_promotion"
+  },
+  "migration": {
+    "migrated_at": "2026-03-27T21:45:04Z",
+    "source_path": "output/data/000660/research-plan.json",
+    "notes": [
+      "Research plan promoted from legacy artifact namespace"
+    ]
+  }
+}

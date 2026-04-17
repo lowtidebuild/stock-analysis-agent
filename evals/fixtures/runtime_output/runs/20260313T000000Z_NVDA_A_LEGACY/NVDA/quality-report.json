@@ -1,0 +1,107 @@
+{
+  "ticker": "NVDA",
+  "output_mode": "A",
+  "check_timestamp": "2026-03-28T14:44:24Z",
+  "overall_result": "PASS",
+  "run_context": {
+    "run_id": "20260313T000000Z_NVDA_A_LEGACY",
+    "artifact_root": "output/runs/20260313T000000Z_NVDA_A_LEGACY/NVDA",
+    "ticker": "NVDA",
+    "reports_dir": "output/reports",
+    "snapshot_dir": "output/data/NVDA",
+    "migration_mode": "legacy_promotion"
+  },
+  "items": {
+    "financial_consistency": {
+      "status": "PASS",
+      "sampled_values": [
+        {
+          "metric": "pe_forward",
+          "output_value": 22.4,
+          "source_value": 22.4,
+          "match": true
+        },
+        {
+          "metric": "revenue_yoy_growth",
+          "output_value": 0.65,
+          "source_value": 0.65,
+          "match": true
+        },
+        {
+          "metric": "ev_ebitda",
+          "output_value": 37.5,
+          "source_value": 37.46,
+          "match": true
+        }
+      ],
+      "delivery_impact": "none"
+    },
+    "price_and_date": {
+      "status": "PASS",
+      "price_found": 186.03,
+      "date_found": "2026-03-11",
+      "delivery_impact": "none"
+    },
+    "blank_over_wrong": {
+      "status": "PASS",
+      "excluded_metrics_checked": [],
+      "violations_found": 0,
+      "delivery_impact": "none"
+    },
+    "contract_validation": {
+      "status": "PASS",
+      "artifacts": {
+        "research-plan": {
+          "status": "PASS",
+          "error_count": 0,
+          "errors": []
+        },
+        "validated-data": {
+          "status": "PASS",
+          "error_count": 0,
+          "errors": []
+        },
+        "analysis-result": {
+          "status": "PASS",
+          "error_count": 0,
+          "errors": []
+        }
+      },
+      "delivery_impact": "none"
+    },
+    "semantic_consistency": {
+      "status": "PASS",
+      "error_count": 0,
+      "delivery_impact": "none"
+    },
+    "verdict_policy": {
+      "status": "PASS",
+      "delivery_impact": "none"
+    },
+    "cross_artifact_consistency": {
+      "status": "PASS",
+      "error_count": 0,
+      "delivery_impact": "none"
+    }
+  },
+  "delivery_gate": {
+    "result": "PASS",
+    "ready_for_delivery": true,
+    "blocking_items": [],
+    "non_blocking_items": [],
+    "historical_only_items": [],
+    "critic_overall": null,
+    "critic_delivery_impact": "none"
+  },
+  "auto_fixes_applied": [],
+  "inline_flags_added": [],
+  "generated_by": "quality-report-builder",
+  "mode_a_simplified": true,
+  "migration": {
+    "migrated_at": "2026-03-27T21:45:04Z",
+    "source_path": "output/quality-report.json",
+    "notes": [
+      "Quality report promoted from legacy shared artifact namespace"
+    ]
+  }
+}

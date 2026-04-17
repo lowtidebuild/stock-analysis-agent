@@ -1,0 +1,54 @@
+{
+  "ticker": "005930",
+  "output_mode": "B",
+  "run_context": {
+    "run_id": "20260312T000000Z_005930_B_LEGACY",
+    "artifact_root": "output/runs/20260312T000000Z_005930_B_LEGACY/005930",
+    "ticker": "005930",
+    "reports_dir": "output/reports",
+    "snapshot_dir": "output/data/005930",
+    "migration_mode": "legacy_promotion"
+  },
+  "source_patch_plan_path": "output/runs/20260312T000000Z_005930_B_LEGACY/005930/patch-plan.json",
+  "analysis_patch_path": "evals/fixtures/analysis-patch-005930-valid.json",
+  "analysis_result_path": "output/runs/20260312T000000Z_005930_B_LEGACY/005930/analysis-result.json",
+  "quality_report_path": "output/runs/20260312T000000Z_005930_B_LEGACY/005930/quality-report.json",
+  "render": {
+    "required": true,
+    "status": "rendered",
+    "engine": "comparison-generator",
+    "report_output_path": "output/reports/005930_000660_MU_B_KR_2026-03-12.html",
+    "rendered_at": "2026-03-28T05:25:00Z",
+    "notes": [
+      "Mode B peer comparison rerender completed successfully."
+    ]
+  },
+  "recheck": {
+    "status": "applied",
+    "critic_overall_before": "FAIL",
+    "critic_overall_after": "PASS",
+    "remaining_fail_count": 0,
+    "quality_report_updated": true,
+    "recheck_payload_path": "evals/fixtures/critic-recheck-mode-b-pass.json",
+    "remaining_fail_items": []
+  },
+  "next_patch_plan": {
+    "path": "output/runs/20260312T000000Z_005930_B_LEGACY/005930/patch-plan.json",
+    "pending_fix_count": 0,
+    "ready_for_redelivery": true,
+    "loop_state": "ready_for_delivery"
+  },
+  "quality_gate": {
+    "overall_result": "PASS_WITH_FLAGS",
+    "delivery_gate_result": "PASS",
+    "critic_overall": "PASS",
+    "blocking_items": [],
+    "non_blocking_items": [],
+    "historical_only_items": [
+      "legacy_migration"
+    ],
+    "delivery_ready": true
+  },
+  "completed_by": "patch-loop-orchestrator",
+  "completed_at": "2026-03-28T05:25:00Z"
+}

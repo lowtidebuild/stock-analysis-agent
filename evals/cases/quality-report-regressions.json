@@ -1,0 +1,34 @@
+{
+  "cases": [
+    {
+      "id": "quality_report_critic_merge_valid_contract",
+      "kind": "artifact",
+      "path": "evals/fixtures/quality-report-critic-valid.json",
+      "artifact_type": "quality-report",
+      "expect_valid": true,
+      "assertions": {
+        "equals": {
+          "delivery_gate.result": "BLOCKED",
+          "delivery_gate.ready_for_delivery": false
+        },
+        "contains": [
+          {
+            "path": "delivery_gate.blocking_items",
+            "value": "critic_review"
+          }
+        ]
+      }
+    },
+    {
+      "id": "quality_report_critic_merge_invalid_status_is_rejected",
+      "kind": "artifact",
+      "path": "evals/fixtures/quality-report-critic-invalid.json",
+      "artifact_type": "quality-report",
+      "expect_valid": false,
+      "required_error_substrings": [
+        "$.feedback_for_analyst",
+        "$.overall_result"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "ticker": "005930",
+  "output_mode": "B",
+  "run_context": {
+    "run_id": "20260312T000000Z_005930_B_LEGACY",
+    "ticker": "005930",
+    "artifact_root": "output/runs/20260312T000000Z_005930_B_LEGACY/005930"
+  },
+  "patch_plan_path": "output/runs/20260312T000000Z_005930_B_LEGACY/005930/patch-plan.json",
+  "source_analysis_result_path": "output/runs/20260312T000000Z_005930_B_LEGACY/005930/analysis-result.json",
+  "target_analysis_result_path": "output/runs/20260312T000000Z_005930_B_LEGACY/005930/analysis-result.json",
+  "task_ids": [
+    "01_differentiator_specificity_test"
+  ],
+  "updated_paths": [
+    "$.top_risks",
+    "$.upcoming_catalysts"
+  ],
+  "render_required": true,
+  "preserve_untouched_sections": true,
+  "updates": [
+    {
+      "task_id": "01_differentiator_specificity_test",
+      "path": "$.top_risks",
+      "value": [
+        "HBM 점유율 회복이 지연되면 고부가 메모리 믹스 개선이 늦어져 전사 영업이익률 재평가가 밀릴 수 있음",
+        "파운드리/모바일 회복이 지연되면 메모리 업사이클이 와도 컨글로머릿 할인 해소 속도가 제한될 수 있음"
+      ],
+      "rationale": "Adds a peer-specific risk pair that explains why Samsung can stay cheaper than SK hynix even when the memory cycle improves."
+    },
+    {
+      "task_id": "01_differentiator_specificity_test",
+      "path": "$.upcoming_catalysts",
+      "value": [
+        {
+          "date": "2026-05-31",
+          "event_type": "product",
+          "description": "HBM3E qualification update with large GPU customers",
+          "significance": "high"
+        },
+        {
+          "date": "2026-07-31",
+          "event_type": "earnings",
+          "description": "2Q26 semiconductor margin recovery print",
+          "significance": "high"
+        }
+      ],
+      "rationale": "Adds explicit catalyst timing so the differentiator section can connect upside, margin recovery, and catalyst visibility."
+    }
+  ],
+  "applied_by": "analyst-patch-executor",
+  "applied_at": "2026-03-28T05:20:00Z"
+}

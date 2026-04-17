@@ -1,0 +1,30 @@
+{
+  "run_id": "20260312T000000Z_MU_B_LEGACY",
+  "created_at": "2026-03-27T21:45:04Z",
+  "tickers": [
+    "MU"
+  ],
+  "artifact_layout": "output/runs/{run_id}/{ticker}/",
+  "artifacts": {
+    "MU": {
+      "artifact_root": "output/runs/20260312T000000Z_MU_B_LEGACY/MU",
+      "research_plan": "output/runs/20260312T000000Z_MU_B_LEGACY/MU/research-plan.json",
+      "tier1_raw": "output/runs/20260312T000000Z_MU_B_LEGACY/MU/tier1-raw.json",
+      "dart_api_raw": "output/runs/20260312T000000Z_MU_B_LEGACY/MU/dart-api-raw.json",
+      "tier2_raw": "output/runs/20260312T000000Z_MU_B_LEGACY/MU/tier2-raw.json",
+      "validated_data": "output/runs/20260312T000000Z_MU_B_LEGACY/MU/validated-data.json",
+      "analysis_result": "output/runs/20260312T000000Z_MU_B_LEGACY/MU/analysis-result.json",
+      "quality_report": "output/runs/20260312T000000Z_MU_B_LEGACY/MU/quality-report.json",
+      "snapshot_dir": "output/data/MU",
+      "reports_dir": "output/reports"
+    }
+  },
+  "migration": {
+    "source_namespace": "legacy_output_samples",
+    "legacy_sources": {
+      "research_plan_source": "output/data/MU/research-plan.json",
+      "validated_data_source": "output/data/MU/validated-data.json",
+      "analysis_source": "output/data/MU/MU_2026-03-12_snapshot.json"
+    }
+  }
+}

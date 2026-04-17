@@ -1,0 +1,23 @@
+{
+  "ticker": "NVDA",
+  "company_name": "NVIDIA Corporation",
+  "analysis_date": "2026-03-13",
+  "data_mode": "standard",
+  "output_mode": "A",
+  "price_at_analysis": 186.03,
+  "currency": "USD",
+  "rr_score": 4.27,
+  "verdict": "Overweight",
+  "scenarios": {
+    "bull": {"target": 260, "return_pct": 39.8, "probability": 0.30},
+    "base": {"target": 220, "return_pct": 18.3, "probability": 0.50},
+    "bear": {"target": 140, "return_pct": -24.7, "probability": 0.20}
+  },
+  "key_metrics": {
+    "pe_forward": 22.4,
+    "revenue_growth_yoy": 0.65,
+    "ev_ebitda": 37.46
+  },
+  "quality_grade": "B",
+  "report_path": "output/reports/NVDA_A_en_2026-03-13.html"
+}

@@ -1,0 +1,52 @@
+{
+  "ticker": "AAPL",
+  "output_mode": "D",
+  "run_context": {
+    "run_id": "20260328T000000Z_AAPL_D_FIXTURE",
+    "artifact_root": "output/runs/20260328T000000Z_AAPL_D_FIXTURE/AAPL",
+    "ticker": "AAPL"
+  },
+  "quality_report_path": "evals/fixtures/quality-report-critic-valid.json",
+  "analysis_result_path": "output/runs/20260328T000000Z_AAPL_D_FIXTURE/AAPL/analysis-result.json",
+  "report_output_path": null,
+  "critic_overall": "FAIL",
+  "current_recheck_count": 1,
+  "remaining_recheck_budget": 0,
+  "pending_fix_count": 1,
+  "ready_for_redelivery": true,
+  "loop_state": "patch_and_recheck",
+  "tasks": [
+    {
+      "task_id": "01_mechanism_test",
+      "priority": 1,
+      "source_item": "mechanism_test",
+      "section": "Section 5 — Precision Risk",
+      "problem": "Regulatory risk lacks quantified stock-price transmission.",
+      "requested_fix": "Add the revenue, EBITDA, and multiple-compression chain for the downside case.",
+      "analysis_targets": [
+        "sections.precision_risks"
+      ],
+      "report_targets": [
+        "Section 5 — Precision Risk"
+      ],
+      "edit_scope": "report_render_only",
+      "render_step_required": false
+    },
+    {
+      "task_id": "02_completeness",
+      "priority": 2,
+      "source_item": "completeness",
+      "section": "Section 9 — Quality of Earnings",
+      "problem": "EBITDA Bridge table is missing.",
+      "requested_fix": "Add EBITDA Bridge and FCF conversion commentary.",
+      "analysis_targets": [
+        "sections.precision_risks"
+      ],
+      "report_targets": [
+        "Section 9 — Quality of Earnings"
+      ],
+      "edit_scope": "analysis_json_and_render",
+      "render_step_required": true
+    }
+  ]
+}

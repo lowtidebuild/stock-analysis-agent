@@ -1,9 +1,9 @@
 # Market Router — SKILL.md
 
-**Role**: Step 2 — Detect MCP availability, determine data mode (Enhanced/Standard), classify company type, identify peers, and write the research plan.
+**Role**: Step 2 — Detect MCP availability, determine data mode (Enhanced/Standard), classify company type, identify peers, initialize a run-local artifact root, and write the research plan.
 **Triggered by**: CLAUDE.md after Step 1 (query interpretation)
 **Reads**: Session state from Step 1, `references/company-type-classification.md`
-**Writes**: `output/research-plan.json`
+**Writes**: `output/runs/{run_id}/{ticker}/research-plan.json`
 **References**: `company-type-classification.md`
 
 ---
@@ -128,7 +128,15 @@ If `company_type` is not found in the macro factors table, use the sector's clos
 
 ### Step 2.6 — Write Research Plan
 
-Write to `output/research-plan.json`:
+Before writing the research plan, initialize the run-local artifact namespace:
+
+```bash
+python .claude/skills/data-manager/scripts/artifact-manager.py init --tickers {ticker}
+```
+
+This creates `output/runs/{run_id}/run-manifest.json` and `output/runs/{run_id}/{ticker}/`.
+
+Write to `output/runs/{run_id}/{ticker}/research-plan.json`:
 
 ```json
 {
@@ -168,11 +176,18 @@ Write to `output/research-plan.json`:
   ],
   "macro_search_required": true,
   "macro_search": "\"Technology\" macro risk factors economic outlook 2026",
-  "macro_factors": ["interest rates", "consumer spending", "USD strength", "semiconductor cycle"]
+  "macro_factors": ["interest rates", "consumer spending", "USD strength", "semiconductor cycle"],
+  "run_context": {
+    "run_id": "20260328T120000Z_AAPL",
+    "ticker": "AAPL",
+    "artifact_root": "output/runs/20260328T120000Z_AAPL/AAPL",
+    "reports_dir": "output/reports",
+    "compatibility_mirror_enabled": false
+  }
 }
 ```
 
-**Multi-ticker Workflow 2**: Write separate research plan per ticker using `output/data/{ticker}/research-plan.json` namespace. Do NOT overwrite the shared `output/research-plan.json` for multi-ticker scenarios.
+**Multi-ticker Workflow 2**: write separate research plans per ticker using `output/runs/{run_id}/{ticker}/research-plan.json`. Do NOT overwrite a deprecated shared `output/research-plan.json`.
 
 ### Step 2.7 — Report Plan Summary
 
@@ -201,5 +216,6 @@ Macro factors: {Yes (N factors) / Skipped (Mode A/B)}
 - [ ] Macro factors determined (Mode C/D) or skipped (Mode A/B)
 - [ ] Tier 1 API call list selected based on output_mode
 - [ ] Tier 2 search list built (≥5 searches for Standard Mode)
-- [ ] `output/research-plan.json` written (or per-ticker path for Workflow 2)
+- [ ] Run-local artifact root initialized
+- [ ] `output/runs/{run_id}/{ticker}/research-plan.json` written
 - [ ] Analysis framework path set correctly for output_mode

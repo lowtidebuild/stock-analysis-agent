@@ -1,0 +1,338 @@
+{
+  "ticker": "000660",
+  "company_name": "SK하이닉스",
+  "analysis_date": "2026-03-12",
+  "data_mode": "standard",
+  "output_mode": "B",
+  "price_at_analysis": 955000,
+  "currency": "KRW",
+  "market_cap_조원": 680.6,
+  "per": 16.2,
+  "ev_ebitda": 7.75,
+  "pbr": 5.7,
+  "roe": 44.15,
+  "operating_margin": 48.59,
+  "revenue_ttm_조원": 97.15,
+  "rr_score": 3.13,
+  "verdict": "비중확대",
+  "analyst_target": 1313600,
+  "workflow": 2,
+  "peer_tickers": [
+    "005930",
+    "MU"
+  ],
+  "market": "KR",
+  "output_language": "ko",
+  "run_context": {
+    "run_id": "20260312T000000Z_000660_B_LEGACY",
+    "artifact_root": "output/runs/20260312T000000Z_000660_B_LEGACY/000660",
+    "ticker": "000660",
+    "reports_dir": "output/reports",
+    "snapshot_dir": "output/data/000660",
+    "migration_mode": "legacy_promotion"
+  },
+  "key_metrics": {
+    "price": {
+      "value": 955000,
+      "currency": "KRW",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "market_cap": {
+      "value": 680.6,
+      "unit": "조원",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide (6,806,308억원)"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "revenue_ttm": {
+      "value": 97.15,
+      "unit": "조원",
+      "grade": "B",
+      "tag": "[Company]",
+      "sources": [
+        "FnGuide (971,467억원)",
+        "SK Hynix Newsroom"
+      ],
+      "source_type": "company_release",
+      "source_authority": "issuer",
+      "display_tag": "[Company]",
+      "approximate": true
+    },
+    "operating_income_ttm": {
+      "value": 47.21,
+      "unit": "조원",
+      "grade": "B",
+      "tag": "[Company]",
+      "sources": [
+        "FnGuide (472,063억원)",
+        "SK Hynix Newsroom"
+      ],
+      "source_type": "company_release",
+      "source_authority": "issuer",
+      "display_tag": "[Company]",
+      "approximate": true
+    },
+    "net_income_ttm": {
+      "value": 42.95,
+      "unit": "조원",
+      "grade": "B",
+      "tag": "[Company]",
+      "sources": [
+        "FnGuide (429,479억원)",
+        "SK Hynix Newsroom"
+      ],
+      "source_type": "company_release",
+      "source_authority": "issuer",
+      "display_tag": "[Company]",
+      "approximate": true
+    },
+    "eps": {
+      "value": 58955,
+      "currency": "KRW",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "per": {
+      "value": 16.2,
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "forward_2026e": 5.15,
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "ev_ebitda": {
+      "value": 7.75,
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "pbr": {
+      "value": 5.7,
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "revenue_growth_yoy": {
+      "value": 46.8,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[Calc]",
+      "sources": [
+        "FnGuide 2025 vs DART 2024"
+      ],
+      "source_type": "calculated",
+      "source_authority": "derived",
+      "display_tag": "[Calc]",
+      "approximate": false
+    },
+    "gross_margin": {
+      "value": null,
+      "grade": "D",
+      "tag": null,
+      "sources": [],
+      "notes": "Not available from FnGuide snapshot",
+      "source_type": null,
+      "source_authority": null,
+      "display_tag": null,
+      "approximate": false,
+      "exclusion_reason": "Not available from FnGuide snapshot"
+    },
+    "operating_margin": {
+      "value": 48.59,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "net_margin": {
+      "value": 44.18,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "roe": {
+      "value": 44.15,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "roa": {
+      "value": 29.02,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "fcf_ttm": {
+      "value": null,
+      "grade": "D",
+      "tag": null,
+      "sources": [],
+      "notes": "OCF not available from current sources",
+      "source_type": null,
+      "source_authority": null,
+      "display_tag": null,
+      "approximate": false,
+      "exclusion_reason": "OCF not available from current sources"
+    },
+    "fcf_yield": {
+      "value": null,
+      "grade": "D",
+      "tag": null,
+      "sources": [],
+      "source_type": null,
+      "source_authority": null,
+      "display_tag": null,
+      "approximate": false,
+      "exclusion_reason": "Legacy migration marked this metric unverifiable"
+    },
+    "net_debt_ebitda": {
+      "value": null,
+      "grade": "D",
+      "tag": null,
+      "sources": [],
+      "notes": "Year-end cash/debt breakdown unavailable",
+      "source_type": null,
+      "source_authority": null,
+      "display_tag": null,
+      "approximate": false,
+      "exclusion_reason": "Year-end cash/debt breakdown unavailable"
+    },
+    "dividend_yield": {
+      "value": 0.31,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "foreign_ownership": {
+      "value": 53.7,
+      "unit": "percent",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide"
+      ],
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    },
+    "analyst_target": {
+      "value": 1313600,
+      "currency": "KRW",
+      "grade": "B",
+      "tag": "[KR-Portal]",
+      "sources": [
+        "FnGuide consensus"
+      ],
+      "upside_pct": 37.5,
+      "source_type": "portal_kr",
+      "source_authority": "market_portal",
+      "display_tag": "[KR-Portal]",
+      "approximate": false
+    }
+  },
+  "scenarios": {
+    "bull": {
+      "target": null,
+      "probability": 0.25,
+      "return_pct": null,
+      "key_assumption": "Legacy sample did not preserve scenario detail for this case; placeholder assumption added during run-local migration."
+    },
+    "base": {
+      "target": 1313600,
+      "probability": 0.5,
+      "return_pct": 37.5,
+      "key_assumption": "Legacy snapshot preserved a consensus target but not full scenario narration; this base case carries that target forward."
+    },
+    "bear": {
+      "target": null,
+      "probability": 0.25,
+      "return_pct": null,
+      "key_assumption": "Legacy sample did not preserve scenario detail for this case; placeholder assumption added during run-local migration."
+    }
+  },
+  "company_type": "Legacy sample migration",
+  "top_risks": [],
+  "upcoming_catalysts": [],
+  "migration": {
+    "migrated_at": "2026-03-27T21:45:04Z",
+    "source_path": "output/data/000660/000660_2026-03-12_snapshot.json",
+    "notes": [
+      "Analysis result promoted from legacy snapshot/latest artifact",
+      "Scenario placeholders were added only where the legacy sample omitted narrative assumptions or targets"
+    ]
+  },
+  "report_path": "output/reports/005930_000660_MU_B_KR_2026-03-12.html"
+}

@@ -3,7 +3,7 @@
 snapshot-manager.py — Manages versioned analysis snapshots.
 
 Usage:
-    python snapshot-manager.py save --ticker AAPL --data-file output/analysis-result.json
+    python snapshot-manager.py save --ticker AAPL --data-file output/runs/<run_id>/AAPL/analysis-result.json
     python snapshot-manager.py list --ticker AAPL
     python snapshot-manager.py get --ticker AAPL --date latest
     python snapshot-manager.py get --ticker AAPL --date 2026-03-12
@@ -12,6 +12,7 @@ Usage:
 Snapshot storage:
     output/data/{ticker}/{ticker}_{YYYY-MM-DD}_snapshot.json   — versioned archive
     output/data/{ticker}/latest.json                           — always points to most recent
+    Custom roots are supported via --data-root for fixture and CI usage.
 """
 
 import sys
@@ -19,17 +20,31 @@ import os
 import json
 import argparse
 import shutil
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-BASE_DIR = Path(__file__).resolve().parents[5]  # project root
-OUTPUT_DIR = BASE_DIR / "output" / "data"
+THIS_FILE = Path(__file__).resolve()
+BASE_DIR = THIS_FILE.parents[4]
+sys.path.insert(0, str(BASE_DIR))
+
+from tools.analysis_contract import find_repo_root  # noqa: E402
+from tools.artifact_validation import validate_artifact_file  # noqa: E402
+
+BASE_DIR = find_repo_root(__file__)
+DEFAULT_OUTPUT_DIR = BASE_DIR / "output" / "data"
 
 
-def get_ticker_dir(ticker: str) -> Path:
-    d = OUTPUT_DIR / ticker.upper()
+def resolve_data_root(data_root: str | None = None) -> Path:
+    if not data_root:
+        return DEFAULT_OUTPUT_DIR
+    root = Path(data_root)
+    return root if root.is_absolute() else (BASE_DIR / root)
+
+
+def get_ticker_dir(ticker: str, data_root: str | None = None) -> Path:
+    d = resolve_data_root(data_root) / ticker.upper()
     d.mkdir(parents=True, exist_ok=True)
     return d
 
@@ -42,12 +57,23 @@ def atomic_write(path: Path, data: dict):
     tmp.replace(path)
 
 
-def cmd_save(ticker: str, data_file: str):
+def cmd_save(ticker: str, data_file: str, skip_validation: bool = False, data_root: str | None = None):
     """Save snapshot from analysis-result.json."""
     data_path = Path(data_file)
     if not data_path.exists():
         print(json.dumps({"status": "error", "message": f"Data file not found: {data_file}"}))
         sys.exit(1)
+
+    validation_result = None
+    if not skip_validation:
+        validation_result = validate_artifact_file(data_path, "analysis-result", base_dir=BASE_DIR)
+        if not validation_result["valid"]:
+            print(json.dumps({
+                "status": "error",
+                "message": "Input analysis-result.json failed schema validation",
+                "validation_errors": validation_result["errors"],
+            }, ensure_ascii=False, indent=2))
+            sys.exit(1)
 
     with open(data_path, "r", encoding="utf-8") as f:
         data = json.load(f)
@@ -59,9 +85,14 @@ def cmd_save(ticker: str, data_file: str):
     if "analysis_date" not in data:
         data["analysis_date"] = today
     if "snapshot_saved_at" not in data:
-        data["snapshot_saved_at"] = datetime.utcnow().isoformat() + "Z"
+        data["snapshot_saved_at"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    if "snapshot_source_artifact" not in data:
+        try:
+            data["snapshot_source_artifact"] = str(data_path.resolve().relative_to(BASE_DIR))
+        except ValueError:
+            data["snapshot_source_artifact"] = str(data_path.resolve())
 
-    ticker_dir = get_ticker_dir(ticker)
+    ticker_dir = get_ticker_dir(ticker, data_root=data_root)
     snapshot_name = f"{ticker.upper()}_{data['analysis_date']}_snapshot.json"
     snapshot_path = ticker_dir / snapshot_name
     latest_path = ticker_dir / "latest.json"
@@ -75,12 +106,14 @@ def cmd_save(ticker: str, data_file: str):
         "latest_path": str(latest_path.relative_to(BASE_DIR)),
         "analysis_date": data["analysis_date"],
         "ticker": ticker.upper(),
+        "validation_performed": not skip_validation,
+        "validation_errors": [] if not validation_result else validation_result["errors"],
     }, ensure_ascii=False, indent=2))
 
 
-def cmd_list(ticker: str):
+def cmd_list(ticker: str, data_root: str | None = None):
     """List all snapshots for a ticker in reverse chronological order."""
-    ticker_dir = get_ticker_dir(ticker)
+    ticker_dir = get_ticker_dir(ticker, data_root=data_root)
     pattern = f"{ticker.upper()}_*_snapshot.json"
     snapshots = sorted(ticker_dir.glob(pattern), reverse=True)
 
@@ -103,9 +136,9 @@ def cmd_list(ticker: str):
     print(json.dumps({"ticker": ticker.upper(), "snapshots": entries}, ensure_ascii=False, indent=2))
 
 
-def cmd_get(ticker: str, date_arg: str):
+def cmd_get(ticker: str, date_arg: str, data_root: str | None = None):
     """Retrieve a snapshot by date specifier."""
-    ticker_dir = get_ticker_dir(ticker)
+    ticker_dir = get_ticker_dir(ticker, data_root=data_root)
 
     if date_arg == "latest":
         target_path = ticker_dir / "latest.json"
@@ -156,24 +189,28 @@ def main():
     save_p = subparsers.add_parser("save")
     save_p.add_argument("--ticker", required=True)
     save_p.add_argument("--data-file", required=True)
+    save_p.add_argument("--skip-validation", action="store_true")
+    save_p.add_argument("--data-root", default=None)
 
     # list
     list_p = subparsers.add_parser("list")
     list_p.add_argument("--ticker", required=True)
+    list_p.add_argument("--data-root", default=None)
 
     # get
     get_p = subparsers.add_parser("get")
     get_p.add_argument("--ticker", required=True)
     get_p.add_argument("--date", required=True, help="latest | YYYY-MM-DD | Nd (e.g. 30d)")
+    get_p.add_argument("--data-root", default=None)
 
     args = parser.parse_args()
 
     if args.command == "save":
-        cmd_save(args.ticker, args.data_file)
+        cmd_save(args.ticker, args.data_file, skip_validation=args.skip_validation, data_root=args.data_root)
     elif args.command == "list":
-        cmd_list(args.ticker)
+        cmd_list(args.ticker, data_root=args.data_root)
     elif args.command == "get":
-        cmd_get(args.ticker, args.date)
+        cmd_get(args.ticker, args.date, data_root=args.data_root)
 
 
 if __name__ == "__main__":

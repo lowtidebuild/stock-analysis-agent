@@ -2,7 +2,7 @@
 
 **Role**: Step 3 — Execute Financial Datasets MCP and FMP MCP API calls to collect structured financial data. Enhanced Mode only.
 **Triggered by**: CLAUDE.md when `data_mode = "enhanced"` after Step 2
-**Reads**: `output/research-plan.json`, `references/api-endpoints.md`
+**Reads**: run-local `research-plan.json`, `references/api-endpoints.md`
 **Writes**: `output/data/{ticker}/tier1-raw.json`
 **References**: `api-endpoints.md`
 
@@ -74,6 +74,38 @@ IF fails:
     → Set fmp_available = false (will trigger web search for analyst targets in Step 4)
 ```
 
+### Step 3.3.5 — yfinance Supplement (Enhanced Mode)
+
+After Financial Datasets + FMP, check whether any critical fields are still missing:
+- `current_price`
+- `market_cap`
+- `pe_ratio`
+- `fifty_two_week_high`
+- `fifty_two_week_low`
+
+If any are missing, run:
+
+```bash
+python .claude/skills/financial-data-collector/scripts/yfinance-collector.py \
+  --ticker {ticker} \
+  --market US \
+  --output output/data/{ticker}/yfinance-raw.json \
+  --bundle minimum
+```
+
+If `yfinance-collector.py` exits `0` or `1`:
+- Read `output/data/{ticker}/yfinance-raw.json`
+- Merge it into `tier1-raw.json` under `yfinance_supplement`
+- Fill missing values only — do not overwrite existing Grade A fields
+- Tag merged values `[Portal]`
+- If yfinance agrees with existing Grade A values within 2% → Grade B
+- If yfinance is the only available structured value → Grade C
+
+If Financial Datasets MCP completely fails but yfinance succeeds:
+- Keep `data_mode = "enhanced"` (structured fallback still succeeded)
+- Set `data_source = "yfinance"`
+- Continue the pipeline without downgrading to Standard Mode
+
 ### Step 3.4 — Data Sufficiency Check
 
 After all calls complete, verify:
@@ -88,7 +120,8 @@ After all calls complete, verify:
 
 ```
 IF current_price unavailable (critical failure):
-    → "CRITICAL: Price data unavailable. Switching to Standard Mode for {ticker}."
+    → If yfinance supplement succeeded: keep `data_mode = "enhanced"` and continue
+    → Otherwise: "CRITICAL: Price data unavailable. Switching to Standard Mode for {ticker}."
     → Switch data_mode to "standard" for this ticker
     → Proceed to Step 4 (web researcher) to get price
 
@@ -184,9 +217,16 @@ FMP: ✓/✗
 If MCP tools are temporarily unavailable but Python environment works, do NOT use Python to call MCPs — MCPs are Claude tool calls, not Python libraries.
 
 If all API calls fail:
-1. Log: `"Enhanced Mode API calls all failed — falling back to Standard Mode"`
-2. Switch `data_mode = "standard"` for this ticker
-3. Proceed to Step 4 (web researcher) with Standard Mode protocol
+1. Log: `"Enhanced Mode API calls all failed — attempting yfinance fallback"`
+2. Run:
+   `python .claude/skills/financial-data-collector/scripts/yfinance-collector.py --ticker {ticker} --market US --output output/data/{ticker}/yfinance-raw.json --bundle standard`
+3. If yfinance succeeds:
+   `data_source = "yfinance"` and `data_mode = "enhanced"`
+   proceed without a Standard Mode downgrade
+4. If yfinance also fails:
+   log `"Enhanced Mode structured fallbacks exhausted — falling back to Standard Mode"`
+5. Switch `data_mode = "standard"` for this ticker
+6. Proceed to Step 4 (web researcher) with Standard Mode protocol
 
 ---
 

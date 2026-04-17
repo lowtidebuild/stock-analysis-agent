@@ -2,8 +2,8 @@
 
 **Role**: Step 9 — Perform 5-item quality check on the generated output before delivery to user. Auto-patch minor issues; flag persistent failures inline.
 **Triggered by**: CLAUDE.md after Step 8 (output generation), before final delivery
-**Reads**: Generated output file (or inline response), `output/validated-data.json`, `output/analysis-result.json`
-**Writes**: Patches to the output file; `output/quality-report.json`
+**Reads**: Generated output file (or inline response), run-local `validated-data.json`, run-local `analysis-result.json`
+**Writes**: Patches to the output file; run-local `quality-report.json`
 **References**: None (quality standards defined in this file)
 
 ---
@@ -14,8 +14,15 @@
 
 Load:
 1. The generated output (HTML file, Markdown file, or inline text)
-2. `output/validated-data.json` (for grade reference)
-3. `output/analysis-result.json` (for scenario probabilities and R/R Score)
+2. run-local `validated-data.json` (for grade reference)
+3. run-local `analysis-result.json` (for scenario probabilities and R/R Score)
+4. Existing run-local `quality-report.json` if present (merge output-facing checks with contract/semantic checks)
+
+After the output-facing checks, rebuild the canonical run-local quality report:
+
+```bash
+python .claude/skills/quality-checker/scripts/quality-report-builder.py --run-dir output/runs/{run_id}
+```
 
 ---
 
@@ -94,7 +101,7 @@ IF output_mode = "A":
 
 **Procedure**:
 1. Count all numerical values in the output (prices, percentages, ratios, revenue figures, etc.)
-2. Count how many have source tags ([Filing], [Portal], [KR-Portal], [Calc], [Est], [Macro])
+2. Count how many have source tags ([Filing], [Company], [Portal], [KR-Portal], [Calc], [Est], [Macro])
 3. Calculate: tagged_count / total_count × 100
 
 **Pass criteria**: ≥80% of numerical values have source tags
@@ -129,7 +136,7 @@ IF output_mode = "A":
 
 ## Quality Report Output
 
-Write to `output/quality-report.json`:
+Write to `output/runs/{run_id}/{ticker}/quality-report.json`:
 
 ```json
 {
@@ -137,6 +144,15 @@ Write to `output/quality-report.json`:
   "output_mode": "C",
   "check_timestamp": "2026-03-12T14:45:00Z",
   "overall_result": "PASS",
+  "delivery_gate": {
+    "result": "PASS",
+    "ready_for_delivery": true,
+    "blocking_items": [],
+    "non_blocking_items": [],
+    "historical_only_items": [],
+    "critic_overall": null,
+    "critic_delivery_impact": "none"
+  },
   "items": {
     "financial_consistency": {
       "status": "PASS",
@@ -164,10 +180,25 @@ Write to `output/quality-report.json`:
       "status": "PASS",
       "excluded_metrics_checked": ["ev_ebitda"],
       "violations_found": 0
+    },
+    "contract_validation": {
+      "status": "PASS"
+    },
+    "semantic_consistency": {
+      "status": "PASS",
+      "error_count": 0
+    },
+    "verdict_policy": {
+      "status": "PASS"
+    },
+    "cross_artifact_consistency": {
+      "status": "PASS",
+      "error_count": 0
     }
   },
   "auto_fixes_applied": [],
-  "inline_flags_added": []
+  "inline_flags_added": [],
+  "generated_by": "quality-report-builder"
 }
 ```
 
@@ -189,6 +220,9 @@ After all 5 checks:
     IF all PASS or auto-fixed → overall = PASS
     IF any inline flags added → overall = PASS_WITH_FLAGS
     IF critical failure (price missing + no fix) → overall = CRITICAL_FLAG
+    THEN compute delivery_gate separately:
+        - historical-only or non-blocking flags may keep overall = PASS_WITH_FLAGS while delivery_gate.result = PASS
+        - FAIL / CRITICAL_FLAG items and critic FAIL must set delivery_gate.result = BLOCKED
 ```
 
 ---
@@ -234,7 +268,7 @@ If flags:
 ✓ Disclaimer: PASS
 ⚠️ Blank-over-wrong: FAIL → [Quality flag added inline]
 
-Result: PASS_WITH_FLAGS — output delivered with quality notes
+Result: PASS_WITH_FLAGS — output delivered with quality notes when delivery_gate = PASS
 ```
 
 ---
@@ -244,6 +278,6 @@ Result: PASS_WITH_FLAGS — output delivered with quality notes
 - [ ] All 5 quality items checked
 - [ ] Auto-fixes applied where possible
 - [ ] Inline flags added where auto-fix insufficient
-- [ ] `output/quality-report.json` written
+- [ ] `output/runs/{run_id}/{ticker}/quality-report.json` written
 - [ ] Quality summary reported to user before delivering output
 - [ ] Output delivered (quality issues do NOT block delivery — flags accompany the output)

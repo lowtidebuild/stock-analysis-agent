@@ -7,7 +7,7 @@ financial tables, scenario matrix, risk table, EBITDA bridge, and source tags th
 **Example**: `output/reports/AAPL_D_EN_2026-03-12.docx`
 
 **How it works**:
-1. Analyst writes all content (narrative + tables) into `output/analysis-result.json` → `sections`
+1. Analyst writes all content (narrative + tables) into run-local `analysis-result.json` → `sections`
 2. `output-generator/SKILL.md` calls `docx-generator.py` to render the DOCX
 3. Final file can be opened in Microsoft Word, Google Docs, or LibreOffice
 
@@ -571,7 +571,7 @@ When `output_language = "ko"` (set in `analysis-result.json`):
 
 ## File Output
 
-Save all content to: `output/analysis-result.json` (sections object as defined above)
+Save all content to: run-local `analysis-result.json` (sections object as defined above)
 
 The output-generator calls `docx-generator.py` to produce: `output/reports/{ticker}_D_{lang}_{YYYY-MM-DD}.docx`
 

@@ -4,6 +4,8 @@ This file provides the decision tree for assigning A/B/C/D confidence grades to 
 
 **Core principle**: Grades are determined by the **original authority** of the data (who published it), NOT the **delivery method** (API vs web). Financial Datasets MCP serves SEC filing data — the authority is SEC. DART OpenAPI serves FSS filing data — the authority is Korean FSS. Both are regulatory sources eligible for Grade A.
 
+**Canonical metadata rule**: A metric must distinguish `source_type`, `source_authority`, and `display_tag`. Legacy tags like `[KR-Web]`, `[DART-API]`, `[Calculated]`, and `[≈]` are not canonical.
+
 ---
 
 ## Grade Definitions
@@ -92,7 +94,13 @@ For each data point:
 - DART filing shows operating income 15.8조원
 - 네이버금융 shows 15.7조원
 - Discrepancy = 0.6%
-- **Grade A** `[Filing]` — DART is the Korean FSS regulatory filing (equivalent authority to SEC EDGAR). Primary regulatory source + arithmetic consistent = Grade A.
+- **Grade A** `[Filing]` — `source_type=filing`, `source_authority=regulatory`. DART is the Korean FSS regulatory filing (equivalent authority to SEC EDGAR). Primary regulatory source + arithmetic consistent = Grade A.
+
+### Example 5a: Company IR release (not a filing)
+- Apple IR publishes an earnings release before the 10-Q is filed
+- The release is authoritative issuer guidance, but not a regulatory filing
+- **Tag as** `[Company]` with `source_type=company_release`, `source_authority=issuer`
+- Grade can still be B or C depending on corroboration, but it should not be mislabeled `[Filing]`
 
 ### Example 6: Arithmetic inconsistency (Grade D)
 - Source A: Revenue = $100B, Net Margin = 30%, implies Net Income = $30B
@@ -156,6 +164,9 @@ For each data point:
     "value": 175.50,
     "grade": "A",
     "sources": ["Financial Datasets MCP (SEC filing data)"],
+    "source_type": "filing",
+    "source_authority": "regulatory",
+    "display_tag": "[Filing]",
     "tag": "[Filing]",
     "note": null
   },
@@ -163,6 +174,9 @@ For each data point:
     "value": 27.3,
     "grade": "A",
     "sources": ["Self-calculated: $175.50 / $6.43"],
+    "source_type": "calculated",
+    "source_authority": "derived",
+    "display_tag": "[Calc]",
     "tag": "[Calc]",
     "note": "Formula: Price / TTM EPS (diluted)"
   },
@@ -170,6 +184,9 @@ For each data point:
     "value": null,
     "grade": "D",
     "sources": [],
+    "source_type": null,
+    "source_authority": null,
+    "display_tag": null,
     "tag": null,
     "exclusion_reason": "Net debt figures from Yahoo Finance ($45B) and Macrotrends ($38B) differ by 18.4%, exceeding 15% threshold. Excluded from analysis."
   }

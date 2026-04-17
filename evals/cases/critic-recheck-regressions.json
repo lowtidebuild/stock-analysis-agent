@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {
+      "id": "quality_report_partial_recheck_valid_contract",
+      "kind": "artifact",
+      "path": "evals/fixtures/quality-report-critic-recheck-valid.json",
+      "artifact_type": "quality-report",
+      "expect_valid": true
+    },
+    {
+      "id": "quality_report_partial_recheck_invalid_counts_are_rejected",
+      "kind": "artifact",
+      "path": "evals/fixtures/quality-report-critic-recheck-invalid.json",
+      "artifact_type": "quality-report",
+      "expect_valid": false,
+      "required_error_substrings": [
+        "$.critic_review.recheck_count",
+        "$.overall_result"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "ticker": "NVDA",
+  "company_name": "NVIDIA Corporation",
+  "analysis_date": "2026-03-13",
+  "data_mode": "standard",
+  "output_mode": "A",
+  "price_at_analysis": 186.03,
+  "currency": "USD",
+  "rr_score": 4.27,
+  "verdict": "Overweight",
+  "scenarios": {
+    "bull": {
+      "target": 260,
+      "return_pct": 39.8,
+      "probability": 0.3,
+      "key_assumption": "Legacy snapshot preserved target/probability inputs but omitted the narrative assumption; migration annotated this field."
+    },
+    "base": {
+      "target": 220,
+      "return_pct": 18.3,
+      "probability": 0.5,
+      "key_assumption": "Legacy snapshot preserved target/probability inputs but omitted the narrative assumption; migration annotated this field."
+    },
+    "bear": {
+      "target": 140,
+      "return_pct": -24.7,
+      "probability": 0.2,
+      "key_assumption": "Legacy snapshot preserved target/probability inputs but omitted the narrative assumption; migration annotated this field."
+    }
+  },
+  "key_metrics": {
+    "pe_forward": {
+      "value": 22.4,
+      "grade": "B",
+      "tag": "[Portal]",
+      "sources": [
+        "StockAnalysis",
+        "GuruFocus"
+      ],
+      "source_values": [
+        22.4,
+        22.63
+      ],
+      "difference_pct": 1.0,
+      "notes": "Two sources agree within 1%. Below semiconductor industry median of 28.88",
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    },
+    "ev_ebitda": {
+      "value": 37.46,
+      "grade": "C",
+      "tag": "[Portal]",
+      "sources": [
+        "ValueInvesting.io"
+      ],
+      "notes": "Single source. Second source shows 33.31 (>10% difference) — using higher value with caveat",
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    }
+  },
+  "quality_grade": "B",
+  "report_path": "output/reports/NVDA_A_en_2026-03-13.html",
+  "market": "US",
+  "output_language": "en",
+  "run_context": {
+    "run_id": "20260313T000000Z_NVDA_A_LEGACY",
+    "artifact_root": "output/runs/20260313T000000Z_NVDA_A_LEGACY/NVDA",
+    "ticker": "NVDA",
+    "reports_dir": "output/reports",
+    "snapshot_dir": "output/data/NVDA",
+    "migration_mode": "legacy_promotion"
+  },
+  "company_type": "Legacy sample migration",
+  "top_risks": [],
+  "upcoming_catalysts": [],
+  "migration": {
+    "migrated_at": "2026-03-27T21:45:04Z",
+    "source_path": "output/data/NVDA/latest.json",
+    "notes": [
+      "Analysis result promoted from legacy snapshot/latest artifact",
+      "Scenario placeholders were added only where the legacy sample omitted narrative assumptions or targets"
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "cases": [
+    {
+      "id": "analysis_result_semantic_mismatch_is_rejected",
+      "kind": "artifact",
+      "path": "evals/fixtures/analysis-result-semantic-invalid.json",
+      "artifact_type": "analysis-result",
+      "expect_valid": false,
+      "required_error_substrings": [
+        "$.scenarios.bull.return_pct",
+        "$.rr_score"
+      ]
+    },
+    {
+      "id": "analysis_result_verdict_policy_mismatch_is_rejected",
+      "kind": "artifact",
+      "path": "evals/fixtures/analysis-result-verdict-invalid.json",
+      "artifact_type": "analysis-result",
+      "expect_valid": false,
+      "required_error_substrings": [
+        "$.verdict"
+      ]
+    }
+  ]
+}

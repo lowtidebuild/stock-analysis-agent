@@ -27,8 +27,14 @@ from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-BASE_DIR = Path(__file__).resolve().parents[5]
-OUTPUT_DIR = BASE_DIR / "output" / "data"
+THIS_FILE = Path(__file__).resolve()
+BASE_DIR = THIS_FILE.parents[4]
+sys.path.insert(0, str(BASE_DIR))
+
+from tools.analysis_contract import extract_numeric_value, find_repo_root  # noqa: E402
+
+BASE_DIR = find_repo_root(__file__)
+DEFAULT_OUTPUT_DIR = BASE_DIR / "output" / "data"
 
 KEY_METRICS = [
     "market_cap", "pe_ratio", "ev_ebitda", "fcf_yield",
@@ -40,10 +46,17 @@ KEY_METRICS = [
 SIGNIFICANT_CHANGE_THRESHOLD = 0.10  # 10% change = significant
 
 
-def load_snapshot(ticker: str, date_arg: str) -> dict:
+def resolve_data_root(data_root: str | None = None) -> Path:
+    if not data_root:
+        return DEFAULT_OUTPUT_DIR
+    root = Path(data_root)
+    return root if root.is_absolute() else (BASE_DIR / root)
+
+
+def load_snapshot(ticker: str, date_arg: str, data_root: str | None = None) -> dict:
     """Load snapshot using snapshot-manager logic."""
     ticker_upper = ticker.upper()
-    ticker_dir = OUTPUT_DIR / ticker_upper
+    ticker_dir = resolve_data_root(data_root) / ticker_upper
 
     if date_arg == "latest":
         p = ticker_dir / "latest.json"
@@ -73,11 +86,13 @@ def load_snapshot(ticker: str, date_arg: str) -> dict:
 
 def pct_change(old_val, new_val):
     """Compute % change from old to new. Returns None if not computable."""
-    if old_val is None or new_val is None:
+    old_num = extract_numeric_value(old_val)
+    new_num = extract_numeric_value(new_val)
+    if old_num is None or new_num is None:
         return None
-    if old_val == 0:
+    if old_num == 0:
         return None
-    return (new_val - old_val) / abs(old_val) * 100
+    return (new_num - old_num) / abs(old_num) * 100
 
 
 def direction(pct):
@@ -94,7 +109,10 @@ def get_nested(snap: dict, key: str):
     """Get value from key_metrics or top-level."""
     km = snap.get("key_metrics", {})
     if key in km:
-        return km[key]
+        metric = km[key]
+        if isinstance(metric, dict) and "value" in metric:
+            return metric.get("value")
+        return metric
     return snap.get(key)
 
 
@@ -205,18 +223,14 @@ def build_summary(delta: dict) -> list:
     return summary if summary else ["No significant changes detected"]
 
 
-def cmd_compare(ticker: str, old_date: str, new_date: str):
+def build_delta_report(ticker: str, old_date: str, new_date: str, data_root: str | None = None) -> dict:
+    old_snap = load_snapshot(ticker, old_date, data_root=data_root)
+    new_snap = load_snapshot(ticker, new_date, data_root=data_root)
+    resolved_root = resolve_data_root(data_root)
     try:
-        old_snap = load_snapshot(ticker, old_date)
-    except FileNotFoundError as e:
-        print(json.dumps({"status": "error", "message": f"Old snapshot: {e}"}))
-        sys.exit(1)
-
-    try:
-        new_snap = load_snapshot(ticker, new_date)
-    except FileNotFoundError as e:
-        print(json.dumps({"status": "error", "message": f"New snapshot: {e}"}))
-        sys.exit(1)
+        data_root_display = str(resolved_root.relative_to(BASE_DIR))
+    except ValueError:
+        data_root_display = str(resolved_root)
 
     # Elapsed days
     try:
@@ -230,16 +244,19 @@ def cmd_compare(ticker: str, old_date: str, new_date: str):
     old_price = old_snap.get("price_at_analysis")
     new_price = new_snap.get("price_at_analysis")
     price_pct = pct_change(old_price, new_price)
+    old_price_num = extract_numeric_value(old_price)
+    new_price_num = extract_numeric_value(new_price)
 
     delta = {
         "ticker": ticker.upper(),
         "old_date": old_snap.get("analysis_date"),
         "new_date": new_snap.get("analysis_date"),
+        "data_root": data_root_display,
         "elapsed_days": elapsed,
         "price_change": {
             "old": old_price,
             "new": new_price,
-            "absolute": round(new_price - old_price, 4) if (old_price and new_price) else None,
+            "absolute": round(new_price_num - old_price_num, 4) if (old_price_num is not None and new_price_num is not None) else None,
             "pct": round(price_pct, 2) if price_pct is not None else None,
         },
         "rr_score_change": {
@@ -262,6 +279,15 @@ def cmd_compare(ticker: str, old_date: str, new_date: str):
     }
 
     delta["summary"] = build_summary(delta)
+    return delta
+
+
+def cmd_compare(ticker: str, old_date: str, new_date: str, data_root: str | None = None):
+    try:
+        delta = build_delta_report(ticker, old_date, new_date, data_root=data_root)
+    except FileNotFoundError as e:
+        print(json.dumps({"status": "error", "message": str(e)}))
+        sys.exit(1)
 
     print(json.dumps(delta, ensure_ascii=False, indent=2))
 
@@ -274,11 +300,12 @@ def main():
     cmp_p.add_argument("--ticker", required=True)
     cmp_p.add_argument("--old-date", required=True, help="YYYY-MM-DD | Nd | latest")
     cmp_p.add_argument("--new-date", required=True, help="YYYY-MM-DD | Nd | latest")
+    cmp_p.add_argument("--data-root", default=None, help="Optional alternate snapshot root")
 
     args = parser.parse_args()
 
     if args.command == "compare":
-        cmd_compare(args.ticker, args.old_date, args.new_date)
+        cmd_compare(args.ticker, args.old_date, args.new_date, data_root=args.data_root)
 
 
 if __name__ == "__main__":

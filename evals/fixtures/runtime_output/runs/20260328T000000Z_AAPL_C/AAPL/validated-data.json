@@ -1,0 +1,118 @@
+{
+  "ticker": "AAPL",
+  "market": "US",
+  "data_mode": "enhanced",
+  "validation_timestamp": "2026-03-28T00:02:00Z",
+  "overall_grade": "A",
+  "run_context": {
+    "run_id": "20260328T000000Z_AAPL_C",
+    "ticker": "AAPL",
+    "artifact_root": "output/runs/20260328T000000Z_AAPL_C/AAPL"
+  },
+  "validated_metrics": {
+    "price_at_analysis": {
+      "value": 192.4,
+      "currency": "USD",
+      "grade": "A",
+      "source_type": "filing",
+      "source_authority": "regulatory",
+      "display_tag": "[Filing]",
+      "tag": "[Filing]",
+      "sources": ["Financial Datasets MCP (SEC filing data)"],
+      "as_of_date": "2026-03-28",
+      "notes": "Price synchronized to the filing-backed collection window."
+    },
+    "revenue_ttm": {
+      "value": 410200,
+      "unit": "millions_usd",
+      "grade": "A",
+      "source_type": "filing",
+      "source_authority": "regulatory",
+      "display_tag": "[Filing]",
+      "tag": "[Filing]",
+      "sources": ["Financial Datasets MCP income_statements (SEC filing data)"],
+      "period_end": "2025-12-31"
+    },
+    "net_income_ttm": {
+      "value": 104800,
+      "unit": "millions_usd",
+      "grade": "A",
+      "source_type": "filing",
+      "source_authority": "regulatory",
+      "display_tag": "[Filing]",
+      "tag": "[Filing]",
+      "sources": ["Financial Datasets MCP income_statements (SEC filing data)"],
+      "period_end": "2025-12-31"
+    },
+    "diluted_shares": {
+      "value": 15400,
+      "unit": "millions",
+      "grade": "A",
+      "source_type": "filing",
+      "source_authority": "regulatory",
+      "display_tag": "[Filing]",
+      "tag": "[Filing]",
+      "sources": ["Financial Datasets MCP balance_sheets (SEC filing data)"]
+    },
+    "fcf_ttm": {
+      "value": 102500,
+      "unit": "millions_usd",
+      "grade": "A",
+      "source_type": "calculated",
+      "source_authority": "derived",
+      "display_tag": "[Calc]",
+      "tag": "[Calc]",
+      "sources": ["Calculated from filing-backed operating cash flow and capex"]
+    },
+    "market_cap": {
+      "value": 2962960,
+      "unit": "millions_usd",
+      "grade": "A",
+      "source_type": "calculated",
+      "source_authority": "derived",
+      "display_tag": "[Calc]",
+      "tag": "[Calc]",
+      "sources": ["Calculated from price and diluted shares"]
+    },
+    "pe_ratio": {
+      "value": 28.26,
+      "grade": "A",
+      "source_type": "calculated",
+      "source_authority": "derived",
+      "display_tag": "[Calc]",
+      "tag": "[Calc]",
+      "sources": ["Calculated from price and TTM EPS"]
+    },
+    "analyst_consensus": {
+      "value": 223.5,
+      "currency": "USD",
+      "grade": "B",
+      "source_type": "estimate",
+      "source_authority": "sell_side",
+      "display_tag": "[Est]",
+      "tag": "[Est]",
+      "sources": ["MarketBeat", "TipRanks"],
+      "source_values": [223.5, 221.0]
+    },
+    "macro_risk_free_rate": {
+      "value": 4.12,
+      "unit": "percent",
+      "grade": "A",
+      "source_type": "macro",
+      "source_authority": "government",
+      "display_tag": "[Macro]",
+      "tag": "[Macro]",
+      "sources": ["FRED DGS10"],
+      "as_of_date": "2026-03-27"
+    }
+  },
+  "grade_summary": {
+    "A": 8,
+    "B": 1,
+    "C": 0,
+    "D": 0
+  },
+  "exclusions": [],
+  "arithmetic_inconsistencies": [],
+  "sanity_alerts": []
+}

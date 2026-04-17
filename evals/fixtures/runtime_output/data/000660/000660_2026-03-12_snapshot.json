@@ -1,0 +1,21 @@
+{
+  "ticker": "000660",
+  "company_name": "SK하이닉스",
+  "analysis_date": "2026-03-12",
+  "data_mode": "standard",
+  "output_mode": "B",
+  "price_at_analysis": 955000,
+  "currency": "KRW",
+  "market_cap_조원": 680.6,
+  "per": 16.20,
+  "ev_ebitda": 7.75,
+  "pbr": 5.70,
+  "roe": 44.15,
+  "operating_margin": 48.59,
+  "revenue_ttm_조원": 97.15,
+  "rr_score": 3.13,
+  "verdict": "비중확대",
+  "analyst_target": 1313600,
+  "workflow": 2,
+  "peer_tickers": ["005930", "MU"]
+}

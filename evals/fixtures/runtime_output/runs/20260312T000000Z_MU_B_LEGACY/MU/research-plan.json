@@ -1,0 +1,45 @@
+{
+  "ticker": "MU",
+  "company_name": "Micron Technology",
+  "market": "US",
+  "data_mode": "standard",
+  "company_type": "Semiconductor/Memory",
+  "company_type_confidence": "HIGH",
+  "output_mode": "B",
+  "output_language": "ko",
+  "analysis_date": "2026-03-12",
+  "peer_tickers": [
+    "005930",
+    "000660"
+  ],
+  "analysis_framework_path": "references/analysis-framework-comparison.md",
+  "tier1_calls": [],
+  "tier2_searches": [
+    "\"MU\" \"Micron Technology\" stock price market cap current 2026",
+    "\"Micron Technology\" latest quarterly earnings revenue EPS 2026",
+    "\"MU\" P/E EV/EBITDA financial ratios",
+    "\"MU\" analyst price target consensus",
+    "\"Micron Technology\" news catalyst 2026",
+    "\"Micron Technology\" HBM memory market share revenue growth 2026",
+    "\"Micron Technology\" competitors semiconductor comparison",
+    "\"MU\" insider trading executives 2026"
+  ],
+  "tier2_fetches": [
+    "https://finance.yahoo.com/quote/MU/"
+  ],
+  "run_context": {
+    "run_id": "20260312T000000Z_MU_B_LEGACY",
+    "artifact_root": "output/runs/20260312T000000Z_MU_B_LEGACY/MU",
+    "ticker": "MU",
+    "reports_dir": "output/reports",
+    "snapshot_dir": "output/data/MU",
+    "migration_mode": "legacy_promotion"
+  },
+  "migration": {
+    "migrated_at": "2026-03-27T21:45:04Z",
+    "source_path": "output/data/MU/research-plan.json",
+    "notes": [
+      "Research plan promoted from legacy artifact namespace"
+    ]
+  }
+}

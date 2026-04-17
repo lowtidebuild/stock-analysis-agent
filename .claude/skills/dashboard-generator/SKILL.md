@@ -2,9 +2,9 @@
 
 **Role**: Step 8 — Generate the Mode C HTML dashboard from `analysis-result.json`.
 **Triggered by**: CLAUDE.md when `output_mode = "C"` after Step 7 (Analyst Agent completes analysis)
-**Reads**: `output/analysis-result.json`, `references/html-template.md`, `references/color-system.md`
+**Reads**: run-local `analysis-result.json`, `references/html-template.md`, `references/color-system.md`
 **Writes**: `output/reports/{ticker}_C_{lang}_{YYYY-MM-DD}.html`
-**References**: `html-template.md`, `color-system.md`
+**References**: `html-template.md`, `color-system.md`, `scripts/render-dashboard.py`
 
 ---
 
@@ -15,12 +15,12 @@
 Load in this order:
 1. Read `references/html-template.md` — complete HTML skeleton with all 11 sections
 2. Read `references/color-system.md` — Tailwind CSS classes and Chart.js color configs
-3. Read `output/analysis-result.json` — analysis output from Analyst Agent
-4. Verify all required sections are present in `analysis-result.json`
+3. Read run-local `analysis-result.json` — analysis output from Analyst Agent
+4. Verify all required sections are present in run-local `analysis-result.json`
 
 ### Step 8.2 — Compute Data Confidence Indicator
 
-From `output/analysis-result.json`, count the `data_quality_used` grade distribution:
+From run-local `analysis-result.json`, count the `data_quality_used` grade distribution:
 
 ```
 Grade A count: {N}
@@ -217,6 +217,14 @@ Sections with all-null data: collapse the section with a note:
 3. Verify HTML is well-formed (all tags closed)
 4. Write to: `output/reports/{ticker}_C_{lang}_{YYYY-MM-DD}.html`
 5. Report path to user
+
+For scripted rerenders inside the critic patch loop, use:
+
+```bash
+python .claude/skills/dashboard-generator/scripts/render-dashboard.py \
+  --input output/runs/{run_id}/{ticker}/analysis-result.json \
+  --output output/reports/{ticker}_C_{lang}_{YYYY-MM-DD}.html
+```
 
 Language suffixes: `EN` or `KR`
 Example: `output/reports/AAPL_C_EN_2026-03-12.html`

@@ -1,0 +1,57 @@
+{
+  "ticker": "TSLA",
+  "company_name": "Tesla, Inc.",
+  "exchange": "NASDAQ",
+  "market": "US",
+  "data_mode": "standard",
+  "output_mode": "C",
+  "output_language": "ko",
+  "analysis_date": "2026-03-22",
+  "price_at_analysis": 370.0,
+  "price_day_change": null,
+  "price_day_change_pct": null,
+  "currency": "USD",
+  "rr_score": 1.87,
+  "verdict": "중립 (Neutral)",
+  "company_type": "Consumer/Automotive + Technology optionality",
+  "key_metrics": {
+    "market_cap": {"value": 1387500, "unit": "M USD", "grade": "B", "tag": "[Portal]"},
+    "pe_ratio": {"value": 366.08, "grade": "B", "tag": "[Calc]"},
+    "forward_pe": {"value": 178.67, "grade": "B", "tag": "[Portal]"},
+    "ev_ebitda": {"value": 129.35, "grade": "B", "tag": "[Calc]"},
+    "ps_ratio": {"value": 14.56, "grade": "B", "tag": "[Portal]"},
+    "fcf_yield": {"value": 0.45, "unit": "%", "grade": "B", "tag": "[Calc]"},
+    "gross_margin": {"value": 18.03, "unit": "%", "grade": "B", "tag": "[Calc]"},
+    "operating_margin": {"value": 4.59, "unit": "%", "grade": "B", "tag": "[Calc]"},
+    "revenue_growth_yoy": {"value": -2.93, "unit": "%", "grade": "B", "tag": "[Portal]"},
+    "net_cash": {"value": 29340, "unit": "M USD", "grade": "B", "tag": "[Calc]"}
+  },
+  "scenarios": {
+    "bull": {
+      "target": 550,
+      "return_pct": 48.6,
+      "probability": 0.25,
+      "key_assumption": "로보택시 7개+ 도시 확장 성공, Cybercab 양산 H2 2026 시작, FSD 유럽 규제 승인, 에너지 사업 연 25%+ 성장 지속"
+    },
+    "base": {
+      "target": 420,
+      "return_pct": 13.5,
+      "probability": 0.50,
+      "key_assumption": "자동차 판매 완만 회복(+5-8% YoY), 에너지 사업 견조 성장, 로보택시는 파일럿 수준 유지"
+    },
+    "bear": {
+      "target": 220,
+      "return_pct": -40.5,
+      "probability": 0.25,
+      "key_assumption": "로보택시 규제 지연, BYD/신규 경쟁 심화로 자동차 마진 15% 이하, Musk 정치 활동 브랜드 훼손"
+    }
+  },
+  "top_risks": ["로보택시 상용화 지연", "EV 경쟁 심화 (BYD)", "Musk 리스크 (브랜드 훼손)"],
+  "upcoming_catalysts": [
+    {"date": "2026-04-01", "event_type": "product", "description": "Cybercab 양산 시작 (예정)", "significance": "high"},
+    {"date": "2026-04-22", "event_type": "earnings", "description": "Q1 2026 실적 발표", "significance": "high"},
+    {"date": "2026-H1", "event_type": "regulatory", "description": "로보택시 7개 신규 시장 확장", "significance": "high"},
+    {"date": "2026-H1", "event_type": "regulatory", "description": "FSD 유럽 규제 승인 (예상)", "significance": "medium"},
+    {"date": "2026-07-22", "event_type": "earnings", "description": "Q2 2026 실적 발표", "significance": "medium"}
+  ]
+}

@@ -2,7 +2,7 @@
 
 **Role**: Step 10 (post-analysis persistence) + Workflow 3 (portfolio & watchlist management)
 **Triggered by**: CLAUDE.md after Step 9 (quality check) for persistence; directly for Workflow 3 commands
-**Reads**: `output/analysis-result.json`, `output/watchlist.json`, `output/portfolio.json`
+**Reads**: run-local `analysis-result.json`, `output/watchlist.json`, `output/portfolio.json`
 **Writes**: Snapshot files, `output/watchlist.json`, `output/portfolio.json`, `output/catalyst-calendar.json`
 **References**: `references/snapshot-schema.md`, `references/watchlist-schema.md`, `references/portfolio-schema.md`
 
@@ -17,12 +17,18 @@ Run after Step 9 (quality check passes or flags applied).
 ```bash
 python .claude/skills/data-manager/scripts/snapshot-manager.py save \
   --ticker {ticker} \
-  --data-file output/analysis-result.json
+  --data-file output/runs/{run_id}/{ticker}/analysis-result.json
 ```
 
 Expected output: confirms `output/data/{ticker}/{ticker}_{date}_snapshot.json` created + `latest.json` updated.
 
-If script fails: manually copy `analysis-result.json` to the correct path (see `snapshot-schema.md` for required fields).
+If script fails because the input is not schema-compliant, run:
+
+```bash
+python .claude/skills/data-validator/scripts/validate-artifacts.py --artifact-type analysis-result --input output/runs/{run_id}/{ticker}/analysis-result.json
+```
+
+If legacy artifacts must be persisted temporarily, use `--skip-validation` explicitly and treat the snapshot as a compatibility fallback.
 
 ### Step 10.2 — Update Watchlist Entry (if ticker in watchlist)
 

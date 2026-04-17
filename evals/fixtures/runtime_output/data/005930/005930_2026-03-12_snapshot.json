@@ -1,0 +1,21 @@
+{
+  "ticker": "005930",
+  "company_name": "삼성전자",
+  "analysis_date": "2026-03-12",
+  "data_mode": "standard",
+  "output_mode": "B",
+  "price_at_analysis": 190000,
+  "currency": "KRW",
+  "market_cap_조원": 1238,
+  "per": 18.27,
+  "ev_ebitda": 8.78,
+  "pbr": 1.87,
+  "roe": 10.85,
+  "operating_margin": 13.07,
+  "revenue_ttm_조원": 333.6,
+  "rr_score": 2.60,
+  "verdict": "비중확대",
+  "analyst_target": 244095,
+  "workflow": 2,
+  "peer_tickers": ["000660", "MU"]
+}

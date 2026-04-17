@@ -2,9 +2,9 @@
 
 **Role**: Step 8 (Mode A) — Generate the Mode A Quick Briefing HTML file from analysis-result.json.
 **Triggered by**: CLAUDE.md after Analyst Agent (Step 7) completes for Mode A
-**Reads**: `output/analysis-result.json`
+**Reads**: run-local `analysis-result.json`
 **Writes**: `output/reports/{ticker}_A_{lang}_{YYYY-MM-DD}.html`
-**References**: `references/analysis-framework-briefing.md`, `references/html-template.md` (this directory)
+**References**: `references/analysis-framework-briefing.md`, `references/html-template.md` (this directory), `scripts/render-briefing.py`
 
 ---
 
@@ -12,7 +12,7 @@
 
 ### Step 8A.1 — Load Analysis Data
 
-Read `output/analysis-result.json`. Extract:
+Read run-local `analysis-result.json`. Extract:
 - `ticker`, `company_name`, `exchange`, `market`, `currency`
 - `price_at_analysis`, `price_day_change`, `price_day_change_pct`
 - `analysis_date`, `data_mode`, `output_language`
@@ -124,6 +124,14 @@ Disclaimer (same as Mode C/D) + data source tags + generation timestamp.
 ### Step 8A.3 — Write File
 
 Write to: `output/reports/{ticker}_A_{lang}_{YYYY-MM-DD}.html`
+
+For scripted rerenders inside the critic patch loop, use:
+
+```bash
+python .claude/skills/briefing-generator/scripts/render-briefing.py \
+  --input output/runs/{run_id}/{ticker}/analysis-result.json \
+  --output output/reports/{ticker}_A_{lang}_{YYYY-MM-DD}.html
+```
 
 ### Step 8A.4 — Chat Summary
 

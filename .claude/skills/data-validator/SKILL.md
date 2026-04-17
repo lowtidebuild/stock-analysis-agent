@@ -2,9 +2,9 @@
 
 **Role**: Step 5 — Validate all collected data through 3-layer fact-checking, assign confidence grades, and enforce the Blank-Over-Wrong principle.
 **Triggered by**: CLAUDE.md after Step 4 (web researcher)
-**Reads**: `output/data/{ticker}/tier1-raw.json` (Enhanced), `output/data/{ticker}/tier2-raw.json`, `references/validation-rules.md`, `references/confidence-grading.md`
-**Writes**: `output/validated-data.json`
-**References**: `validation-rules.md`, `confidence-grading.md`
+**Reads**: `output/data/{ticker}/tier1-raw.json` (Enhanced), `output/data/{ticker}/tier2-raw.json`, `references/validation-rules.md`, `references/confidence-grading.md`, `references/source-metadata-contract.md`
+**Writes**: `output/runs/{run_id}/{ticker}/validated-data.json`
+**References**: `validation-rules.md`, `confidence-grading.md`, `source-metadata-contract.md`
 
 ---
 
@@ -191,7 +191,7 @@ Using `confidence-grading.md` decision tree, assign final grade per metric:
 | C | Value with caveat | 단일 소스, 산술 일관성 있음 |
 | D | "—" | 검증 불가, 또는 >10% 불일치 미해결 |
 
-Source tags (`[Filing]`, `[Portal]`, `[KR-Portal]`, `[Calc]`, `[Est]`, `[Macro]`) indicate provenance only — see CLAUDE.md Section 11.
+Source tags (`[Filing]`, `[Company]`, `[Portal]`, `[KR-Portal]`, `[Calc]`, `[Est]`, `[Macro]`) indicate provenance only — see CLAUDE.md Section 11.
 
 **Korean stock rules**:
 - Financial statements (IS/BS/CF) from DART API → **Grade A**, tag `[Filing]`
@@ -204,7 +204,7 @@ Source tags (`[Filing]`, `[Portal]`, `[KR-Portal]`, `[Calc]`, `[Est]`, `[Macro]`
 
 ### Step 5.6 — Build Validated Data Object
 
-Write `output/validated-data.json`:
+Write `output/runs/{run_id}/{ticker}/validated-data.json`:
 
 ```json
 {
@@ -217,6 +217,9 @@ Write `output/validated-data.json`:
     "price_at_analysis": {
       "value": 175.50,
       "grade": "A",
+      "source_type": "filing",
+      "source_authority": "regulatory",
+      "display_tag": "[Filing]",
       "tag": "[Filing]",
       "sources": ["Financial Datasets MCP (SEC filing data)"],
       "notes": ""
@@ -224,6 +227,9 @@ Write `output/validated-data.json`:
     "market_cap": {
       "value": 2718000,
       "grade": "B",
+      "source_type": "calculated",
+      "source_authority": "derived",
+      "display_tag": "[Calc]",
       "tag": "[Calc]",
       "sources": ["Calculated from Filing price + shares", "Yahoo Finance"],
       "source_values": [2718000, 2710000],
@@ -233,6 +239,9 @@ Write `output/validated-data.json`:
     "pe_ratio": {
       "value": 28.0,
       "grade": "A",
+      "source_type": "calculated",
+      "source_authority": "derived",
+      "display_tag": "[Calc]",
       "tag": "[Calc]",
       "sources": ["Calculated from Filing price + net_income_ttm"],
       "notes": "Arithmetic consistent with Yahoo Finance reported 27.9x"
@@ -240,6 +249,9 @@ Write `output/validated-data.json`:
     "revenue_ttm": {
       "value": 395000,
       "grade": "A",
+      "source_type": "filing",
+      "source_authority": "regulatory",
+      "display_tag": "[Filing]",
       "tag": "[Filing]",
       "sources": ["Financial Datasets MCP income_statements (SEC filing data)"],
       "notes": "8 quarters of data available"
@@ -247,6 +259,9 @@ Write `output/validated-data.json`:
     "ev_ebitda": {
       "value": null,
       "grade": "D",
+      "source_type": null,
+      "source_authority": null,
+      "display_tag": null,
       "tag": null,
       "sources": [],
       "exclusion_reason": "EBITDA TTM could not be verified from available sources"
@@ -308,5 +323,5 @@ If `ratio-calculator.py` cannot be executed:
 - [ ] Confidence grades assigned (A/B/C/D) for all 10 key metrics
 - [ ] Korean stocks: dart-api-raw.json loaded (Grade A IS/BS/CF); fallback to Grade B if missing
 - [ ] Grade D metrics → value = null, exclusion_reason filled
-- [ ] `output/validated-data.json` written
+- [ ] run-local `validated-data.json` written
 - [ ] Validation summary printed

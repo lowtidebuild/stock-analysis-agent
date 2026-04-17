@@ -1,0 +1,46 @@
+{
+  "ticker": "NVDA",
+  "market": "US",
+  "data_mode": "standard",
+  "company_type": "Technology/Semiconductor",
+  "company_type_confidence": "HIGH",
+  "output_mode": "A",
+  "output_language": "en",
+  "analysis_date": "2026-03-13",
+  "peer_tickers": [
+    "AMD",
+    "AVGO",
+    "INTC",
+    "QCOM",
+    "TSM"
+  ],
+  "analysis_framework_path": "references/analysis-framework-briefing.md",
+  "tier1_calls": [],
+  "tier1_fmp_calls": [],
+  "tier2_searches": [
+    "\"NVDA\" stock price market cap current 2026",
+    "\"NVDA\" latest quarterly earnings revenue EPS 2026",
+    "\"NVDA\" P/E EV/EBITDA financial ratios",
+    "\"NVDA\" analyst price target consensus buy hold sell",
+    "\"NVDA\" news catalyst 2026",
+    "\"NVDA\" competitors AMD AVGO sector comparison",
+    "\"NVDA\" Nvidia earnings call transcript guidance 2026",
+    "\"NVDA\" recent news developments last 90 days"
+  ],
+  "tier2_fetches": [],
+  "run_context": {
+    "run_id": "20260313T000000Z_NVDA_A_LEGACY",
+    "artifact_root": "output/runs/20260313T000000Z_NVDA_A_LEGACY/NVDA",
+    "ticker": "NVDA",
+    "reports_dir": "output/reports",
+    "snapshot_dir": "output/data/NVDA",
+    "migration_mode": "legacy_promotion"
+  },
+  "migration": {
+    "migrated_at": "2026-03-27T21:45:04Z",
+    "source_path": "output/research-plan.json",
+    "notes": [
+      "Research plan promoted from legacy artifact namespace"
+    ]
+  }
+}

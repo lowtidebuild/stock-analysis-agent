@@ -1,0 +1,245 @@
+{
+  "ticker": "NVDA",
+  "market": "US",
+  "data_mode": "standard",
+  "validation_timestamp": "2026-03-13T10:05:00Z",
+  "overall_grade": "B",
+  "validated_metrics": {
+    "price_at_analysis": {
+      "value": 186.03,
+      "currency": "USD",
+      "date": "2026-03-11",
+      "grade": "B",
+      "tag": "[Portal]",
+      "sources": [
+        "MacroTrends",
+        "StockAnalysis"
+      ],
+      "notes": "Two portals confirm same closing price",
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    },
+    "market_cap": {
+      "value": 4490000,
+      "unit": "millions_usd",
+      "grade": "B",
+      "tag": "[Portal]",
+      "sources": [
+        "MacroTrends",
+        "Capital.com",
+        "CompaniesMarketCap"
+      ],
+      "source_values": [
+        4490000,
+        4490000
+      ],
+      "difference_pct": 0.0,
+      "notes": "Multiple sources agree. Calc check: 186.03 × ~24.1B shares ≈ $4.48T — consistent",
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    },
+    "revenue_ttm": {
+      "value": 215900,
+      "unit": "millions_usd",
+      "grade": "A",
+      "tag": "[Filing]",
+      "sources": [
+        "Nvidia Newsroom (official press release)",
+        "StockTitan",
+        "CNBC"
+      ],
+      "notes": "FY2026 full-year revenue from official earnings release",
+      "source_type": "filing",
+      "source_authority": "regulatory",
+      "display_tag": "[Filing]",
+      "approximate": false
+    },
+    "revenue_q4_fy2026": {
+      "value": 68100,
+      "unit": "millions_usd",
+      "grade": "A",
+      "tag": "[Filing]",
+      "sources": [
+        "Nvidia Newsroom",
+        "CNBC"
+      ],
+      "notes": "Q4 FY2026 revenue from official earnings release. +73% YoY, +20% QoQ",
+      "source_type": "filing",
+      "source_authority": "regulatory",
+      "display_tag": "[Filing]",
+      "approximate": false
+    },
+    "eps_q4_adjusted": {
+      "value": 1.62,
+      "grade": "B",
+      "tag": "[Portal]",
+      "sources": [
+        "CNBC"
+      ],
+      "notes": "Adjusted EPS, beat estimate of $1.53",
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    },
+    "eps_ttm_implied": {
+      "value": 4.93,
+      "grade": "B",
+      "tag": "[Calc]",
+      "sources": [
+        "Calculated: price $186.03 / trailing P/E 37.71"
+      ],
+      "notes": "Derived from trailing P/E. Consistent across StockAnalysis, Yahoo Finance, FinanceCharts",
+      "source_type": "calculated",
+      "source_authority": "derived",
+      "display_tag": "[Calc]",
+      "approximate": false
+    },
+    "pe_trailing": {
+      "value": 37.71,
+      "grade": "B",
+      "tag": "[Portal]",
+      "sources": [
+        "StockAnalysis",
+        "Yahoo Finance",
+        "FinanceCharts"
+      ],
+      "source_values": [
+        37.71,
+        37.97,
+        37.28
+      ],
+      "difference_pct": 1.8,
+      "notes": "Three sources agree within 2% — slight timing differences in TTM calculation",
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    },
+    "pe_forward": {
+      "value": 22.4,
+      "grade": "B",
+      "tag": "[Portal]",
+      "sources": [
+        "StockAnalysis",
+        "GuruFocus"
+      ],
+      "source_values": [
+        22.4,
+        22.63
+      ],
+      "difference_pct": 1.0,
+      "notes": "Two sources agree within 1%. Below semiconductor industry median of 28.88",
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    },
+    "ev_ebitda": {
+      "value": 37.46,
+      "grade": "C",
+      "tag": "[Portal]",
+      "sources": [
+        "ValueInvesting.io"
+      ],
+      "notes": "Single source. Second source shows 33.31 (>10% difference) — using higher value with caveat",
+      "source_type": "portal_global",
+      "source_authority": "market_portal",
+      "display_tag": "[Portal]",
+      "approximate": false
+    },
+    "data_center_revenue_q4": {
+      "value": 62300,
+      "unit": "millions_usd",
+      "grade": "A",
+      "tag": "[Filing]",
+      "sources": [
+        "CNBC (from earnings release)",
+        "Nvidia Newsroom"
+      ],
+      "notes": "91.5% of total Q4 revenue. +75% YoY",
+      "source_type": "filing",
+      "source_authority": "regulatory",
+      "display_tag": "[Filing]",
+      "approximate": false
+    },
+    "q1_fy2027_guidance": {
+      "value": 78000,
+      "unit": "millions_usd",
+      "grade": "A",
+      "tag": "[Filing]",
+      "sources": [
+        "Nvidia Q4 FY2026 earnings call",
+        "Nvidia Newsroom"
+      ],
+      "notes": "Revenue guidance $78B ±2%, significantly above consensus $72.6B",
+      "source_type": "filing",
+      "source_authority": "regulatory",
+      "display_tag": "[Filing]",
+      "approximate": false
+    },
+    "analyst_consensus": {
+      "rating": "Strong Buy",
+      "avg_target": 263.29,
+      "low_target": 100,
+      "high_target": 360,
+      "total_analysts": 38,
+      "implied_upside": 0.4263,
+      "grade": "B",
+      "tag": "[Est]",
+      "sources": [
+        "MarketBeat",
+        "StockAnalysis",
+        "Public.com"
+      ],
+      "notes": "59 Buy, 4 Hold, 1 Sell across broader coverage",
+      "source_type": "estimate",
+      "source_authority": "sell_side",
+      "display_tag": "[Est]",
+      "approximate": false
+    }
+  },
+  "grade_summary": {
+    "A": 4,
+    "B": 7,
+    "C": 1,
+    "D": 0
+  },
+  "exclusions": [],
+  "arithmetic_inconsistencies": [],
+  "sanity_alerts": [
+    "Revenue YoY growth 65% — exceptionally high but consistent with AI infrastructure demand cycle. No merger-related anomaly.",
+    "Data center 91% of revenue — extreme segment concentration. Verified from official filings."
+  ],
+  "run_context": {
+    "run_id": "20260313T000000Z_NVDA_A_LEGACY",
+    "artifact_root": "output/runs/20260313T000000Z_NVDA_A_LEGACY/NVDA",
+    "ticker": "NVDA",
+    "reports_dir": "output/reports",
+    "snapshot_dir": "output/data/NVDA",
+    "migration_mode": "legacy_promotion"
+  },
+  "migration": {
+    "migrated_at": "2026-03-27T21:45:04Z",
+    "source_path": "output/validated-data.json",
+    "notes": [
+      "Validated metrics normalized to canonical source metadata contract",
+      "price_at_analysis: inferred source_type=portal_global",
+      "market_cap: inferred source_type=portal_global",
+      "revenue_ttm: inferred source_type=filing",
+      "revenue_q4_fy2026: inferred source_type=filing",
+      "eps_q4_adjusted: inferred source_type=portal_global",
+      "eps_ttm_implied: inferred source_type=calculated",
+      "pe_trailing: inferred source_type=portal_global",
+      "pe_forward: inferred source_type=portal_global",
+      "ev_ebitda: inferred source_type=portal_global",
+      "data_center_revenue_q4: inferred source_type=filing",
+      "q1_fy2027_guidance: inferred source_type=filing",
+      "analyst_consensus: inferred source_type=estimate"
+    ]
+  }
+}

@@ -1,0 +1,334 @@
+{
+  "cases": [
+    {
+      "id": "aapl_snapshot_roundtrip_preserves_analysis_result",
+      "kind": "comparison",
+      "left": {
+        "path": "output/runs/20260328T000000Z_AAPL_C/AAPL/analysis-result.json"
+      },
+      "right": {
+        "path": "output/test-snapshots/AAPL/AAPL_2026-03-28_snapshot.json"
+      },
+      "expect_valid": true,
+      "assertions": {
+        "left_required_paths": [
+          "run_context.run_id",
+          "key_metrics.market_cap.value",
+          "scenarios.base.target"
+        ],
+        "right_required_paths": [
+          "snapshot_saved_at",
+          "snapshot_source_artifact",
+          "run_context.run_id"
+        ],
+        "path_pairs_equal": [
+          {
+            "left": "ticker",
+            "right": "ticker"
+          },
+          {
+            "left": "analysis_date",
+            "right": "analysis_date"
+          },
+          {
+            "left": "verdict",
+            "right": "verdict"
+          },
+          {
+            "left": "scenarios.base.target",
+            "right": "scenarios.base.target"
+          },
+          {
+            "left": "key_metrics.market_cap.display_tag",
+            "right": "key_metrics.market_cap.display_tag"
+          }
+        ],
+        "numeric_pairs_close": [
+          {
+            "left": "price_at_analysis",
+            "right": "price_at_analysis",
+            "tolerance": 0.0001
+          },
+          {
+            "left": "rr_score",
+            "right": "rr_score",
+            "tolerance": 0.0001
+          },
+          {
+            "left": "key_metrics.market_cap.value",
+            "right": "key_metrics.market_cap.value",
+            "tolerance": 0.0001
+          }
+        ]
+      }
+    },
+    {
+      "id": "aapl_delta_fixture_reports_expected_change",
+      "kind": "delta",
+      "ticker": "AAPL",
+      "old_date": "2026-03-21",
+      "new_date": "latest",
+      "data_root": "output/test-snapshots",
+      "expect_valid": true,
+      "assertions": {
+        "equals": {
+          "ticker": "AAPL",
+          "old_date": "2026-03-21",
+          "new_date": "2026-03-28",
+          "verdict_change.changed": false,
+          "scenario_changes.base.old_target": 200,
+          "scenario_changes.base.new_target": 210
+        },
+        "numeric_ranges": [
+          {
+            "path": "elapsed_days",
+            "min": 7,
+            "max": 7
+          },
+          {
+            "path": "price_change.pct",
+            "min": 6.1,
+            "max": 6.2
+          },
+          {
+            "path": "rr_score_change.old",
+            "min": 2.1,
+            "max": 2.11
+          },
+          {
+            "path": "rr_score_change.new",
+            "min": 2.52,
+            "max": 2.52
+          }
+        ],
+        "list_lengths": [
+          {
+            "path": "risk_changes.new_risks",
+            "equals": 1
+          }
+        ],
+        "contains": [
+          {
+            "path": "risk_changes.new_risks",
+            "value": "Regulatory pressure on App Store economics"
+          }
+        ]
+      }
+    },
+    {
+      "id": "legacy_nvda_snapshot_core_values_preserved",
+      "kind": "comparison",
+      "left": {
+        "path": "output/runs/20260313T000000Z_NVDA_A_LEGACY/NVDA/analysis-result.json"
+      },
+      "right": {
+        "path": "output/data/NVDA/NVDA_2026-03-13_snapshot.json"
+      },
+      "expect_valid": true,
+      "assertions": {
+        "path_pairs_equal": [
+          {
+            "left": "ticker",
+            "right": "ticker"
+          },
+          {
+            "left": "analysis_date",
+            "right": "analysis_date"
+          },
+          {
+            "left": "verdict",
+            "right": "verdict"
+          },
+          {
+            "left": "scenarios.base.target",
+            "right": "scenarios.base.target"
+          }
+        ],
+        "numeric_pairs_close": [
+          {
+            "left": "price_at_analysis",
+            "right": "price_at_analysis",
+            "tolerance": 0.0001
+          },
+          {
+            "left": "rr_score",
+            "right": "rr_score",
+            "tolerance": 0.0001
+          },
+          {
+            "left": "key_metrics.pe_forward.value",
+            "right": "key_metrics.pe_forward",
+            "tolerance": 0.0001
+          },
+          {
+            "left": "key_metrics.ev_ebitda.value",
+            "right": "key_metrics.ev_ebitda",
+            "tolerance": 0.0001
+          }
+        ]
+      }
+    },
+    {
+      "id": "legacy_005930_snapshot_core_values_preserved",
+      "kind": "comparison",
+      "left": {
+        "path": "output/runs/20260312T000000Z_005930_B_LEGACY/005930/analysis-result.json"
+      },
+      "right": {
+        "path": "output/data/005930/005930_2026-03-12_snapshot.json"
+      },
+      "expect_valid": true,
+      "assertions": {
+        "path_pairs_equal": [
+          {
+            "left": "ticker",
+            "right": "ticker"
+          },
+          {
+            "left": "analysis_date",
+            "right": "analysis_date"
+          },
+          {
+            "left": "verdict",
+            "right": "verdict"
+          }
+        ],
+        "numeric_pairs_close": [
+          {
+            "left": "price_at_analysis",
+            "right": "price_at_analysis",
+            "tolerance": 0.0001
+          },
+          {
+            "left": "rr_score",
+            "right": "rr_score",
+            "tolerance": 0.0001
+          },
+          {
+            "left": "key_metrics.market_cap.value",
+            "right": "market_cap_조원",
+            "tolerance": 0.0001
+          },
+          {
+            "left": "key_metrics.ev_ebitda.value",
+            "right": "ev_ebitda",
+            "tolerance": 0.0001
+          },
+          {
+            "left": "scenarios.base.target",
+            "right": "analyst_target",
+            "tolerance": 0.0001
+          }
+        ]
+      }
+    },
+    {
+      "id": "legacy_000660_snapshot_core_values_preserved",
+      "kind": "comparison",
+      "left": {
+        "path": "output/runs/20260312T000000Z_000660_B_LEGACY/000660/analysis-result.json"
+      },
+      "right": {
+        "path": "output/data/000660/000660_2026-03-12_snapshot.json"
+      },
+      "expect_valid": true,
+      "assertions": {
+        "path_pairs_equal": [
+          {
+            "left": "ticker",
+            "right": "ticker"
+          },
+          {
+            "left": "analysis_date",
+            "right": "analysis_date"
+          },
+          {
+            "left": "verdict",
+            "right": "verdict"
+          }
+        ],
+        "numeric_pairs_close": [
+          {
+            "left": "price_at_analysis",
+            "right": "price_at_analysis",
+            "tolerance": 0.0001
+          },
+          {
+            "left": "rr_score",
+            "right": "rr_score",
+            "tolerance": 0.0001
+          },
+          {
+            "left": "key_metrics.market_cap.value",
+            "right": "market_cap_조원",
+            "tolerance": 0.0001
+          },
+          {
+            "left": "key_metrics.ev_ebitda.value",
+            "right": "ev_ebitda",
+            "tolerance": 0.0001
+          },
+          {
+            "left": "scenarios.base.target",
+            "right": "analyst_target",
+            "tolerance": 0.0001
+          }
+        ]
+      }
+    },
+    {
+      "id": "legacy_mu_snapshot_core_values_preserved",
+      "kind": "comparison",
+      "left": {
+        "path": "output/runs/20260312T000000Z_MU_B_LEGACY/MU/analysis-result.json"
+      },
+      "right": {
+        "path": "output/data/MU/MU_2026-03-12_snapshot.json"
+      },
+      "expect_valid": true,
+      "assertions": {
+        "path_pairs_equal": [
+          {
+            "left": "ticker",
+            "right": "ticker"
+          },
+          {
+            "left": "analysis_date",
+            "right": "analysis_date"
+          },
+          {
+            "left": "verdict",
+            "right": "verdict"
+          }
+        ],
+        "numeric_pairs_close": [
+          {
+            "left": "price_at_analysis",
+            "right": "price_at_analysis",
+            "tolerance": 0.0001
+          },
+          {
+            "left": "rr_score",
+            "right": "rr_score",
+            "tolerance": 0.0001
+          },
+          {
+            "left": "key_metrics.market_cap.value",
+            "right": "market_cap_M_usd",
+            "tolerance": 0.0001
+          },
+          {
+            "left": "key_metrics.ev_ebitda.value",
+            "right": "ev_ebitda",
+            "tolerance": 0.0001
+          },
+          {
+            "left": "scenarios.base.target",
+            "right": "analyst_target",
+            "tolerance": 0.0001
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "cases": [
+    {
+      "id": "patch_loop_result_valid_contract",
+      "kind": "artifact",
+      "path": "evals/fixtures/patch-loop-result-valid.json",
+      "artifact_type": "patch-loop-result",
+      "expect_valid": true,
+      "assertions": {
+        "equals": {
+          "ticker": "AAPL",
+          "output_mode": "C",
+          "render.status": "rendered",
+          "recheck.status": "applied",
+          "next_patch_plan.ready_for_redelivery": true,
+          "quality_gate.delivery_gate_result": "PASS",
+          "quality_gate.delivery_ready": true
+        },
+        "required_paths": [
+          "run_context.run_id",
+          "render.report_output_path",
+          "recheck.recheck_payload_path",
+          "next_patch_plan.path"
+        ]
+      }
+    },
+    {
+      "id": "patch_loop_result_invalid_state_is_rejected",
+      "kind": "artifact",
+      "path": "evals/fixtures/patch-loop-result-invalid.json",
+      "artifact_type": "patch-loop-result",
+      "expect_valid": false,
+      "required_error_substrings": [
+        "$.render.status",
+        "$.recheck.quality_report_updated",
+        "$.recheck.remaining_fail_count",
+        "$.next_patch_plan.pending_fix_count",
+        "$.next_patch_plan.loop_state",
+        "$.quality_gate.delivery_ready"
+      ]
+    },
+    {
+      "id": "patch_loop_result_nvda_mode_a_valid_contract",
+      "kind": "artifact",
+      "path": "evals/fixtures/patch-loop-result-nvda-valid.json",
+      "artifact_type": "patch-loop-result",
+      "expect_valid": true,
+      "assertions": {
+        "equals": {
+          "ticker": "NVDA",
+          "output_mode": "A",
+          "render.engine": "briefing-generator",
+          "render.status": "rendered",
+          "quality_gate.delivery_gate_result": "PASS",
+          "quality_gate.delivery_ready": true
+        },
+        "required_paths": [
+          "render.report_output_path",
+          "recheck.recheck_payload_path"
+        ]
+      }
+    },
+    {
+      "id": "patch_loop_result_005930_mode_b_rendered_with_flags",
+      "kind": "artifact",
+      "path": "evals/fixtures/patch-loop-result-005930-valid.json",
+      "artifact_type": "patch-loop-result",
+      "expect_valid": true,
+      "assertions": {
+        "equals": {
+          "ticker": "005930",
+          "output_mode": "B",
+          "render.engine": "comparison-generator",
+          "render.status": "rendered",
+          "quality_gate.overall_result": "PASS_WITH_FLAGS",
+          "quality_gate.delivery_gate_result": "PASS",
+          "quality_gate.delivery_ready": true
+        },
+        "required_paths": [
+          "render.report_output_path",
+          "recheck.recheck_payload_path",
+          "next_patch_plan.path"
+        ]
+      }
+    }
+  ]
+}

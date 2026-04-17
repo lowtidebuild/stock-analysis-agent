@@ -19,7 +19,13 @@ from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-BASE_DIR = Path(__file__).resolve().parents[5]
+THIS_FILE = Path(__file__).resolve()
+BASE_DIR = THIS_FILE.parents[4]
+sys.path.insert(0, str(BASE_DIR))
+
+from tools.analysis_contract import find_repo_root  # noqa: E402
+
+BASE_DIR = find_repo_root(__file__)
 WATCHLIST_PATH = BASE_DIR / "output" / "watchlist.json"
 
 

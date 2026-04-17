@@ -1,0 +1,42 @@
+{
+  "ticker": "NWSA",
+  "company": "News Corporation Class A",
+  "market": "US",
+  "data_mode": "standard",
+  "validation_timestamp": "2026-03-12T10:00:00Z",
+  "overall_grade": "B",
+  "validated_metrics": {
+    "price_at_analysis": {"value": 24.03, "grade": "B", "tag": "[Web]", "sources": ["StockAnalysis", "Public.com"]},
+    "market_cap_m": {"value": 13980, "grade": "B", "tag": "[≈]", "sources": ["Public.com", "Yahoo Finance"]},
+    "pe_ttm": {"value": 14.89, "grade": "C", "tag": "[1S]", "sources": ["StockAnalysis"], "notes": "GAAP EPS includes non-recurring Foxtel divestiture gains; normalized P/E estimated ~24x"},
+    "ev_ebitda": {"value": 12.16, "grade": "C", "tag": "[1S]", "sources": ["valueinvesting.io"], "notes": "Alternate figure 15.57 also seen; >5% divergence"},
+    "pb_ratio": {"value": null, "grade": "D", "tag": "[Unverified]", "exclusion_reason": "Not sourced from web searches"},
+    "revenue_ttm_m": {"value": 8620, "grade": "B", "tag": "[Web]", "sources": ["StockAnalysis"], "notes": "TTM ~$8.62B; FY2025 (Jun) = $8.5B"},
+    "revenue_growth_yoy_pct": {"value": 2.4, "grade": "B", "tag": "[≈]", "sources": ["Multiple sources confirm 2-2.4% YoY"]},
+    "eps_ttm": {"value": 2.07, "grade": "B", "tag": "[≈]", "sources": ["10-K SEC Filing", "Yahoo Finance"]},
+    "eps_growth_yoy_pct": {"value": null, "grade": "D", "tag": "[Unverified]", "exclusion_reason": "Net income +71% YoY includes Foxtel divestiture gains — not organic"},
+    "gross_margin_pct": {"value": 56.19, "grade": "C", "tag": "[1S]", "sources": ["MacroTrends"]},
+    "operating_margin_pct": {"value": 10.3, "grade": "C", "tag": "[1S]", "sources": ["Web"], "notes": "Two-year avg; quarterly variation significant"},
+    "net_margin_pct": {"value": 14.0, "grade": "C", "tag": "[Web]", "sources": ["Web"], "notes": "FY2025; includes non-recurring gains"},
+    "fcf_ttm_m": {"value": 571, "grade": "B", "tag": "[≈]", "sources": ["10-K", "Earnings Call"]},
+    "fcf_yield_pct": {"value": 4.08, "grade": "C", "tag": "[Calculated]"},
+    "roe_pct": {"value": 13.5, "grade": "C", "tag": "[1S]", "sources": ["GuruFocus"]},
+    "net_debt_ebitda": {"value": -0.36, "grade": "C", "tag": "[Calculated]", "notes": "Net cash: $2.4B cash - $1.9B LTD = $500M net cash; Seg EBITDA $1.4B"},
+    "dividend_yield_pct": {"value": 0.73, "grade": "B", "tag": "[≈]", "sources": ["Multiple sources"]},
+    "diluted_shares_m": {"value": 552, "grade": "C", "tag": "[Web]", "sources": ["GuruFocus"]},
+    "52w_high": {"value": 31.61, "grade": "B", "tag": "[≈]"},
+    "52w_low": {"value": 22.20, "grade": "B", "tag": "[≈]"}
+  },
+  "exclusions": [
+    {"metric": "pb_ratio", "reason": "Not sourced from web searches", "display": "—"},
+    {"metric": "eps_growth_yoy_pct", "reason": "Non-recurring gains distort YoY comparison", "display": "—"}
+  ],
+  "grade_summary": {"A": 0, "B": 8, "C": 10, "D": 2},
+  "analyst_consensus": {"rating": "Hold", "buy": 4, "hold": 2, "sell": 1, "avg_pt": 37.02},
+  "catalysts": [
+    "AI content licensing deals (OpenAI + Meta ~$50M+/yr)",
+    "Q2 FY2026 beat: Revenue +6% YoY, Segment EBITDA +9%",
+    "$1B share repurchase program ($172M in Q2 FY2026)"
+  ],
+  "notes": ["Fiscal year ends June 30", "FY2025 net income includes Foxtel divestiture gains", "95% of profit from Dow Jones + Digital Real Estate + HarperCollins"]
+}

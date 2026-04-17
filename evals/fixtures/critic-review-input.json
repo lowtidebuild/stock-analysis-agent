@@ -1,0 +1,29 @@
+{
+  "critic_review": {
+    "reviewer": "critic-agent",
+    "review_timestamp": "2026-03-28T01:20:00Z",
+    "overall": "FAIL",
+    "items": [
+      {
+        "item": "generic_test",
+        "status": "PASS",
+        "section": "Section 4 — Variant View",
+        "notes": "Company-specific evidence is cited."
+      },
+      {
+        "item": "mechanism_test",
+        "status": "FAIL",
+        "section": "Section 5 — Precision Risk",
+        "problem": "Regulatory risk lacks quantified stock-price transmission.",
+        "fix": "Add the revenue, EBITDA, and multiple-compression chain for the downside case."
+      }
+    ]
+  },
+  "feedback_for_analyst": [
+    {
+      "section": "Section 5 — Precision Risk",
+      "problem": "Regulatory risk lacks quantified stock-price transmission.",
+      "fix": "Add the revenue, EBITDA, and multiple-compression chain for the downside case."
+    }
+  ]
+}

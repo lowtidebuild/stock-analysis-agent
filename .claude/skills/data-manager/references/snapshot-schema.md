@@ -2,6 +2,8 @@
 
 This file defines the complete JSON schema for a single-ticker analysis snapshot saved to `output/data/{ticker}/{ticker}_{YYYY-MM-DD}_snapshot.json`.
 
+Snapshots are persisted artifacts. The working pipeline artifacts live under `output/runs/{run_id}/{ticker}/...`, and the snapshot should preserve `run_context` from that run.
+
 ---
 
 ## Top-Level Fields
@@ -11,6 +13,11 @@ This file defines the complete JSON schema for a single-ticker analysis snapshot
   "ticker": "AAPL",
   "market": "US",
   "data_mode": "enhanced",
+  "run_context": {
+    "run_id": "20260328T000000Z_AAPL_C",
+    "artifact_root": "output/runs/20260328T000000Z_AAPL_C/AAPL",
+    "ticker": "AAPL"
+  },
   "analysis_date": "2026-03-12",
   "price_at_analysis": 175.50,
   "currency": "USD",
@@ -36,13 +43,14 @@ This file defines the complete JSON schema for a single-ticker analysis snapshot
 | `ticker` | string | YES | Canonical ticker (US: 1-5 uppercase alpha; KR: 6-digit numeric) |
 | `market` | string | YES | "US" or "KR" |
 | `data_mode` | string | YES | "enhanced" or "standard" |
+| `run_context` | object | YES | Run-local artifact metadata preserved from `output/runs/{run_id}/{ticker}` |
 | `analysis_date` | string | YES | ISO 8601 date YYYY-MM-DD |
 | `price_at_analysis` | number | YES | Price at time of analysis |
 | `currency` | string | YES | "USD" or "KRW" |
 | `output_mode` | string | YES | "0", "A", "B", "C", or "D" |
 | `company_type` | string | YES | One of: Technology/Platform, Industrial/Manufacturing, Financial, Biotech/Pharma, Consumer, Energy, Korean, Other |
-| `key_metrics` | object | YES | Core financial metrics (see below) |
-| `confidence_grades` | object | YES | A/B/C/D grade per metric key |
+| `key_metrics` | object | YES | Core financial metrics as metric-entry objects (`value`, `grade`, `source_type`, `display_tag`, `sources`) |
+| `confidence_grades` | object | NO | Legacy compatibility map only. Prefer per-metric `grade` in `key_metrics`. |
 | `variant_view_summary` | string | YES | 1-2 sentence summary of thesis |
 | `scenarios` | object | YES | bull/base/bear scenarios |
 | `rr_score` | number | YES | Risk/Reward Score (top-level for easy extraction) |
@@ -58,22 +66,25 @@ This file defines the complete JSON schema for a single-ticker analysis snapshot
 
 ```json
 "key_metrics": {
-  "market_cap": "2.7T",
-  "market_cap_raw": 2700000000000,
-  "pe_ratio": 28.5,
-  "ev_ebitda": 22.1,
-  "fcf_yield": 3.8,
-  "revenue_growth_yoy": 8.2,
-  "operating_margin": 31.5,
-  "gross_margin": 43.8,
-  "net_margin": 24.9,
-  "net_debt_ebitda": 0.3,
-  "revenue_ttm": 390000000000,
-  "ebitda_ttm": 130000000000,
-  "eps_ttm": 6.43,
-  "fcf_ttm": 99000000000,
-  "roe": 147.9,
-  "dividend_yield": 0.5
+  "market_cap": {
+    "value": 2717250,
+    "unit": "millions_usd",
+    "grade": "A",
+    "source_type": "calculated",
+    "source_authority": "derived",
+    "display_tag": "[Calc]",
+    "tag": "[Calc]",
+    "sources": ["Calculated from filing-backed price and shares"]
+  },
+  "pe_ratio": {
+    "value": 28.5,
+    "grade": "A",
+    "source_type": "calculated",
+    "source_authority": "derived",
+    "display_tag": "[Calc]",
+    "tag": "[Calc]",
+    "sources": ["Calculated from filing-backed price and EPS"]
+  }
 }
 ```
 
@@ -98,7 +109,7 @@ This file defines the complete JSON schema for a single-ticker analysis snapshot
 
 ---
 
-## `confidence_grades` Object
+## `confidence_grades` Object (Legacy Compatibility)
 
 One letter grade (A/B/C/D) per metric key, matching keys in `key_metrics`:
 
@@ -182,7 +193,7 @@ List of source tags actually used in this analysis:
 "data_sources_used": ["[Filing]", "[Calc]", "[Portal]", "[Est]"]
 ```
 
-Valid values: `[Filing]`, `[Portal]`, `[KR-Portal]`, `[Calc]`, `[Est]`
+Valid values: `[Filing]`, `[Company]`, `[Portal]`, `[KR-Portal]`, `[Calc]`, `[Est]`, `[Macro]`
 
 ---
 

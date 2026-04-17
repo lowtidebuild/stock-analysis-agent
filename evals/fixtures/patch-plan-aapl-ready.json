@@ -1,0 +1,19 @@
+{
+  "ticker": "AAPL",
+  "output_mode": "D",
+  "run_context": {
+    "run_id": "20260328T000000Z_AAPL_D_FIXTURE",
+    "artifact_root": "output/runs/20260328T000000Z_AAPL_D_FIXTURE/AAPL",
+    "ticker": "AAPL"
+  },
+  "quality_report_path": "evals/fixtures/quality-report-critic-recheck-valid.json",
+  "analysis_result_path": "output/runs/20260328T000000Z_AAPL_D_FIXTURE/AAPL/analysis-result.json",
+  "report_output_path": null,
+  "critic_overall": "PASS",
+  "current_recheck_count": 1,
+  "remaining_recheck_budget": 0,
+  "pending_fix_count": 0,
+  "ready_for_redelivery": true,
+  "loop_state": "ready_for_delivery",
+  "tasks": []
+}

@@ -1,0 +1,45 @@
+{
+  "ticker": "005930",
+  "output_mode": "B",
+  "run_context": {
+    "run_id": "20260312T000000Z_005930_B_LEGACY",
+    "artifact_root": "output/runs/20260312T000000Z_005930_B_LEGACY/005930",
+    "ticker": "005930",
+    "reports_dir": "output/reports",
+    "snapshot_dir": "output/data/005930",
+    "migration_mode": "legacy_promotion"
+  },
+  "quality_report_path": "/private/tmp/005930-quality-report-with-critic.json",
+  "analysis_result_path": "output/runs/20260312T000000Z_005930_B_LEGACY/005930/analysis-result.json",
+  "report_output_path": "output/reports/005930_000660_MU_B_KR_2026-03-12.html",
+  "critic_overall": "FAIL",
+  "current_recheck_count": 0,
+  "remaining_recheck_budget": 1,
+  "pending_fix_count": 1,
+  "ready_for_redelivery": false,
+  "loop_state": "patch_and_recheck",
+  "tasks": [
+    {
+      "task_id": "01_differentiator_specificity_test",
+      "priority": 1,
+      "source_item": "differentiator_specificity_test",
+      "section": "Section 6 — Key Differentiators",
+      "problem": "Key Differentiators lacks peer-specific catalyst/risk framing and concrete numbers.",
+      "requested_fix": "Add 2-3 differentiators that compare at least two peers with explicit upside, margin, or valuation numbers and tie Samsung's setup to a catalyst/risk pair.",
+      "analysis_targets": [
+        "top_risks",
+        "upcoming_catalysts",
+        "key_metrics",
+        "scenarios"
+      ],
+      "report_targets": [
+        "Section 6 — Key Differentiators"
+      ],
+      "edit_scope": "analysis_json_and_render",
+      "render_step_required": true,
+      "notes": [
+        "Patch only the failing section; preserve all previously passing critic items."
+      ]
+    }
+  ]
+}

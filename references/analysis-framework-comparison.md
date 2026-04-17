@@ -17,7 +17,7 @@ Mode B produces a comparative analysis of 2–5 peer companies side-by-side. The
 
 ## Required Inputs
 
-- `output/data/{ticker}/validated-data.json` for EACH ticker in the comparison
+- `output/runs/{run_id}/{ticker}/validated-data.json` for EACH ticker in the comparison
 - Current price for each ticker (Grade D price → exclude from ranking, note in output)
 - Company type identified for each ticker
 
@@ -132,9 +132,9 @@ Example differentiators:
 ## Multi-Ticker Data Management
 
 For Workflow 2 (peer comparison), each ticker's validated data is stored separately:
-- `output/data/{ticker}/validated-data.json`
+- `output/runs/{run_id}/{ticker}/validated-data.json`
 
-Do NOT use shared `output/validated-data.json` for multi-ticker analysis (prevents collision).
+Do NOT use a shared `output/validated-data.json` for multi-ticker analysis (prevents collision). Use run-local or per-ticker namespaced artifacts only.
 
 If a ticker was analyzed in the same session (session context):
 - Re-use the validated data already in memory — do not re-collect

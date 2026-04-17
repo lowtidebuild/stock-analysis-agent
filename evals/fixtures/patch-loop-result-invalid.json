@@ -1,0 +1,50 @@
+{
+  "ticker": "AAPL",
+  "output_mode": "C",
+  "run_context": {
+    "run_id": "20260328T000000Z_AAPL_C",
+    "ticker": "AAPL",
+    "artifact_root": "output/runs/20260328T000000Z_AAPL_C/AAPL"
+  },
+  "source_patch_plan_path": "evals/fixtures/patch-plan-aapl-needs-patch.json",
+  "analysis_patch_path": "evals/fixtures/analysis-patch-aapl-valid.json",
+  "analysis_result_path": "output/runs/20260328T000000Z_AAPL_C/AAPL/analysis-result.json",
+  "quality_report_path": "evals/fixtures/quality-report-critic-valid.json",
+  "render": {
+    "required": true,
+    "status": "not_requested",
+    "engine": null,
+    "report_output_path": null,
+    "notes": [
+      "This is intentionally inconsistent."
+    ]
+  },
+  "recheck": {
+    "status": "applied",
+    "critic_overall_before": "FAIL",
+    "critic_overall_after": "FAIL",
+    "remaining_fail_count": 0,
+    "quality_report_updated": false,
+    "recheck_payload_path": "evals/fixtures/critic-recheck-pass.json",
+    "remaining_fail_items": []
+  },
+  "next_patch_plan": {
+    "path": "evals/fixtures/patch-plan-aapl-needs-patch.json",
+    "pending_fix_count": 1,
+    "ready_for_redelivery": true,
+    "loop_state": "patch_and_recheck"
+  },
+  "quality_gate": {
+    "overall_result": "PASS_WITH_FLAGS",
+    "delivery_gate_result": "BLOCKED",
+    "critic_overall": "FAIL",
+    "blocking_items": [
+      "critic_review"
+    ],
+    "non_blocking_items": [],
+    "historical_only_items": [],
+    "delivery_ready": true
+  },
+  "completed_by": "patch-loop-orchestrator",
+  "completed_at": "2026-03-28T02:32:00Z"
+}

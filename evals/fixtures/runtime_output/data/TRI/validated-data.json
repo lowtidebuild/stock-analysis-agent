@@ -1,0 +1,40 @@
+{
+  "ticker": "TRI",
+  "company": "Thomson Reuters Corporation",
+  "market": "US",
+  "data_mode": "standard",
+  "validation_timestamp": "2026-03-12T10:00:00Z",
+  "overall_grade": "B",
+  "validated_metrics": {
+    "price_at_analysis": {"value": 103.70, "grade": "B", "tag": "[Web]", "sources": ["Yahoo Finance", "StockAnalysis"]},
+    "market_cap_m": {"value": 46060, "grade": "B", "tag": "[≈]", "sources": ["Yahoo Finance", "MarketWatch"]},
+    "pe_ttm": {"value": 31.52, "grade": "C", "tag": "[1S]", "sources": ["Yahoo Finance"], "notes": "Some sources cite 32.93-48.31; using Yahoo Finance figure at current price"},
+    "ev_ebitda": {"value": 27.99, "grade": "B", "tag": "[≈]", "sources": ["StockAnalysis", "GuruFocus"], "notes": "Two sources: 27.99 and 27.52 — within 5%"},
+    "pb_ratio": {"value": 3.91, "grade": "C", "tag": "[1S]", "sources": ["StockAnalysis"]},
+    "revenue_ttm_m": {"value": 7476, "grade": "B", "tag": "[≈]", "sources": ["Press Release", "Multiple web"], "notes": "FY2025 full-year revenue confirmed"},
+    "revenue_growth_yoy_pct": {"value": 3.0, "grade": "B", "tag": "[≈]", "sources": ["Press Release"], "notes": "Total +3%, organic +7%"},
+    "eps_ttm": {"value": 3.92, "grade": "B", "tag": "[≈]", "sources": ["Press Release", "Web"], "notes": "FY2025 adjusted EPS"},
+    "eps_growth_yoy_pct": {"value": 4.0, "grade": "C", "tag": "[1S]", "sources": ["Web"]},
+    "gross_margin_pct": {"value": 37.77, "grade": "C", "tag": "[1S]", "sources": ["Web"]},
+    "operating_margin_pct": {"value": 28.5, "grade": "C", "tag": "[1S]", "sources": ["Web"]},
+    "net_margin_pct": {"value": 19.8, "grade": "C", "tag": "[1S]", "sources": ["Web"]},
+    "fcf_ttm_m": {"value": 1950, "grade": "C", "tag": "[1S]", "sources": ["Web"], "notes": "FY2025 FCF $1.95B"},
+    "fcf_yield_pct": {"value": 4.23, "grade": "C", "tag": "[Calculated]", "sources": ["Calculated from Web inputs"]},
+    "roe_pct": {"value": 12.2, "grade": "B", "tag": "[≈]", "sources": ["Web: 12.2% and 12.48%"]},
+    "net_debt_ebitda": {"value": null, "grade": "D", "tag": "[Unverified]", "exclusion_reason": "Net debt/EBITDA not found from web sources"},
+    "dividend_yield_pct": {"value": 2.53, "grade": "B", "tag": "[≈]", "sources": ["Multiple web"]},
+    "diluted_shares_m": {"value": 449.5, "grade": "B", "tag": "[Web]", "sources": ["10-K FY2025"]},
+    "52w_high": {"value": 218.42, "grade": "B", "tag": "[≈]"},
+    "52w_low": {"value": 79.71, "grade": "B", "tag": "[≈]"}
+  },
+  "exclusions": [
+    {"metric": "net_debt_ebitda", "reason": "Not directly found in web searches", "display": "—"}
+  ],
+  "grade_summary": {"A": 0, "B": 12, "C": 7, "D": 1},
+  "analyst_consensus": {"rating": "Buy", "buy": 8, "hold": 1, "sell": 0, "avg_pt": 164.55},
+  "catalysts": [
+    "Anthropic partnership / AI agentic capabilities scaling",
+    "$600M share repurchase + $605M capital return",
+    "CFO transition (Mike Eastwood retiring May 2026)"
+  ]
+}

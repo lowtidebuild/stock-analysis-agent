@@ -1,0 +1,12 @@
+{
+  "reviewer": "critic-agent",
+  "review_timestamp": "2026-03-28T04:00:00Z",
+  "items": [
+    {
+      "item": "mechanism_test",
+      "status": "PASS",
+      "section": "Section 1 — Top Risk",
+      "notes": "Top risk now includes a clear event-to-revenue-to-margin-to-multiple chain."
+    }
+  ]
+}

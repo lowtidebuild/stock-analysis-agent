@@ -1,0 +1,23 @@
+{
+  "critic_review": {
+    "reviewer": "critic-agent",
+    "review_timestamp": "2026-03-28T03:50:00Z",
+    "overall": "FAIL",
+    "items": [
+      {
+        "item": "mechanism_test",
+        "status": "FAIL",
+        "section": "Section 1 — Top Risk",
+        "problem": "Top risk is missing a full causal chain from event to valuation impact.",
+        "fix": "Replace the top risk with a one-line chain that links AI server order pushout to revenue deceleration, margin pressure, and multiple compression."
+      }
+    ]
+  },
+  "feedback_for_analyst": [
+    {
+      "section": "Section 1 — Top Risk",
+      "problem": "Top risk is missing a full causal chain from event to valuation impact.",
+      "fix": "Replace the top risk with a one-line chain that links AI server order pushout to revenue deceleration, margin pressure, and multiple compression."
+    }
+  ]
+}

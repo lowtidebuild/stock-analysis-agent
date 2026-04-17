@@ -1,0 +1,42 @@
+{
+  "ticker": "005930",
+  "company_name": "삼성전자",
+  "market": "KR",
+  "data_mode": "standard",
+  "company_type": "Semiconductor/Memory",
+  "company_type_confidence": "HIGH",
+  "output_mode": "B",
+  "output_language": "ko",
+  "analysis_date": "2026-03-12",
+  "peer_tickers": [
+    "000660",
+    "MU"
+  ],
+  "analysis_framework_path": "references/analysis-framework-comparison.md",
+  "tier1_calls": [],
+  "tier2_searches": [
+    "\"삼성전자\" 2026 실적 매출 영업이익 반도체",
+    "\"삼성전자\" HBM 고대역폭메모리 점유율 2026",
+    "\"삼성전자\" 주가 목표가 애널리스트 컨센서스",
+    "\"005930\" PER EV/EBITDA 밸류에이션",
+    "\"삼성전자\" 파운드리 반도체 경쟁 TSMC 2026"
+  ],
+  "tier2_fetches": [
+    "https://finance.naver.com/item/main.naver?code=005930"
+  ],
+  "run_context": {
+    "run_id": "20260312T000000Z_005930_B_LEGACY",
+    "artifact_root": "output/runs/20260312T000000Z_005930_B_LEGACY/005930",
+    "ticker": "005930",
+    "reports_dir": "output/reports",
+    "snapshot_dir": "output/data/005930",
+    "migration_mode": "legacy_promotion"
+  },
+  "migration": {
+    "migrated_at": "2026-03-27T21:45:04Z",
+    "source_path": "output/data/005930/research-plan.json",
+    "notes": [
+      "Research plan promoted from legacy artifact namespace"
+    ]
+  }
+}

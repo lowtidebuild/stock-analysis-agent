@@ -1,0 +1,132 @@
+{
+  "cases": [
+    {
+      "id": "analysis_patch_aapl_valid_contract",
+      "kind": "artifact",
+      "path": "evals/fixtures/analysis-patch-aapl-valid.json",
+      "artifact_type": "analysis-patch",
+      "expect_valid": true,
+      "assertions": {
+        "equals": {
+          "ticker": "AAPL",
+          "output_mode": "C",
+          "render_required": true,
+          "preserve_untouched_sections": true
+        },
+        "contains": [
+          {
+            "path": "updated_paths",
+            "value": "$.sections.precision_risks"
+          }
+        ],
+        "required_paths": [
+          "updates[0].value[1].mechanism",
+          "run_context.run_id"
+        ]
+      }
+    },
+    {
+      "id": "analysis_patch_wrong_target_is_rejected",
+      "kind": "artifact",
+      "path": "evals/fixtures/analysis-patch-aapl-invalid.json",
+      "artifact_type": "analysis-patch",
+      "expect_valid": false,
+      "required_error_substrings": [
+        "$.updates[0].path"
+      ]
+    },
+    {
+      "id": "analysis_patch_ready_plan_rejects_new_updates",
+      "kind": "artifact",
+      "path": "evals/fixtures/analysis-patch-ready-invalid.json",
+      "artifact_type": "analysis-patch",
+      "expect_valid": false,
+      "required_error_substrings": [
+        "$.task_ids",
+        "$.updates: patch-plan is already ready_for_redelivery"
+      ]
+    },
+    {
+      "id": "analysis_patch_matches_patch_plan_identity",
+      "kind": "comparison",
+      "left": {
+        "path": "output/runs/20260328T000000Z_AAPL_C/AAPL/patch-plan.json"
+      },
+      "right": {
+        "path": "evals/fixtures/analysis-patch-aapl-valid.json"
+      },
+      "expect_valid": true,
+      "assertions": {
+        "path_pairs_equal": [
+          {
+            "left": "ticker",
+            "right": "ticker"
+          },
+          {
+            "left": "output_mode",
+            "right": "output_mode"
+          },
+          {
+            "left": "run_context.run_id",
+            "right": "run_context.run_id"
+          },
+          {
+            "left": "run_context.artifact_root",
+            "right": "run_context.artifact_root"
+          }
+        ]
+      }
+    },
+    {
+      "id": "analysis_patch_nvda_mode_a_valid_contract",
+      "kind": "artifact",
+      "path": "evals/fixtures/analysis-patch-nvda-valid.json",
+      "artifact_type": "analysis-patch",
+      "expect_valid": true,
+      "assertions": {
+        "equals": {
+          "ticker": "NVDA",
+          "output_mode": "A",
+          "render_required": true
+        },
+        "contains": [
+          {
+            "path": "updated_paths",
+            "value": "$.top_risks"
+          }
+        ],
+        "required_paths": [
+          "updates[0].value[0]"
+        ]
+      }
+    },
+    {
+      "id": "analysis_patch_005930_mode_b_valid_contract",
+      "kind": "artifact",
+      "path": "evals/fixtures/analysis-patch-005930-valid.json",
+      "artifact_type": "analysis-patch",
+      "expect_valid": true,
+      "assertions": {
+        "equals": {
+          "ticker": "005930",
+          "output_mode": "B",
+          "render_required": true
+        },
+        "contains": [
+          {
+            "path": "updated_paths",
+            "value": "$.top_risks"
+          },
+          {
+            "path": "updated_paths",
+            "value": "$.upcoming_catalysts"
+          }
+        ],
+        "required_paths": [
+          "updates[0].value[0]",
+          "updates[1].value[0].description"
+        ]
+      }
+    }
+  ]
+}

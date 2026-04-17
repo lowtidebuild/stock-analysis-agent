@@ -1,0 +1,117 @@
+{
+  "ticker": "AAPL",
+  "company_name": "Apple Inc.",
+  "market": "US",
+  "data_mode": "enhanced",
+  "output_mode": "C",
+  "analysis_date": "2026-03-21",
+  "price_at_analysis": 181.2,
+  "currency": "USD",
+  "run_context": {
+    "run_id": "20260321T000000Z_AAPL_C_FIXTURE",
+    "artifact_root": "output/runs/20260321T000000Z_AAPL_C_FIXTURE/AAPL",
+    "ticker": "AAPL"
+  },
+  "key_metrics": {
+    "market_cap": {
+      "value": 2791872,
+      "unit": "millions_usd",
+      "grade": "A",
+      "source_type": "calculated",
+      "source_authority": "derived",
+      "display_tag": "[Calc]",
+      "tag": "[Calc]",
+      "sources": [
+        "Fixture baseline from filing-backed price and diluted shares"
+      ]
+    },
+    "pe_ratio": {
+      "value": 26.63,
+      "grade": "A",
+      "source_type": "calculated",
+      "source_authority": "derived",
+      "display_tag": "[Calc]",
+      "tag": "[Calc]",
+      "sources": [
+        "Fixture baseline from filing-backed price and EPS"
+      ]
+    },
+    "fcf_yield": {
+      "value": 3.66,
+      "unit": "percent",
+      "grade": "A",
+      "source_type": "calculated",
+      "source_authority": "derived",
+      "display_tag": "[Calc]",
+      "tag": "[Calc]",
+      "sources": [
+        "Fixture baseline from filing-backed FCF and market cap"
+      ]
+    },
+    "revenue_growth_yoy": {
+      "value": 5.9,
+      "unit": "percent",
+      "grade": "A",
+      "source_type": "filing",
+      "source_authority": "regulatory",
+      "display_tag": "[Filing]",
+      "tag": "[Filing]",
+      "sources": [
+        "Fixture baseline from filing-backed revenue growth"
+      ]
+    },
+    "operating_margin": {
+      "value": 31.0,
+      "unit": "percent",
+      "grade": "A",
+      "source_type": "calculated",
+      "source_authority": "derived",
+      "display_tag": "[Calc]",
+      "tag": "[Calc]",
+      "sources": [
+        "Fixture baseline from filing-backed operating income and revenue"
+      ]
+    }
+  },
+  "scenarios": {
+    "bull": {
+      "target": 220,
+      "return_pct": 21.4,
+      "probability": 0.25,
+      "key_assumption": "Services attach improves modestly while AI features remain mostly free."
+    },
+    "base": {
+      "target": 200,
+      "return_pct": 10.4,
+      "probability": 0.5,
+      "key_assumption": "Replacement demand stays steady and Services continues mid-single-digit mix expansion."
+    },
+    "bear": {
+      "target": 145,
+      "return_pct": -20.0,
+      "probability": 0.25,
+      "key_assumption": "China softness and policy pressure offset ecosystem resilience."
+    }
+  },
+  "rr_score": 2.11,
+  "verdict": "Neutral",
+  "top_risks": [
+    "China demand slowdown",
+    "AI feature monetization lag"
+  ],
+  "upcoming_catalysts": [
+    {
+      "date": "2026-05-02",
+      "event_type": "earnings",
+      "description": "FY2Q 2026 earnings",
+      "significance": "high"
+    }
+  ],
+  "report_path": "output/reports/AAPL_C_EN_2026-03-21.html",
+  "snapshot_saved_at": "2026-03-21T00:00:00Z",
+  "snapshot_source_artifact": "eval-fixture",
+  "data_sources_used": [
+    "[Filing]",
+    "[Calc]"
+  ]
+}

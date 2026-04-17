@@ -1,0 +1,367 @@
+{
+  "cases": [
+    {
+      "id": "golden_nvda_legacy_run",
+      "kind": "run_dir",
+      "path": "output/runs/20260313T000000Z_NVDA_A_LEGACY",
+      "expect_valid": true,
+      "artifact_assertions": {
+        "run-manifest": {
+          "equals": {
+            "run_id": "20260313T000000Z_NVDA_A_LEGACY",
+            "tickers[0]": "NVDA",
+            "artifacts.NVDA.artifact_root": "output/runs/20260313T000000Z_NVDA_A_LEGACY/NVDA"
+          }
+        },
+        "research-plan": {
+          "equals": {
+            "ticker": "NVDA",
+            "output_mode": "A",
+            "analysis_framework_path": "references/analysis-framework-briefing.md",
+            "run_context.ticker": "NVDA"
+          },
+          "required_paths": [
+            "tier2_searches[0]",
+            "migration.notes[0]"
+          ]
+        },
+        "validated-data": {
+          "equals": {
+            "overall_grade": "B",
+            "validated_metrics.revenue_ttm.display_tag": "[Filing]",
+            "validated_metrics.analyst_consensus.display_tag": "[Est]",
+            "validated_metrics.market_cap.source_type": "portal_global",
+            "run_context.migration_mode": "legacy_promotion"
+          },
+          "numeric_ranges": [
+            {
+              "path": "validated_metrics.price_at_analysis.value",
+              "min": 180,
+              "max": 190
+            }
+          ],
+          "required_paths": [
+            "migration.notes[0]",
+            "validated_metrics.market_cap.sources[0]"
+          ]
+        },
+        "analysis-result": {
+          "equals": {
+            "output_mode": "A",
+            "verdict": "Overweight",
+            "scenarios.base.probability": 0.5,
+            "key_metrics.pe_forward.display_tag": "[Portal]"
+          },
+          "numeric_ranges": [
+            {
+              "path": "rr_score",
+              "min": 4.0,
+              "max": 4.5
+            },
+            {
+              "path": "scenarios.bull.target",
+              "min": 250,
+              "max": 270
+            }
+          ],
+          "required_paths": [
+            "report_path",
+            "scenarios.base.key_assumption"
+          ],
+          "contains": [
+            {
+              "path": "migration.notes",
+              "value": "Scenario placeholders were added only where the legacy sample omitted narrative assumptions or targets"
+            }
+          ]
+        },
+        "quality-report": {
+          "equals": {
+            "overall_result": "PASS",
+            "mode_a_simplified": true,
+            "items.semantic_consistency.status": "PASS",
+            "items.verdict_policy.status": "PASS",
+            "items.cross_artifact_consistency.status": "PASS",
+            "generated_by": "quality-report-builder"
+          }
+        }
+      }
+    },
+    {
+      "id": "golden_005930_legacy_run",
+      "kind": "run_dir",
+      "path": "output/runs/20260312T000000Z_005930_B_LEGACY",
+      "expect_valid": true,
+      "artifact_assertions": {
+        "research-plan": {
+          "equals": {
+            "ticker": "005930",
+            "market": "KR",
+            "output_mode": "B",
+            "analysis_framework_path": "references/analysis-framework-comparison.md"
+          }
+        },
+        "validated-data": {
+          "equals": {
+            "validated_metrics.price.display_tag": "[KR-Portal]",
+            "validated_metrics.market_cap.approximate": true,
+            "validated_metrics.revenue_ttm.display_tag": "[Filing]",
+            "validated_metrics.fcf_yield.display_tag": "[Calc]"
+          },
+          "numeric_ranges": [
+            {
+              "path": "validated_metrics.market_cap.value",
+              "min": 1200,
+              "max": 1300
+            },
+            {
+              "path": "validated_metrics.analyst_target.value",
+              "min": 240000,
+              "max": 245000
+            }
+          ],
+          "list_lengths": [
+            {
+              "path": "exclusions",
+              "equals": 0
+            }
+          ]
+        },
+        "analysis-result": {
+          "equals": {
+            "output_mode": "B",
+            "verdict": "비중확대",
+            "scenarios.base.target": 244095,
+            "key_metrics.revenue_ttm.display_tag": "[Filing]"
+          },
+          "numeric_ranges": [
+            {
+              "path": "rr_score",
+              "min": 2.5,
+              "max": 2.7
+            },
+            {
+              "path": "scenarios.base.return_pct",
+              "min": 28.4,
+              "max": 28.6
+            }
+          ],
+          "required_paths": [
+            "scenarios.base.key_assumption",
+            "migration.notes[0]"
+          ]
+        },
+        "quality-report": {
+          "equals": {
+            "overall_result": "PASS_WITH_FLAGS",
+            "items.legacy_migration.status": "PASS_WITH_FLAGS",
+            "items.contract_validation.status": "PASS",
+            "items.semantic_consistency.status": "PASS",
+            "items.verdict_policy.status": "PASS",
+            "items.cross_artifact_consistency.status": "PASS"
+          }
+        }
+      }
+    },
+    {
+      "id": "golden_mu_legacy_run",
+      "kind": "run_dir",
+      "path": "output/runs/20260312T000000Z_MU_B_LEGACY",
+      "expect_valid": true,
+      "artifact_assertions": {
+        "validated-data": {
+          "equals": {
+            "validated_metrics.price.display_tag": "[Portal]",
+            "validated_metrics.revenue_growth_yoy.display_tag": "[Calc]",
+            "validated_metrics.roa.display_tag": "[Portal]",
+            "validated_metrics.analyst_target.display_tag": "[Portal]"
+          },
+          "numeric_ranges": [
+            {
+              "path": "validated_metrics.price.value",
+              "min": 403,
+              "max": 404
+            },
+            {
+              "path": "validated_metrics.fcf_yield.value",
+              "min": 1.0,
+              "max": 1.1
+            }
+          ],
+          "list_lengths": [
+            {
+              "path": "exclusions",
+              "equals": 0
+            }
+          ]
+        },
+        "analysis-result": {
+          "equals": {
+            "output_mode": "B",
+            "verdict": "중립",
+            "scenarios.base.target": 438.44,
+            "key_metrics.fcf_yield.display_tag": "[Calc]"
+          },
+          "numeric_ranges": [
+            {
+              "path": "rr_score",
+              "min": 1.7,
+              "max": 1.9
+            },
+            {
+              "path": "scenarios.base.return_pct",
+              "min": 8.5,
+              "max": 8.7
+            }
+          ],
+          "required_paths": [
+            "scenarios.base.key_assumption",
+            "migration.notes[0]"
+          ]
+        },
+        "quality-report": {
+          "equals": {
+            "overall_result": "PASS_WITH_FLAGS",
+            "items.legacy_migration.status": "PASS_WITH_FLAGS",
+            "items.contract_validation.status": "PASS",
+            "items.semantic_consistency.status": "PASS",
+            "items.verdict_policy.status": "PASS",
+            "items.cross_artifact_consistency.status": "PASS"
+          }
+        }
+      }
+    },
+    {
+      "id": "golden_000660_legacy_run",
+      "kind": "run_dir",
+      "path": "output/runs/20260312T000000Z_000660_B_LEGACY",
+      "expect_valid": true,
+      "artifact_assertions": {
+        "validated-data": {
+          "equals": {
+            "validated_metrics.price.display_tag": "[KR-Portal]",
+            "validated_metrics.revenue_ttm.display_tag": "[Company]",
+            "validated_metrics.revenue_ttm.approximate": true,
+            "validated_metrics.gross_margin.grade": "D"
+          },
+          "numeric_ranges": [
+            {
+              "path": "validated_metrics.market_cap.value",
+              "min": 680,
+              "max": 681
+            },
+            {
+              "path": "validated_metrics.analyst_target.value",
+              "min": 1310000,
+              "max": 1320000
+            }
+          ],
+          "list_lengths": [
+            {
+              "path": "exclusions",
+              "equals": 4
+            }
+          ],
+          "required_paths": [
+            "validated_metrics.gross_margin.exclusion_reason"
+          ]
+        },
+        "analysis-result": {
+          "equals": {
+            "output_mode": "B",
+            "verdict": "비중확대",
+            "scenarios.base.target": 1313600,
+            "key_metrics.revenue_ttm.display_tag": "[Company]"
+          },
+          "numeric_ranges": [
+            {
+              "path": "rr_score",
+              "min": 3.0,
+              "max": 3.2
+            },
+            {
+              "path": "scenarios.base.return_pct",
+              "min": 37.4,
+              "max": 37.6
+            }
+          ],
+          "required_paths": [
+            "scenarios.base.key_assumption"
+          ]
+        },
+        "quality-report": {
+          "equals": {
+            "overall_result": "PASS_WITH_FLAGS",
+            "items.legacy_migration.status": "PASS_WITH_FLAGS",
+            "items.contract_validation.status": "PASS",
+            "items.semantic_consistency.status": "PASS",
+            "items.verdict_policy.status": "PASS",
+            "items.cross_artifact_consistency.status": "PASS"
+          }
+        }
+      }
+    },
+    {
+      "id": "golden_aapl_mode_c_fixture",
+      "kind": "run_dir",
+      "path": "output/runs/20260328T000000Z_AAPL_C",
+      "expect_valid": true,
+      "artifact_assertions": {
+        "validated-data": {
+          "equals": {
+            "validated_metrics.price_at_analysis.display_tag": "[Filing]",
+            "validated_metrics.market_cap.display_tag": "[Calc]",
+            "validated_metrics.revenue_ttm.display_tag": "[Filing]"
+          },
+          "numeric_ranges": [
+            {
+              "path": "validated_metrics.price_at_analysis.value",
+              "min": 190,
+              "max": 195
+            }
+          ]
+        },
+        "analysis-result": {
+          "equals": {
+            "output_mode": "C",
+            "verdict": "Neutral",
+            "scenarios.base.probability": 0.5,
+            "key_metrics.market_cap.display_tag": "[Calc]"
+          },
+          "required_paths": [
+            "sections.variant_view_q1",
+            "sections.variant_view_q2",
+            "sections.variant_view_q3",
+            "sections.precision_risks",
+            "sections.portfolio_strategy"
+          ],
+          "list_lengths": [
+            {
+              "path": "sections.precision_risks",
+              "min": 3
+            }
+          ],
+          "numeric_ranges": [
+            {
+              "path": "rr_score",
+              "min": 2.4,
+              "max": 2.6
+            }
+          ]
+        },
+        "quality-report": {
+          "equals": {
+            "overall_result": "PASS",
+            "items.financial_consistency.status": "PASS",
+            "items.price_and_date.status": "PASS",
+            "items.source_tags.status": "PASS",
+            "items.semantic_consistency.status": "PASS",
+            "items.verdict_policy.status": "PASS",
+            "items.cross_artifact_consistency.status": "PASS",
+            "generated_by": "quality-report-builder"
+          }
+        }
+      }
+    }
+  ]
+}
