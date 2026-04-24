@@ -160,6 +160,11 @@ Sanity alerts → log but do NOT automatically downgrade grade. Include in valid
 
 **Condition**: Only run if `macro_context.structured` exists in tier2-raw.json.
 
+Before numeric checks, inspect `macro_context.structured.status`:
+- `available`: validate numeric FRED values and preserve `grade` per series.
+- `unavailable`: preserve `source="FRED"`, `status="unavailable"`, `grade="D"`, `reason`, and `series=[]`; do not create fallback macro numbers from narrative text.
+- Missing status: treat as contract failure and add a validation warning requiring `available` or `unavailable`.
+
 | Check | Rule | On Failure |
 |-------|------|------------|
 | Yield curve | Flag if DGS10 < DGS2 (inverted) | Set `yield_curve_inverted: true` (informational, not an error) |
@@ -178,7 +183,7 @@ Sanity alerts → log but do NOT automatically downgrade grade. Include in valid
 | 24h – 7 days | B |
 | > 7 days | C (add `[stale]` tag) |
 
-Pass through validated `macro_context.structured` values to `validated-data.json`.
+Pass through validated `macro_context.structured` values to `validated-data.json`. If status is `unavailable`, the pass-through object must remain non-numeric except for metadata; downstream analysis may mention that structured macro data was unavailable, but must not cite current FRED values.
 
 ### Step 5.5 — Apply Confidence Grades
 

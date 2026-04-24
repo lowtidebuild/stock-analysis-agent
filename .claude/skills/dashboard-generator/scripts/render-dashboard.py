@@ -330,6 +330,41 @@ def render_macro_context(sections: dict[str, Any]) -> str:
     macro = sections.get("macro_context")
     if not isinstance(macro, dict):
         return '<div class="card p-5 text-sm text-gray-500 italic">[Data unavailable]</div>'
+    structured = macro.get("structured")
+    structured_html = ""
+    if isinstance(structured, dict):
+        status = structured.get("status")
+        grade = structured.get("grade") or "D"
+        if status == "unavailable":
+            reason = structured.get("reason") or "collector unavailable"
+            structured_html = (
+                '<div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">'
+                f'<p class="font-semibold">Macro data unavailable [Grade {escape(grade)}]</p>'
+                f'<p class="mt-1">{escape(reason)}</p>'
+                "</div>"
+            )
+        elif status == "available":
+            series_cards = []
+            for item in structured.get("series") or []:
+                if not isinstance(item, dict) or item.get("value") is None:
+                    continue
+                label = item.get("label") or item.get("id") or "FRED series"
+                unit = item.get("unit") or ""
+                item_grade = item.get("grade") or grade
+                series_cards.append(
+                    '<div class="rounded-xl border border-gray-200 bg-white p-3">'
+                    f'<p class="text-xs text-gray-500">{escape(label)}</p>'
+                    f'<p class="mt-1 font-semibold text-gray-900">{escape(item.get("value"))} {escape(unit)}</p>'
+                    f'<p class="mt-1 text-xs text-gray-400">FRED [Grade {escape(item_grade)}]</p>'
+                    "</div>"
+                )
+                if len(series_cards) == 4:
+                    break
+            structured_html = (
+                '<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">'
+                + safe_join(series_cards, fallback="Structured macro series unavailable.")
+                + "</div>"
+            )
     factors = macro.get("factors")
     factor_cards = []
     if isinstance(factors, list):
@@ -345,6 +380,7 @@ def render_macro_context(sections: dict[str, Any]) -> str:
             )
     return (
         '<div class="card p-6">'
+        f"{structured_html}"
         f'<p class="text-sm text-gray-700 leading-6">{escape(macro.get("narrative") or "[Data unavailable]")}</p>'
         f'<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">{safe_join(factor_cards, fallback="No factor cards available.")}</div>'
         "</div>"

@@ -126,7 +126,7 @@ Follow `analysis-framework-dashboard.md` exactly:
     - Extract DCF assumptions from your scenario analysis:
       - `fcf_ttm` from validated-data.json
       - `fcf_growth_rate` from your Base scenario revenue/margin assumptions
-      - `wacc`: If `macro_context.structured.risk_free_rate` is available in validated data:
+      - `wacc`: If `macro_context.structured.status == "available"` and `risk_free_rate` is available in validated data:
         - Use FRED-based WACC: pass `risk_free_rate`, `beta` (from financial_metrics), `erp` (sector default 5-6%) to dcf-calculator.py
         - Also pass `debt_to_value`, `cost_of_debt`, `tax_rate` from validated-data.json if available
         - dcf-calculator.py will auto-calculate WACC from components
@@ -141,13 +141,17 @@ Follow `analysis-framework-dashboard.md` exactly:
     - **Timeout budget**: Execute DCF FIRST in the analysis phase. If DCF + scenario analysis approaches 3.5 minutes, skip remaining DCF scenarios and proceed with available results.
 7b. **Macro Context Integration (Mode C/D only)**
     - Read `macro_context` from run-local `tier2-raw.json` (or run-local `validated-data.json`)
-    - **Structured data (FRED)**: If `macro_context.structured` is present:
+    - **Structured data (FRED)**: If `macro_context.structured.status == "available"`:
       - Use FRED values for quantitative macro references (e.g., "10Y yield at 4.25% [Macro]")
       - Generate `macro_sensitivity` section:
         - Identify primary macro factor for this company type (see sensitivity mapping below)
         - Calculate 3 scenarios: factor `<RATE_DELTA>` / `<COMMODITY_PRICE_DELTA>` / `<INDEX_POINT_DELTA>`
         - For each scenario: estimate stock impact % with mechanism chain
       - Write `sections.macro_sensitivity` to `analysis-result.json`
+    - If `macro_context.structured.status == "unavailable"`:
+      - Do not cite FRED rates, inflation, GDP, FX, or commodity values.
+      - Preserve `structured.status`, `grade="D"`, `reason`, and `series=[]` in `sections.macro_context`.
+      - Use a short narrative such as "Structured FRED macro data unavailable; no quantitative macro card shown."
     - **Qualitative data (web)**: If `macro_context.qualitative` is present:
       - Integrate qualitative factors into Variant View considerations
       - If any factor has direct, quantifiable impact → allocate Precision Risk slot with full mechanism chain
@@ -246,6 +250,13 @@ Write ALL content — narrative text and structured tables — to run-local `ana
     "assumptions_displayed": true
   },
   "macro_context": {
+    "structured": {
+      "source": "FRED",
+      "status": "<available|unavailable>",
+      "grade": "<A|B|C|D>",
+      "retrieved_at": "<ISO8601_OR_NULL>",
+      "series": []
+    },
     "narrative": "Macro overlay text...",
     "factors": [{"factor": "Interest rates", "impact": "+/-X% on valuation multiple", "probability": "Medium"}],
     "risk_slot_allocated": false
@@ -395,6 +406,13 @@ request that only succeeded through yfinance must be written as
       "assumptions_displayed": true
     },
     "macro_context": {
+      "structured": {
+        "source": "FRED",
+        "status": "<available|unavailable>",
+        "grade": "<A|B|C|D>",
+        "retrieved_at": "<ISO8601_OR_NULL>",
+        "series": []
+      },
       "narrative": "Macro overlay text...",
       "factors": [{"factor": "Interest rates", "impact": "+/-X% on valuation multiple", "probability": "Medium"}],
       "risk_slot_allocated": false

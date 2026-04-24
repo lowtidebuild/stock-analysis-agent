@@ -163,7 +163,64 @@
       "type": ["array", "null"]
     },
     "sections": {
-      "type": ["object", "null"]
+      "type": ["object", "null"],
+      "properties": {
+        "macro_context": {
+          "type": ["object", "null"],
+          "properties": {
+            "structured": {
+              "type": ["object", "null"],
+              "properties": {
+                "source": {
+                  "type": "string",
+                  "enum": ["FRED"]
+                },
+                "status": {
+                  "type": "string",
+                  "enum": ["available", "unavailable"]
+                },
+                "grade": {
+                  "type": "string",
+                  "enum": ["A", "B", "C", "D"]
+                },
+                "reason": {
+                  "type": ["string", "null"]
+                },
+                "retrieved_at": {
+                  "type": ["string", "null"]
+                },
+                "series": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["id", "label", "value", "grade"],
+                    "properties": {
+                      "id": { "type": "string" },
+                      "label": { "type": "string" },
+                      "value": { "type": ["number", "null"] },
+                      "as_of_date": { "type": ["string", "null"] },
+                      "unit": { "type": ["string", "null"] },
+                      "grade": { "type": "string", "enum": ["A", "B", "C", "D"] },
+                      "source": { "type": ["string", "null"] }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              },
+              "required": ["source", "status", "grade", "series"],
+              "additionalProperties": true
+            },
+            "narrative": {
+              "type": ["string", "null"]
+            },
+            "factors": {
+              "type": ["array", "null"]
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
     }
   },
   "additionalProperties": true

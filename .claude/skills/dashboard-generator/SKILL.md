@@ -184,6 +184,8 @@ Place BETWEEN Precision Risk and Peer Comparison sections.
 
 HTML structure:
 - Section heading: "Macro Environment" with globe icon
+- If `macro_context.structured.status == "available"`: render only the provided `series[]` values, with `[Macro]`/grade labels.
+- If `macro_context.structured.status == "unavailable"`: show "Macro data unavailable" plus the `reason`, and do not render quantitative macro cards.
 - Narrative paragraph(s)
 - Factor cards (horizontally laid out, 2-3 cards):
   - Factor name (bold)

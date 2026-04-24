@@ -169,7 +169,15 @@
       "AI feature launches fail to improve attach rates or upgrade intent."
     ],
     "macro_context": {
-      "narrative": "Rates remain the cleanest macro variable because Apple is priced as a durable growth franchise rather than a deep-value cash flow stream.",
+      "structured": {
+        "source": "FRED",
+        "status": "unavailable",
+        "grade": "D",
+        "reason": "fixture_without_fred_snapshot",
+        "retrieved_at": null,
+        "series": []
+      },
+      "narrative": "Structured FRED macro data unavailable in this fixture; qualitative rate sensitivity only.",
       "factors": [
         {
           "factor": "10Y Treasury yield",

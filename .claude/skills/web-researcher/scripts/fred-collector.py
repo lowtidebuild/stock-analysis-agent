@@ -60,6 +60,26 @@ SERIES_CONFIG = {
     "DEXKOUS":          {"name": "USD/KRW Exchange Rate",             "unit": "krw_per_usd",         "category": "kr_overlay"},
 }
 
+MACRO_FIELD_MAP = {
+    "risk_free_rate": ("common", "DGS10"),
+    "fed_funds_rate": ("common", "DFF"),
+    "yield_curve_spread": ("common", "yield_curve_spread"),
+    "cpi_yoy": ("common", "CPIAUCSL"),
+    "gdp_growth": ("common", "A191RL1Q225SBEA"),
+    "unemployment": ("common", "UNRATE"),
+}
+
+KR_OVERLAY_FIELD_MAP = {
+    "usd_krw": "DEXKOUS",
+}
+
+SECTOR_FIELD_MAP = {
+    "financial": {"baa_spread": "BAA10Y", "prime_rate": "DPRIME"},
+    "energy": {"wti_crude": "DCOILWTICO"},
+    "consumer": {"retail_sales": "RSAFS", "consumer_sentiment": "UMCSENT"},
+    "industrial": {"industrial_production": "INDPRO"},
+}
+
 
 def fred_request(series_id, api_key, limit=5):
     """Fetch latest observations for a FRED series. Returns list of observations or None."""
@@ -124,6 +144,168 @@ def compute_yoy_change(observations):
     if prior_val and prior_val != 0:
         return round((current_val - prior_val) / prior_val * 100, 2)
     return None
+
+
+def macro_grade(api_status, errors=None, cache_status=None):
+    """Return the display grade for the structured FRED macro payload."""
+    if cache_status == "cache_very_stale":
+        return "C"
+    if cache_status == "cache_stale" or api_status == "failed_using_stale":
+        return "B"
+    if api_status == "success" and not errors:
+        return "A"
+    if api_status == "partial":
+        return "B"
+    return "D"
+
+
+def macro_entry_value(entry):
+    if not isinstance(entry, dict):
+        return None
+    if entry.get("yoy_pct") is not None:
+        return entry.get("yoy_pct")
+    return entry.get("value")
+
+
+def macro_series_item(series_id, entry, grade):
+    if not isinstance(entry, dict):
+        return None
+    value = macro_entry_value(entry)
+    if value is None:
+        return None
+    return {
+        "id": series_id,
+        "label": entry.get("series_name") or series_id,
+        "value": value,
+        "as_of_date": entry.get("date"),
+        "unit": entry.get("unit"),
+        "grade": grade,
+        "source": "FRED",
+    }
+
+
+def _macro_group(snapshot, group_name):
+    group = snapshot.get(group_name)
+    return group if isinstance(group, dict) else {}
+
+
+def build_macro_context_structured(snapshot, reason=None, cache_status=None):
+    """Build the canonical macro_context.structured contract from a FRED snapshot."""
+    retrieved_at = snapshot.get("collection_timestamp") or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    errors = snapshot.get("errors") if isinstance(snapshot.get("errors"), list) else []
+    api_status = snapshot.get("api_status") or ("failed" if reason else "success")
+    grade = macro_grade(api_status, errors=errors, cache_status=cache_status)
+
+    common = _macro_group(snapshot, "common")
+    sector = _macro_group(snapshot, "sector")
+    kr_overlay = _macro_group(snapshot, "kr_overlay")
+
+    if reason:
+        return {
+            "source": "FRED",
+            "status": "unavailable",
+            "grade": "D",
+            "reason": reason,
+            "retrieved_at": retrieved_at,
+            "series": [],
+        }
+
+    series = []
+    for series_id, entry in common.items():
+        item = macro_series_item(series_id, entry, grade)
+        if item:
+            series.append(item)
+    for sector_entries in sector.values():
+        if not isinstance(sector_entries, dict):
+            continue
+        for series_id, entry in sector_entries.items():
+            item = macro_series_item(series_id, entry, grade)
+            if item:
+                series.append(item)
+    for series_id, entry in kr_overlay.items():
+        item = macro_series_item(series_id, entry, grade)
+        if item:
+            series.append(item)
+
+    if not series:
+        return {
+            "source": "FRED",
+            "status": "unavailable",
+            "grade": "D",
+            "reason": "no_series_available",
+            "retrieved_at": retrieved_at,
+            "series": [],
+        }
+
+    structured = {
+        "source": "FRED",
+        "status": "available",
+        "tag": "[Macro]",
+        "grade": grade,
+        "retrieved_at": retrieved_at,
+        "series": series,
+        "sector_specific": {},
+        "kr_overlay": {},
+    }
+
+    for field_name, (group_name, series_id) in MACRO_FIELD_MAP.items():
+        group = common if group_name == "common" else {}
+        entry = group.get(series_id)
+        value = macro_entry_value(entry)
+        if value is not None:
+            structured[field_name] = value
+
+    spread = structured.get("yield_curve_spread")
+    if spread is not None:
+        structured["yield_curve_inverted"] = spread < 0
+
+    for sector_name, fields in SECTOR_FIELD_MAP.items():
+        sector_entries = sector.get(sector_name) if isinstance(sector.get(sector_name), dict) else {}
+        sector_payload = {}
+        for field_name, series_id in fields.items():
+            value = macro_entry_value(sector_entries.get(series_id))
+            if value is not None:
+                sector_payload[field_name] = value
+        if sector_payload:
+            structured["sector_specific"][sector_name] = sector_payload
+
+    for field_name, series_id in KR_OVERLAY_FIELD_MAP.items():
+        value = macro_entry_value(kr_overlay.get(series_id))
+        if value is not None:
+            structured["kr_overlay"][field_name] = value
+
+    if errors:
+        structured["warnings"] = errors
+    return structured
+
+
+def attach_macro_context(snapshot, reason=None, cache_status=None):
+    snapshot["macro_context"] = {
+        "structured": build_macro_context_structured(snapshot, reason=reason, cache_status=cache_status)
+    }
+    return snapshot
+
+
+def build_failure_snapshot(reason, errors=None, include_kr=False):
+    snapshot = {
+        "collection_timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "cache_ttl_hours": CACHE_TTL_HOURS,
+        "api_status": "failed",
+        "source": "FRED",
+        "tag": "[Macro]",
+        "confidence_grade": "D",
+        "common": {},
+        "sector": {"technology": {}, "financial": {}, "energy": {}, "consumer": {}, "industrial": {}},
+        "kr_overlay": {} if include_kr else {},
+        "errors": errors or [reason],
+    }
+    return attach_macro_context(snapshot, reason=reason)
+
+
+def write_snapshot(output_path, snapshot):
+    os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(snapshot, f, ensure_ascii=False, indent=2)
 
 
 def check_cache(output_path, force=False):
@@ -220,19 +402,20 @@ def build_snapshot(series_data, errors, include_kr=False):
             "interpretation": "positive = normal, negative = inverted",
         }
 
+    api_status = "success" if not errors else ("partial" if any(v is not None for v in series_data.values()) else "failed")
     snapshot = {
         "collection_timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "cache_ttl_hours": CACHE_TTL_HOURS,
-        "api_status": "success" if not errors else ("partial" if series_data else "failed"),
+        "api_status": api_status,
         "source": "FRED",
         "tag": "[Macro]",
-        "confidence_grade": "A",
+        "confidence_grade": macro_grade(api_status, errors=errors),
         "common": common,
         "sector": sector,
         "kr_overlay": kr_overlay if include_kr else {},
         "errors": errors,
     }
-    return snapshot
+    return attach_macro_context(snapshot)
 
 
 def attach_sanitization_metadata(record):
@@ -262,6 +445,9 @@ def main():
     cached_data, cache_status = check_cache(args.output, force=args.force)
 
     if cache_status == "cache_valid":
+        if not isinstance(cached_data.get("macro_context"), dict):
+            cached_data = attach_sanitization_metadata(attach_macro_context(cached_data, cache_status=cache_status))
+            write_snapshot(args.output, cached_data)
         # Cache is fresh — return immediately
         summary = {
             "status": "cached",
@@ -276,6 +462,10 @@ def main():
     if not api_key:
         if cached_data:
             # No API key but have stale cache — return it with warning
+            cached_data["api_status"] = "failed_using_stale"
+            cached_data["confidence_grade"] = macro_grade("failed_using_stale", cache_status=cache_status)
+            cached_data = attach_sanitization_metadata(attach_macro_context(cached_data, cache_status=cache_status))
+            write_snapshot(args.output, cached_data)
             summary = {
                 "status": "stale_cache",
                 "warning": "FRED_API_KEY not set. Using stale cached data.",
@@ -284,7 +474,12 @@ def main():
             print(json.dumps(summary, ensure_ascii=False))
             return
         else:
-            result = {"status": "fail", "error": "FRED API key not provided. Set FRED_API_KEY env var or use --api-key."}
+            error = "FRED API key not provided. Set FRED_API_KEY env var or use --api-key."
+            failure_snapshot = attach_sanitization_metadata(
+                build_failure_snapshot("missing_api_key", errors=[error], include_kr=include_kr)
+            )
+            write_snapshot(args.output, failure_snapshot)
+            result = {"status": "fail", "error": error, "output_path": args.output}
             print(json.dumps(result, ensure_ascii=False))
             sys.exit(1)
 
@@ -295,11 +490,10 @@ def main():
         # Total failure — return stale cache if available
         if cached_data:
             cached_data["api_status"] = "failed_using_stale"
+            cached_data["confidence_grade"] = macro_grade("failed_using_stale", cache_status=cache_status)
             cached_data["errors"] = errors
-            cached_data = attach_sanitization_metadata(cached_data)
-            os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
-            with open(args.output, "w", encoding="utf-8") as f:
-                json.dump(cached_data, f, ensure_ascii=False, indent=2)
+            cached_data = attach_sanitization_metadata(attach_macro_context(cached_data, cache_status=cache_status))
+            write_snapshot(args.output, cached_data)
             summary = {
                 "status": "stale_cache",
                 "warning": "All FRED API calls failed. Using stale cached data.",
@@ -309,7 +503,16 @@ def main():
             print(json.dumps(summary, ensure_ascii=False))
             return
         else:
-            result = {"status": "fail", "error": "All FRED API calls failed and no cache available.", "errors": errors}
+            failure_snapshot = attach_sanitization_metadata(
+                build_failure_snapshot("collector_failed", errors=errors, include_kr=include_kr)
+            )
+            write_snapshot(args.output, failure_snapshot)
+            result = {
+                "status": "fail",
+                "error": "All FRED API calls failed and no cache available.",
+                "errors": errors,
+                "output_path": args.output,
+            }
             print(json.dumps(result, ensure_ascii=False))
             sys.exit(1)
 
@@ -317,9 +520,7 @@ def main():
     snapshot = attach_sanitization_metadata(
         build_snapshot(series_data, errors, include_kr=include_kr)
     )
-    os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
-    with open(args.output, "w", encoding="utf-8") as f:
-        json.dump(snapshot, f, ensure_ascii=False, indent=2)
+    write_snapshot(args.output, snapshot)
 
     # Summary to stdout
     non_null = sum(1 for v in series_data.values() if v is not None)

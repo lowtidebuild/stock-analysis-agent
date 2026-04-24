@@ -530,7 +530,6 @@ def validate_analysis_completeness(data: dict[str, Any], path: str = "$") -> lis
                 errors.append(
                     f"{path}.sections.analyst_coverage: Mode C completeness requires consensus or price_target"
                 )
-
     if output_mode == "D":
         qoe = sections.get("quality_of_earnings")
         if qoe not in EMPTY_VALUES and not isinstance(qoe, dict):
@@ -732,6 +731,118 @@ def validate_source_profile_contract(data: dict[str, Any], path: str = "$") -> l
     ):
         errors.append(f"{path}.overall_grade: {overall_grade!r} exceeds confidence_cap {confidence_cap!r}")
 
+    return errors
+
+
+MACRO_NUMERIC_FIELDS = {
+    "risk_free_rate",
+    "fed_funds_rate",
+    "yield_curve_spread",
+    "cpi_yoy",
+    "gdp_growth",
+    "unemployment",
+}
+MACRO_STRUCTURED_STATUSES = {"available", "unavailable"}
+
+
+def validate_macro_context_contract(
+    macro_context: Any,
+    path: str = "$.macro_context",
+    require_structured: bool = False,
+) -> list[str]:
+    errors: list[str] = []
+    if macro_context in EMPTY_VALUES:
+        if require_structured:
+            errors.append(f"{path}: macro_context is required")
+        return errors
+    if not isinstance(macro_context, dict):
+        return [f"{path}: macro_context must be an object"]
+
+    structured = macro_context.get("structured")
+    if not isinstance(structured, dict):
+        if require_structured:
+            errors.append(f"{path}.structured: required FRED status object with status='available' or 'unavailable'")
+        return errors
+
+    source = structured.get("source")
+    status = structured.get("status")
+    grade = structured.get("grade")
+    series = structured.get("series")
+
+    if source != "FRED":
+        errors.append(f"{path}.structured.source: expected 'FRED', got {source!r}")
+    if status not in MACRO_STRUCTURED_STATUSES:
+        errors.append(f"{path}.structured.status: expected 'available' or 'unavailable', got {status!r}")
+    if grade not in GRADE_RANK:
+        errors.append(f"{path}.structured.grade: expected A/B/C/D, got {grade!r}")
+    if not isinstance(series, list):
+        errors.append(f"{path}.structured.series: expected array")
+        series = []
+
+    numeric_fields_present = [
+        field_name
+        for field_name in MACRO_NUMERIC_FIELDS
+        if extract_numeric_value(structured.get(field_name)) is not None
+    ]
+
+    if status == "available":
+        if grade == "D":
+            errors.append(f"{path}.structured.grade: available FRED data cannot be Grade D")
+        value_items = []
+        for index, item in enumerate(series):
+            if not isinstance(item, dict):
+                errors.append(f"{path}.structured.series[{index}]: expected object")
+                continue
+            if not item.get("id"):
+                errors.append(f"{path}.structured.series[{index}].id: missing series id")
+            if not item.get("label"):
+                errors.append(f"{path}.structured.series[{index}].label: missing series label")
+            item_grade = item.get("grade")
+            if item_grade not in GRADE_RANK:
+                errors.append(f"{path}.structured.series[{index}].grade: expected A/B/C/D")
+            if item_grade == "D" and item.get("value") is not None:
+                errors.append(f"{path}.structured.series[{index}].value: Grade D series must not carry a value")
+            if extract_numeric_value(item.get("value")) is not None:
+                value_items.append(item)
+        if not value_items:
+            errors.append(f"{path}.structured.series: available FRED data requires at least one numeric series value")
+
+    if status == "unavailable":
+        if grade != "D":
+            errors.append(f"{path}.structured.grade: unavailable FRED data must be Grade D")
+        if not structured.get("reason"):
+            errors.append(f"{path}.structured.reason: unavailable FRED data requires a reason")
+        if numeric_fields_present:
+            errors.append(
+                f"{path}.structured: unavailable FRED data must not include numeric macro fields "
+                f"({', '.join(sorted(numeric_fields_present))})"
+            )
+        value_items = [
+            item
+            for item in series
+            if isinstance(item, dict) and extract_numeric_value(item.get("value")) is not None
+        ]
+        if value_items:
+            errors.append(f"{path}.structured.series: unavailable FRED data must not include series values")
+
+    return errors
+
+
+def validate_macro_contexts(data: dict[str, Any], path: str = "$", require_sections_structured: bool = False) -> list[str]:
+    errors: list[str] = []
+    if isinstance(data.get("macro_context"), dict):
+        errors.extend(validate_macro_context_contract(data["macro_context"], path=f"{path}.macro_context"))
+
+    sections = data.get("sections")
+    if isinstance(sections, dict):
+        macro_context = sections.get("macro_context")
+        errors.extend(
+            validate_macro_context_contract(
+                macro_context,
+                path=f"{path}.sections.macro_context",
+                require_structured=require_sections_structured and macro_context not in EMPTY_VALUES,
+            )
+        )
     return errors
 
 
@@ -1437,6 +1548,12 @@ def validate_artifact_data(
     base_dir: str | Path | None = None,
 ) -> list[str]:
     if artifact_type in FETCHED_ARTIFACT_TYPES:
+        if artifact_type == "fred-snapshot":
+            return validate_macro_context_contract(
+                data.get("macro_context"),
+                path="$.macro_context",
+                require_structured=True,
+            )
         return []
     if artifact_type not in SCHEMA_ARTIFACT_TYPES:
         raise ValueError(f"unsupported artifact_type: {artifact_type}")
@@ -1458,6 +1575,7 @@ def validate_artifact_data(
         errors.extend(validate_scenarios(data))
         errors.extend(validate_analysis_semantics(data))
         errors.extend(validate_verdict_alignment(data))
+        errors.extend(validate_macro_contexts(data, require_sections_structured=artifact_type == "analysis-result"))
         errors.extend(
             validate_formula_metrics(
                 data.get("key_metrics", {}),
@@ -1519,9 +1637,15 @@ def validate_artifact_file(
             }
         )
 
+    content_grade = None
+    if artifact_type == "fred-snapshot" and isinstance(data.get("macro_context"), dict):
+        structured_macro = data["macro_context"].get("structured")
+        if isinstance(structured_macro, dict) and structured_macro.get("grade") in GRADE_RANK:
+            content_grade = structured_macro.get("grade")
+
     schema_valid = not errors
     ingestion_allowed = schema_valid and not security_flags
-    overall_grade = "D" if errors or flags else "A"
+    overall_grade = "D" if errors or flags else (content_grade or "A")
     return {
         "artifact_type": artifact_type,
         "path": str(path),

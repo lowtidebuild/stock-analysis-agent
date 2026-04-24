@@ -154,6 +154,63 @@ def _source_tag_coverage(rendered_text: str) -> dict[str, Any]:
     }
 
 
+def _macro_context_structured(analysis: dict[str, Any], validated: dict[str, Any]) -> dict[str, Any] | None:
+    for payload in (analysis, validated):
+        sections = payload.get("sections") if isinstance(payload, dict) else None
+        candidates = []
+        if isinstance(sections, dict):
+            candidates.append(sections.get("macro_context"))
+        if isinstance(payload, dict):
+            candidates.append(payload.get("macro_context"))
+        for candidate in candidates:
+            if not isinstance(candidate, dict):
+                continue
+            structured = candidate.get("structured")
+            if isinstance(structured, dict):
+                return structured
+    return None
+
+
+def _validate_unavailable_macro_rendering(
+    visible_text: str,
+    analysis: dict[str, Any],
+    validated: dict[str, Any],
+) -> list[str]:
+    structured = _macro_context_structured(analysis, validated)
+    if not structured or structured.get("status") != "unavailable":
+        return []
+
+    lower_visible = visible_text.lower()
+    macro_markers = (
+        "macro",
+        "fred",
+        "treasury",
+        "yield",
+        "fed funds",
+        "inflation",
+        "cpi",
+        "gdp",
+        "unemployment",
+        "usd/krw",
+        "wti",
+    )
+    unavailable_markers = (
+        "macro data unavailable",
+        "structured macro data unavailable",
+        "fred unavailable",
+        "data unavailable",
+        "unavailable",
+        "사용 불가",
+        "수집 실패",
+        "데이터 없음",
+    )
+    if any(marker in lower_visible for marker in macro_markers) and not any(
+        marker in lower_visible for marker in unavailable_markers
+    ):
+        return ["Rendered output discusses macro data while FRED structured data is unavailable"]
+    return []
+
+
 def build_rendered_output_item(
     report_path: str | Path,
     analysis: dict[str, Any],
@@ -221,6 +278,8 @@ def build_rendered_output_item(
             "Rendered output source-tag coverage is below threshold "
             f"({source_coverage['source_tag_count']}/{source_coverage['expected_source_tags']})"
         )
+
+    errors.extend(_validate_unavailable_macro_rendering(visible_text, analysis, validated))
 
     item: dict[str, Any] = {
         "status": "FAIL" if errors else ("PASS_WITH_FLAGS" if warnings else "PASS"),

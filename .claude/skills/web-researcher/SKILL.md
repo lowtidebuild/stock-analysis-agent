@@ -189,8 +189,8 @@ Check run-local `research-plan.json` for `macro_search_required`. If `false` or 
      --market {US|KR} \
      --output output/data/macro/fred-snapshot.json
    ```
-2. **Timeout**: 15 seconds. If times out or fails → log warning, proceed to Phase 2 without structured data.
-3. If successful, load `output/data/macro/fred-snapshot.json` and build `macro_context.structured`:
+2. **Timeout**: 15 seconds. If times out or fails → keep the failure artifact if it was written; otherwise create `macro_context.structured` with `source="FRED"`, `status="unavailable"`, `grade="D"`, `reason="<timeout|collector_failed|missing_api_key>"`, and `series=[]`. Do not invent macro numbers.
+3. If successful, load `output/data/macro/fred-snapshot.json` and copy `macro_context.structured` from the snapshot. If using an older snapshot that lacks it, build the same structure:
    - Extract `common` fields: `risk_free_rate` (DGS10), `fed_funds_rate` (DFF), `yield_curve_spread`, `cpi_yoy` (CPIAUCSL), `gdp_growth` (A191RL1Q225SBEA), `unemployment` (UNRATE)
    - Extract `sector_specific` fields based on `company_type` from research-plan.json:
      - company_type contains "Financial" → include BAA10Y, DPRIME
@@ -199,7 +199,8 @@ Check run-local `research-plan.json` for `macro_search_required`. If `false` or 
      - company_type contains "Industrial"/"Manufacturing" → include INDPRO
      - Others (Technology, Biotech, etc.) → common only
    - If `market == "KR"` → include `kr_overlay.DEXKOUS` as `usd_krw`
-   - Tag: `[Macro]`, Grade: `A` (or `B` if cache is stale)
+   - Set `status="available"` when at least one series value is present.
+   - Tag: `[Macro]`, Grade: `A` (or `B` if partial/stale, `C` if very stale). Each numeric series entry must carry its own `grade`.
 
 **Phase 2 — Qualitative Web Search (20-second budget)**:
 
@@ -224,9 +225,13 @@ Check run-local `research-plan.json` for `macro_search_required`. If `false` or 
 "macro_context": {
   "structured": {
     "source": "FRED",
+    "status": "available",
     "tag": "[Macro]",
     "grade": "A",
-    "timestamp": "2026-03-25T09:00:00Z",
+    "retrieved_at": "2026-03-25T09:00:00Z",
+    "series": [
+      {"id": "DGS10", "label": "10-Year Treasury Yield", "value": 4.25, "as_of_date": "2026-03-24", "unit": "percent", "grade": "A", "source": "FRED"}
+    ],
     "risk_free_rate": 4.25,
     "fed_funds_rate": 4.50,
     "yield_curve_spread": 0.30,
@@ -263,9 +268,10 @@ Check run-local `research-plan.json` for `macro_search_required`. If `false` or 
 ```
 
 **Edge cases**:
-- If FRED fails AND web search fails → set `macro_context` to `null` (not an empty object)
+- If FRED fails AND web search fails → keep `macro_context.structured.status="unavailable"`, `grade="D"`, and `series=[]`; set `narrative` to "Macro data unavailable from FRED and qualitative search." Do not set a blank object and do not synthesize rates, inflation, GDP, FX, or commodity values.
 - If `macro_search_required` is `true` but `macro_search` is missing → skip and log warning
-- If `macro_context.structured` is present but `macro_context.qualitative` has no results → still include `structured` data
+- If `macro_context.structured.status="available"` but `macro_context.qualitative` has no results → still include `structured` data
+- If `macro_context.structured.status="unavailable"` → rendered output must either say macro data is unavailable or omit quantitative macro cards entirely.
 - Always proceed to the next step regardless of macro search outcome
 
 ### Step 4.9 — Write tier2-raw.json
