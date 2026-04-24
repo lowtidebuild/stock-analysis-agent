@@ -23,6 +23,7 @@ import sys
 sys.path.insert(0, str(REPO_ROOT))
 
 from tools.analysis_contract import build_default_report_path  # noqa: E402
+from tools.paths import data_path, runtime_path  # noqa: E402
 
 
 def load_json(path: str | Path) -> dict[str, Any]:
@@ -31,8 +32,7 @@ def load_json(path: str | Path) -> dict[str, Any]:
 
 
 def resolve_path(path: str | Path) -> Path:
-    candidate = Path(path)
-    return candidate if candidate.is_absolute() else REPO_ROOT / candidate
+    return runtime_path(path)
 
 
 def display_path(path: Path) -> str:
@@ -214,11 +214,11 @@ def find_analysis_path_for_ticker(
     run_context = main_analysis.get("run_context") if isinstance(main_analysis.get("run_context"), dict) else {}
     artifact_root = run_context.get("artifact_root")
     if isinstance(artifact_root, str):
-        same_run = REPO_ROOT / Path(artifact_root).parent.parent / ticker / "analysis-result.json"
+        same_run = runtime_path(Path(artifact_root).parent.parent / ticker / "analysis-result.json")
         if same_run.exists():
             return same_run
 
-    runs_root = REPO_ROOT / "output" / "runs"
+    runs_root = data_path("runs")
     candidates = list(runs_root.glob(f"*/{ticker}/analysis-result.json"))
     if not candidates:
         return None
@@ -232,10 +232,10 @@ def find_validated_path_for_ticker(ticker: str, analysis_path: Path | None) -> P
         sibling = analysis_path.with_name("validated-data.json")
         if sibling.exists():
             return sibling
-    run_candidates = sorted((REPO_ROOT / "output" / "runs").glob(f"*/{ticker}/validated-data.json"))
+    run_candidates = sorted(data_path("runs").glob(f"*/{ticker}/validated-data.json"))
     if run_candidates:
         return run_candidates[-1]
-    legacy = REPO_ROOT / "output" / "data" / ticker / "validated-data.json"
+    legacy = data_path("data", ticker, "validated-data.json")
     return legacy if legacy.exists() else None
 
 

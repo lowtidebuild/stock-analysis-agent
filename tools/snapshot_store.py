@@ -7,6 +7,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+from tools.paths import runtime_path
+
 POINTER_KIND = "stock-analysis.latest-snapshot-pointer"
 POINTER_SCHEMA_VERSION = "1.0"
 DEFAULT_FRESHNESS_TTL_HOURS = 24
@@ -50,9 +52,18 @@ def resolve_stored_path(value: str | Path, base_dir: Path, pointer_path: Path | 
     if candidate.is_absolute():
         return candidate.resolve()
 
+    if candidate.parts and candidate.parts[0] == "output":
+        runtime_candidate = runtime_path(candidate).resolve()
+        if runtime_candidate.exists() or pointer_path is None:
+            return runtime_candidate
+
     base_candidate = (base_dir / candidate).resolve()
     if base_candidate.exists() or pointer_path is None:
         return base_candidate
+
+    runtime_candidate = runtime_path(candidate).resolve()
+    if runtime_candidate.exists():
+        return runtime_candidate
 
     return (pointer_path.parent / candidate).resolve()
 

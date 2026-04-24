@@ -31,7 +31,8 @@ def _resolve(env_name: str, default: pathlib.Path) -> pathlib.Path:
     raw = os.environ.get(env_name)
     if not raw:
         return default
-    return pathlib.Path(os.path.expanduser(raw))
+    path = pathlib.Path(os.path.expanduser(raw))
+    return path if path.is_absolute() else REPO_ROOT / path
 
 
 def data_dir() -> pathlib.Path:
@@ -56,9 +57,27 @@ def data_path(*parts: str) -> pathlib.Path:
     return data_dir().joinpath(*parts)
 
 
+def runtime_path(path: str | pathlib.Path) -> pathlib.Path:
+    """Resolve a runtime or repo-relative path.
+
+    Historical manifests and eval cases store runtime paths as ``output/...``.
+    When ``$STOCK_ANALYSIS_DATA_DIR`` is set, those paths should resolve under
+    the configured data root instead of the repository's ``output/``.
+    Non-runtime relative paths remain repository-relative.
+    """
+    candidate = pathlib.Path(os.path.expanduser(str(path)))
+    if candidate.is_absolute():
+        return candidate
+    parts = candidate.parts
+    if parts and parts[0] == "output":
+        return data_path(*parts[1:])
+    return REPO_ROOT / candidate
+
+
 __all__ = [
     "REPO_ROOT",
     "data_dir",
     "data_path",
     "private_docs_dir",
+    "runtime_path",
 ]

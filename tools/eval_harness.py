@@ -21,6 +21,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from tools.analysis_contract import extract_numeric_value  # noqa: E402
 from tools.artifact_validation import validate_artifact_file, validate_run_directory  # noqa: E402
+from tools.paths import runtime_path  # noqa: E402
 
 EMPTY_VALUES = (None, "", [], {})
 
@@ -276,9 +277,13 @@ def completeness_checks(artifact_type: str, artifact_path: Path) -> list[str]:
     return []
 
 
+def resolve_case_path(path: str | Path) -> Path:
+    return runtime_path(path)
+
+
 def evaluate_case(case: dict[str, Any]) -> dict[str, Any]:
     kind = case["kind"]
-    path = REPO_ROOT / case["path"] if "path" in case else None
+    path = resolve_case_path(case["path"]) if "path" in case else None
     expect_valid = case.get("expect_valid", True)
     required_substrings = case.get("required_error_substrings", [])
     payloads: dict[str, Any] = {}
@@ -307,8 +312,8 @@ def evaluate_case(case: dict[str, Any]) -> dict[str, Any]:
             })
         payloads = load_run_payloads(result)
     elif kind == "comparison":
-        left_path = REPO_ROOT / case["left"]["path"]
-        right_path = REPO_ROOT / case["right"]["path"]
+        left_path = resolve_case_path(case["left"]["path"])
+        right_path = resolve_case_path(case["right"]["path"])
         left_payload = load_json(left_path)
         right_payload = load_json(right_path)
         payloads = {
@@ -329,7 +334,7 @@ def evaluate_case(case: dict[str, Any]) -> dict[str, Any]:
         }
     elif kind == "delta":
         module = load_delta_module()
-        data_root = case.get("data_root")
+        data_root = str(resolve_case_path(case["data_root"])) if case.get("data_root") else None
         try:
             delta_payload = module.build_delta_report(
                 case["ticker"],

@@ -25,11 +25,12 @@ BASE_DIR = THIS_FILE.parents[4]
 sys.path.insert(0, str(BASE_DIR))
 
 from tools.analysis_contract import find_repo_root  # noqa: E402
-from tools.snapshot_store import load_snapshot_document  # noqa: E402
+from tools.paths import data_path, runtime_path  # noqa: E402
+from tools.snapshot_store import display_path, load_snapshot_document  # noqa: E402
 
 BASE_DIR = find_repo_root(__file__)
-WATCHLIST_PATH = BASE_DIR / "output" / "watchlist.json"
-CALENDAR_PATH = BASE_DIR / "output" / "catalyst-calendar.json"
+WATCHLIST_PATH = data_path("watchlist.json")
+CALENDAR_PATH = data_path("catalyst-calendar.json")
 
 
 def atomic_write(path: Path, data: dict):
@@ -64,7 +65,7 @@ def cmd_build():
             skipped.append({"ticker": ticker, "reason": "no snapshot path"})
             continue
 
-        snap_path = BASE_DIR / snap_path_str
+        snap_path = runtime_path(snap_path_str)
         if not snap_path.exists():
             skipped.append({"ticker": ticker, "reason": f"snapshot file not found: {snap_path_str}"})
             continue
@@ -116,7 +117,7 @@ def cmd_build():
         "total_events": len(events),
         "tickers_processed": len(tickers) - len(skipped),
         "tickers_skipped": len(skipped),
-        "calendar_path": str(CALENDAR_PATH.relative_to(BASE_DIR)),
+        "calendar_path": display_path(CALENDAR_PATH, BASE_DIR),
         "skipped_details": skipped if skipped else [],
     }, ensure_ascii=False, indent=2))
 

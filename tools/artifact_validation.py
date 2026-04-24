@@ -15,6 +15,7 @@ from tools.analysis_contract import (
 )
 from tools.analysis_patch import load_json as load_json_file
 from tools.analysis_patch import validate_against_patch_plan
+from tools.paths import runtime_path
 
 SCHEMA_DIR = Path(".claude") / "schemas"
 MILLION_SHARE_UNITS = {"million", "millions"}
@@ -1055,9 +1056,7 @@ def validate_analysis_patch(data: dict[str, Any], path: str = "$") -> list[str]:
         errors.append(f"{path}.applied_at: missing applied timestamp")
 
     if patch_plan_path:
-        patch_plan_file = Path(patch_plan_path)
-        if not patch_plan_file.is_absolute():
-            patch_plan_file = find_repo_root(Path.cwd()) / patch_plan_file
+        patch_plan_file = runtime_path(patch_plan_path)
         if not patch_plan_file.exists():
             errors.append(f"{path}.patch_plan_path: referenced patch-plan file does not exist at {patch_plan_path!r}")
         else:

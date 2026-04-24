@@ -24,6 +24,7 @@ BASE_DIR = THIS_FILE.parents[4]
 sys.path.insert(0, str(BASE_DIR))
 
 from tools.analysis_contract import find_repo_root  # noqa: E402
+from tools.paths import data_path, runtime_path  # noqa: E402
 from tools.snapshot_store import (  # noqa: E402
     display_path,
     is_latest_pointer,
@@ -33,7 +34,7 @@ from tools.snapshot_store import (  # noqa: E402
 )
 
 BASE_DIR = find_repo_root(__file__)
-WATCHLIST_PATH = BASE_DIR / "output" / "watchlist.json"
+WATCHLIST_PATH = data_path("watchlist.json")
 
 
 def atomic_write(path: Path, data: dict):
@@ -155,7 +156,7 @@ def cmd_update_snapshot(ticker: str, snapshot_path: str):
         print(json.dumps({"status": "not_found", "message": f"{ticker.upper()} not found in watchlist. Add it first."}))
         sys.exit(1)
 
-    snap_file = BASE_DIR / snapshot_path
+    snap_file = runtime_path(snapshot_path)
     if not snap_file.exists():
         print(json.dumps({"status": "error", "message": f"Snapshot file not found: {snapshot_path}"}))
         sys.exit(1)
@@ -167,7 +168,7 @@ def cmd_update_snapshot(ticker: str, snapshot_path: str):
         print(json.dumps({"status": "error", "message": f"Snapshot file could not be read: {e}"}))
         sys.exit(1)
 
-    stored_snapshot_path = snapshot_path
+    stored_snapshot_path = display_path(snap_file, BASE_DIR)
     if is_latest_pointer(raw_snapshot_ref):
         resolved_snapshot = resolve_pointer_snapshot_path(raw_snapshot_ref, snap_file, BASE_DIR)
         stored_snapshot_path = display_path(resolved_snapshot, BASE_DIR)

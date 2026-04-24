@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
-from tools.paths import data_dir
+from tools.paths import REPO_ROOT, data_dir, data_path
 
 CANONICAL_DISPLAY_TAGS = [
     "[Filing]",
@@ -201,7 +201,11 @@ def build_default_report_path(
 
     lang = (output_language or "en").upper()
     date_value = analysis_date or datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    return f"output/reports/{key}_{mode}_{lang}_{date_value}.{extension}"
+    report_path = data_path("reports", f"{key}_{mode}_{lang}_{date_value}.{extension}")
+    try:
+        return str(report_path.resolve().relative_to(REPO_ROOT))
+    except ValueError:
+        return str(report_path.resolve())
 
 
 def build_run_paths(

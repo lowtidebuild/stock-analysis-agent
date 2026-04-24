@@ -49,6 +49,12 @@ class DataDirTests(unittest.TestCase):
 
         self.assertEqual(data_dir(), pathlib.Path.home() / "scratch" / "sa")
 
+    def test_data_dir_resolves_relative_env_under_repo(self):
+        os.environ["STOCK_ANALYSIS_DATA_DIR"] = "tmp-runtime"
+        from tools.paths import data_dir, REPO_ROOT
+
+        self.assertEqual(data_dir(), REPO_ROOT / "tmp-runtime")
+
     def test_private_docs_dir_defaults_to_in_repo(self):
         from tools.paths import private_docs_dir, REPO_ROOT
 
@@ -65,6 +71,29 @@ class DataDirTests(unittest.TestCase):
 
         result = data_path("reports", "x.html")
         self.assertTrue(str(result).endswith("output/reports/x.html"))
+
+    def test_runtime_path_maps_output_prefix_to_data_dir(self):
+        os.environ["STOCK_ANALYSIS_DATA_DIR"] = "/tmp/stock-agent-runtime"
+        from tools.paths import runtime_path
+
+        self.assertEqual(
+            runtime_path("output/runs/run-a/AAPL/analysis-result.json"),
+            pathlib.Path("/tmp/stock-agent-runtime/runs/run-a/AAPL/analysis-result.json"),
+        )
+
+    def test_default_report_path_honors_data_dir_env(self):
+        os.environ["STOCK_ANALYSIS_DATA_DIR"] = "/tmp/stock-agent-runtime"
+        from tools.analysis_contract import build_default_report_path
+
+        self.assertEqual(
+            build_default_report_path(
+                ticker="AAPL",
+                output_mode="C",
+                output_language="en",
+                analysis_date="2026-04-24",
+            ),
+            str(pathlib.Path("/tmp/stock-agent-runtime/reports/AAPL_C_EN_2026-04-24.html").resolve()),
+        )
 
     def test_build_run_paths_honors_data_dir_env(self):
         os.environ["STOCK_ANALYSIS_DATA_DIR"] = "/tmp/stock-agent-runtime"

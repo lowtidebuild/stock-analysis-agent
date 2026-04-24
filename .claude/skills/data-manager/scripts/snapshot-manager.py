@@ -29,7 +29,7 @@ sys.path.insert(0, str(BASE_DIR))
 
 from tools.analysis_contract import find_repo_root  # noqa: E402
 from tools.artifact_validation import validate_artifact_file  # noqa: E402
-from tools.paths import data_dir  # noqa: E402
+from tools.paths import data_dir, runtime_path  # noqa: E402
 from tools.snapshot_store import (  # noqa: E402
     atomic_write_json,
     build_latest_pointer,
@@ -49,8 +49,7 @@ DEFAULT_OUTPUT_DIR = data_dir() / "data"
 def resolve_data_root(data_root: str | None = None) -> Path:
     if not data_root:
         return DEFAULT_OUTPUT_DIR
-    root = Path(data_root)
-    return root if root.is_absolute() else (BASE_DIR / root)
+    return runtime_path(data_root)
 
 
 def get_ticker_dir(ticker: str, data_root: str | None = None) -> Path:
@@ -61,7 +60,7 @@ def get_ticker_dir(ticker: str, data_root: str | None = None) -> Path:
 
 def cmd_save(ticker: str, data_file: str, skip_validation: bool = False, data_root: str | None = None):
     """Save snapshot from analysis-result.json."""
-    data_path = Path(data_file)
+    data_path = runtime_path(data_file)
     if not data_path.exists():
         print(json.dumps({"status": "error", "message": f"Data file not found: {data_file}"}))
         sys.exit(1)

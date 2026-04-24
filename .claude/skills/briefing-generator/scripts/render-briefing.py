@@ -23,6 +23,7 @@ import sys
 sys.path.insert(0, str(REPO_ROOT))
 
 from tools.analysis_contract import build_default_report_path  # noqa: E402
+from tools.paths import data_path, runtime_path  # noqa: E402
 
 
 def load_json(path: str | Path) -> dict[str, Any]:
@@ -31,8 +32,7 @@ def load_json(path: str | Path) -> dict[str, Any]:
 
 
 def resolve_path(path: str | Path) -> Path:
-    candidate = Path(path)
-    return candidate if candidate.is_absolute() else REPO_ROOT / candidate
+    return runtime_path(path)
 
 
 def display_path(path: Path) -> str:
@@ -353,10 +353,7 @@ def main() -> None:
                 output_language=data.get("output_language"),
                 analysis_date=data.get("analysis_date"),
             )
-            or str(__import__("os").path.join(
-                __import__("os").environ.get("STOCK_ANALYSIS_DATA_DIR", "output"),
-                "reports", "briefing.html",
-            ))
+            or str(data_path("reports", "briefing.html"))
         )
     )
     rendered_path = generate_briefing(data, output_path)

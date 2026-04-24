@@ -703,7 +703,7 @@ def main():
     _repo_root = pathlib.Path(__file__).resolve().parents[4]
     if str(_repo_root) not in sys.path:
         sys.path.insert(0, str(_repo_root))
-    from tools.paths import data_path  # noqa: E402
+    from tools.paths import data_path, runtime_path  # noqa: E402
 
     parser = argparse.ArgumentParser(description="Generate Mode D Investment Memo as DOCX")
     parser.add_argument(
@@ -716,15 +716,16 @@ def main():
     )
     args = parser.parse_args()
 
-    if not os.path.exists(args.input):
-        print(f"ERROR: Input file not found: {args.input}")
+    input_path = runtime_path(args.input)
+    if not input_path.exists():
+        print(f"ERROR: Input file not found: {input_path}")
         sys.exit(1)
 
-    with open(args.input, "r", encoding="utf-8") as f:
+    with open(input_path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     if args.output:
-        output_path = args.output
+        output_path = str(runtime_path(args.output))
     else:
         ticker    = data.get("ticker", "UNKNOWN")
         lang      = (data.get("output_language") or "en").upper()

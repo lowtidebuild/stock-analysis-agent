@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 import subprocess
 import sys
@@ -47,8 +48,9 @@ def sample_analysis(ticker: str, run_id: str, analysis_date: str, price: float, 
     }
 
 
-def run_json(command: list[str]) -> dict:
-    result = subprocess.run(command, cwd=ROOT, text=True, capture_output=True, check=True)
+def run_json(command: list[str], env: dict[str, str] | None = None) -> dict:
+    run_env = None if env is None else {**os.environ, **env}
+    result = subprocess.run(command, cwd=ROOT, env=run_env, text=True, capture_output=True, check=True)
     return json.loads(result.stdout)
 
 
@@ -185,6 +187,57 @@ class SnapshotPointerTests(unittest.TestCase):
             self.assertEqual(delta["old_date"], "2026-04-01")
             self.assertEqual(delta["new_date"], "2026-04-24")
             self.assertEqual(delta["price_change"]["pct"], 12.0)
+
+    def test_snapshot_manager_resolves_output_data_file_against_runtime_root(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runtime_root = pathlib.Path(tmp) / "runtime"
+            run_dir = runtime_root / "runs" / "run-env" / "AAPL"
+            run_dir.mkdir(parents=True)
+            analysis_path = run_dir / "analysis-result.json"
+            analysis_path.write_text(
+                json.dumps(sample_analysis("AAPL", "run-env", "2026-04-24", 101.0, 6.7)),
+                encoding="utf-8",
+            )
+            (run_dir / "quality-report.json").write_text(json.dumps({"status": "PASS"}), encoding="utf-8")
+            env = {"STOCK_ANALYSIS_DATA_DIR": str(runtime_root)}
+
+            save_result = run_json([
+                sys.executable,
+                str(SNAPSHOT_MANAGER),
+                "save",
+                "--ticker",
+                "AAPL",
+                "--data-file",
+                "output/runs/run-env/AAPL/analysis-result.json",
+                "--skip-validation",
+            ], env=env)
+
+            latest_path = runtime_root / "data" / "AAPL" / "latest.json"
+            self.assertTrue(latest_path.exists())
+            self.assertEqual(save_result["status"], "ok")
+
+            loaded = run_json([
+                sys.executable,
+                str(SNAPSHOT_MANAGER),
+                "get",
+                "--ticker",
+                "AAPL",
+                "--date",
+                "latest",
+            ], env=env)
+            self.assertEqual(loaded["ticker"], "AAPL")
+            self.assertEqual(loaded["rr_score"], 6.7)
+
+    def test_resolve_stored_path_preserves_base_dir_relative_refs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = pathlib.Path(tmp) / "base"
+            base.mkdir()
+            target = base / "relative-snapshot.json"
+            target.write_text("{}", encoding="utf-8")
+
+            from tools.snapshot_store import resolve_stored_path
+
+            self.assertEqual(resolve_stored_path("relative-snapshot.json", base), target.resolve())
 
 
 if __name__ == "__main__":

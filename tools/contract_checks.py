@@ -22,6 +22,7 @@ REPO_ROOT = THIS_FILE.parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
 from tools.eval_harness import run_manifest  # noqa: E402
+from tools.paths import data_path  # noqa: E402
 
 
 COMPILE_DIRS = [
@@ -43,7 +44,7 @@ def ensure_runtime_output_fixtures() -> list[str]:
     if not RUNTIME_OUTPUT_FIXTURE_ROOT.exists():
         return copied
 
-    destination_root = REPO_ROOT / "output"
+    destination_root = data_path()
     for fixture_path in sorted(RUNTIME_OUTPUT_FIXTURE_ROOT.rglob("*")):
         if fixture_path.is_dir():
             continue
@@ -53,7 +54,10 @@ def ensure_runtime_output_fixtures() -> list[str]:
             continue
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(fixture_path, destination)
-        copied.append(str(destination.relative_to(REPO_ROOT)))
+        try:
+            copied.append(str(destination.resolve().relative_to(REPO_ROOT)))
+        except ValueError:
+            copied.append(str(destination.resolve()))
     return copied
 
 
