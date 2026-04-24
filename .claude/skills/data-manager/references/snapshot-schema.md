@@ -13,6 +13,11 @@ Snapshots are persisted artifacts. The working pipeline artifacts live under `ou
   "ticker": "AAPL",
   "market": "US",
   "data_mode": "enhanced",
+  "requested_mode": "enhanced",
+  "effective_mode": "standard",
+  "source_profile": "yfinance_fallback",
+  "source_tier": "portal_structured",
+  "confidence_cap": "C",
   "run_context": {
     "run_id": "20260328T000000Z_AAPL_C",
     "artifact_root": "output/runs/20260328T000000Z_AAPL_C/AAPL",
@@ -72,7 +77,12 @@ Readers must support legacy full-snapshot `latest.json` files, but writers must 
 |-------|------|----------|-------------|
 | `ticker` | string | YES | Canonical ticker (US: 1-5 uppercase alpha; KR: 6-digit numeric) |
 | `market` | string | YES | "US" or "KR" |
-| `data_mode` | string | YES | "enhanced" or "standard" |
+| `data_mode` | string | YES | Requested pipeline mode, "enhanced" or "standard" |
+| `requested_mode` | string | NO | User/requested collection mode; defaults to `data_mode` for legacy snapshots |
+| `effective_mode` | string | NO | Actual achieved source strength, "enhanced" or "standard" |
+| `source_profile` | string | NO | `financial_datasets`, `sec_or_dart_primary`, `yfinance_fallback`, `web_only`, or `mixed` |
+| `source_tier` | string | NO | `filing_primary`, `api_structured`, `portal_structured`, `search_snippet`, or `user_supplied` |
+| `confidence_cap` | string | NO | Maximum allowed overall confidence grade after fallback, A/B/C/D |
 | `run_context` | object | YES | Run-local artifact metadata preserved from `output/runs/{run_id}/{ticker}` |
 | `analysis_date` | string | YES | ISO 8601 date YYYY-MM-DD |
 | `price_at_analysis` | number | YES | Price at time of analysis |

@@ -28,6 +28,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from tools.analysis_contract import build_default_report_path  # noqa: E402
 from tools.paths import data_path, runtime_path  # noqa: E402
+from tools.source_profile import source_confidence_label, source_profile_label  # noqa: E402
 
 
 def load_json(path: str | Path) -> dict[str, Any]:
@@ -166,7 +167,7 @@ def rr_badge(rr_score: Any) -> str:
     )
 
 
-def data_confidence_badge(key_metrics: dict[str, Any]) -> str:
+def data_confidence_badge(data: dict[str, Any], key_metrics: dict[str, Any]) -> str:
     counts = {"A": 0, "B": 0, "C": 0, "D": 0}
     for entry in key_metrics.values():
         if isinstance(entry, dict):
@@ -185,7 +186,7 @@ def data_confidence_badge(key_metrics: dict[str, Any]) -> str:
     else:
         klass = "bg-green-50 text-green-700 border-green-200"
         label = "Data Confidence A"
-    summary = f"A:{counts['A']} B:{counts['B']} C:{counts['C']} D:{counts['D']}"
+    summary = f"{source_confidence_label(data)} | A:{counts['A']} B:{counts['B']} C:{counts['C']} D:{counts['D']}"
     return f'<span class="{klass} inline-flex items-center gap-2 border px-3 py-1.5 rounded-lg text-sm font-semibold">{label}<span class="text-xs opacity-80">{summary}</span></span>'
 
 
@@ -437,10 +438,11 @@ def build_dashboard_html(data: dict[str, Any]) -> str:
           </div>
         </div>
         <div class="flex flex-col items-start md:items-end gap-3">
-          {data_confidence_badge(key_metrics)}
+          {data_confidence_badge(data, key_metrics)}
           <div class="text-sm text-blue-200/90 space-y-1">
             <p>Analysis Date: {analysis_date}</p>
-            <p>Data Mode: {escape(data.get("data_mode") or "—")}</p>
+            <p>Requested Mode: {escape(data.get("requested_mode") or data.get("data_mode") or "—")}</p>
+            <p>Effective Source: {escape(source_profile_label(data))}</p>
             <p>Currency: {escape(currency)}</p>
           </div>
         </div>

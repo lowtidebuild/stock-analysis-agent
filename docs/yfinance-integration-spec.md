@@ -363,8 +363,11 @@ Grade C (standalone).
 ```
 
 Also update Step 3's fallback clause: if MCP completely fails AND yfinance
-succeeds, mark data_source as `"yfinance"` and keep data_mode as "enhanced"
-(it's still structured, just from a lower-authority source).
+succeeds, preserve `requested_mode="enhanced"` but write
+`effective_mode="standard"`, `source_profile="yfinance_fallback"`,
+`source_tier="portal_structured"`, and `confidence_cap="C"`. `data_mode` may
+remain `"enhanced"` only as the requested pipeline mode; renderers and analyst
+confidence language must use the source profile fields.
 
 ### 8.2 `.claude/skills/web-researcher/SKILL.md`
 

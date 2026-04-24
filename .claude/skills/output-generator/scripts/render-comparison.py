@@ -24,6 +24,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from tools.analysis_contract import build_default_report_path  # noqa: E402
 from tools.paths import data_path, runtime_path  # noqa: E402
+from tools.source_profile import effective_mode_label, source_profile_label  # noqa: E402
 
 
 def load_json(path: str | Path) -> dict[str, Any]:
@@ -146,17 +147,19 @@ def verdict_badge(verdict: str | None) -> str:
 
 
 def data_mode_badge(peer: dict[str, Any], korean: bool) -> str:
-    market = (peer.get("analysis") or {}).get("market")
-    data_mode = (peer.get("analysis") or {}).get("data_mode")
+    analysis = peer.get("analysis") or {}
+    market = analysis.get("market")
+    effective_mode = effective_mode_label(analysis)
+    source_label = source_profile_label(analysis)
     ticker = peer.get("ticker")
     if market == "KR":
-        label = f"{ticker} · 한국주식" if korean else f"{ticker} · Korean Stock"
+        label = f"{ticker} · {source_label}" if korean else f"{ticker} · {source_label}"
         klass = "bg-sky-500/20 text-sky-100"
-    elif data_mode == "enhanced":
-        label = f"{ticker} · 강화 모드" if korean else f"{ticker} · Enhanced"
+    elif effective_mode == "enhanced":
+        label = f"{ticker} · {source_label}" if korean else f"{ticker} · {source_label}"
         klass = "bg-green-500/20 text-green-100"
     else:
-        label = f"{ticker} · 표준 모드" if korean else f"{ticker} · Standard"
+        label = f"{ticker} · {source_label}" if korean else f"{ticker} · {source_label}"
         klass = "bg-amber-500/20 text-amber-100"
     return f'<span class="{klass} text-xs px-3 py-1 rounded-full">{escape(label)}</span>'
 

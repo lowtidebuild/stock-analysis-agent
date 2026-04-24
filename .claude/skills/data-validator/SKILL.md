@@ -211,6 +211,11 @@ Write `output/runs/{run_id}/{ticker}/validated-data.json`:
   "ticker": "AAPL",
   "market": "US",
   "data_mode": "enhanced",
+  "requested_mode": "enhanced",
+  "effective_mode": "enhanced",
+  "source_profile": "financial_datasets",
+  "source_tier": "api_structured",
+  "confidence_cap": "A",
   "validation_timestamp": "2026-03-12T14:32:00Z",
   "overall_grade": "B",
   "validated_metrics": {
@@ -283,6 +288,20 @@ Write `output/runs/{run_id}/{ticker}/validated-data.json`:
   "arithmetic_inconsistencies": [],
   "sanity_alerts": [],
   "ratio_calculator_output": {...}
+}
+```
+
+For yfinance-only fallback after an Enhanced request, do not present the run as
+full enhanced source quality. Use:
+
+```json
+{
+  "data_mode": "enhanced",
+  "requested_mode": "enhanced",
+  "effective_mode": "standard",
+  "source_profile": "yfinance_fallback",
+  "source_tier": "portal_structured",
+  "confidence_cap": "C"
 }
 ```
 

@@ -25,6 +25,26 @@
       "type": "string",
       "enum": ["enhanced", "standard"]
     },
+    "requested_mode": {
+      "type": ["string", "null"],
+      "enum": ["enhanced", "standard", null]
+    },
+    "effective_mode": {
+      "type": ["string", "null"],
+      "enum": ["enhanced", "standard", null]
+    },
+    "source_profile": {
+      "type": ["string", "null"],
+      "enum": ["financial_datasets", "sec_or_dart_primary", "yfinance_fallback", "web_only", "mixed", null]
+    },
+    "source_tier": {
+      "type": ["string", "null"],
+      "enum": ["filing_primary", "api_structured", "portal_structured", "search_snippet", "user_supplied", null]
+    },
+    "confidence_cap": {
+      "type": ["string", "null"],
+      "enum": ["A", "B", "C", "D", null]
+    },
     "validation_timestamp": {
       "type": "string"
     },

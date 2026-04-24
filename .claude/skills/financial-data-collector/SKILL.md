@@ -102,8 +102,12 @@ If `yfinance-collector.py` exits `0` or `1`:
 - If yfinance is the only available structured value → Grade C
 
 If Financial Datasets MCP completely fails but yfinance succeeds:
-- Keep `data_mode = "enhanced"` (structured fallback still succeeded)
-- Set `data_source = "yfinance"`
+- Preserve `requested_mode = "enhanced"`
+- Set `effective_mode = "standard"`
+- Set `source_profile = "yfinance_fallback"`
+- Set `source_tier = "portal_structured"`
+- Set `confidence_cap = "C"`
+- Keep `data_mode = "enhanced"` only as the requested pipeline mode; downstream confidence must use `effective_mode` + `source_profile`
 - Continue the pipeline without downgrading to Standard Mode
 
 ### Step 3.4 — Data Sufficiency Check
@@ -120,7 +124,7 @@ After all calls complete, verify:
 
 ```
 IF current_price unavailable (critical failure):
-    → If yfinance supplement succeeded: keep `data_mode = "enhanced"` and continue
+    → If yfinance supplement succeeded: set source_profile="yfinance_fallback", effective_mode="standard", confidence_cap="C", and continue
     → Otherwise: "CRITICAL: Price data unavailable. Switching to Standard Mode for {ticker}."
     → Switch data_mode to "standard" for this ticker
     → Proceed to Step 4 (web researcher) to get price
@@ -224,7 +228,7 @@ If all API calls fail:
 2. Run:
    `python .claude/skills/financial-data-collector/scripts/yfinance-collector.py --ticker {ticker} --market US --output output/runs/{run_id}/{ticker}/yfinance-raw.json --bundle standard`
 3. If yfinance succeeds:
-   `data_source = "yfinance"` and `data_mode = "enhanced"`
+   set `requested_mode = "enhanced"`, `effective_mode = "standard"`, `source_profile = "yfinance_fallback"`, `source_tier = "portal_structured"`, and `confidence_cap = "C"`
    proceed without a Standard Mode downgrade
 4. If yfinance also fails:
    log `"Enhanced Mode structured fallbacks exhausted — falling back to Standard Mode"`

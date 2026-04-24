@@ -16,6 +16,7 @@ from tools.analysis_contract import (
 from tools.analysis_patch import load_json as load_json_file
 from tools.analysis_patch import validate_against_patch_plan
 from tools.paths import runtime_path
+from tools.source_profile import CONFIDENCE_CAPS, DATA_MODES, GRADE_RANK, SOURCE_PROFILES, SOURCE_TIERS
 
 SCHEMA_DIR = Path(".claude") / "schemas"
 MILLION_SHARE_UNITS = {"million", "millions"}
@@ -613,6 +614,17 @@ def validate_cross_artifact_consistency(
         if len(set(values.values())) > 1:
             errors.append(f"cross-artifact.{field}: inconsistent values {values}")
 
+    for field in ("requested_mode", "effective_mode", "source_profile", "source_tier", "confidence_cap"):
+        values = {}
+        for label, payload in present_payloads:
+            if label == "research-plan" and field != "requested_mode":
+                continue
+            value = payload.get(field)
+            if value is not None:
+                values[label] = value
+        if len(set(values.values())) > 1:
+            errors.append(f"cross-artifact.{field}: inconsistent values {values}")
+
     run_context_fields = ("run_id", "artifact_root", "ticker")
     run_context_values: dict[str, dict[str, Any]] = {}
     for label, payload in present_payloads:
@@ -665,6 +677,60 @@ def validate_cross_artifact_consistency(
                 errors.append(
                     f"cross-artifact.{metric_name}.{key}: analysis-result {analysis_meta!r} does not match validated-data {validated_meta!r}"
                 )
+
+    return errors
+
+
+def validate_source_profile_contract(data: dict[str, Any], path: str = "$") -> list[str]:
+    errors: list[str] = []
+    requested_mode = data.get("requested_mode")
+    effective_mode = data.get("effective_mode")
+    source_profile = data.get("source_profile")
+    source_tier = data.get("source_tier")
+    confidence_cap = data.get("confidence_cap")
+
+    if requested_mode is not None and requested_mode not in DATA_MODES:
+        errors.append(f"{path}.requested_mode: invalid mode {requested_mode!r}")
+    if effective_mode is not None and effective_mode not in DATA_MODES:
+        errors.append(f"{path}.effective_mode: invalid mode {effective_mode!r}")
+    if source_profile is not None and source_profile not in SOURCE_PROFILES:
+        errors.append(f"{path}.source_profile: invalid source profile {source_profile!r}")
+    if source_tier is not None and source_tier not in SOURCE_TIERS:
+        errors.append(f"{path}.source_tier: invalid source tier {source_tier!r}")
+    if confidence_cap is not None and confidence_cap not in CONFIDENCE_CAPS:
+        errors.append(f"{path}.confidence_cap: invalid confidence cap {confidence_cap!r}")
+
+    if source_profile == "yfinance_fallback":
+        if effective_mode != "standard":
+            errors.append(f"{path}.effective_mode: yfinance_fallback requires effective_mode='standard'")
+        if source_tier not in {None, "portal_structured"}:
+            errors.append(f"{path}.source_tier: yfinance_fallback requires source_tier='portal_structured'")
+        if confidence_cap not in {None, "C", "D"}:
+            errors.append(f"{path}.confidence_cap: yfinance_fallback cannot exceed C")
+
+    if source_profile == "web_only":
+        if effective_mode not in {None, "standard"}:
+            errors.append(f"{path}.effective_mode: web_only requires effective_mode='standard'")
+        if source_tier not in {None, "search_snippet"}:
+            errors.append(f"{path}.source_tier: web_only requires source_tier='search_snippet'")
+        if confidence_cap not in {None, "C", "D"}:
+            errors.append(f"{path}.confidence_cap: web_only cannot exceed C")
+
+    if source_profile in {"financial_datasets", "sec_or_dart_primary"}:
+        if effective_mode == "standard":
+            errors.append(f"{path}.effective_mode: {source_profile} should not downgrade to standard")
+        if source_tier not in {None, "filing_primary", "api_structured"}:
+            errors.append(f"{path}.source_tier: {source_profile} requires filing_primary or api_structured")
+
+    overall_grade = data.get("overall_grade")
+    if (
+        isinstance(overall_grade, str)
+        and isinstance(confidence_cap, str)
+        and overall_grade in GRADE_RANK
+        and confidence_cap in GRADE_RANK
+        and GRADE_RANK[overall_grade] > GRADE_RANK[confidence_cap]
+    ):
+        errors.append(f"{path}.overall_grade: {overall_grade!r} exceeds confidence_cap {confidence_cap!r}")
 
     return errors
 
@@ -1380,6 +1446,8 @@ def validate_artifact_data(
 
     if artifact_type in {"research-plan", "validated-data", "analysis-result", "quality-report", "snapshot", "patch-plan", "analysis-patch", "patch-loop-result"}:
         errors.extend(validate_run_context(data))
+    if artifact_type in {"research-plan", "validated-data", "analysis-result", "snapshot"}:
+        errors.extend(validate_source_profile_contract(data))
 
     market = data.get("market")
     if artifact_type == "validated-data":

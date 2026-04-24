@@ -24,6 +24,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from tools.analysis_contract import build_default_report_path  # noqa: E402
 from tools.paths import data_path, runtime_path  # noqa: E402
+from tools.source_profile import source_confidence_label  # noqa: E402
 
 
 def load_json(path: str | Path) -> dict[str, Any]:
@@ -309,7 +310,7 @@ def build_briefing_html(data: dict[str, Any]) -> str:
     <section class="bg-white rounded-3xl shadow-sm border border-gray-200 p-6 sm:p-8">
       <h3 class="text-lg font-bold text-gray-900">Run Notes</h3>
       <ul class="mt-4 list-disc pl-5 space-y-2 text-sm text-gray-600">
-        <li>Output mode: {escape(data.get("output_mode") or "A")} | Data mode: {escape(data.get("data_mode") or "—")} | Quality grade: {escape(data.get("quality_grade") or "—")}</li>
+        <li>Output mode: {escape(data.get("output_mode") or "A")} | Source confidence: {escape(source_confidence_label(data))}</li>
         <li>Report path: {escape(data.get("report_path") or "—")}</li>
         <li>{escape(migration_notes[0] if migration_notes else "No migration note recorded.")}</li>
       </ul>

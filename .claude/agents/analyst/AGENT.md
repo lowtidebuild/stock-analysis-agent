@@ -333,6 +333,13 @@ From `validated-data.json`:
 
 Write to run-local `analysis-result.json`:
 
+Do not infer data strength from `data_mode` alone. `data_mode` preserves the
+requested pipeline mode; source confidence must follow `effective_mode`,
+`source_profile`, `source_tier`, and `confidence_cap`. For example, an Enhanced
+request that only succeeded through yfinance must be written as
+`source_profile="yfinance_fallback"` with `effective_mode="standard"` and
+`confidence_cap="C"`.
+
 ```json
 {
   "ticker": "<TICKER>",
@@ -340,6 +347,11 @@ Write to run-local `analysis-result.json`:
   "exchange": "<EXCHANGE>",
   "market": "US",
   "data_mode": "enhanced",
+  "requested_mode": "enhanced",
+  "effective_mode": "standard",
+  "source_profile": "yfinance_fallback",
+  "source_tier": "portal_structured",
+  "confidence_cap": "C",
   "output_mode": "C",
   "output_language": "en",
   "analysis_date": "<ANALYSIS_DATE>",

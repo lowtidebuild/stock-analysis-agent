@@ -241,6 +241,11 @@ def rows_from_list_of_dicts(records):
 # ---------------------------------------------------------------------------
 
 def generate_docx(data: dict, output_path: str) -> str:
+    _repo_root = pathlib.Path(__file__).resolve().parents[4]
+    if str(_repo_root) not in sys.path:
+        sys.path.insert(0, str(_repo_root))
+    from tools.source_profile import source_confidence_label  # noqa: E402
+
     lang = data.get("output_language", "en").lower()
     if lang not in ("ko", "en"):
         lang = "en"
@@ -287,7 +292,10 @@ def generate_docx(data: dict, output_path: str) -> str:
         else f"{cur_sym}{price:,.2f}" if isinstance(price, (int, float))
         else f"{cur_sym}{price}"
     )
-    meta.add_run(f"Date: {analysis_date}  |  Price: {price_fmt}  |  Mode: {data_mode.upper()}")
+    meta.add_run(
+        f"Date: {analysis_date}  |  Price: {price_fmt}  |  "
+        f"Requested Mode: {data_mode.upper()}  |  Source: {source_confidence_label(data)}"
+    )
 
     vp = doc.add_paragraph()
     vp.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -659,12 +667,7 @@ def generate_docx(data: dict, output_path: str) -> str:
                 if isinstance(e, dict):
                     p2.add_run(f"\n  • {e.get('metric', '—')}: {e.get('reason', '—')}")
 
-    mode_str = (
-        "Enhanced (Financial Datasets MCP active)"
-        if data_mode == "enhanced"
-        else "Standard (Web-only)"
-    )
-    doc.add_paragraph(f"Data Mode: {mode_str}")
+    doc.add_paragraph(f"Data Source: {source_confidence_label(data)}")
 
     # -----------------------------------------------------------------------
     # DISCLAIMER
