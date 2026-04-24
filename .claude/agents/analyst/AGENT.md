@@ -489,7 +489,7 @@ python .claude/agents/analyst/scripts/run-patch-loop.py \
 Render behavior:
 - Mode A: rerenders the HTML briefing automatically via `briefing-generator/scripts/render-briefing.py`
 - Mode B: rerenders the peer comparison HTML automatically via `output-generator/scripts/render-comparison.py`
-- Mode C: rerenders the HTML dashboard automatically via `dashboard-generator/scripts/render-dashboard.py`
+- Mode C: does not auto-rerender with `dashboard-generator/scripts/render-dashboard.py`; that script is eval-only. Patch loop returns `manual_render_required`, then the full `dashboard-generator/references/html-template.md` must be repopulated from the patched `analysis-result.json`.
 - Mode D: tries to rerender DOCX automatically via `docx-generator.py`
 - If no `report_path` exists, render status becomes `not_requested`
 

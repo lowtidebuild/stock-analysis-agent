@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """
-render-dashboard.py — Scriptable Mode C dashboard renderer.
+render-dashboard.py — Eval-only Mode C dashboard renderer.
+
+This script is not the canonical user-facing Mode C renderer. Final delivery
+must populate references/html-template.md as described in
+docs/adr/0001-mode-c-rendering-strategy.ko.md.
 
 Usage:
     python render-dashboard.py --input output/runs/<run_id>/<ticker>/analysis-result.json
@@ -544,6 +548,7 @@ def main() -> None:
             {
                 "input_path": display_path(input_path),
                 "output_path": display_path(Path(rendered_path)),
+                "warning": "eval-only renderer; do not use for final Mode C delivery",
             },
             ensure_ascii=False,
             indent=2,

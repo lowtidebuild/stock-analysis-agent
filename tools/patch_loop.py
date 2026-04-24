@@ -28,16 +28,6 @@ def load_docx_generator(repo_root: str | Path) -> Any:
     return module
 
 
-def load_dashboard_generator(repo_root: str | Path) -> Any:
-    module_path = Path(repo_root) / ".claude" / "skills" / "dashboard-generator" / "scripts" / "render-dashboard.py"
-    spec = importlib.util.spec_from_file_location("dashboard_generator_script", module_path)
-    if spec is None or spec.loader is None:
-        raise RuntimeError(f"Could not load dashboard generator from {module_path}")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
 def load_comparison_generator(repo_root: str | Path) -> Any:
     module_path = Path(repo_root) / ".claude" / "skills" / "output-generator" / "scripts" / "render-comparison.py"
     spec = importlib.util.spec_from_file_location("comparison_generator_script", module_path)
@@ -141,25 +131,16 @@ def build_render_result(
             }
 
     if output_mode == "C":
-        try:
-            module = load_dashboard_generator(repo_root)
-            output_value = module.generate_dashboard(analysis_result, str(report_output_path))
-            return {
-                "required": True,
-                "status": "rendered",
-                "engine": "dashboard-generator",
-                "report_output_path": display_path(output_value, repo_root=repo_root),
-                "rendered_at": utc_now_iso(),
-                "notes": ["Mode C dashboard rerender completed successfully."],
-            }
-        except Exception as exc:
-            return {
-                "required": True,
-                "status": "render_failed",
-                "engine": "dashboard-generator",
-                "report_output_path": display_path(report_output_path, repo_root=repo_root),
-                "notes": [str(exc)],
-            }
+        return {
+            "required": True,
+            "status": "manual_render_required",
+            "engine": "html-template-manual",
+            "report_output_path": display_path(report_output_path, repo_root=repo_root),
+            "notes": [
+                "Mode C final delivery is canonicalized on references/html-template.md; render-dashboard.py is eval-only and is not used by the patch loop.",
+                "Repopulate the full dashboard template from the patched analysis-result.json before redelivery.",
+            ],
+        }
 
     if output_mode == "B":
         try:

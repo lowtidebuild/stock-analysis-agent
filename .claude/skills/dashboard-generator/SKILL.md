@@ -4,7 +4,7 @@
 **Triggered by**: CLAUDE.md when `output_mode = "C"` after Step 7 (Analyst Agent completes analysis)
 **Reads**: run-local `analysis-result.json`, `references/html-template.md`, `references/color-system.md`
 **Writes**: `output/reports/{ticker}_C_{lang}_{YYYY-MM-DD}.html`
-**References**: `html-template.md`, `color-system.md`, `scripts/render-dashboard.py`
+**References**: `html-template.md`, `color-system.md`, `docs/adr/0001-mode-c-rendering-strategy.ko.md`
 
 ---
 
@@ -218,13 +218,7 @@ Sections with all-null data: collapse the section with a note:
 4. Write to: `output/reports/{ticker}_C_{lang}_{YYYY-MM-DD}.html`
 5. Report path to user
 
-For scripted rerenders inside the critic patch loop, use:
-
-```bash
-python .claude/skills/dashboard-generator/scripts/render-dashboard.py \
-  --input output/runs/{run_id}/{ticker}/analysis-result.json \
-  --output output/reports/{ticker}_C_{lang}_{YYYY-MM-DD}.html
-```
+Do not use `scripts/render-dashboard.py` for final delivery or critic patch-loop rerenders. That script is eval-only. If a Mode C patch changes `analysis-result.json`, repopulate the full `html-template.md` manually/template-guided from the patched artifact and run the rendered output validator again before delivery.
 
 Language suffixes: `EN` or `KR`
 Example: `output/reports/AAPL_C_EN_2026-03-12.html`
