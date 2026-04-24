@@ -120,6 +120,14 @@
           "type": ["string", "null"],
           "enum": ["PASS", "PASS_WITH_FLAGS", "FAIL", null]
         },
+        "max_severity": {
+          "type": ["string", "null"],
+          "enum": ["NONE", "MINOR", "MAJOR", "BLOCKER", null]
+        },
+        "critic_severity": {
+          "type": ["string", "null"],
+          "enum": ["NONE", "MINOR", "MAJOR", "BLOCKER", null]
+        },
         "blocking_items": {
           "type": "array",
           "items": { "type": "string" }

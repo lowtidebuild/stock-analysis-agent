@@ -60,6 +60,10 @@
           "type": "string",
           "enum": ["PASS", "PASS_WITH_FLAGS", "FAIL"]
         },
+        "severity": {
+          "type": ["string", "null"],
+          "enum": ["NONE", "MINOR", "MAJOR", "BLOCKER", null]
+        },
         "items": {
           "type": "array",
           "minItems": 1,
@@ -73,6 +77,10 @@
               "status": {
                 "type": "string",
                 "enum": ["PASS", "PASS_WITH_FLAGS", "FAIL", "SKIP"]
+              },
+              "severity": {
+                "type": ["string", "null"],
+                "enum": ["NONE", "MINOR", "MAJOR", "BLOCKER", null]
               },
               "section": {
                 "type": ["string", "null"]
@@ -153,9 +161,24 @@
           "type": "array",
           "items": { "type": "string" }
         },
+        "max_severity": {
+          "type": "string",
+          "enum": ["NONE", "MINOR", "MAJOR", "BLOCKER"]
+        },
+        "item_severities": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "enum": ["MINOR", "MAJOR", "BLOCKER"]
+          }
+        },
         "critic_overall": {
           "type": ["string", "null"],
           "enum": ["PASS", "PASS_WITH_FLAGS", "FAIL", null]
+        },
+        "critic_severity": {
+          "type": "string",
+          "enum": ["NONE", "MINOR", "MAJOR", "BLOCKER"]
         },
         "critic_delivery_impact": {
           "type": "string",
@@ -193,6 +216,10 @@
           "status": {
             "type": "string",
             "enum": ["PASS", "PASS_WITH_FLAGS", "CRITICAL_FLAG", "FAIL", "SKIP"]
+          },
+          "severity": {
+            "type": ["string", "null"],
+            "enum": ["NONE", "MINOR", "MAJOR", "BLOCKER", null]
           },
           "delivery_impact": {
             "type": ["string", "null"],

@@ -283,6 +283,8 @@ def build_patch_loop_result(
             "overall_result": final_quality_report.get("overall_result"),
             "delivery_gate_result": delivery_gate.get("result"),
             "critic_overall": critic_review.get("overall"),
+            "max_severity": delivery_gate.get("max_severity"),
+            "critic_severity": delivery_gate.get("critic_severity"),
             "blocking_items": delivery_gate.get("blocking_items", []),
             "non_blocking_items": delivery_gate.get("non_blocking_items", []),
             "historical_only_items": delivery_gate.get("historical_only_items", []),

@@ -71,6 +71,7 @@ def main() -> None:
                 "overall_result": report.get("overall_result"),
                 "delivery_gate_result": (report.get("delivery_gate") or {}).get("result"),
                 "ready_for_delivery": (report.get("delivery_gate") or {}).get("ready_for_delivery"),
+                "max_severity": (report.get("delivery_gate") or {}).get("max_severity"),
                 "item_keys": sorted(report.get("items", {}).keys()),
                 "validation": validation,
             },

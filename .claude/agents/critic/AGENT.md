@@ -260,6 +260,7 @@ Write to `output/runs/{run_id}/{ticker}/quality-report.json` and preserve the ex
       {
         "item": "mechanism_test",
         "status": "FAIL",
+        "severity": "BLOCKER",
         "section": "Section 5 — Risk 2",
         "problem": "Regulatory risk lacks financial impact estimate",
         "fix": "Add: <RISK_EVENT> -> <BUSINESS_IMPACT> -> <EBITDA_OR_EPS_IMPACT> -> <MULTIPLE_OR_TARGET_PRICE_EFFECT>"
@@ -282,6 +283,7 @@ Write to `output/runs/{run_id}/{ticker}/quality-report.json` and preserve the ex
       {
         "item": "completeness",
         "status": "FAIL",
+        "severity": "MAJOR",
         "section": "Section 9",
         "problem": "QoE section only 35 words",
         "fix": "Add EBITDA Bridge table + FCF conversion ratio"
@@ -306,8 +308,9 @@ Write to `output/runs/{run_id}/{ticker}/quality-report.json` and preserve the ex
 Contract rules:
 - Preserve the existing top-level `items` object from the quality checker.
 - If `critic_review.overall = "FAIL"`, top-level `overall_result` must become `FAIL`.
+- Add `severity` to every failing critic item: `BLOCKER` for structural/security/data-integrity failures, `MAJOR` for important but deliverable omissions, `MINOR` for polish or localized flags.
 - Store the pre-critic status in `core_overall_result`.
-- Recompute `delivery_gate` after critic merge. A critic FAIL must set `delivery_gate.result = "BLOCKED"`.
+- Recompute `delivery_gate` after critic merge. Critic `BLOCKER` severity sets `delivery_gate.result = "BLOCKED"`; critic `MAJOR/MINOR` severity stays deliverable with flags.
 - If critic finds failures, `feedback_for_analyst` must be present with actionable section/problem/fix entries.
 - `feedback_for_analyst` is consumed by `.claude/agents/analyst/scripts/build-patch-plan.py`; section labels and fixes must therefore stay concrete enough to map back to JSON section targets.
 

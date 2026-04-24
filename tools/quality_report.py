@@ -20,6 +20,13 @@ from tools.artifact_validation import (
 QUALITY_ITEM_STATUSES = {"PASS", "PASS_WITH_FLAGS", "CRITICAL_FLAG", "FAIL", "SKIP"}
 CRITIC_OVERALL_STATUSES = {"PASS", "PASS_WITH_FLAGS", "FAIL"}
 DELIVERY_IMPACTS = {"none", "historical_flag_only", "non_blocking_flag", "delivery_blocking_flag"}
+DELIVERY_SEVERITIES = {"NONE", "MINOR", "MAJOR", "BLOCKER"}
+DELIVERY_SEVERITY_RANK = {
+    "NONE": 0,
+    "MINOR": 1,
+    "MAJOR": 2,
+    "BLOCKER": 3,
+}
 STATUS_SEVERITY = {
     "PASS": 0,
     "SKIP": 0,
@@ -420,50 +427,116 @@ def build_cross_artifact_item(
 
 
 def infer_delivery_impact(item_name: str, item_payload: dict[str, Any]) -> str:
-    explicit = item_payload.get("delivery_impact")
-    if explicit in DELIVERY_IMPACTS:
-        return explicit
-
-    status = item_payload.get("status")
-    if status in {"PASS", "SKIP", None}:
+    severity = infer_delivery_severity(item_name, item_payload)
+    if severity == "NONE":
         return "none"
     if item_name == "legacy_migration":
         return "historical_flag_only"
+    if severity == "BLOCKER":
+        return "delivery_blocking_flag"
+
+    explicit = item_payload.get("delivery_impact")
+    if explicit in {"historical_flag_only", "non_blocking_flag"}:
+        return explicit
+    return "non_blocking_flag"
+
+
+def infer_delivery_severity(item_name: str, item_payload: dict[str, Any]) -> str:
+    explicit = item_payload.get("severity")
+    if explicit in DELIVERY_SEVERITIES:
+        return explicit
+
+    explicit_impact = item_payload.get("delivery_impact")
+    status = item_payload.get("status")
+    if explicit_impact == "delivery_blocking_flag":
+        return "BLOCKER"
+    if explicit_impact in {"historical_flag_only", "non_blocking_flag"}:
+        return "MAJOR" if status in {"FAIL", "CRITICAL_FLAG"} else "MINOR"
+
+    if item_name == "legacy_migration" and status not in {"PASS", "SKIP", None}:
+        return "MINOR"
+    if status in {"PASS", "SKIP", None}:
+        return "NONE"
     if status == "PASS_WITH_FLAGS":
-        return "non_blocking_flag"
-    return "delivery_blocking_flag"
+        return "MINOR"
+    return "BLOCKER"
 
 
 def annotate_delivery_impacts(items: dict[str, Any]) -> dict[str, Any]:
     annotated: dict[str, Any] = copy.deepcopy(items)
     for item_name, payload in annotated.items():
         if isinstance(payload, dict):
+            payload["severity"] = infer_delivery_severity(item_name, payload)
             payload["delivery_impact"] = infer_delivery_impact(item_name, payload)
     return annotated
 
 
-def critic_delivery_impact(critic_review: dict[str, Any] | None) -> str:
+def critic_delivery_severity(critic_review: dict[str, Any] | None) -> str:
     if not isinstance(critic_review, dict):
-        return "none"
+        return "NONE"
+    explicit = critic_review.get("severity")
+    if explicit in DELIVERY_SEVERITIES:
+        return explicit
+
+    item_severities: list[str] = []
+    items = critic_review.get("items")
+    if isinstance(items, list):
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            item_severities.append(infer_delivery_severity(str(item.get("item") or "critic_item"), item))
+    if item_severities:
+        return max(item_severities, key=lambda value: DELIVERY_SEVERITY_RANK[value])
+
     overall = critic_review.get("overall")
     if overall == "FAIL":
-        return "delivery_blocking_flag"
+        return "BLOCKER"
     if overall == "PASS_WITH_FLAGS":
-        return "non_blocking_flag"
+        return "MINOR"
+    return "NONE"
+
+
+def delivery_impact_from_severity(severity: str, *, historical: bool = False) -> str:
+    if severity == "BLOCKER":
+        return "delivery_blocking_flag"
+    if severity in {"MAJOR", "MINOR"}:
+        return "historical_flag_only" if historical else "non_blocking_flag"
     return "none"
+
+
+def critic_delivery_impact(critic_review: dict[str, Any] | None) -> str:
+    return delivery_impact_from_severity(critic_delivery_severity(critic_review))
+
+
+def annotate_critic_review(critic_review: dict[str, Any] | None) -> dict[str, Any] | None:
+    if not isinstance(critic_review, dict):
+        return None
+
+    annotated = copy.deepcopy(critic_review)
+    items = annotated.get("items")
+    if isinstance(items, list):
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            item_name = str(item.get("item") or "critic_item")
+            item["severity"] = infer_delivery_severity(item_name, item)
+    annotated["severity"] = critic_delivery_severity(annotated)
+    return annotated
 
 
 def build_delivery_gate(items: dict[str, Any], critic_review: dict[str, Any] | None = None) -> dict[str, Any]:
     blocking_items: list[str] = []
     non_blocking_items: list[str] = []
     historical_only_items: list[str] = []
+    item_severities: dict[str, str] = {}
 
     for item_name, payload in items.items():
         if not isinstance(payload, dict):
             continue
-        status = payload.get("status")
-        if status in {None, "PASS", "SKIP"}:
+        severity = infer_delivery_severity(item_name, payload)
+        if severity == "NONE":
             continue
+        item_severities[item_name] = severity
         impact = infer_delivery_impact(item_name, payload)
         if impact == "delivery_blocking_flag":
             blocking_items.append(item_name)
@@ -472,12 +545,18 @@ def build_delivery_gate(items: dict[str, Any], critic_review: dict[str, Any] | N
         elif impact == "non_blocking_flag":
             non_blocking_items.append(item_name)
 
+    critic_severity = critic_delivery_severity(critic_review)
     critic_impact = critic_delivery_impact(critic_review)
     critic_overall = critic_review.get("overall") if isinstance(critic_review, dict) else None
     if critic_impact == "delivery_blocking_flag":
         blocking_items.append("critic_review")
     elif critic_impact == "non_blocking_flag":
         non_blocking_items.append("critic_review")
+
+    all_severities = list(item_severities.values())
+    if critic_severity != "NONE":
+        all_severities.append(critic_severity)
+    max_severity = max(all_severities, key=lambda value: DELIVERY_SEVERITY_RANK[value]) if all_severities else "NONE"
 
     result = "BLOCKED" if blocking_items else "PASS"
     return {
@@ -486,7 +565,10 @@ def build_delivery_gate(items: dict[str, Any], critic_review: dict[str, Any] | N
         "blocking_items": blocking_items,
         "non_blocking_items": non_blocking_items,
         "historical_only_items": historical_only_items,
+        "max_severity": max_severity,
+        "item_severities": item_severities,
         "critic_overall": critic_overall,
+        "critic_severity": critic_severity,
         "critic_delivery_impact": critic_impact,
     }
 
@@ -567,14 +649,16 @@ def merge_critic_review(
     feedback_for_analyst: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     merged = copy.deepcopy(report)
-    merged["critic_review"] = copy.deepcopy(critic_review)
+    annotated_items = annotate_delivery_impacts(merged.get("items", {}))
+    merged["items"] = annotated_items
+    merged["critic_review"] = annotate_critic_review(critic_review)
     if feedback_for_analyst is not None:
         merged["feedback_for_analyst"] = copy.deepcopy(feedback_for_analyst)
 
-    core_overall_result = merged.get("core_overall_result") or combine_overall_result(merged.get("items", {}))
+    core_overall_result = merged.get("core_overall_result") or combine_overall_result(annotated_items)
     merged["core_overall_result"] = core_overall_result
     merged["overall_result"] = combine_report_overall_result(core_overall_result, merged["critic_review"])
-    merged["delivery_gate"] = build_delivery_gate(merged.get("items", {}), merged["critic_review"])
+    merged["delivery_gate"] = build_delivery_gate(annotated_items, merged["critic_review"])
     return merged
 
 
@@ -655,8 +739,11 @@ def apply_critic_recheck(
     updated_review["recheck_history"] = history
     updated_review["recheck_count"] = len(history)
 
+    updated_review = annotate_critic_review(updated_review) or updated_review
     merged["critic_review"] = updated_review
-    merged["core_overall_result"] = merged.get("core_overall_result") or combine_overall_result(merged.get("items", {}))
+    annotated_items = annotate_delivery_impacts(merged.get("items", {}))
+    merged["items"] = annotated_items
+    merged["core_overall_result"] = merged.get("core_overall_result") or combine_overall_result(annotated_items)
     if feedback_for_analyst is not None:
         merged["feedback_for_analyst"] = copy.deepcopy(feedback_for_analyst)
     else:
@@ -667,7 +754,7 @@ def apply_critic_recheck(
             merged.pop("feedback_for_analyst", None)
 
     merged["overall_result"] = combine_report_overall_result(merged["core_overall_result"], updated_review)
-    merged["delivery_gate"] = build_delivery_gate(merged.get("items", {}), updated_review)
+    merged["delivery_gate"] = build_delivery_gate(annotated_items, updated_review)
     return merged
 
 

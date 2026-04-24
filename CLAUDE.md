@@ -281,9 +281,9 @@ Quality check runs at Step 9 for all outputs. Mode A uses simplified 3-item chec
 6. Completeness (all required sections ≥50 words)
 7. Blank-over-wrong (Grade D exclusions honored)
 
-**Feedback loop**: Critic FAIL → Analyst patches → Critic re-checks (max 1 loop). After 1 loop, output is delivered with remaining flags.
+**Feedback loop**: Critic FAIL → Analyst patches → Critic re-checks (max 1 loop). After 1 loop, non-blocking failures are delivered with remaining flags; BLOCKER failures stay blocked.
 
-**Delivery rule**: Quality issues do NOT block output delivery. Users always receive output, with quality flags where issues persist.
+**Delivery rule**: Delivery is severity-based. `BLOCKER` items block delivery, `MAJOR` and `MINOR` items are delivered with flags, and historical-only flags stay visible without blocking.
 
 ---
 
@@ -368,9 +368,9 @@ IF data collection fails completely:
     → Never return empty output
 
 IF analysis fails to meet quality threshold after 1 feedback loop:
-    → Deliver output with [Quality flag] annotations
-    → Note which items failed and why
-    → Never block delivery
+    → Recompute severity-based delivery_gate
+    → Deliver MAJOR/MINOR issues with [Quality flag] annotations
+    → Block only BLOCKER issues such as structural, security, or data-integrity failures
 ```
 
 ---

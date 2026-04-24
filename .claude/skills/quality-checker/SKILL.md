@@ -150,7 +150,10 @@ Write to `output/runs/{run_id}/{ticker}/quality-report.json`:
     "blocking_items": [],
     "non_blocking_items": [],
     "historical_only_items": [],
+    "max_severity": "NONE",
+    "item_severities": {},
     "critic_overall": null,
+    "critic_severity": "NONE",
     "critic_delivery_impact": "none"
   },
   "items": {
@@ -218,11 +221,17 @@ FOR each of the 5 items:
 
 After all 5 checks:
     IF all PASS or auto-fixed → overall = PASS
+    Assign severity per item:
+        - BLOCKER: structural, security, data-integrity, or fabricated-value failure
+        - MAJOR: important but deliverable quality issue
+        - MINOR: wording, historical migration, or localized polish issue
+        - NONE: PASS/SKIP
     IF any inline flags added → overall = PASS_WITH_FLAGS
     IF critical failure (price missing + no fix) → overall = CRITICAL_FLAG
     THEN compute delivery_gate separately:
-        - historical-only or non-blocking flags may keep overall = PASS_WITH_FLAGS while delivery_gate.result = PASS
-        - FAIL / CRITICAL_FLAG items and critic FAIL must set delivery_gate.result = BLOCKED
+        - BLOCKER → delivery_gate.result = BLOCKED
+        - MAJOR/MINOR → delivery_gate.result = PASS with non_blocking_items
+        - historical-only flags → delivery_gate.result = PASS with historical_only_items
 ```
 
 ---
@@ -280,4 +289,4 @@ Result: PASS_WITH_FLAGS — output delivered with quality notes when delivery_ga
 - [ ] Inline flags added where auto-fix insufficient
 - [ ] `output/runs/{run_id}/{ticker}/quality-report.json` written
 - [ ] Quality summary reported to user before delivering output
-- [ ] Output delivered (quality issues do NOT block delivery — flags accompany the output)
+- [ ] Output delivered only when `delivery_gate.ready_for_delivery = true`; MAJOR/MINOR flags accompany the output
