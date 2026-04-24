@@ -104,6 +104,9 @@ FETCHED_ARTIFACT_TYPES = {
     "yfinance-raw",
     "fred-snapshot",
 }
+FETCHED_SCHEMA_ARTIFACT_TYPES = {
+    "tier2-raw",
+}
 FETCHED_ARTIFACT_FILENAMES = {f"{artifact_type}.json" for artifact_type in FETCHED_ARTIFACT_TYPES}
 UNSANITIZED_FETCHED_CONTENT_FLAG = "unsanitized fetched content (sanitizer block missing)"
 EMPTY_VALUES = (None, "", [], {})
@@ -142,7 +145,10 @@ MODE_D_REQUIRED_SECTIONS = (
 
 
 def load_schema(schema_name: str, base_dir: str | Path | None = None) -> dict[str, Any]:
-    root = find_repo_root(base_dir or Path.cwd())
+    try:
+        root = find_repo_root(base_dir or Path.cwd())
+    except RuntimeError:
+        root = find_repo_root(Path.cwd())
     schema_path = root / SCHEMA_DIR / f"{schema_name}.schema.json"
     with open(schema_path, "r", encoding="utf-8") as handle:
         return json.load(handle)
@@ -382,6 +388,75 @@ def validate_formula_metrics(
                 errors.append(
                     f"{path}.fcf_yield.value: expected {expected_fcf_yield:.2f}% from fcf_ttm ÷ market_cap, got {fcf_yield_value}"
                 )
+
+    return errors
+
+
+def validate_tier2_raw_contract(data: dict[str, Any], path: str = "$") -> list[str]:
+    errors: list[str] = []
+    raw_results = data.get("raw_search_results")
+    query_ids: set[str] = set()
+
+    if isinstance(raw_results, list):
+        for index, result in enumerate(raw_results):
+            if not isinstance(result, dict):
+                continue
+            result_path = f"{path}.raw_search_results[{index}]"
+            query_id = result.get("query_id")
+            if isinstance(query_id, str):
+                if query_id in query_ids:
+                    errors.append(f"{result_path}.query_id: duplicate query_id {query_id!r}")
+                query_ids.add(query_id)
+            if "data_extracted" in result:
+                errors.append(
+                    f"{result_path}.data_extracted: keep raw search results separate from extracted_metric_candidates"
+                )
+
+    for search_index, search in enumerate(data.get("searches_executed", []) or []):
+        if not isinstance(search, dict):
+            continue
+        for result_index, result in enumerate(search.get("results", []) or []):
+            if isinstance(result, dict) and "data_extracted" in result:
+                errors.append(
+                    f"{path}.searches_executed[{search_index}].results[{result_index}].data_extracted: "
+                    "legacy embedded metric extraction is not allowed; move it to extracted_metric_candidates"
+                )
+
+    candidates = data.get("extracted_metric_candidates")
+    candidate_metrics: set[str] = set()
+    if isinstance(candidates, list):
+        for index, candidate in enumerate(candidates):
+            if not isinstance(candidate, dict):
+                continue
+            candidate_path = f"{path}.extracted_metric_candidates[{index}]"
+            metric = candidate.get("metric")
+            if isinstance(metric, str):
+                candidate_metrics.add(metric)
+            source_query_id = candidate.get("source_query_id")
+            extraction_method = candidate.get("extraction_method")
+            if extraction_method == "search_snippet" and not source_query_id:
+                errors.append(f"{candidate_path}.source_query_id: search_snippet candidates must reference a raw result")
+            if isinstance(source_query_id, str) and query_ids and source_query_id not in query_ids:
+                errors.append(f"{candidate_path}.source_query_id: unknown raw search result {source_query_id!r}")
+
+    key_data = data.get("key_data_extracted")
+    if isinstance(key_data, dict) and key_data and not candidates:
+        errors.append(
+            f"{path}.key_data_extracted: summary values cannot be used without extracted_metric_candidates"
+        )
+
+    conflicts = data.get("metric_conflicts")
+    if isinstance(conflicts, list):
+        for index, conflict in enumerate(conflicts):
+            if not isinstance(conflict, dict):
+                continue
+            conflict_path = f"{path}.metric_conflicts[{index}]"
+            metric = conflict.get("metric")
+            if isinstance(metric, str) and candidate_metrics and metric not in candidate_metrics:
+                errors.append(f"{conflict_path}.metric: conflict metric {metric!r} has no extracted candidate")
+            conflict_candidates = conflict.get("candidates")
+            if not isinstance(conflict_candidates, list) or len(conflict_candidates) < 2:
+                errors.append(f"{conflict_path}.candidates: conflicts must preserve at least two candidates")
 
     return errors
 
@@ -1548,13 +1623,21 @@ def validate_artifact_data(
     base_dir: str | Path | None = None,
 ) -> list[str]:
     if artifact_type in FETCHED_ARTIFACT_TYPES:
+        errors: list[str] = []
+        if artifact_type in FETCHED_SCHEMA_ARTIFACT_TYPES:
+            schema = load_schema(artifact_type, base_dir=base_dir)
+            errors.extend(validate_schema(data, schema))
+        if artifact_type == "tier2-raw":
+            errors.extend(validate_tier2_raw_contract(data))
         if artifact_type == "fred-snapshot":
-            return validate_macro_context_contract(
-                data.get("macro_context"),
-                path="$.macro_context",
-                require_structured=True,
+            errors.extend(
+                validate_macro_context_contract(
+                    data.get("macro_context"),
+                    path="$.macro_context",
+                    require_structured=True,
+                )
             )
-        return []
+        return errors
     if artifact_type not in SCHEMA_ARTIFACT_TYPES:
         raise ValueError(f"unsupported artifact_type: {artifact_type}")
 

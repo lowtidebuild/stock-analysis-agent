@@ -1,0 +1,210 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Tier 2 Raw Web Research",
+  "type": "object",
+  "required": [
+    "ticker",
+    "collection_timestamp",
+    "market",
+    "raw_search_results",
+    "extracted_metric_candidates",
+    "metric_conflicts"
+  ],
+  "properties": {
+    "ticker": {
+      "type": "string"
+    },
+    "collection_timestamp": {
+      "type": "string"
+    },
+    "market": {
+      "type": "string",
+      "enum": ["US", "KR"]
+    },
+    "raw_search_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "query_id",
+          "query",
+          "rank",
+          "title",
+          "url",
+          "published_date",
+          "retrieved_at",
+          "snippet",
+          "source_domain"
+        ],
+        "properties": {
+          "query_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "query": {
+            "type": "string"
+          },
+          "rank": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "published_date": {
+            "type": ["string", "null"]
+          },
+          "retrieved_at": {
+            "type": "string"
+          },
+          "snippet": {
+            "type": "string"
+          },
+          "source_domain": {
+            "type": "string"
+          },
+          "tool": {
+            "type": ["string", "null"]
+          },
+          "metadata": {
+            "type": ["object", "null"],
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "extracted_metric_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "metric",
+          "raw_value",
+          "normalized_value",
+          "unit",
+          "source_url",
+          "extraction_method",
+          "confidence_candidate"
+        ],
+        "properties": {
+          "candidate_id": {
+            "type": ["string", "null"]
+          },
+          "metric": {
+            "type": "string",
+            "minLength": 1
+          },
+          "raw_value": {
+            "type": ["string", "number", "null"]
+          },
+          "normalized_value": {
+            "type": ["number", "null"]
+          },
+          "unit": {
+            "type": ["string", "null"]
+          },
+          "currency": {
+            "type": ["string", "null"]
+          },
+          "as_of_date": {
+            "type": ["string", "null"]
+          },
+          "period_end": {
+            "type": ["string", "null"]
+          },
+          "source_url": {
+            "type": "string"
+          },
+          "source_query_id": {
+            "type": ["string", "null"]
+          },
+          "source_result_rank": {
+            "type": ["integer", "null"],
+            "minimum": 1
+          },
+          "source_domain": {
+            "type": ["string", "null"]
+          },
+          "extraction_method": {
+            "type": "string",
+            "enum": [
+              "search_snippet",
+              "direct_fetch",
+              "portal_table",
+              "filing_table",
+              "api_structured",
+              "calculated",
+              "user_supplied"
+            ]
+          },
+          "confidence_candidate": {
+            "type": "string",
+            "enum": ["A", "B", "C", "D"]
+          },
+          "notes": {
+            "type": ["string", "null"]
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "metric_conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["metric", "candidates", "resolution"],
+        "properties": {
+          "metric": {
+            "type": "string",
+            "minLength": 1
+          },
+          "candidates": {
+            "type": "array",
+            "minItems": 2
+          },
+          "resolution": {
+            "type": "string"
+          },
+          "selected_candidate_index": {
+            "type": ["integer", "null"],
+            "minimum": 0
+          },
+          "notes": {
+            "type": ["string", "null"]
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "key_data_extracted": {
+      "type": ["object", "null"],
+      "additionalProperties": true
+    },
+    "news_items": {
+      "type": ["array", "null"]
+    },
+    "analyst_coverage": {
+      "type": ["object", "null"],
+      "additionalProperties": true
+    },
+    "insider_trades": {
+      "type": ["array", "null"]
+    },
+    "qualitative_context": {
+      "type": ["string", "null"]
+    },
+    "macro_context": {
+      "type": ["object", "null"],
+      "additionalProperties": true
+    },
+    "_sanitization": {
+      "type": ["object", "null"],
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

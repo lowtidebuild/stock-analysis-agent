@@ -37,8 +37,8 @@ Cross-check source: tier2 (web)
 **Standard Mode (US stocks)**:
 ```
 Load: output/runs/{run_id}/{ticker}/tier2-raw.json    (web data only)
-Primary source: tier2 (first source found)
-Cross-check source: tier2 (second source found)
+Primary source: tier2 extracted_metric_candidates
+Cross-check source: tier2 extracted_metric_candidates from independent source_domain values
 ```
 
 **Korean stocks**:
@@ -56,6 +56,13 @@ Load: output/data/macro/fred-snapshot.json    (FRED macro data, if exists — sh
 FRED macro data: [Macro] tag, Grade A (federal government source)
 If fred-snapshot.json missing or null: skip FRED validation, proceed with existing data
 ```
+
+For `tier2-raw.json`, treat `raw_search_results[]` as evidence text only.
+Final metrics may be selected from `extracted_metric_candidates[]`, Tier 1
+structured data, DART structured data, yfinance structured fallback, or
+deterministic calculations. Do not select final values directly from
+`raw_search_results[].snippet`, `searches_executed[].results[]`, or legacy
+`key_data_extracted`; those fields are trace/context only.
 
 ### Step 5.2 — Layer 1: Arithmetic Consistency (ratio-calculator.py)
 
@@ -141,6 +148,38 @@ For each metric, record:
   "notes": "Two sources agree within 1%"
 }
 ```
+
+When using web data, build the record from `extracted_metric_candidates[]`.
+Preserve traceability:
+
+```json
+{
+  "metric": "market_cap",
+  "value": "<NORMALIZED_VALUE>",
+  "sources": ["<SOURCE_DOMAIN_1>", "<SOURCE_DOMAIN_2>"],
+  "source_values": ["<NORMALIZED_VALUE_1>", "<NORMALIZED_VALUE_2>"],
+  "difference_pct": "<DIFFERENCE_PCT>",
+  "grade": "B",
+  "tag": "[Portal]",
+  "candidate_trace": {
+    "selected_candidate_id": "<CANDIDATE_ID>",
+    "source_query_ids": ["<QUERY_ID_1>", "<QUERY_ID_2>"],
+    "selection_reason": "<WHY_THIS_CANDIDATE_WON>"
+  },
+  "conflicts": [
+    {
+      "candidate_refs": ["<CANDIDATE_REF_1>", "<CANDIDATE_REF_2>"],
+      "resolution": "<LOWER_ESTIMATE_USED_OR_UNRESOLVED>"
+    }
+  ],
+  "notes": "<VALIDATION_NOTE>"
+}
+```
+
+If candidates disagree beyond the cross-reference threshold, copy the conflict
+to top-level `metric_conflicts[]` in `validated-data.json` as well as the
+metric-level `conflicts[]` field. Grade D metrics still use `value: null` and
+must not flow into analysis.
 
 ### Step 5.4 — Layer 3: Sector Sanity Check
 

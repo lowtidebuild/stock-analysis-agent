@@ -39,6 +39,8 @@ Execute searches in the order defined in `research-plan.json`. For each search:
 - Use the exact query string from the plan (do not paraphrase)
 - Collect the top 3–5 results per search
 - Extract: title, URL, date, relevant snippet (max 500 chars per result)
+- Store raw search hits only in `raw_search_results`; do not embed extracted values inside search result objects
+- Store every numeric or categorical value parsed from those hits as a separate `extracted_metric_candidates[]` entry
 
 ### Step 4.3 — Standard Mode US Protocol (8 searches)
 
@@ -69,7 +71,8 @@ python .claude/skills/financial-data-collector/scripts/yfinance-collector.py \
 
 If the script exits `0` or `1`:
 - Read `output/runs/{run_id}/{ticker}/yfinance-raw.json`
-- Merge extracted fields into `tier2-raw.json` → `key_data_extracted`
+- Append extracted fields to `tier2-raw.json` → `extracted_metric_candidates`
+- Leave `key_data_extracted` as a backward-compatible summary only; validator selection must not depend on it
 - Tag yfinance-derived fields as `[Portal]`
 - Use yfinance before raw direct-fetch scraping when structured price/basics are still missing
 
@@ -281,32 +284,47 @@ Check run-local `research-plan.json` for `macro_search_required`. If `false` or 
   "ticker": "<TICKER>",
   "collection_timestamp": "<COLLECTION_TIMESTAMP>",
   "market": "US",
-  "searches_executed": [
+  "raw_search_results": [
     {
+      "query_id": "<QUERY_ID>",
       "query": "\"<TICKER>\" stock price market cap current",
-      "results": [
-        {
-          "source": "<PORTAL_NAME>",
-          "url": "<SOURCE_URL>",
-          "date": "<SOURCE_DATE>",
-          "snippet": "<SOURCE_SNIPPET_WITH_EXTRACTED_VALUES>",
-          "data_extracted": {
-            "price": "<CURRENT_PRICE>",
-            "market_cap": "<MARKET_CAP>",
-            "52w_high": "<FIFTY_TWO_WEEK_HIGH>",
-            "52w_low": "<FIFTY_TWO_WEEK_LOW>"
-          },
-          "tag": "[Portal]",
-          "confidence_grade": "B"
-        }
-      ]
+      "rank": "<RESULT_RANK>",
+      "title": "<RESULT_TITLE>",
+      "url": "<SOURCE_URL>",
+      "published_date": "<DATE_OR_NULL>",
+      "retrieved_at": "<RETRIEVED_AT>",
+      "snippet": "<SANITIZED_SNIPPET>",
+      "source_domain": "<DOMAIN>"
+    }
+  ],
+  "extracted_metric_candidates": [
+    {
+      "candidate_id": "<CANDIDATE_ID>",
+      "metric": "market_cap",
+      "raw_value": "<RAW_VALUE>",
+      "normalized_value": "<NORMALIZED_VALUE>",
+      "unit": "<UNIT>",
+      "currency": "<CURRENCY_OR_NULL>",
+      "as_of_date": "<DATE_OR_NULL>",
+      "source_url": "<SOURCE_URL>",
+      "source_query_id": "<QUERY_ID>",
+      "source_result_rank": "<RESULT_RANK>",
+      "source_domain": "<DOMAIN>",
+      "extraction_method": "search_snippet",
+      "confidence_candidate": "C",
+      "notes": "<WHY_THIS_VALUE_IS_OR_IS_NOT_RELIABLE>"
+    }
+  ],
+  "metric_conflicts": [
+    {
+      "metric": "market_cap",
+      "candidates": ["<CANDIDATE_REF_1>", "<CANDIDATE_REF_2>"],
+      "resolution": "<HOW_VALIDATOR_SHOULD_RESOLVE_OR_WHY_UNRESOLVED>",
+      "selected_candidate_index": "<INDEX_OR_NULL>"
     }
   ],
   "key_data_extracted": {
-    "price": {"value": "<CURRENT_PRICE>", "source": "<PORTAL_NAME>", "tag": "[Portal]", "grade": "B"},
-    "market_cap": {"value": "<MARKET_CAP>", "source": "<SOURCE_PAIR>", "tag": "[Portal]", "grade": "B"},
-    "revenue_ttm": {"value": "<REVENUE_TTM>", "source": "<FILING_OR_PORTAL_SOURCE>", "tag": "[Portal]", "grade": "B"},
-    "pe_ratio": {"value": "<PE_RATIO>", "source": "<PORTAL_NAME>", "tag": "[Portal]", "grade": "C"}
+    "market_cap": {"value": "<NORMALIZED_VALUE>", "source": "<SUMMARY_SOURCE>", "tag": "[Portal]", "grade": "C"}
   },
   "news_items": [...],
   "analyst_coverage": {...},
@@ -315,6 +333,10 @@ Check run-local `research-plan.json` for `macro_search_required`. If `false` or 
   "macro_context": null
 }
 ```
+
+In real output, `rank`, `normalized_value`, `source_result_rank`, and
+`selected_candidate_index` use JSON numbers or `null`; the placeholders above
+only mark the field slots.
 
 ### Step 4.10 — Post-Fetch Sanitization (MANDATORY)
 
@@ -379,6 +401,8 @@ For peer comparison, run a parallel (or sequential) web research for each ticker
 - [ ] Korean stocks: yfinance fallback used only if 네이버금융 failed or left required fields blank
 - [ ] Source tags applied to all extracted data points
 - [ ] Confidence grades assigned (A/B/C/D)
+- [ ] Raw search hits stored in `raw_search_results[]` without embedded metric values
+- [ ] Metric values stored in `extracted_metric_candidates[]`, with unresolved disagreements preserved in `metric_conflicts[]`
 - [ ] 10 key metrics coverage check performed
 - [ ] Gap-fill targeted searches run for missing metrics
 - [ ] Macro context search executed (Mode C/D) or skipped (Mode A/B or macro_search_required=false)

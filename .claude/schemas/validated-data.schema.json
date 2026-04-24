@@ -141,6 +141,27 @@
             "type": ["string", "null"],
             "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
           },
+          "candidate_trace": {
+            "type": ["object", "null"],
+            "properties": {
+              "selected_candidate_id": {
+                "type": ["string", "null"]
+              },
+              "source_query_ids": {
+                "type": ["array", "null"],
+                "items": {
+                  "type": "string"
+                }
+              },
+              "selection_reason": {
+                "type": ["string", "null"]
+              }
+            },
+            "additionalProperties": true
+          },
+          "conflicts": {
+            "type": ["array", "null"]
+          },
           "exclusion_reason": {
             "type": ["string", "null"]
           }
@@ -159,6 +180,9 @@
       "additionalProperties": true
     },
     "exclusions": {
+      "type": "array"
+    },
+    "metric_conflicts": {
       "type": "array"
     }
   },
