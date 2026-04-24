@@ -283,7 +283,7 @@ Quality check runs at Step 9 for all outputs. Mode A uses simplified 3-item chec
 
 **Feedback loop**: Critic FAIL → Analyst patches → Critic re-checks (max 1 loop). After 1 loop, non-blocking failures are delivered with remaining flags; BLOCKER failures stay blocked.
 
-**Delivery rule**: Delivery is severity-based. `BLOCKER` items block delivery, `MAJOR` and `MINOR` items are delivered with flags, and historical-only flags stay visible without blocking.
+**Delivery rule**: Delivery is severity-based. `BLOCKER` items block delivery, `MAJOR` and `MINOR` items are delivered with flags, and historical-only flags stay visible without blocking. Each `BLOCKER` must also be classified as `patchable` or `terminal`; patchable blockers may enter the one-loop repair path, terminal blockers stop delivery and require fresh trusted inputs.
 
 ---
 
@@ -369,8 +369,9 @@ IF data collection fails completely:
 
 IF analysis fails to meet quality threshold after 1 feedback loop:
     → Recompute severity-based delivery_gate
+    → If BLOCKER is patchable, use the remaining patch/recheck budget once
     → Deliver MAJOR/MINOR issues with [Quality flag] annotations
-    → Block only BLOCKER issues such as structural, security, or data-integrity failures
+    → Block terminal BLOCKER issues such as unsanitized consumed input or invalid source artifact contracts
 ```
 
 ---

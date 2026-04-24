@@ -148,6 +148,9 @@ Write to `output/runs/{run_id}/{ticker}/quality-report.json`:
     "result": "PASS",
     "ready_for_delivery": true,
     "blocking_items": [],
+    "patchable_blocking_items": [],
+    "terminal_blocking_items": [],
+    "blocker_actions": {},
     "non_blocking_items": [],
     "historical_only_items": [],
     "max_severity": "NONE",
@@ -230,6 +233,8 @@ After all 5 checks:
     IF critical failure (price missing + no fix) → overall = CRITICAL_FLAG
     THEN compute delivery_gate separately:
         - BLOCKER → delivery_gate.result = BLOCKED
+        - patchable BLOCKER → add to patchable_blocking_items and use one repair/recheck attempt if budget remains
+        - terminal BLOCKER → add to terminal_blocking_items and do not auto-retry delivery
         - MAJOR/MINOR → delivery_gate.result = PASS with non_blocking_items
         - historical-only flags → delivery_gate.result = PASS with historical_only_items
 ```

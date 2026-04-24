@@ -61,6 +61,7 @@ CRITIC_REVIEW_ALLOWED_OVERALL = {"PASS", "PASS_WITH_FLAGS", "FAIL"}
 CRITIC_REVIEW_ALLOWED_ITEM_STATUSES = {"PASS", "PASS_WITH_FLAGS", "FAIL", "SKIP"}
 QUALITY_ITEM_DELIVERY_IMPACTS = {"none", "historical_flag_only", "non_blocking_flag", "delivery_blocking_flag"}
 QUALITY_ITEM_SEVERITIES = {"NONE", "MINOR", "MAJOR", "BLOCKER"}
+QUALITY_ITEM_BLOCKER_ACTIONS = {"none", "patchable", "terminal"}
 QUALITY_ITEM_SEVERITY_RANK = {
     "NONE": 0,
     "MINOR": 1,
@@ -694,6 +695,11 @@ def validate_quality_report(data: dict[str, Any], path: str = "$.items") -> list
             errors.append(
                 f"{path}.{item_name}.severity: {severity!r} is not one of {sorted(QUALITY_ITEM_SEVERITIES)}"
             )
+        blocker_action = item_payload.get("blocker_action")
+        if blocker_action is not None and blocker_action not in QUALITY_ITEM_BLOCKER_ACTIONS:
+            errors.append(
+                f"{path}.{item_name}.blocker_action: {blocker_action!r} is not one of {sorted(QUALITY_ITEM_BLOCKER_ACTIONS)}"
+            )
         delivery_impact = item_payload.get("delivery_impact")
         if delivery_impact is not None and delivery_impact not in QUALITY_ITEM_DELIVERY_IMPACTS:
             errors.append(
@@ -725,8 +731,16 @@ def validate_quality_report(data: dict[str, Any], path: str = "$.items") -> list
             errors.append(
                 f"$.delivery_gate.ready_for_delivery: expected {expected_delivery_gate['ready_for_delivery']!r}, got {delivery_gate.get('ready_for_delivery')!r}"
             )
-        for list_key in ("blocking_items", "non_blocking_items", "historical_only_items"):
+        for list_key in (
+            "blocking_items",
+            "non_blocking_items",
+            "historical_only_items",
+            "patchable_blocking_items",
+            "terminal_blocking_items",
+        ):
             actual = delivery_gate.get(list_key)
+            if actual is None and list_key in {"patchable_blocking_items", "terminal_blocking_items"}:
+                continue
             if not isinstance(actual, list):
                 errors.append(f"$.delivery_gate.{list_key}: expected array")
             elif sorted(actual) != sorted(expected_delivery_gate[list_key]):
@@ -754,6 +768,14 @@ def validate_quality_report(data: dict[str, Any], path: str = "$.items") -> list
                 errors.append(
                     f"$.delivery_gate.item_severities: expected {expected_delivery_gate['item_severities']!r}, got {actual_severities!r}"
                 )
+        if "blocker_actions" in delivery_gate:
+            actual_actions = delivery_gate.get("blocker_actions")
+            if not isinstance(actual_actions, dict):
+                errors.append("$.delivery_gate.blocker_actions: expected object")
+            elif actual_actions != expected_delivery_gate["blocker_actions"]:
+                errors.append(
+                    f"$.delivery_gate.blocker_actions: expected {expected_delivery_gate['blocker_actions']!r}, got {actual_actions!r}"
+                )
 
     critic_review = data.get("critic_review")
     feedback = data.get("feedback_for_analyst")
@@ -778,6 +800,11 @@ def validate_quality_report(data: dict[str, Any], path: str = "$.items") -> list
                 errors.append(
                     f"$.critic_review.severity: {critic_severity!r} is not one of {sorted(QUALITY_ITEM_SEVERITIES)}"
                 )
+            critic_blocker_action = critic_review.get("blocker_action")
+            if critic_blocker_action is not None and critic_blocker_action not in QUALITY_ITEM_BLOCKER_ACTIONS:
+                errors.append(
+                    f"$.critic_review.blocker_action: {critic_blocker_action!r} is not one of {sorted(QUALITY_ITEM_BLOCKER_ACTIONS)}"
+                )
             if not isinstance(review_items, list) or not review_items:
                 errors.append("$.critic_review.items: expected non-empty array")
             else:
@@ -797,6 +824,11 @@ def validate_quality_report(data: dict[str, Any], path: str = "$.items") -> list
                     if item_severity is not None and item_severity not in QUALITY_ITEM_SEVERITIES:
                         errors.append(
                             f"$.critic_review.items[{index}].severity: {item_severity!r} is not one of {sorted(QUALITY_ITEM_SEVERITIES)}"
+                        )
+                    item_blocker_action = review_item.get("blocker_action")
+                    if item_blocker_action is not None and item_blocker_action not in QUALITY_ITEM_BLOCKER_ACTIONS:
+                        errors.append(
+                            f"$.critic_review.items[{index}].blocker_action: {item_blocker_action!r} is not one of {sorted(QUALITY_ITEM_BLOCKER_ACTIONS)}"
                         )
                     if item_status == "FAIL":
                         if not review_item.get("problem"):
@@ -1079,6 +1111,10 @@ def validate_patch_loop_result(data: dict[str, Any], path: str = "$") -> list[st
     overall_result = quality_gate.get("overall_result")
     delivery_gate_result = quality_gate.get("delivery_gate_result")
     delivery_ready = quality_gate.get("delivery_ready")
+    blocking_items = quality_gate.get("blocking_items")
+    patchable_blocking_items = quality_gate.get("patchable_blocking_items")
+    terminal_blocking_items = quality_gate.get("terminal_blocking_items")
+    blocker_actions = quality_gate.get("blocker_actions")
     if delivery_ready:
         if delivery_gate_result != "PASS":
             errors.append(f"{path}.quality_gate.delivery_ready: requires delivery_gate_result=PASS")
@@ -1086,10 +1122,22 @@ def validate_patch_loop_result(data: dict[str, Any], path: str = "$") -> list[st
             errors.append(f"{path}.quality_gate.delivery_ready: requires next_patch_plan.ready_for_redelivery=true")
         if render_status not in {"not_requested", "rendered"}:
             errors.append(f"{path}.quality_gate.delivery_ready: incompatible with render.status={render_status!r}")
+        if terminal_blocking_items:
+            errors.append(f"{path}.quality_gate.delivery_ready: incompatible with terminal_blocking_items")
     if delivery_gate_result == "BLOCKED" and delivery_ready:
         errors.append(f"{path}.quality_gate.delivery_ready: must be false when delivery_gate_result=BLOCKED")
     if delivery_gate_result == "PASS" and overall_result not in {"PASS", "PASS_WITH_FLAGS"}:
         errors.append(f"{path}.quality_gate.delivery_gate_result: PASS is inconsistent with overall_result={overall_result!r}")
+    if delivery_gate_result == "PASS" and blocking_items:
+        errors.append(f"{path}.quality_gate.blocking_items: must be empty when delivery_gate_result=PASS")
+    if isinstance(blocker_actions, dict):
+        for item_name, action in blocker_actions.items():
+            if action not in QUALITY_ITEM_BLOCKER_ACTIONS - {"none"}:
+                errors.append(f"{path}.quality_gate.blocker_actions.{item_name}: invalid action {action!r}")
+            if action == "patchable" and isinstance(patchable_blocking_items, list) and item_name not in patchable_blocking_items:
+                errors.append(f"{path}.quality_gate.patchable_blocking_items: missing {item_name!r} from blocker_actions")
+            if action == "terminal" and isinstance(terminal_blocking_items, list) and item_name not in terminal_blocking_items:
+                errors.append(f"{path}.quality_gate.terminal_blocking_items: missing {item_name!r} from blocker_actions")
 
     return errors
 
@@ -1133,6 +1181,28 @@ def _infer_delivery_impact(item_name: str, item_payload: dict[str, Any]) -> str:
     return "non_blocking_flag"
 
 
+def _text_list(value: Any) -> list[str]:
+    if isinstance(value, list):
+        return [str(item) for item in value]
+    if value in (None, ""):
+        return []
+    return [str(value)]
+
+
+def _has_terminal_input_failure(item_payload: dict[str, Any]) -> bool:
+    combined = " ".join(_text_list(item_payload.get("errors")) + _text_list(item_payload.get("warnings"))).lower()
+    terminal_markers = (
+        "unsanitized",
+        "sanitization",
+        "ingestion_allowed",
+        "ingestion allowed",
+        "fetched artifact",
+        "research-plan:",
+        "validated-data:",
+    )
+    return any(marker in combined for marker in terminal_markers)
+
+
 def _infer_delivery_severity(item_name: str, item_payload: dict[str, Any]) -> str:
     explicit = item_payload.get("severity")
     if explicit in QUALITY_ITEM_SEVERITIES:
@@ -1152,6 +1222,25 @@ def _infer_delivery_severity(item_name: str, item_payload: dict[str, Any]) -> st
     if status == "PASS_WITH_FLAGS":
         return "MINOR"
     return "BLOCKER"
+
+
+def _infer_blocker_action(item_name: str, item_payload: dict[str, Any]) -> str:
+    severity = _infer_delivery_severity(item_name, item_payload)
+    explicit = item_payload.get("blocker_action")
+    if explicit in {"patchable", "terminal"}:
+        return explicit
+    if explicit == "none" and severity != "BLOCKER":
+        return explicit
+
+    if severity != "BLOCKER":
+        return "none"
+    if _has_terminal_input_failure(item_payload):
+        return "terminal"
+    if item_name in {"rendered_output", "price_and_date", "blank_over_wrong"}:
+        return "patchable"
+    if item_name in {"contract_validation", "semantic_consistency", "verdict_policy", "cross_artifact_consistency"}:
+        return "patchable"
+    return "terminal"
 
 
 def _critic_delivery_severity(critic_review: dict[str, Any] | None) -> str:
@@ -1191,11 +1280,33 @@ def _critic_delivery_impact(critic_review: dict[str, Any] | None) -> str:
     return _delivery_impact_from_severity(_critic_delivery_severity(critic_review))
 
 
+def _critic_blocker_action(critic_review: dict[str, Any] | None) -> str:
+    if not isinstance(critic_review, dict):
+        return "none"
+    severity = _critic_delivery_severity(critic_review)
+    explicit = critic_review.get("blocker_action")
+    if explicit in {"patchable", "terminal"}:
+        return explicit
+    if explicit == "none" and severity != "BLOCKER":
+        return explicit
+    if severity != "BLOCKER":
+        return "none"
+    items = critic_review.get("items")
+    if isinstance(items, list):
+        for item in items:
+            if isinstance(item, dict) and item.get("status") == "FAIL" and item.get("fix"):
+                return "patchable"
+    return "terminal"
+
+
 def _build_expected_delivery_gate(items: dict[str, Any], critic_review: dict[str, Any] | None = None) -> dict[str, Any]:
     blocking_items: list[str] = []
     non_blocking_items: list[str] = []
     historical_only_items: list[str] = []
     item_severities: dict[str, str] = {}
+    patchable_blocking_items: list[str] = []
+    terminal_blocking_items: list[str] = []
+    blocker_actions: dict[str, str] = {}
 
     for item_name, item_payload in items.items():
         if not isinstance(item_payload, dict):
@@ -1207,6 +1318,12 @@ def _build_expected_delivery_gate(items: dict[str, Any], critic_review: dict[str
         impact = _infer_delivery_impact(item_name, item_payload)
         if impact == "delivery_blocking_flag":
             blocking_items.append(item_name)
+            blocker_action = _infer_blocker_action(item_name, item_payload)
+            blocker_actions[item_name] = blocker_action
+            if blocker_action == "patchable":
+                patchable_blocking_items.append(item_name)
+            elif blocker_action == "terminal":
+                terminal_blocking_items.append(item_name)
         elif impact == "non_blocking_flag":
             non_blocking_items.append(item_name)
         elif impact == "historical_flag_only":
@@ -1217,6 +1334,12 @@ def _build_expected_delivery_gate(items: dict[str, Any], critic_review: dict[str
     critic_overall = critic_review.get("overall") if isinstance(critic_review, dict) else None
     if critic_impact == "delivery_blocking_flag":
         blocking_items.append("critic_review")
+        blocker_action = _critic_blocker_action(critic_review)
+        blocker_actions["critic_review"] = blocker_action
+        if blocker_action == "patchable":
+            patchable_blocking_items.append("critic_review")
+        elif blocker_action == "terminal":
+            terminal_blocking_items.append("critic_review")
     elif critic_impact == "non_blocking_flag":
         non_blocking_items.append("critic_review")
 
@@ -1230,6 +1353,9 @@ def _build_expected_delivery_gate(items: dict[str, Any], critic_review: dict[str
         "result": result,
         "ready_for_delivery": result == "PASS",
         "blocking_items": blocking_items,
+        "patchable_blocking_items": patchable_blocking_items,
+        "terminal_blocking_items": terminal_blocking_items,
+        "blocker_actions": blocker_actions,
         "non_blocking_items": non_blocking_items,
         "historical_only_items": historical_only_items,
         "max_severity": max_severity,

@@ -72,6 +72,8 @@ def main() -> None:
                 "delivery_gate_result": (report.get("delivery_gate") or {}).get("result"),
                 "ready_for_delivery": (report.get("delivery_gate") or {}).get("ready_for_delivery"),
                 "max_severity": (report.get("delivery_gate") or {}).get("max_severity"),
+                "patchable_blocking_items": (report.get("delivery_gate") or {}).get("patchable_blocking_items", []),
+                "terminal_blocking_items": (report.get("delivery_gate") or {}).get("terminal_blocking_items", []),
                 "item_keys": sorted(report.get("items", {}).keys()),
                 "validation": validation,
             },

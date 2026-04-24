@@ -64,6 +64,10 @@
           "type": ["string", "null"],
           "enum": ["NONE", "MINOR", "MAJOR", "BLOCKER", null]
         },
+        "blocker_action": {
+          "type": ["string", "null"],
+          "enum": ["none", "patchable", "terminal", null]
+        },
         "items": {
           "type": "array",
           "minItems": 1,
@@ -81,6 +85,10 @@
               "severity": {
                 "type": ["string", "null"],
                 "enum": ["NONE", "MINOR", "MAJOR", "BLOCKER", null]
+              },
+              "blocker_action": {
+                "type": ["string", "null"],
+                "enum": ["none", "patchable", "terminal", null]
               },
               "section": {
                 "type": ["string", "null"]
@@ -153,6 +161,21 @@
           "type": "array",
           "items": { "type": "string" }
         },
+        "patchable_blocking_items": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "terminal_blocking_items": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "blocker_actions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "enum": ["patchable", "terminal"]
+          }
+        },
         "non_blocking_items": {
           "type": "array",
           "items": { "type": "string" }
@@ -220,6 +243,10 @@
           "severity": {
             "type": ["string", "null"],
             "enum": ["NONE", "MINOR", "MAJOR", "BLOCKER", null]
+          },
+          "blocker_action": {
+            "type": ["string", "null"],
+            "enum": ["none", "patchable", "terminal", null]
           },
           "delivery_impact": {
             "type": ["string", "null"],

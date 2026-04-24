@@ -132,6 +132,21 @@
           "type": "array",
           "items": { "type": "string" }
         },
+        "patchable_blocking_items": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "terminal_blocking_items": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "blocker_actions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "enum": ["patchable", "terminal"]
+          }
+        },
         "non_blocking_items": {
           "type": "array",
           "items": { "type": "string" }

@@ -261,6 +261,7 @@ Write to `output/runs/{run_id}/{ticker}/quality-report.json` and preserve the ex
         "item": "mechanism_test",
         "status": "FAIL",
         "severity": "BLOCKER",
+        "blocker_action": "patchable",
         "section": "Section 5 — Risk 2",
         "problem": "Regulatory risk lacks financial impact estimate",
         "fix": "Add: <RISK_EVENT> -> <BUSINESS_IMPACT> -> <EBITDA_OR_EPS_IMPACT> -> <MULTIPLE_OR_TARGET_PRICE_EFFECT>"
@@ -309,6 +310,7 @@ Contract rules:
 - Preserve the existing top-level `items` object from the quality checker.
 - If `critic_review.overall = "FAIL"`, top-level `overall_result` must become `FAIL`.
 - Add `severity` to every failing critic item: `BLOCKER` for structural/security/data-integrity failures, `MAJOR` for important but deliverable omissions, `MINOR` for polish or localized flags.
+- Add `blocker_action` to every `BLOCKER`: `patchable` when the analyst can repair a bounded section and recheck once; `terminal` when trusted inputs are unsafe or missing.
 - Store the pre-critic status in `core_overall_result`.
 - Recompute `delivery_gate` after critic merge. Critic `BLOCKER` severity sets `delivery_gate.result = "BLOCKED"`; critic `MAJOR/MINOR` severity stays deliverable with flags.
 - If critic finds failures, `feedback_for_analyst` must be present with actionable section/problem/fix entries.

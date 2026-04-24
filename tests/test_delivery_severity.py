@@ -83,8 +83,28 @@ class DeliverySeverityTests(unittest.TestCase):
         gate = build_delivery_gate(items)
 
         self.assertEqual(items["rendered_output"]["delivery_impact"], "delivery_blocking_flag")
+        self.assertEqual(items["rendered_output"]["blocker_action"], "patchable")
         self.assertEqual(gate["result"], "BLOCKED")
         self.assertFalse(gate["ready_for_delivery"])
+        self.assertIn("rendered_output", gate["patchable_blocking_items"])
+
+    def test_terminal_blocker_is_separated_from_patchable_blockers(self):
+        items = annotate_delivery_impacts(
+            {
+                "contract_validation": {
+                    "status": "FAIL",
+                    "errors": ["validated-data: unsanitized fetched artifact ingestion_allowed=false"],
+                }
+            }
+        )
+
+        gate = build_delivery_gate(items)
+
+        self.assertEqual(items["contract_validation"]["severity"], "BLOCKER")
+        self.assertEqual(items["contract_validation"]["blocker_action"], "terminal")
+        self.assertEqual(gate["result"], "BLOCKED")
+        self.assertIn("contract_validation", gate["terminal_blocking_items"])
+        self.assertNotIn("contract_validation", gate["patchable_blocking_items"])
 
     def test_critic_major_failure_is_deliverable_with_flags(self):
         critic_review = {
@@ -125,6 +145,23 @@ class DeliverySeverityTests(unittest.TestCase):
 
         self.assertTrue(any("$.delivery_gate.result" in error for error in errors))
         self.assertTrue(any("$.delivery_gate.ready_for_delivery" in error for error in errors))
+
+    def test_validator_rejects_mismatched_blocker_action_lists(self):
+        items = copy.deepcopy(CORE_ITEMS)
+        items["rendered_output"] = {
+            "status": "FAIL",
+            "severity": "BLOCKER",
+            "blocker_action": "patchable",
+            "errors": ["Rendered output file is missing"],
+        }
+        report = _quality_report(items)
+        self.assertEqual(validate_artifact_data("quality-report", report), [])
+
+        report["delivery_gate"]["patchable_blocking_items"] = []
+
+        errors = validate_artifact_data("quality-report", report)
+
+        self.assertTrue(any("$.delivery_gate.patchable_blocking_items" in error for error in errors))
 
 
 if __name__ == "__main__":
