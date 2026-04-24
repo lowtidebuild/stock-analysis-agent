@@ -172,7 +172,7 @@ Before numeric checks, inspect `macro_context.structured.status`:
 | CPI range | Must be -2% to 15% | Grade D → set to null |
 | GDP range | Must be -10% to 15% | Grade D → set to null |
 | USD/KRW range | Must be 800 to 2000 | Grade D → set to null |
-| WTI range | Must be $10 to $250 | Grade D → set to null |
+| WTI range | Must be 10 to 250 dollars per barrel | Grade D → set to null |
 | UMCSENT range | Must be 20 to 120 | Grade D → set to null |
 
 **Cache freshness grading**:
@@ -213,7 +213,7 @@ Write `output/runs/{run_id}/{ticker}/validated-data.json`:
 
 ```json
 {
-  "ticker": "AAPL",
+  "ticker": "<TICKER>",
   "market": "US",
   "data_mode": "enhanced",
   "requested_mode": "enhanced",
@@ -221,11 +221,11 @@ Write `output/runs/{run_id}/{ticker}/validated-data.json`:
   "source_profile": "financial_datasets",
   "source_tier": "api_structured",
   "confidence_cap": "A",
-  "validation_timestamp": "2026-03-12T14:32:00Z",
+  "validation_timestamp": "<VALIDATION_TIMESTAMP>",
   "overall_grade": "B",
   "validated_metrics": {
     "price_at_analysis": {
-      "value": 175.50,
+      "value": "<CURRENT_PRICE>",
       "grade": "A",
       "source_type": "filing",
       "source_authority": "regulatory",
@@ -235,29 +235,29 @@ Write `output/runs/{run_id}/{ticker}/validated-data.json`:
       "notes": ""
     },
     "market_cap": {
-      "value": 2718000,
+      "value": "<MARKET_CAP>",
       "grade": "B",
       "source_type": "calculated",
       "source_authority": "derived",
       "display_tag": "[Calc]",
       "tag": "[Calc]",
       "sources": ["Calculated from Filing price + shares", "Yahoo Finance"],
-      "source_values": [2718000, 2710000],
-      "difference_pct": 0.3,
-      "notes": "Two sources agree within 0.3%"
+      "source_values": ["<SOURCE_VALUE_1>", "<SOURCE_VALUE_2>"],
+      "difference_pct": "<DIFFERENCE_PCT>",
+      "notes": "Two sources agree within <DIFFERENCE_PCT>%"
     },
     "pe_ratio": {
-      "value": 28.0,
+      "value": "<PE_RATIO>",
       "grade": "A",
       "source_type": "calculated",
       "source_authority": "derived",
       "display_tag": "[Calc]",
       "tag": "[Calc]",
       "sources": ["Calculated from Filing price + net_income_ttm"],
-      "notes": "Arithmetic consistent with Yahoo Finance reported 27.9x"
+      "notes": "Arithmetic consistent with <PORTAL_NAME> reported value"
     },
     "revenue_ttm": {
-      "value": 395000,
+      "value": "<REVENUE_TTM>",
       "grade": "A",
       "source_type": "filing",
       "source_authority": "regulatory",
@@ -278,10 +278,10 @@ Write `output/runs/{run_id}/{ticker}/validated-data.json`:
     }
   },
   "grade_summary": {
-    "A": 3,
-    "B": 5,
-    "C": 1,
-    "D": 1
+    "A": "<GRADE_A_COUNT>",
+    "B": "<GRADE_B_COUNT>",
+    "C": "<GRADE_C_COUNT>",
+    "D": "<GRADE_D_COUNT>"
   },
   "exclusions": [
     {

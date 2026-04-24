@@ -10,7 +10,7 @@ Snapshots are persisted artifacts. The working pipeline artifacts live under `ou
 
 ```json
 {
-  "ticker": "AAPL",
+  "ticker": "<TICKER>",
   "market": "US",
   "data_mode": "enhanced",
   "requested_mode": "enhanced",
@@ -19,12 +19,12 @@ Snapshots are persisted artifacts. The working pipeline artifacts live under `ou
   "source_tier": "portal_structured",
   "confidence_cap": "C",
   "run_context": {
-    "run_id": "20260328T000000Z_AAPL_C",
-    "artifact_root": "output/runs/20260328T000000Z_AAPL_C/AAPL",
-    "ticker": "AAPL"
+    "run_id": "<RUN_ID>",
+    "artifact_root": "output/runs/<RUN_ID>/<TICKER>",
+    "ticker": "<TICKER>"
   },
-  "analysis_date": "2026-03-12",
-  "price_at_analysis": 175.50,
+  "analysis_date": "<ANALYSIS_DATE>",
+  "price_at_analysis": "<CURRENT_PRICE>",
   "currency": "USD",
   "output_mode": "C",
   "company_type": "Technology/Platform",
@@ -32,11 +32,11 @@ Snapshots are persisted artifacts. The working pipeline artifacts live under `ou
   "confidence_grades": { ... },
   "variant_view_summary": "...",
   "scenarios": { ... },
-  "rr_score": 9.3,
+  "rr_score": "<RR_SCORE>",
   "top_risks": [...],
   "verdict": "Overweight",
   "upcoming_catalysts": [...],
-  "report_path": "output/reports/AAPL_C_EN_2026-03-12.html",
+  "report_path": "output/reports/<TICKER>_C_<LANG>_<ANALYSIS_DATE>.html",
   "data_sources_used": [...]
 }
 ```
@@ -51,20 +51,20 @@ New writes store the latest reference as a compact pointer:
 {
   "schema_version": "1.0",
   "kind": "stock-analysis.latest-snapshot-pointer",
-  "ticker": "AAPL",
-  "latest_snapshot_id": "2026-04-24_run_20260424T000000Z_AAPL_C",
-  "analysis_date": "2026-04-24",
-  "snapshot_saved_at": "2026-04-24T12:00:00Z",
-  "expires_at": "2026-04-25T12:00:00Z",
+  "ticker": "<TICKER>",
+  "latest_snapshot_id": "<SNAPSHOT_ID>",
+  "analysis_date": "<ANALYSIS_DATE>",
+  "snapshot_saved_at": "<SNAPSHOT_SAVED_AT>",
+  "expires_at": "<EXPIRES_AT>",
   "freshness_ttl_hours": 24,
   "data_mode": "enhanced",
   "output_mode": "C",
-  "rr_score": 7.2,
+  "rr_score": "<RR_SCORE>",
   "verdict": "Neutral",
   "refs": {
-    "analysis_result": "output/data/AAPL/snapshots/2026-04-24_run_20260424T000000Z_AAPL_C/analysis-result.json",
-    "validated_data": "output/data/AAPL/snapshots/2026-04-24_run_20260424T000000Z_AAPL_C/validated-data.json",
-    "quality_report": "output/data/AAPL/snapshots/2026-04-24_run_20260424T000000Z_AAPL_C/quality-report.json"
+    "analysis_result": "output/data/<TICKER>/snapshots/<SNAPSHOT_ID>/analysis-result.json",
+    "validated_data": "output/data/<TICKER>/snapshots/<SNAPSHOT_ID>/validated-data.json",
+    "quality_report": "output/data/<TICKER>/snapshots/<SNAPSHOT_ID>/quality-report.json"
   }
 }
 ```
@@ -107,7 +107,7 @@ Readers must support legacy full-snapshot `latest.json` files, but writers must 
 ```json
 "key_metrics": {
   "market_cap": {
-    "value": 2717250,
+    "value": "<MARKET_CAP>",
     "unit": "millions_usd",
     "grade": "A",
     "source_type": "calculated",
@@ -117,7 +117,7 @@ Readers must support legacy full-snapshot `latest.json` files, but writers must 
     "sources": ["Calculated from filing-backed price and shares"]
   },
   "pe_ratio": {
-    "value": 28.5,
+    "value": "<PE_RATIO>",
     "grade": "A",
     "source_type": "calculated",
     "source_authority": "derived",
@@ -178,22 +178,22 @@ Grade meanings: A=규제기관 공시 원본+산술 일관성, B=2+소스 교차
 ```json
 "scenarios": {
   "bull": {
-    "target": 220.0,
-    "return_pct": "+25.4%",
+    "target": "<BULL_TARGET>",
+    "return_pct": "<BULL_RETURN_PCT>",
     "probability": 0.30,
-    "key_assumption": "Services revenue accelerates to 20%+ growth driven by AI monetization"
+    "key_assumption": "<SOURCE_BACKED_BULL_ASSUMPTION>"
   },
   "base": {
-    "target": 195.0,
-    "return_pct": "+11.4%",
+    "target": "<BASE_TARGET>",
+    "return_pct": "<BASE_RETURN_PCT>",
     "probability": 0.50,
-    "key_assumption": "Steady iPhone cycle + mid-teens Services growth"
+    "key_assumption": "<SOURCE_BACKED_BASE_ASSUMPTION>"
   },
   "bear": {
-    "target": 145.0,
-    "return_pct": "-17.3%",
+    "target": "<BEAR_TARGET>",
+    "return_pct": "<BEAR_RETURN_PCT>",
     "probability": 0.20,
-    "key_assumption": "China revenue declines 25%+ due to regulatory action or competitive loss"
+    "key_assumption": "<SOURCE_BACKED_BEAR_ASSUMPTION>"
   }
 }
 ```
@@ -207,16 +207,16 @@ Grade meanings: A=규제기관 공시 원본+산술 일관성, B=2+소스 교차
 ```json
 "upcoming_catalysts": [
   {
-    "date": "2026-04-25",
-    "event": "FY2Q 2026 Earnings",
+    "date": "<CATALYST_DATE>",
+    "event": "<SOURCE_BACKED_EVENT>",
     "significance": "high",
-    "leading_indicators": "iPhone shipment data from supply chain checks"
+    "leading_indicators": "<SOURCE_BACKED_LEADING_INDICATOR>"
   },
   {
-    "date": "2026-06-09",
-    "event": "WWDC 2026 — AI features announcement",
+    "date": "<CATALYST_DATE>",
+    "event": "<SOURCE_BACKED_EVENT>",
     "significance": "high",
-    "leading_indicators": "Beta developer leak, App Store review changes"
+    "leading_indicators": "<SOURCE_BACKED_LEADING_INDICATOR>"
   }
 ]
 ```
@@ -237,35 +237,35 @@ Valid values: `[Filing]`, `[Company]`, `[Portal]`, `[KR-Portal]`, `[Calc]`, `[Es
 
 ---
 
-## Complete Example (AAPL, Enhanced Mode, Mode C)
+## Complete Example (Enhanced Mode, Mode C)
 
 ```json
 {
-  "ticker": "AAPL",
+  "ticker": "<TICKER>",
   "market": "US",
   "data_mode": "enhanced",
-  "analysis_date": "2026-03-12",
-  "price_at_analysis": 175.50,
+  "analysis_date": "<ANALYSIS_DATE>",
+  "price_at_analysis": "<CURRENT_PRICE>",
   "currency": "USD",
   "output_mode": "C",
   "company_type": "Technology/Platform",
   "key_metrics": {
-    "market_cap": "2.7T",
-    "market_cap_raw": 2717250000000,
-    "pe_ratio": 28.5,
-    "ev_ebitda": 22.1,
-    "fcf_yield": 3.8,
-    "revenue_growth_yoy": 8.2,
-    "operating_margin": 31.5,
-    "gross_margin": 43.8,
-    "net_margin": 24.9,
-    "net_debt_ebitda": 0.3,
-    "revenue_ttm": 390000000000,
-    "ebitda_ttm": 130000000000,
-    "eps_ttm": 6.43,
-    "fcf_ttm": 99000000000,
-    "roe": 147.9,
-    "dividend_yield": 0.5
+    "market_cap": "<MARKET_CAP>",
+    "market_cap_raw": "<MARKET_CAP_RAW>",
+    "pe_ratio": "<PE_RATIO>",
+    "ev_ebitda": "<EV_EBITDA>",
+    "fcf_yield": "<FCF_YIELD>",
+    "revenue_growth_yoy": "<REVENUE_GROWTH_YOY>",
+    "operating_margin": "<OPERATING_MARGIN>",
+    "gross_margin": "<GROSS_MARGIN>",
+    "net_margin": "<NET_MARGIN>",
+    "net_debt_ebitda": "<NET_DEBT_EBITDA>",
+    "revenue_ttm": "<REVENUE_TTM>",
+    "ebitda_ttm": "<EBITDA_TTM>",
+    "eps_ttm": "<EPS_TTM>",
+    "fcf_ttm": "<FCF_TTM>",
+    "roe": "<ROE>",
+    "dividend_yield": "<DIVIDEND_YIELD>"
   },
   "confidence_grades": {
     "price": "A",
@@ -277,24 +277,24 @@ Valid values: `[Filing]`, `[Company]`, `[Portal]`, `[KR-Portal]`, `[Calc]`, `[Es
     "net_debt_ebitda": "A",
     "fcf_ttm": "A"
   },
-  "variant_view_summary": "Market treats Apple as a hardware company exposed to iPhone cycle risk, ignoring the structural shift: Services is now 25% of revenue at 75%+ gross margins, creating a recurring-revenue business the market prices at hardware multiples.",
+  "variant_view_summary": "<SOURCE_BACKED_VARIANT_VIEW_SUMMARY>",
   "scenarios": {
-    "bull": {"target": 220, "return_pct": "+25%", "probability": 0.30, "key_assumption": "AI-native iPhone supercycle drives 15% unit growth + Services accelerates to 20%+ growth"},
-    "base": {"target": 195, "return_pct": "+11%", "probability": 0.50, "key_assumption": "Steady iPhone replacement + mid-teens Services growth, stable margins"},
-    "bear": {"target": 145, "return_pct": "-17%", "probability": 0.20, "key_assumption": "China revenue -25%+ from regulatory action; Services growth decelerates to <10%"}
+    "bull": {"target": "<BULL_TARGET>", "return_pct": "<BULL_RETURN_PCT>", "probability": 0.30, "key_assumption": "<SOURCE_BACKED_BULL_ASSUMPTION>"},
+    "base": {"target": "<BASE_TARGET>", "return_pct": "<BASE_RETURN_PCT>", "probability": 0.50, "key_assumption": "<SOURCE_BACKED_BASE_ASSUMPTION>"},
+    "bear": {"target": "<BEAR_TARGET>", "return_pct": "<BEAR_RETURN_PCT>", "probability": 0.20, "key_assumption": "<SOURCE_BACKED_BEAR_ASSUMPTION>"}
   },
-  "rr_score": 9.3,
+  "rr_score": "<RR_SCORE>",
   "top_risks": [
-    "China regulatory restriction on App Store or device sales (mechanism: forced revenue removal, ~$70B revenue at risk)",
-    "AI features fail to drive upgrade cycle (mechanism: elongated replacement cycle, ~5% unit volume miss)",
-    "DOJ antitrust action on App Store 30% commission (mechanism: forced margin compression, ~$3-5B annual Services impact)"
+    "<SOURCE_BACKED_RISK_1>",
+    "<SOURCE_BACKED_RISK_2>",
+    "<SOURCE_BACKED_RISK_3>"
   ],
   "verdict": "Overweight",
   "upcoming_catalysts": [
-    {"date": "2026-04-25", "event": "FY2Q Earnings", "significance": "high", "leading_indicators": "Taiwan Semiconductor monthly revenue data"},
-    {"date": "2026-06-09", "event": "WWDC 2026", "significance": "medium", "leading_indicators": "Developer beta registrations"}
+    {"date": "<CATALYST_DATE>", "event": "<SOURCE_BACKED_EVENT>", "significance": "high", "leading_indicators": "<SOURCE_BACKED_LEADING_INDICATOR>"},
+    {"date": "<CATALYST_DATE>", "event": "<SOURCE_BACKED_EVENT>", "significance": "medium", "leading_indicators": "<SOURCE_BACKED_LEADING_INDICATOR>"}
   ],
-  "report_path": "output/reports/AAPL_C_EN_2026-03-12.html",
+  "report_path": "output/reports/<TICKER>_C_<LANG>_<ANALYSIS_DATE>.html",
   "data_sources_used": ["[Filing]", "[Calc]", "[Portal]", "[Est]"]
 }
 ```

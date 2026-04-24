@@ -16,7 +16,7 @@
 
 Test call:
 ```
-get_current_stock_price("AAPL")
+get_current_stock_price("<TICKER>")
 ```
 
 | Result | Decision |
@@ -32,7 +32,7 @@ Cache the result as session variable: `DATA_MODE = "enhanced" | "standard"`
 
 Log:
 ```
-MCP check: get_current_stock_price("AAPL") → {result}
+MCP check: get_current_stock_price("<TICKER>") -> {result}
 DATA_MODE: {enhanced/standard}
 ```
 
@@ -64,7 +64,7 @@ Identify 3–5 most relevant peer tickers for comparison (used in dashboard peer
 Peer selection criteria:
 - Same sector/sub-industry (not just same broad sector)
 - Similar market cap (within 5x of subject company)
-- Listed on accessible market (US: NYSE/NASDAQ/AMEX; KR: KOSPI/KOSDAQ)
+- Listed on accessible market (US major exchange; KR: KOSPI/KOSDAQ)
 - Max 5 peers
 
 ### Step 2.4 — Plan Tier 1 API Calls (Enhanced Mode Only)
@@ -89,17 +89,17 @@ From `us-data-sources.md` (US) or `kr-data-sources.md` (KR), select searches:
 
 **Standard Mode — US** (8 searches minimum):
 1. `"{ticker}" stock price market cap current`
-2. `"{ticker}" latest quarterly earnings revenue EPS 2026`
+2. `"{ticker}" latest quarterly earnings revenue EPS {YYYY}`
 3. `"{ticker}" P/E EV/EBITDA financial ratios`
 4. `"{ticker}" 10-Q SEC EDGAR financial statements`
 5. `"{ticker}" analyst price target consensus buy hold sell`
-6. `"{ticker}" news catalyst 2026`
+6. `"{ticker}" news catalyst {YYYY}`
 7. `"{ticker}" competitors sector comparison`
 8. `"{ticker}" insider trading executives` (Mode C/D only)
 
 **Enhanced Mode — qualitative supplement** (4 searches):
-1. `"{ticker}" earnings call transcript guidance 2026`
-2. `"{company}" industry trends competitive landscape 2026`
+1. `"{ticker}" earnings call transcript guidance {YYYY}`
+2. `"{company}" industry trends competitive landscape {YYYY}`
 3. `"{ticker}" recent news developments last 90 days`
 4. `"{ticker}" vs competitors {peer1} {peer2}`
 
@@ -140,15 +140,15 @@ Write to `output/runs/{run_id}/{ticker}/research-plan.json`:
 
 ```json
 {
-  "ticker": "AAPL",
+  "ticker": "<TICKER>",
   "market": "US",
   "data_mode": "enhanced",
-  "company_type": "Technology/Platform",
+  "company_type": "<COMPANY_TYPE>",
   "company_type_confidence": "HIGH",
   "output_mode": "C",
   "output_language": "en",
-  "analysis_date": "2026-03-12",
-  "peer_tickers": ["MSFT", "GOOGL", "META", "AMZN"],
+  "analysis_date": "<ANALYSIS_DATE>",
+  "peer_tickers": ["<PEER_1>", "<PEER_2>", "<PEER_3>", "<PEER_4>"],
   "analysis_framework_path": "references/analysis-framework-dashboard.md",  // Mode A: "references/analysis-framework-briefing.md"
   "tier1_calls": [
     "get_income_statements",
@@ -164,23 +164,23 @@ Write to `output/runs/{run_id}/{ticker}/research-plan.json`:
   ],
   "tier1_fmp_calls": ["price_target_summary", "grades_summary", "historical_grades"],
   "tier2_searches": [
-    "\"AAPL\" latest quarterly earnings revenue EPS 2026",
-    "\"AAPL\" P/E EV/EBITDA financial ratios",
-    "\"AAPL\" analyst price target consensus buy hold sell",
-    "\"AAPL\" news catalyst 2026",
-    "\"AAPL\" earnings call transcript guidance 2026",
-    "\"AAPL\" recent news developments last 90 days"
+    "\"<TICKER>\" latest quarterly earnings revenue EPS <YYYY>",
+    "\"<TICKER>\" P/E EV/EBITDA financial ratios",
+    "\"<TICKER>\" analyst price target consensus buy hold sell",
+    "\"<TICKER>\" news catalyst <YYYY>",
+    "\"<TICKER>\" earnings call transcript guidance <YYYY>",
+    "\"<TICKER>\" recent news developments last 90 days"
   ],
   "tier2_fetches": [
-    "https://finance.yahoo.com/quote/AAPL/"
+    "<PORTAL_QUOTE_URL>"
   ],
   "macro_search_required": true,
-  "macro_search": "\"Technology\" macro risk factors economic outlook 2026",
-  "macro_factors": ["interest rates", "consumer spending", "USD strength", "semiconductor cycle"],
+  "macro_search": "\"<SECTOR>\" macro risk factors economic outlook <YYYY>",
+  "macro_factors": ["<MACRO_FACTOR_1>", "<MACRO_FACTOR_2>", "<MACRO_FACTOR_3>"],
   "run_context": {
-    "run_id": "20260328T120000Z_AAPL",
-    "ticker": "AAPL",
-    "artifact_root": "output/runs/20260328T120000Z_AAPL/AAPL",
+    "run_id": "<RUN_ID>",
+    "ticker": "<TICKER>",
+    "artifact_root": "output/runs/<RUN_ID>/<TICKER>",
     "reports_dir": "output/reports",
     "compatibility_mirror_enabled": false
   }

@@ -142,9 +142,9 @@ Write to `output/runs/{run_id}/{ticker}/quality-report.json`:
 
 ```json
 {
-  "ticker": "AAPL",
+  "ticker": "<TICKER>",
   "output_mode": "C",
-  "check_timestamp": "2026-03-12T14:45:00Z",
+  "check_timestamp": "<CHECK_TIMESTAMP>",
   "overall_result": "PASS",
   "delivery_gate": {
     "result": "PASS",
@@ -165,24 +165,24 @@ Write to `output/runs/{run_id}/{ticker}/quality-report.json`:
     "financial_consistency": {
       "status": "PASS",
       "sampled_values": [
-        {"metric": "market_cap", "output_value": 2718000, "source_value": 2718000, "match": true},
-        {"metric": "pe_ratio", "output_value": 28.0, "source_value": 28.0, "match": true},
-        {"metric": "revenue_ttm", "output_value": 395000, "source_value": 395000, "match": true}
+        {"metric": "market_cap", "output_value": "<OUTPUT_MARKET_CAP>", "source_value": "<SOURCE_MARKET_CAP>", "match": true},
+        {"metric": "pe_ratio", "output_value": "<OUTPUT_PE_RATIO>", "source_value": "<SOURCE_PE_RATIO>", "match": true},
+        {"metric": "revenue_ttm", "output_value": "<OUTPUT_REVENUE_TTM>", "source_value": "<SOURCE_REVENUE_TTM>", "match": true}
       ]
     },
     "price_and_date": {
       "status": "PASS",
-      "price_found": 175.50,
-      "date_found": "2026-03-12"
+      "price_found": "<CURRENT_PRICE>",
+      "date_found": "<ANALYSIS_DATE>"
     },
     "disclaimer": {
       "status": "PASS"
     },
     "source_tags": {
       "status": "PASS",
-      "total_numeric_values": 45,
-      "tagged_values": 38,
-      "coverage_pct": 84.4
+      "total_numeric_values": "<NUMERIC_CLAIM_COUNT>",
+      "tagged_values": "<TAGGED_VALUE_COUNT>",
+      "coverage_pct": "<COVERAGE_PCT>"
     },
     "blank_over_wrong": {
       "status": "PASS",

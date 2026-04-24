@@ -4,7 +4,7 @@ Mode D produces a professionally formatted Word document (.docx) with section he
 financial tables, scenario matrix, risk table, EBITDA bridge, and source tags throughout.
 
 **Output path**: `output/reports/{ticker}_D_{lang}_{YYYY-MM-DD}.docx`
-**Example**: `output/reports/AAPL_D_EN_2026-03-12.docx`
+**Example**: `output/reports/{ticker}_D_{lang}_{YYYY-MM-DD}.docx`
 
 **How it works**:
 1. Analyst writes all content (narrative + tables) into run-local `analysis-result.json` → `sections`
@@ -23,25 +23,25 @@ The `docx-generator.py` reads these fields to build the formatted document.
 ### Required top-level fields (outside `sections`)
 ```json
 {
-  "ticker": "AAPL",
-  "company_name": "Apple Inc.",
-  "exchange": "NASDAQ",
+  "ticker": "<TICKER>",
+  "company_name": "<COMPANY_NAME>",
+  "exchange": "<EXCHANGE>",
   "market": "US",
   "data_mode": "enhanced",
   "output_mode": "D",
   "output_language": "en",
-  "analysis_date": "2026-03-12",
-  "price_at_analysis": 175.50,
+  "analysis_date": "<ANALYSIS_DATE>",
+  "price_at_analysis": "<CURRENT_PRICE>",
   "currency": "USD",
-  "rr_score": 7.8,
+  "rr_score": "<RR_SCORE>",
   "verdict": "Overweight",
   "scenarios": {
-    "bull": {"target": 225, "return_pct": 28.2, "probability": 0.30, "key_assumption": "..."},
-    "base": {"target": 195, "return_pct": 11.4, "probability": 0.50, "key_assumption": "..."},
-    "bear": {"target": 145, "return_pct": -17.1, "probability": 0.20, "key_assumption": "..."}
+    "bull": {"target": "<BULL_TARGET>", "return_pct": "<BULL_RETURN_PCT>", "probability": 0.30, "key_assumption": "<SOURCE_BACKED_BULL_ASSUMPTION>"},
+    "base": {"target": "<BASE_TARGET>", "return_pct": "<BASE_RETURN_PCT>", "probability": 0.50, "key_assumption": "<SOURCE_BACKED_BASE_ASSUMPTION>"},
+    "bear": {"target": "<BEAR_TARGET>", "return_pct": "<BEAR_RETURN_PCT>", "probability": 0.20, "key_assumption": "<SOURCE_BACKED_BEAR_ASSUMPTION>"}
   },
   "data_quality_used": {
-    "grade_A_count": 3, "grade_B_count": 5, "grade_C_count": 1, "grade_D_count": 1,
+    "grade_A_count": "<GRADE_A_COUNT>", "grade_B_count": "<GRADE_B_COUNT>", "grade_C_count": "<GRADE_C_COUNT>", "grade_D_count": "<GRADE_D_COUNT>",
     "overall_grade": "B",
     "exclusions": [{"metric": "ev_ebitda", "reason": "EBITDA TTM unverifiable"}]
   }
@@ -53,9 +53,9 @@ The `docx-generator.py` reads these fields to build the formatted document.
 "sections": {
   "executive_summary": {
     "verdict": "Overweight",
-    "rr_score": 7.8,
-    "current_price": 175.50,
-    "base_target": 195,
+    "rr_score": "<RR_SCORE>",
+    "current_price": "<CURRENT_PRICE>",
+    "base_target": "<BASE_TARGET>",
     "horizon": "12 months",
     "narrative": "3-5 sentence executive summary. Lead with variant view — what the market prices in vs. analysis finding..."
   },
@@ -63,107 +63,107 @@ The `docx-generator.py` reads these fields to build the formatted document.
   "financial_performance": {
     "narrative": "Revenue quality and margin analysis narrative...",
     "revenue_table": [
-      {"quarter": "Q1 FY2025", "revenue": "$124.3B", "yoy_growth": "5.1%", "source": "[Filing]"},
-      {"quarter": "Q2 FY2025", "revenue": "$95.4B",  "yoy_growth": "4.9%", "source": "[Filing]"}
+      {"quarter": "<FISCAL_QUARTER>", "revenue": "<REVENUE>", "yoy_growth": "<YOY_GROWTH>", "source": "[Filing]"},
+      {"quarter": "<FISCAL_QUARTER>", "revenue": "<REVENUE>", "yoy_growth": "<YOY_GROWTH>", "source": "[Filing]"}
     ],
     "margin_table": [
-      {"quarter": "Q1 FY2025", "gross_margin": "46.9%", "op_margin": "31.2%", "net_margin": "24.1%", "source": "[Filing]"}
+      {"quarter": "<FISCAL_QUARTER>", "gross_margin": "<GROSS_MARGIN>", "op_margin": "<OPERATING_MARGIN>", "net_margin": "<NET_MARGIN>", "source": "[Filing]"}
     ],
     "cash_flow_table": [
-      {"metric": "Operating CF", "ttm": "$118.3B", "prior_year": "$109.2B", "change": "+8.3%"},
-      {"metric": "CapEx",        "ttm": "($9.4B)",  "prior_year": "($10.7B)", "change": "-12.1%"},
-      {"metric": "FCF",          "ttm": "$108.9B",  "prior_year": "$98.5B",   "change": "+10.6%"},
-      {"metric": "FCF Margin",   "ttm": "24.2%",    "prior_year": "22.9%",    "change": "+130bps"}
+      {"metric": "Operating CF", "ttm": "<OPERATING_CF_TTM>", "prior_year": "<PRIOR_YEAR_OPERATING_CF>", "change": "<CHANGE_PCT>"},
+      {"metric": "CapEx",        "ttm": "<CAPEX_TTM>",        "prior_year": "<PRIOR_YEAR_CAPEX>",        "change": "<CHANGE_PCT>"},
+      {"metric": "FCF",          "ttm": "<FCF_TTM>",          "prior_year": "<PRIOR_YEAR_FCF>",          "change": "<CHANGE_PCT>"},
+      {"metric": "FCF Margin",   "ttm": "<FCF_MARGIN>",       "prior_year": "<PRIOR_YEAR_FCF_MARGIN>",   "change": "<BPS_CHANGE>"}
     ],
     "balance_sheet": [
-      {"item": "Cash & Equivalents", "value": "$65.2B",   "source": "[Filing]"},
-      {"item": "Total Debt",         "value": "$109.3B",  "source": "[Filing]"},
-      {"item": "Net Debt",           "value": "$44.1B",   "source": "[Calc]"},
-      {"item": "Net Debt/EBITDA",    "value": "0.37x",    "source": "[Calc]"},
-      {"item": "Shares Outstanding", "value": "15,441M",  "source": "[Filing]"}
+      {"item": "Cash & Equivalents", "value": "<CASH>",                "source": "[Filing]"},
+      {"item": "Total Debt",         "value": "<TOTAL_DEBT>",          "source": "[Filing]"},
+      {"item": "Net Debt",           "value": "<NET_DEBT>",            "source": "[Calc]"},
+      {"item": "Net Debt/EBITDA",    "value": "<NET_DEBT_EBITDA>",     "source": "[Calc]"},
+      {"item": "Shares Outstanding", "value": "<SHARES_OUTSTANDING>",  "source": "[Filing]"}
     ],
-    "fcf_note": "SBC represents 2.8% of TTM revenue [Filing]. Working capital changes minimal. No major one-time items in TTM period."
+    "fcf_note": "<SOURCE_BACKED_FCF_QUALITY_NOTE>"
   },
   "valuation_analysis": {
     "narrative": "Valuation context: what growth assumptions are implied by current price...",
     "valuation_table": [
-      {"metric": "P/E (NTM)", "current": "28.0x [Filing]", "sector_avg": "~22x", "5y_historical": "~25x", "assessment": "Premium"},
-      {"metric": "EV/EBITDA", "current": "—",            "sector_avg": "~16x", "5y_historical": "—",    "assessment": "Grade D — excluded"},
-      {"metric": "P/FCF",     "current": "22.3x [Calc]", "sector_avg": "~20x", "5y_historical": "—", "assessment": "Slight premium"},
-      {"metric": "P/Sales",   "current": "7.2x [Filing]",  "sector_avg": "~5x",  "5y_historical": "~6x",  "assessment": "Premium"}
+      {"metric": "P/E (NTM)", "current": "<CURRENT_PE> [Filing]", "sector_avg": "<SECTOR_AVG_PE>", "5y_historical": "<HISTORICAL_PE>", "assessment": "<ASSESSMENT>"},
+      {"metric": "EV/EBITDA", "current": "—",                    "sector_avg": "<SECTOR_AVG_EV_EBITDA>", "5y_historical": "—", "assessment": "Grade D — excluded"},
+      {"metric": "P/FCF",     "current": "<CURRENT_P_FCF> [Calc]", "sector_avg": "<SECTOR_AVG_P_FCF>", "5y_historical": "—", "assessment": "<ASSESSMENT>"},
+      {"metric": "P/Sales",   "current": "<CURRENT_P_SALES> [Filing]", "sector_avg": "<SECTOR_AVG_P_SALES>", "5y_historical": "<HISTORICAL_P_SALES>", "assessment": "<ASSESSMENT>"}
     ],
     "sotp_table": null
   },
   "variant_view_q1": "Full Q1 text (150-250 words). State market consensus first, then the specific disagreement, then supporting evidence with data points...",
   "variant_view_q2": "Catalyst summary text (1-2 sentences on most critical catalyst)...",
   "variant_view_q2_catalysts": [
-    {"catalyst": "Q2 FY2026 earnings — Services revenue beat", "timeline": "Apr 2026", "probability": "High", "impact": "+5-8% stock reaction if Services >$28B"},
-    {"catalyst": "WWDC 2026 AI features announcement",         "timeline": "Jun 2026", "probability": "Medium", "impact": "Re-rating potential if Apple Intelligence monetization confirmed"},
-    {"catalyst": "China market share data — Lunar New Year",   "timeline": "Mar 2026", "probability": "Medium", "impact": "Downside risk if iPhone share < 15% in China"}
+    {"catalyst": "<SOURCE_BACKED_CATALYST_1>", "timeline": "<CATALYST_TIMELINE>", "probability": "High", "impact": "<SOURCE_BACKED_IMPACT>"},
+    {"catalyst": "<SOURCE_BACKED_CATALYST_2>", "timeline": "<CATALYST_TIMELINE>", "probability": "Medium", "impact": "<SOURCE_BACKED_IMPACT>"},
+    {"catalyst": "<SOURCE_BACKED_CATALYST_3>", "timeline": "<CATALYST_TIMELINE>", "probability": "Medium", "impact": "<SOURCE_BACKED_IMPACT>"}
   ],
   "variant_view_q3": "Full Q3 text on optionality the market is not pricing in...",
   "variant_view_q4": "Full Q4 text on capital allocation analysis. Include buyback math, M&A track record, debt strategy...",
   "variant_view_q5": "Full Q5 text. Thesis achieved conditions, thesis broken conditions (≥3 testable), better opportunity criteria...",
   "precision_risks": [
     {
-      "risk": "DOJ App Store Investigation",
-      "mechanism": "Forced reduction in App Store commission rate from 30% to 15-17% → App Store revenue declines ~$6B annually → EBITDA impact ~$5B (4.2% of TTM) → P/E compression from 28x to 24x at current growth rate",
-      "ebitda_impact": "~$5B (4.2% of TTM EBITDA)",
+      "risk": "<SOURCE_BACKED_RISK_EVENT>",
+      "mechanism": "<RISK_EVENT> -> <BUSINESS_IMPACT> -> <EBITDA_OR_EPS_IMPACT> -> <MULTIPLE_OR_TARGET_PRICE_EFFECT>",
+      "ebitda_impact": "<EBITDA_IMPACT>",
       "probability": "Medium",
-      "mitigation": "Monitor: DOJ filing updates, EU DMA compliance precedent"
+      "mitigation": "<MONITORING_INDICATOR>"
     }
   ],
-  "macro_risk": "FX headwind: 57% of revenue ex-Americas [Filing]. 10% USD strengthening reduces EPS by ~$0.45 (4.5% of FY2026 consensus EPS). Interest rate sensitivity minimal — net cash position after adjusting for operational debt.",
+  "macro_risk": "<SOURCE_BACKED_MACRO_RISK_OVERLAY>",
   "investment_scenarios": {
     "narratives": {
-      "bull": "Services revenue reaches 25% of total by FY2027 on Apple Intelligence monetization. iPhone cycle stable. Re-rating to 32x NTM P/E drives $225 target.",
-      "base": "iPhone unit growth 6-8% annually, Services 15% YoY. Multiple holds at 28x. $195 target in 12 months on EPS growth alone.",
-      "bear": "China revenue contracts 20%+ on Huawei share gains and geopolitical escalation. Services growth decelerates to <10%. Multiple compresses to 22x. $145 target."
+      "bull": "<SOURCE_BACKED_BULL_NARRATIVE>",
+      "base": "<SOURCE_BACKED_BASE_NARRATIVE>",
+      "bear": "<SOURCE_BACKED_BEAR_NARRATIVE>"
     }
   },
   "peer_comparison": [
-    {"metric": "P/E",       "AAPL": "28.0x [Filing]", "MSFT": "32.5x", "GOOGL": "20.1x", "sector_avg": "~22x"},
-    {"metric": "EV/EBITDA", "AAPL": "—", "MSFT": "22.3x", "GOOGL": "14.8x", "sector_avg": "~16x"},
-    {"metric": "Rev Growth","AAPL": "5.1% [Filing]",  "MSFT": "17.6%", "GOOGL": "12.0%", "sector_avg": "~10%"},
-    {"metric": "Op Margin", "AAPL": "31.2% [Filing]", "MSFT": "44.8%", "GOOGL": "28.5%", "sector_avg": "~25%"},
-    {"metric": "FCF Yield", "AAPL": "4.5% [Calc]", "MSFT": "2.3%", "GOOGL": "4.1%", "sector_avg": "~3%"}
+    {"metric": "P/E",       "<TICKER>": "<COMPANY_PE> [Filing]", "<PEER_1>": "<PEER_1_PE>", "<PEER_2>": "<PEER_2_PE>", "sector_avg": "<SECTOR_AVG_PE>"},
+    {"metric": "EV/EBITDA", "<TICKER>": "—", "<PEER_1>": "<PEER_1_EV_EBITDA>", "<PEER_2>": "<PEER_2_EV_EBITDA>", "sector_avg": "<SECTOR_AVG_EV_EBITDA>"},
+    {"metric": "Rev Growth","<TICKER>": "<COMPANY_REVENUE_GROWTH> [Filing]", "<PEER_1>": "<PEER_1_REVENUE_GROWTH>", "<PEER_2>": "<PEER_2_REVENUE_GROWTH>", "sector_avg": "<SECTOR_AVG_REVENUE_GROWTH>"},
+    {"metric": "Op Margin", "<TICKER>": "<COMPANY_OPERATING_MARGIN> [Filing]", "<PEER_1>": "<PEER_1_OPERATING_MARGIN>", "<PEER_2>": "<PEER_2_OPERATING_MARGIN>", "sector_avg": "<SECTOR_AVG_OPERATING_MARGIN>"},
+    {"metric": "FCF Yield", "<TICKER>": "<COMPANY_FCF_YIELD> [Calc]", "<PEER_1>": "<PEER_1_FCF_YIELD>", "<PEER_2>": "<PEER_2_FCF_YIELD>", "sector_avg": "<SECTOR_AVG_FCF_YIELD>"}
   ],
-  "peer_comparison_narrative": "Relative valuation assessment: premium vs. GOOGL justified by ecosystem lock-in and Services margin expansion. Discount vs. MSFT reflects lower growth rate. Key competitive threat: MSFT's enterprise AI adoption rate outpacing Apple Intelligence consumer monetization.",
+  "peer_comparison_narrative": "<SOURCE_BACKED_RELATIVE_VALUATION_ASSESSMENT>",
   "management_governance": "Full Section 8 text (150-200 words). CEO tenure, guidance track record (last 4 quarters), capital allocation history...",
   "quality_of_earnings": {
     "ebitda_bridge": [
-      {"item": "Reported EBITDA",         "amount": "$125.0B", "note": "[Filing]"},
-      {"item": "Less: SBC",               "amount": "($12.9B)", "note": "2.8% of revenue [Filing]"},
-      {"item": "Less: Restructuring",     "amount": "($0.0B)",  "note": "None in TTM"},
-      {"item": "Less: M&A Costs",         "amount": "($0.2B)",  "note": "One-time"},
-      {"item": "Less: Maintenance CapEx", "amount": "($6.5B)",  "note": "Estimated [Calc]"},
-      {"item": "Adjusted Cash Earnings",  "amount": "$105.4B",  "note": "16% haircut vs. reported EBITDA"}
+      {"item": "Reported EBITDA",         "amount": "<REPORTED_EBITDA>",        "note": "[Filing]"},
+      {"item": "Less: SBC",               "amount": "<SBC_ADJUSTMENT>",         "note": "<SBC_NOTE> [Filing]"},
+      {"item": "Less: Restructuring",     "amount": "<RESTRUCTURING_ADJUSTMENT>", "note": "<RESTRUCTURING_NOTE>"},
+      {"item": "Less: M&A Costs",         "amount": "<M_AND_A_COSTS>",          "note": "<ONE_TIME_NOTE>"},
+      {"item": "Less: Maintenance CapEx", "amount": "<MAINTENANCE_CAPEX>",      "note": "Estimated [Calc]"},
+      {"item": "Adjusted Cash Earnings",  "amount": "<ADJUSTED_CASH_EARNINGS>", "note": "<ADJUSTMENT_NOTE>"}
     ],
     "narrative": "FCF conversion quality analysis...",
-    "fcf_conversion": "Operating CF / Net Income = 1.24x — strong accruals quality (>1.1x threshold). No unusual working capital changes.",
-    "earnings_sustainability": "Margins sustainable: hardware margins stable, Services margins expanding at 73% gross [Filing]. No significant one-time items inflate TTM EBITDA."
+    "fcf_conversion": "<SOURCE_BACKED_FCF_CONVERSION_ANALYSIS>",
+    "earnings_sustainability": "<SOURCE_BACKED_EARNINGS_SUSTAINABILITY>"
   },
   "what_would_make_me_wrong": [
     {
-      "assumption": "Services revenue growth sustains at 15%+ annually",
-      "if_wrong": "If Services growth decelerates to <10%, our base case EPS of $8.20 misses by ~$0.40 (5%), compressing target to ~$175 at current multiple",
-      "monitoring_indicator": "Watch quarterly Services revenue reports; flag if growth < 12% for 2 consecutive quarters",
+      "assumption": "<SOURCE_BACKED_ASSUMPTION_1>",
+      "if_wrong": "<CONSEQUENCE_FOR_MODEL_OR_TARGET>",
+      "monitoring_indicator": "<MONITORING_INDICATOR>",
       "probability": "Low"
     },
     {
-      "assumption": "China revenue stabilizes after FY2025 headwinds",
-      "if_wrong": "20% China revenue decline = ~$14B revenue impact = bear case trigger",
-      "monitoring_indicator": "IDC China smartphone market share quarterly data; Huawei P-series sales data",
+      "assumption": "<SOURCE_BACKED_ASSUMPTION_2>",
+      "if_wrong": "<CONSEQUENCE_FOR_MODEL_OR_TARGET>",
+      "monitoring_indicator": "<MONITORING_INDICATOR>",
       "probability": "Medium"
     },
     {
-      "assumption": "No material antitrust action reduces App Store economics",
-      "if_wrong": "Commission cut to 15% reduces EBITDA by ~$5B; P/E compression to 24x = $155 fair value",
-      "monitoring_indicator": "DOJ case progress; EU DMA enforcement actions",
+      "assumption": "<SOURCE_BACKED_ASSUMPTION_3>",
+      "if_wrong": "<CONSEQUENCE_FOR_MODEL_OR_TARGET>",
+      "monitoring_indicator": "<MONITORING_INDICATOR>",
       "probability": "Low-Medium"
     }
   ],
-  "pre_mortem": "If this investment loses 30% over 12 months, the most likely cause would be a simultaneous hit from China revenue contraction exceeding 25% and a DOJ-mandated App Store commission reduction, compressing both revenue and multiple in the same fiscal year — a scenario we assign 8% probability but have not fully priced into our bear case.",
+  "pre_mortem": "<SOURCE_BACKED_PRE_MORTEM>",
   "data_sources": [
     {"data_category": "Revenue / Earnings",  "source": "Financial Datasets MCP (SEC filing data)",  "confidence": "A", "tag": "[Filing]"},
     {"data_category": "Current Price",       "source": "get_current_stock_price (SEC filing data)", "confidence": "A", "tag": "[Filing]"},
@@ -318,7 +318,7 @@ into the JSON `sections` object — do NOT write a separate Markdown file.
 
 | Catalyst | Timeline | Probability | Impact if Triggered |
 |----------|----------|-------------|---------------------|
-| {Specific event/data point} | {Q1 2026 / H2 2026 / etc.} | {High/Medium/Low} | {Specific effect on price or multiple} |
+| {Specific event/data point} | {FISCAL_PERIOD / TIME_WINDOW} | {High/Medium/Low} | {Specific effect on price or multiple} |
 | {Specific event/data point} | | | |
 | {Specific event/data point} | | | |
 
@@ -326,7 +326,7 @@ into the JSON `sections` object — do NOT write a separate Markdown file.
 
 ### Q3: What Optionality Is the Market Not Pricing In?
 
-{Describe 1–2 specific upside options not in consensus estimates. Could be: new product, geographic expansion, regulatory tailwind, technology transition. Each must have a rough size estimate — e.g., "if {optionality} achieves {x} revenue by 2027, it adds ~${y} to fair value at {z}x multiple".}
+{Describe 1–2 specific upside options not in consensus estimates. Could be: new product, geographic expansion, regulatory tailwind, technology transition. Each must have a rough size estimate — e.g., "if {optionality} achieves {revenue} by {future_period}, it adds {fair_value_impact} at {multiple}x multiple".}
 
 ### Q4: Capital Allocation — How Is Management Creating (or Destroying) Value?
 
@@ -364,7 +364,7 @@ into the JSON `sections` object — do NOT write a separate Markdown file.
 | {Risk 2} | | | | |
 | {Risk 3} | | | | |
 
-*Risk Rule: Every risk must have a mechanism. "Competition risk" → FAIL. "Amazon AWS entering enterprise HR SaaS at 30-40% discount, compressing {TICKER}'s blended ASP from $120 to $85/seat, reducing revenue by ~$800M (12% of TTM) at current seat count" → PASS.*
+*Risk Rule: Every risk must have a mechanism. "Competition risk" -> FAIL. "<SPECIFIC_COMPETITOR_ACTION> compresses <BUSINESS_DRIVER> from <BASELINE_VALUE> to <DOWNSIDE_VALUE>, reducing revenue by <REVENUE_IMPACT> (<PCT_OF_TTM> of TTM)" -> PASS.*
 
 ### Macro Risk Overlay
 {Interest rate sensitivity, FX exposure [% revenue from non-domestic], commodity exposure if relevant. All with quantified impact estimates.}

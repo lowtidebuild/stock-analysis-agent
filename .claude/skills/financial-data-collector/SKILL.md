@@ -24,7 +24,7 @@ IF valid price returned:
 IF error or empty result:
     → Retry once with slight delay
     → If still failing: "ERROR: {ticker} not found via API. Attempting web verification..."
-    → Web search: "{ticker} stock NYSE NASDAQ" to confirm ticker
+    → Web search: "{ticker} stock US exchange" to confirm ticker
     → If ticker confirmed wrong: ask user to verify
     → If API down: switch to Standard Mode for this session
 ```
@@ -172,8 +172,8 @@ Write all collected data to `output/runs/{run_id}/{ticker}/tier1-raw.json`:
 
 ```json
 {
-  "ticker": "AAPL",
-  "collection_timestamp": "2026-03-12T14:30:00Z",
+  "ticker": "<TICKER>",
+  "collection_timestamp": "<COLLECTION_TIMESTAMP>",
   "data_source": "financial-datasets-mcp",
   "api_calls_succeeded": ["get_current_stock_price", "get_income_statements", ...],
   "api_calls_failed": [],
@@ -181,7 +181,7 @@ Write all collected data to `output/runs/{run_id}/{ticker}/tier1-raw.json`:
   "income_statements": [...],
   "balance_sheets": [...],
   "cash_flow_statements": [...],
-  "current_price": {"price": 175.50, "change": 1.25, "change_pct": 0.72},
+  "current_price": {"price": "<CURRENT_PRICE>", "change": "<DAY_CHANGE>", "change_pct": "<DAY_CHANGE_PCT>"},
   "historical_prices": [...],
   "financial_metrics": {...},
   "analyst_estimates": {...},
@@ -192,13 +192,13 @@ Write all collected data to `output/runs/{run_id}/{ticker}/tier1-raw.json`:
   "fmp_grades_summary": {...},
   "fmp_grade_history": [...],
   "derived_ttm": {
-    "revenue_ttm": 395000,
-    "net_income_ttm": 97000,
-    "operating_income_ttm": 118000,
-    "gross_profit_ttm": 180000,
-    "fcf_ttm": 110000,
-    "eps_ttm": 6.27,
-    "diluted_shares": 15500
+    "revenue_ttm": "<REVENUE_TTM>",
+    "net_income_ttm": "<NET_INCOME_TTM>",
+    "operating_income_ttm": "<OPERATING_INCOME_TTM>",
+    "gross_profit_ttm": "<GROSS_PROFIT_TTM>",
+    "fcf_ttm": "<FCF_TTM>",
+    "eps_ttm": "<EPS_TTM>",
+    "diluted_shares": "<DILUTED_SHARES>"
   }
 }
 ```

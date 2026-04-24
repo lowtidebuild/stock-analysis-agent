@@ -63,27 +63,27 @@ Also include a completion summary in your final message. If a persistent record 
 
 ```json
 {
-  "timestamp": "2026-03-12T14:30:00Z",
+  "timestamp": "<COLLECTION_TIMESTAMP>",
   "tickers": {
-    "AAPL": {
+    "<TICKER_1>": {
       "status": "complete",
-      "tier1_path": "output/runs/20260424T000000Z_AAPL_MSFT/AAPL/tier1-raw.json",
-      "tier2_path": "output/runs/20260424T000000Z_AAPL_MSFT/AAPL/tier2-raw.json",
-      "api_calls_succeeded": 10,
+      "tier1_path": "output/runs/<RUN_ID>/<TICKER_1>/tier1-raw.json",
+      "tier2_path": "output/runs/<RUN_ID>/<TICKER_1>/tier2-raw.json",
+      "api_calls_succeeded": "<SUCCESS_COUNT>",
       "api_calls_failed": 0,
       "price_available": true,
-      "quarters_available": 8,
+      "quarters_available": "<QUARTER_COUNT>",
       "data_mode": "enhanced"
     },
-    "MSFT": {
+    "<TICKER_2>": {
       "status": "complete",
-      "tier1_path": "output/runs/20260424T000000Z_AAPL_MSFT/MSFT/tier1-raw.json",
-      "tier2_path": "output/runs/20260424T000000Z_AAPL_MSFT/MSFT/tier2-raw.json",
-      "api_calls_succeeded": 9,
-      "api_calls_failed": 1,
-      "failed_calls": ["get_insider_trades"],
+      "tier1_path": "output/runs/<RUN_ID>/<TICKER_2>/tier1-raw.json",
+      "tier2_path": "output/runs/<RUN_ID>/<TICKER_2>/tier2-raw.json",
+      "api_calls_succeeded": "<SUCCESS_COUNT>",
+      "api_calls_failed": "<FAILURE_COUNT>",
+      "failed_calls": ["<FAILED_CALL_NAME>"],
       "price_available": true,
-      "quarters_available": 8,
+      "quarters_available": "<QUARTER_COUNT>",
       "data_mode": "enhanced"
     }
   },
@@ -130,9 +130,9 @@ Every data point I extract is tagged at the point of extraction — not after:
 
 ```json
 {
-  "price": {"value": 175.50, "source": "get_current_stock_price", "tag": "[Filing]"},
-  "revenue_ttm": {"value": 395000, "source": "get_income_statements (4Q sum)", "tag": "[Filing]"},
-  "pe_ratio": {"value": 28.5, "source": "Yahoo Finance", "tag": "[Portal]"}
+  "price": {"value": "<CURRENT_PRICE>", "source": "get_current_stock_price", "tag": "[Filing]"},
+  "revenue_ttm": {"value": "<REVENUE_TTM>", "source": "get_income_statements (4Q sum)", "tag": "[Filing]"},
+  "pe_ratio": {"value": "<PE_RATIO>", "source": "<PORTAL_NAME>", "tag": "[Portal]"}
 }
 ```
 

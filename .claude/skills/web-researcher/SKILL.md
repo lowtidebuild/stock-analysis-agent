@@ -47,11 +47,11 @@ Execute ALL 8 searches from `us-data-sources.md` Standard Mode section:
 | # | Query Template | Purpose |
 |---|----------------|---------|
 | 1 | `"{ticker}" stock price market cap current` | Price, market cap |
-| 2 | `"{ticker}" latest quarterly earnings revenue EPS 2026` | Recent financials |
+| 2 | `"{ticker}" latest quarterly earnings revenue EPS {YYYY}` | Recent financials |
 | 3 | `"{ticker}" P/E EV/EBITDA financial ratios` | Valuation metrics |
 | 4 | `"{ticker}" 10-Q SEC EDGAR financial statements` | Raw financial data |
 | 5 | `"{ticker}" analyst price target consensus buy hold sell` | Analyst views |
-| 6 | `"{ticker}" news catalyst 2026` | Qualitative context |
+| 6 | `"{ticker}" news catalyst {YYYY}` | Qualitative context |
 | 7 | `"{ticker}" competitors sector comparison` | Peer context |
 | 8 | `"{ticker}" insider trading executives` | Management alignment |
 
@@ -137,8 +137,8 @@ Merge missing fields only:
 - Extract: 외국인 지분율, 기관 순매수/순매도
 
 **Step 4.4.5 — General search**:
-- Search: `"{company}" 실적발표 2026 영업이익 매출`
-- Search: `"{company}" 잠정실적 2026`
+- Search: `"{company}" 실적발표 {YYYY} 영업이익 매출`
+- Search: `"{company}" 잠정실적 {YYYY}`
 
 ### Step 4.5 — Enhanced Mode Qualitative Supplement (4 searches)
 
@@ -146,8 +146,8 @@ When `data_mode = "enhanced"`, execute these additional searches AFTER Tier 1 AP
 
 | # | Query Template | Purpose |
 |---|----------------|---------|
-| 1 | `"{ticker}" earnings call transcript guidance 2026` | Management outlook |
-| 2 | `"{company}" industry trends competitive landscape 2026` | Sector context |
+| 1 | `"{ticker}" earnings call transcript guidance {YYYY}` | Management outlook |
+| 2 | `"{company}" industry trends competitive landscape {YYYY}` | Sector context |
 | 3 | `"{ticker}" recent news developments last 90 days` | Catalyst monitoring |
 | 4 | `"{ticker}" vs competitors {peer1} {peer2}` | Relative positioning |
 
@@ -171,8 +171,8 @@ After collecting data, identify which of the 10 key metrics from `validation-rul
 - MISSING (not found in any source)
 
 For each MISSING metric, attempt one additional targeted search:
-- Revenue missing → `"{ticker}" annual revenue TTM 2025`
-- EPS missing → `"{ticker}" diluted EPS TTM 2025`
+- Revenue missing → `"{ticker}" annual revenue TTM {YYYY}`
+- EPS missing → `"{ticker}" diluted EPS TTM {YYYY}`
 - P/E missing → try Yahoo Finance direct fetch
 
 If still missing after targeted search → mark as Grade D (will be excluded from analysis).
@@ -215,7 +215,7 @@ Check run-local `research-plan.json` for `macro_search_required`. If `false` or 
 |-------|-------------|
 | `factor` | What macro force (e.g., "Fed rate cuts", "China tariffs", "USD/KRW depreciation") |
 | `narrative` | How it affects the sector/ticker — must be specific, not generic |
-| `timeline` | When impact occurs (e.g., "Q2 2026", "next 6 months", "immediate") |
+| `timeline` | When impact occurs (e.g., "<FISCAL_QUARTER>", "next 6 months", "immediate") |
 | `confidence` | High / Medium / Low — based on source authority and consensus |
 | `tag` | Source tag: `[News]`, `[Filing]`, or `[Est]` |
 
@@ -228,13 +228,13 @@ Check run-local `research-plan.json` for `macro_search_required`. If `false` or 
     "status": "available",
     "tag": "[Macro]",
     "grade": "A",
-    "retrieved_at": "2026-03-25T09:00:00Z",
+    "retrieved_at": "<RETRIEVED_AT>",
     "series": [
-      {"id": "DGS10", "label": "10-Year Treasury Yield", "value": 4.25, "as_of_date": "2026-03-24", "unit": "percent", "grade": "A", "source": "FRED"}
+      {"id": "<FRED_SERIES_ID>", "label": "<FRED_SERIES_LABEL>", "value": "<SERIES_VALUE>", "as_of_date": "<SERIES_AS_OF_DATE>", "unit": "<UNIT>", "grade": "A", "source": "FRED"}
     ],
-    "risk_free_rate": 4.25,
-    "fed_funds_rate": 4.50,
-    "yield_curve_spread": 0.30,
+    "risk_free_rate": "<RISK_FREE_RATE>",
+    "fed_funds_rate": "<FED_FUNDS_RATE>",
+    "yield_curve_spread": "<YIELD_CURVE_SPREAD>",
     "yield_curve_inverted": false,
     "cpi_yoy": 2.8,
     "gdp_growth": 2.1,
@@ -278,23 +278,23 @@ Check run-local `research-plan.json` for `macro_search_required`. If `false` or 
 
 ```json
 {
-  "ticker": "AAPL",
-  "collection_timestamp": "2026-03-12T14:30:00Z",
+  "ticker": "<TICKER>",
+  "collection_timestamp": "<COLLECTION_TIMESTAMP>",
   "market": "US",
   "searches_executed": [
     {
-      "query": "\"AAPL\" stock price market cap current",
+      "query": "\"<TICKER>\" stock price market cap current",
       "results": [
         {
-          "source": "Yahoo Finance",
-          "url": "https://finance.yahoo.com/quote/AAPL/",
-          "date": "2026-03-12",
-          "snippet": "Apple Inc. (AAPL) $175.50 +1.25 (+0.72%)",
+          "source": "<PORTAL_NAME>",
+          "url": "<SOURCE_URL>",
+          "date": "<SOURCE_DATE>",
+          "snippet": "<SOURCE_SNIPPET_WITH_EXTRACTED_VALUES>",
           "data_extracted": {
-            "price": 175.50,
-            "market_cap": "2.71T",
-            "52w_high": 199.62,
-            "52w_low": 164.08
+            "price": "<CURRENT_PRICE>",
+            "market_cap": "<MARKET_CAP>",
+            "52w_high": "<FIFTY_TWO_WEEK_HIGH>",
+            "52w_low": "<FIFTY_TWO_WEEK_LOW>"
           },
           "tag": "[Portal]",
           "confidence_grade": "B"
@@ -303,10 +303,10 @@ Check run-local `research-plan.json` for `macro_search_required`. If `false` or 
     }
   ],
   "key_data_extracted": {
-    "price": {"value": 175.50, "source": "Yahoo Finance", "tag": "[Portal]", "grade": "B"},
-    "market_cap": {"value": 2710000, "source": "Yahoo Finance + MarketWatch", "tag": "[Portal]", "grade": "B"},
-    "revenue_ttm": {"value": 395000, "source": "SEC EDGAR 10-Q", "tag": "[Portal]", "grade": "B"},
-    "pe_ratio": {"value": 28.0, "source": "Yahoo Finance", "tag": "[Portal]", "grade": "C"}
+    "price": {"value": "<CURRENT_PRICE>", "source": "<PORTAL_NAME>", "tag": "[Portal]", "grade": "B"},
+    "market_cap": {"value": "<MARKET_CAP>", "source": "<SOURCE_PAIR>", "tag": "[Portal]", "grade": "B"},
+    "revenue_ttm": {"value": "<REVENUE_TTM>", "source": "<FILING_OR_PORTAL_SOURCE>", "tag": "[Portal]", "grade": "B"},
+    "pe_ratio": {"value": "<PE_RATIO>", "source": "<PORTAL_NAME>", "tag": "[Portal]", "grade": "C"}
   },
   "news_items": [...],
   "analyst_coverage": {...},
@@ -333,8 +333,8 @@ This rewrites the file in place with a top-level `_sanitization` block:
 "_sanitization": {
   "tool": "tools/prompt_injection_filter.py",
   "version": "1",
-  "timestamp": "2026-04-16T00:00:00Z",
-  "fields_scanned": 42,
+  "timestamp": "<SANITIZATION_TIMESTAMP>",
+  "fields_scanned": "<FIELD_COUNT>",
   "redactions": 0,
   "findings": []
 }

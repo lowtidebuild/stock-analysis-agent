@@ -64,52 +64,52 @@ For each data point:
 ## Specific Examples
 
 ### Example 1: Self-Calculated P/E (Grade A)
-- Yahoo Finance shows P/E = 28.0x
-- You calculate: Price $175.50 / TTM EPS $6.43 = 27.3x
-- Discrepancy = 2.6%
-- SEC filing confirms EPS $6.43
+- <PORTAL_NAME> shows P/E = <PORTAL_PE>x
+- You calculate: Price <CURRENT_PRICE> / TTM EPS <EPS_TTM> = <CALCULATED_PE>x
+- Discrepancy = <DIFFERENCE_PCT>%
+- SEC filing confirms EPS <EPS_TTM>
 - **Grade A** `[Calc]` — self-calculated from verified inputs
 
 ### Example 2: Revenue from two portals (Grade B)
-- Yahoo Finance shows Q revenue = $89.5B
-- MarketWatch shows Q revenue = $89.7B
-- Discrepancy = 0.22% (< 5%)
+- <PORTAL_1> shows Q revenue = <REVENUE_VALUE_1>
+- <PORTAL_2> shows Q revenue = <REVENUE_VALUE_2>
+- Discrepancy = <DIFFERENCE_PCT>% (< 5%)
 - No SEC filing fetch done
-- **Grade B** `[Portal]` — display as "$89.5–89.7B"
+- **Grade B** `[Portal]` — display as "<SOURCE_RANGE>"
 
 ### Example 3: Only one portal available (Grade C)
-- Yahoo Finance shows net debt = $45B
+- <PORTAL_NAME> shows net debt = <NET_DEBT_VALUE>
 - No other source found
 - Arithmetic check: Market Cap + Net Debt = stated EV within 8% → consistent
-- **Grade C** `[Portal]` — display as "~$45B"
+- **Grade C** `[Portal]` — display as "~<NET_DEBT_VALUE>"
 
 ### Example 4: Sources contradict (Grade D)
-- Yahoo Finance: Quarterly revenue = $89.5B
-- Macrotrends: Quarterly revenue = $76.3B (15% lower)
+- <PORTAL_1>: Quarterly revenue = <REVENUE_VALUE_1>
+- <PORTAL_2>: Quarterly revenue = <REVENUE_VALUE_2> (<DIFFERENCE_PCT>% lower)
 - Cannot determine which fiscal quarter each covers
 - Cannot verify via SEC fetch
 - **Grade D** — display as "—" with note: "Revenue data unverified due to source discrepancy"
 
 ### Example 5: Korean stock from DART (Grade A)
-- DART filing shows operating income 15.8조원
-- 네이버금융 shows 15.7조원
-- Discrepancy = 0.6%
+- DART filing shows operating income <DART_OPERATING_INCOME>
+- 네이버금융 shows <PORTAL_OPERATING_INCOME>
+- Discrepancy = <DIFFERENCE_PCT>%
 - **Grade A** `[Filing]` — `source_type=filing`, `source_authority=regulatory`. DART is the Korean FSS regulatory filing (equivalent authority to SEC EDGAR). Primary regulatory source + arithmetic consistent = Grade A.
 
 ### Example 5a: Company IR release (not a filing)
-- Apple IR publishes an earnings release before the 10-Q is filed
+- <COMPANY_NAME> IR publishes an earnings release before the 10-Q is filed
 - The release is authoritative issuer guidance, but not a regulatory filing
 - **Tag as** `[Company]` with `source_type=company_release`, `source_authority=issuer`
 - Grade can still be B or C depending on corroboration, but it should not be mislabeled `[Filing]`
 
 ### Example 6: Arithmetic inconsistency (Grade D)
-- Source A: Revenue = $100B, Net Margin = 30%, implies Net Income = $30B
-- Source B: Net Income = $18B
+- Source A: Revenue = <REVENUE>, Net Margin = <NET_MARGIN>, implies Net Income = <IMPLIED_NET_INCOME>
+- Source B: Net Income = <REPORTED_NET_INCOME>
 - Cannot reconcile: either revenue or margin or net income is wrong
 - **Grade D for net income** until resolved; re-search for clarification
 
 ### Example 7: API data grading (Grade A)
-- Financial Datasets MCP `get_income_statements` returns revenue = $402.8B
+- Financial Datasets MCP `get_income_statements` returns revenue = <REVENUE_VALUE>
 - This is SEC 10-Q filing data delivered via API
 - **Grade A** `[Filing]` — Grade A because the underlying authority is SEC, not because the delivery method is API. The API is a reliable pipe to regulatory filing data.
 
@@ -140,7 +140,7 @@ For each data point:
 - Still display as "—" in P/E column but with "N/A" label, not silence
 
 ### Pre-revenue Companies (Biotech)
-- Revenue may legitimately be $0 or near-$0
+- Revenue may legitimately be zero or near-zero
 - Grade A if SEC filing confirms zero revenue
 - P/E, EV/EBITDA: N/A — display guidance to use P/S or EV/Pipeline instead
 
@@ -152,7 +152,7 @@ For each data point:
 
 ### Fiscal Year Mismatch
 - When two sources use different fiscal quarters → Grade C with note about timing difference
-- Always specify reporting period: "FY2Q 2026" not just "Q2"
+- Always specify reporting period: "<FISCAL_PERIOD>" not just "Q2"
 
 ---
 
@@ -161,7 +161,7 @@ For each data point:
 ```json
 "validated_metrics": {
   "price": {
-    "value": 175.50,
+    "value": "<CURRENT_PRICE>",
     "grade": "A",
     "sources": ["Financial Datasets MCP (SEC filing data)"],
     "source_type": "filing",
@@ -171,9 +171,9 @@ For each data point:
     "note": null
   },
   "pe_ratio": {
-    "value": 27.3,
+    "value": "<PE_RATIO>",
     "grade": "A",
-    "sources": ["Self-calculated: $175.50 / $6.43"],
+    "sources": ["Self-calculated: <CURRENT_PRICE> / <EPS_TTM>"],
     "source_type": "calculated",
     "source_authority": "derived",
     "display_tag": "[Calc]",
@@ -188,7 +188,7 @@ For each data point:
     "source_authority": null,
     "display_tag": null,
     "tag": null,
-    "exclusion_reason": "Net debt figures from Yahoo Finance ($45B) and Macrotrends ($38B) differ by 18.4%, exceeding 15% threshold. Excluded from analysis."
+    "exclusion_reason": "Net debt figures from <PORTAL_1> and <PORTAL_2> differ by <DIFFERENCE_PCT>%, exceeding 15% threshold. Excluded from analysis."
   }
 }
 ```

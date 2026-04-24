@@ -19,7 +19,7 @@ Every metric entry should include:
 
 ```json
 {
-  "value": 175.50,
+  "value": "<METRIC_VALUE>",
   "grade": "A",
   "source_type": "filing",
   "source_authority": "regulatory",
@@ -29,8 +29,8 @@ Every metric entry should include:
   "source_values": null,
   "notes": null,
   "approximate": false,
-  "as_of_date": "2026-03-28",
-  "period_end": "2025-12-31"
+  "as_of_date": "<AS_OF_DATE>",
+  "period_end": "<PERIOD_END_DATE>"
 }
 ```
 
