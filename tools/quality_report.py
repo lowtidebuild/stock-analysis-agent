@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import copy
 import json
+import math
+import re
+import zipfile
 from pathlib import Path
 from typing import Any
 
@@ -49,6 +52,20 @@ FINANCIAL_SAMPLE_PRIORITY = (
     "operating_margin",
     "revenue_growth_yoy",
 )
+SOURCE_TAG_PATTERN = re.compile(r"\[(?:Filing|Portal|KR-Portal|Calc|Est|Macro|User)\]")
+NUMBER_PATTERN = re.compile(r"(?<![A-Za-z0-9_])(?:[$₩€£]?\s*)?\d+(?:,\d{3})*(?:\.\d+)?\s*(?:%|x|bp|B|M|T|조|억|만)?")
+MODE_REQUIRED_RENDERED_TERMS = {
+    "C": (
+        ("DCF valuation", ("dcf",)),
+        ("analyst coverage", ("analyst coverage", "analyst target", "analyst rating")),
+        ("chart data", ("new chart", "chart.js", "pricelabels", "pricedata")),
+    ),
+    "D": (
+        ("executive summary", ("executive summary", "요약")),
+        ("valuation", ("valuation", "밸류에이션", "가치평가")),
+        ("risk", ("risk", "리스크")),
+    ),
+}
 
 
 def load_json(path: str | Path) -> dict[str, Any]:
@@ -72,6 +89,142 @@ def _metric_entry_value(entry: Any) -> float | None:
     if isinstance(entry, dict):
         return extract_numeric_value(entry.get("value"))
     return extract_numeric_value(entry)
+
+
+def _read_rendered_text(report_path: str | Path) -> tuple[str | None, str | None]:
+    path = Path(report_path)
+    suffix = path.suffix.lower()
+    try:
+        if suffix == ".docx":
+            with zipfile.ZipFile(path) as archive:
+                document_xml = archive.read("word/document.xml").decode("utf-8", errors="replace")
+            return re.sub(r"<[^>]+>", " ", document_xml), None
+        return path.read_text(encoding="utf-8", errors="replace"), None
+    except Exception as exc:  # noqa: BLE001
+        return None, f"Unable to read rendered output: {type(exc).__name__}: {exc}"
+
+
+def _html_body_text(rendered_text: str) -> str:
+    text = re.sub(r"<script\b[^>]*>.*?</script>", " ", rendered_text, flags=re.IGNORECASE | re.DOTALL)
+    text = re.sub(r"<style\b[^>]*>.*?</style>", " ", text, flags=re.IGNORECASE | re.DOTALL)
+    text = re.sub(r"<[^>]+>", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _stringify_metric_value(value: float) -> list[str]:
+    candidates = {str(value)}
+    if float(value).is_integer():
+        int_value = int(value)
+        candidates.add(str(int_value))
+        candidates.add(f"{int_value:,}")
+    else:
+        candidates.add(f"{value:,.2f}")
+        candidates.add(f"{value:.2f}")
+    return sorted(candidates, key=len, reverse=True)
+
+
+def _source_tag_coverage(rendered_text: str) -> dict[str, Any]:
+    visible_text = _html_body_text(rendered_text)
+    numbers = NUMBER_PATTERN.findall(visible_text)
+    tags = SOURCE_TAG_PATTERN.findall(visible_text)
+    if not numbers:
+        return {"status": "PASS", "numeric_claim_count": 0, "source_tag_count": len(tags), "coverage_pct": 100.0}
+
+    # One source tag often covers a table row with several numbers. This is a
+    # coarse output-facing guardrail, not a citation parser.
+    expected_tags = max(1, math.ceil(len(numbers) / 5))
+    coverage_pct = min(100.0, round(len(tags) / expected_tags * 100, 1))
+    status = "PASS" if len(tags) >= expected_tags else "FAIL"
+    return {
+        "status": status,
+        "numeric_claim_count": len(numbers),
+        "source_tag_count": len(tags),
+        "expected_source_tags": expected_tags,
+        "coverage_pct": coverage_pct,
+    }
+
+
+def build_rendered_output_item(
+    report_path: str | Path,
+    analysis: dict[str, Any],
+    validated: dict[str, Any],
+) -> dict[str, Any]:
+    path = Path(report_path)
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    if not path.exists():
+        return {
+            "status": "FAIL",
+            "report_path": str(path),
+            "errors": [f"Rendered output file is missing: {path}"],
+        }
+
+    rendered_text, read_error = _read_rendered_text(path)
+    if rendered_text is None:
+        return {
+            "status": "FAIL",
+            "report_path": str(path),
+            "errors": [read_error or "Rendered output could not be read"],
+        }
+
+    lower_text = rendered_text.lower()
+    visible_text = _html_body_text(rendered_text)
+    lower_visible_text = visible_text.lower()
+
+    if path.suffix.lower() in {".html", ".htm"} and not re.search(r"<html\b", rendered_text, re.IGNORECASE):
+        errors.append("HTML report is missing <html> root element")
+
+    if "disclaimer" not in lower_text and "investment advice" not in lower_text and "투자 조언" not in lower_text:
+        errors.append("Rendered output is missing disclaimer text")
+
+    output_mode = str(analysis.get("output_mode") or "").upper()
+    for label, candidates in MODE_REQUIRED_RENDERED_TERMS.get(output_mode, ()):
+        if not any(candidate in lower_visible_text or candidate in lower_text for candidate in candidates):
+            errors.append(f"Rendered output is missing required Mode {output_mode} section: {label}")
+
+    if output_mode == "C" and path.suffix.lower() in {".html", ".htm"}:
+        if "arrays are not present" in lower_text or "fixture" in lower_visible_text:
+            errors.append("Mode C dashboard rendered fixture-only chart placeholder text")
+        if not any(token in lower_text for token in ("new chart", "pricelabels", "pricedata", "const quarters")):
+            errors.append("Mode C dashboard is missing Chart.js data initialization")
+
+    exclusions = validated.get("exclusions") or []
+    key_metrics = analysis.get("key_metrics") if isinstance(analysis.get("key_metrics"), dict) else {}
+    blank_violations: list[dict[str, Any]] = []
+    for exclusion in exclusions:
+        metric_name = exclusion.get("metric") if isinstance(exclusion, dict) else exclusion
+        if not metric_name:
+            continue
+        metric_entry = key_metrics.get(str(metric_name))
+        metric_value = _metric_entry_value(metric_entry)
+        if metric_value is None:
+            continue
+        if any(candidate and candidate in visible_text for candidate in _stringify_metric_value(metric_value)):
+            blank_violations.append({"metric": str(metric_name), "value_found": metric_value})
+    if blank_violations:
+        errors.append("Rendered output displays values for metrics marked as excluded/Grade D")
+
+    source_coverage = _source_tag_coverage(rendered_text)
+    if source_coverage["status"] == "FAIL":
+        warnings.append(
+            "Rendered output source-tag coverage is below threshold "
+            f"({source_coverage['source_tag_count']}/{source_coverage['expected_source_tags']})"
+        )
+
+    item: dict[str, Any] = {
+        "status": "FAIL" if errors else ("PASS_WITH_FLAGS" if warnings else "PASS"),
+        "report_path": str(path),
+        "file_exists": True,
+        "source_tag_coverage": source_coverage,
+    }
+    if blank_violations:
+        item["blank_over_wrong_violations"] = blank_violations
+    if errors:
+        item["errors"] = errors
+    if warnings:
+        item["warnings"] = warnings
+    return item
 
 
 def _analysis_metric_value(analysis: dict[str, Any], metric_name: str) -> float | None:
@@ -401,6 +554,10 @@ def merge_items(existing_items: dict[str, Any] | None, generated_items: dict[str
         if key in generated_items:
             merged[key] = generated_items[key]
 
+    for key, value in generated_items.items():
+        if key not in BASELINE_GENERATED_ITEMS and key not in CORE_GENERATED_ITEMS:
+            merged[key] = value
+
     return merged
 
 
@@ -520,6 +677,7 @@ def build_quality_report(
     analysis: dict[str, Any],
     *,
     existing_report: dict[str, Any] | None = None,
+    report_path: str | Path | None = None,
 ) -> dict[str, Any]:
     existing_report = copy.deepcopy(existing_report) if existing_report else {}
     generated_items = {
@@ -531,6 +689,8 @@ def build_quality_report(
         "verdict_policy": build_verdict_policy_item(analysis),
         "cross_artifact_consistency": build_cross_artifact_item(research_plan, validated, analysis),
     }
+    if report_path is not None:
+        generated_items["rendered_output"] = build_rendered_output_item(report_path, analysis, validated)
     merged_items = annotate_delivery_impacts(merge_items(existing_report.get("items"), generated_items))
     critic_review = existing_report.get("critic_review") if isinstance(existing_report.get("critic_review"), dict) else None
     core_overall_result = combine_overall_result(merged_items)
@@ -554,6 +714,8 @@ def build_quality_report(
         "inline_flags_added": existing_report.get("inline_flags_added", []),
         "generated_by": "quality-report-builder",
     }
+    if report_path is not None:
+        report["report_path"] = str(report_path)
     if critic_review:
         report["critic_review"] = critic_review
         report["core_overall_result"] = core_overall_result
@@ -565,7 +727,7 @@ def build_quality_report(
     return report
 
 
-def build_quality_report_from_run_dir(run_dir: str | Path) -> dict[str, Any]:
+def build_quality_report_from_run_dir(run_dir: str | Path, report_path: str | Path | None = None) -> dict[str, Any]:
     path = Path(run_dir)
     ticker_dirs = [child for child in path.iterdir() if child.is_dir()]
     if len(ticker_dirs) != 1:
@@ -577,12 +739,12 @@ def build_quality_report_from_run_dir(run_dir: str | Path) -> dict[str, Any]:
     analysis = load_json(ticker_dir / "analysis-result.json")
     quality_report_path = ticker_dir / "quality-report.json"
     existing_report = load_json(quality_report_path) if quality_report_path.exists() else None
-    return build_quality_report(research_plan, validated, analysis, existing_report=existing_report)
+    return build_quality_report(research_plan, validated, analysis, existing_report=existing_report, report_path=report_path)
 
 
-def write_quality_report(run_dir: str | Path) -> Path:
+def write_quality_report(run_dir: str | Path, report_path: str | Path | None = None) -> Path:
     path = Path(run_dir)
-    report = build_quality_report_from_run_dir(path)
+    report = build_quality_report_from_run_dir(path, report_path=report_path)
     ticker_dirs = [child for child in path.iterdir() if child.is_dir()]
     ticker_dir = ticker_dirs[0]
     quality_report_path = ticker_dir / "quality-report.json"
