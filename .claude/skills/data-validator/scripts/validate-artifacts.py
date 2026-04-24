@@ -27,6 +27,8 @@ def main() -> None:
         "run-manifest",
         "research-plan",
         "validated-data",
+        "evidence-pack",
+        "context-budget",
         "analysis-result",
         "quality-report",
         "tier1-raw",

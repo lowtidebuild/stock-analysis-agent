@@ -105,6 +105,14 @@ class DataDirTests(unittest.TestCase):
             paths["tier1_raw"],
             pathlib.Path("/tmp/stock-agent-runtime/runs/20260424T000000Z_AAPL/AAPL/tier1-raw.json").resolve(),
         )
+        self.assertEqual(
+            paths["evidence_pack"],
+            pathlib.Path("/tmp/stock-agent-runtime/runs/20260424T000000Z_AAPL/AAPL/evidence-pack.json").resolve(),
+        )
+        self.assertEqual(
+            paths["context_budget"],
+            pathlib.Path("/tmp/stock-agent-runtime/runs/20260424T000000Z_AAPL/AAPL/context-budget.json").resolve(),
+        )
         self.assertEqual(paths["snapshot_dir"], pathlib.Path("/tmp/stock-agent-runtime/data/AAPL").resolve())
 
     def test_build_snapshot_paths_use_immutable_snapshot_namespace(self):
@@ -117,6 +125,14 @@ class DataDirTests(unittest.TestCase):
         self.assertEqual(
             paths["validated_data"],
             pathlib.Path("/tmp/stock-agent-runtime/data/AAPL/snapshots/2026-04-24_run_abc123/validated-data.json").resolve(),
+        )
+        self.assertEqual(
+            paths["evidence_pack"],
+            pathlib.Path("/tmp/stock-agent-runtime/data/AAPL/snapshots/2026-04-24_run_abc123/evidence-pack.json").resolve(),
+        )
+        self.assertEqual(
+            paths["context_budget"],
+            pathlib.Path("/tmp/stock-agent-runtime/data/AAPL/snapshots/2026-04-24_run_abc123/context-budget.json").resolve(),
         )
 
 

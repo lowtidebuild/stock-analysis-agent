@@ -43,6 +43,8 @@ class RunLocalArtifactDocsTests(unittest.TestCase):
         claude = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
         self.assertIn("output/runs/{run_id}/{ticker}/tier1-raw.json", claude)
         self.assertIn("output/runs/{run_id}/{ticker}/tier2-raw.json", claude)
+        self.assertIn("output/runs/{run_id}/{ticker}/evidence-pack.json", claude)
+        self.assertIn("output/runs/{run_id}/{ticker}/context-budget.json", claude)
         self.assertIn("output/data/{ticker}/latest.json", claude)
 
 

@@ -118,6 +118,8 @@ SCHEMA_ARTIFACT_TYPES = {
     "run-manifest",
     "research-plan",
     "validated-data",
+    "evidence-pack",
+    "context-budget",
     "analysis-result",
     "quality-report",
     "snapshot",
@@ -138,6 +140,42 @@ FETCHED_SCHEMA_ARTIFACT_TYPES = {
 FETCHED_ARTIFACT_FILENAMES = {f"{artifact_type}.json" for artifact_type in FETCHED_ARTIFACT_TYPES}
 UNSANITIZED_FETCHED_CONTENT_FLAG = "unsanitized fetched content (sanitizer block missing)"
 EMPTY_VALUES = (None, "", [], {})
+EVIDENCE_PACK_FORBIDDEN_KEYS = {
+    "snippet",
+    "body",
+    "raw_search_results",
+    "search_results",
+    "searches_executed",
+    "fetched_text",
+    "filing_text",
+    "article_text",
+    "full_text",
+}
+CONTEXT_BUDGET_REQUIRED_ROUTING_ITEMS = {
+    "strong_model": {
+        "final_investment_reasoning",
+        "variant_view",
+        "risk_mechanism_critique",
+        "what_would_make_me_wrong",
+    },
+    "cheap_model_or_deterministic_preprocess": {
+        "analyst_coverage_summary",
+        "news_catalyst_grouping",
+        "first_pass_narrative_comments",
+    },
+    "no_llm": {
+        "schema_validation",
+        "source_tag_count",
+        "scenario_probability_sum",
+        "word_count",
+        "html_required_section_check",
+        "docx_heading_table_check",
+        "ratio_recomputation",
+        "path_contract_validation",
+        "renderer_execution",
+        "context_budget_measurement",
+    },
+}
 MODE_C_REQUIRED_SECTIONS = (
     "variant_view_q1",
     "variant_view_q2",
@@ -487,6 +525,115 @@ def validate_tier2_raw_contract(data: dict[str, Any], path: str = "$") -> list[s
             if not isinstance(conflict_candidates, list) or len(conflict_candidates) < 2:
                 errors.append(f"{conflict_path}.candidates: conflicts must preserve at least two candidates")
 
+    return errors
+
+
+def _find_forbidden_evidence_keys(node: Any, path: str = "$") -> list[str]:
+    offenders: list[str] = []
+    if isinstance(node, dict):
+        for key, value in node.items():
+            next_path = f"{path}.{key}"
+            if key in EVIDENCE_PACK_FORBIDDEN_KEYS:
+                offenders.append(next_path)
+            offenders.extend(_find_forbidden_evidence_keys(value, next_path))
+    elif isinstance(node, list):
+        for index, item in enumerate(node):
+            offenders.extend(_find_forbidden_evidence_keys(item, f"{path}[{index}]"))
+    return offenders
+
+
+def validate_evidence_pack_contract(data: dict[str, Any], path: str = "$") -> list[str]:
+    errors: list[str] = []
+    facts = data.get("facts")
+    if not isinstance(facts, list):
+        return errors
+
+    for index, fact in enumerate(facts):
+        fact_path = f"{path}.facts[{index}]"
+        if not isinstance(fact, dict):
+            continue
+        if fact.get("grade") == "D":
+            errors.append(f"{fact_path}.grade: evidence facts must exclude Grade D metrics")
+        if not fact.get("sources"):
+            errors.append(f"{fact_path}.sources: evidence fact missing sources")
+
+    for offender in _find_forbidden_evidence_keys(data, path):
+        errors.append(f"{offender}: evidence-pack must not embed raw fetched text or search result payloads")
+
+    raw_access_policy = data.get("raw_access_policy")
+    if isinstance(raw_access_policy, dict):
+        if raw_access_policy.get("default_load") != "deny":
+            errors.append(f"{path}.raw_access_policy.default_load: analyst raw artifact default must be deny")
+        if raw_access_policy.get("raw_access_log_required") is not True:
+            errors.append(f"{path}.raw_access_policy.raw_access_log_required: raw artifact access must be logged")
+    return errors
+
+
+def validate_context_budget_contract(data: dict[str, Any], path: str = "$") -> list[str]:
+    errors: list[str] = []
+    included_files = data.get("included_files")
+    excluded_raw_artifacts = data.get("excluded_raw_artifacts")
+    totals = data.get("totals")
+
+    if isinstance(included_files, list):
+        included_sum = 0
+        for index, item in enumerate(included_files):
+            item_path = f"{path}.included_files[{index}]"
+            if not isinstance(item, dict):
+                continue
+            if item.get("role") == "raw_artifact_excluded_by_default":
+                errors.append(f"{item_path}.role: raw artifacts must not be included by default")
+            tokens = item.get("estimated_tokens")
+            if isinstance(tokens, int) and not isinstance(tokens, bool):
+                included_sum += tokens
+        if isinstance(totals, dict) and totals.get("included_estimated_tokens") != included_sum:
+            errors.append(
+                f"{path}.totals.included_estimated_tokens: expected {included_sum}, "
+                f"got {totals.get('included_estimated_tokens')}"
+            )
+
+    if isinstance(excluded_raw_artifacts, list):
+        excluded_sum = 0
+        for index, item in enumerate(excluded_raw_artifacts):
+            item_path = f"{path}.excluded_raw_artifacts[{index}]"
+            if not isinstance(item, dict):
+                continue
+            if item.get("role") != "raw_artifact_excluded_by_default":
+                errors.append(f"{item_path}.role: expected raw_artifact_excluded_by_default")
+            tokens = item.get("estimated_tokens")
+            if isinstance(tokens, int) and not isinstance(tokens, bool):
+                excluded_sum += tokens
+        if isinstance(totals, dict):
+            if totals.get("excluded_raw_estimated_tokens") != excluded_sum:
+                errors.append(
+                    f"{path}.totals.excluded_raw_estimated_tokens: expected {excluded_sum}, "
+                    f"got {totals.get('excluded_raw_estimated_tokens')}"
+                )
+            if totals.get("estimated_tokens_avoided_by_default_raw_exclusion") != excluded_sum:
+                errors.append(
+                    f"{path}.totals.estimated_tokens_avoided_by_default_raw_exclusion: "
+                    f"expected {excluded_sum}, got "
+                    f"{totals.get('estimated_tokens_avoided_by_default_raw_exclusion')}"
+                )
+
+    if isinstance(totals, dict):
+        included = totals.get("included_estimated_tokens")
+        limit = totals.get("strong_model_soft_limit_tokens")
+        within = totals.get("within_soft_limit")
+        if isinstance(included, int) and isinstance(limit, int) and isinstance(within, bool):
+            expected_within = included <= limit
+            if within is not expected_within:
+                errors.append(f"{path}.totals.within_soft_limit: expected {expected_within}, got {within}")
+
+    routing_policy = data.get("routing_policy")
+    if isinstance(routing_policy, dict):
+        for key, required_items in CONTEXT_BUDGET_REQUIRED_ROUTING_ITEMS.items():
+            values = routing_policy.get(key)
+            if not isinstance(values, list):
+                continue
+            missing = sorted(required_items.difference(str(value) for value in values))
+            if missing:
+                errors.append(f"{path}.routing_policy.{key}: missing required routing items {missing}")
     return errors
 
 
@@ -1697,15 +1844,30 @@ def validate_artifact_data(
     schema = load_schema(artifact_type, base_dir=base_dir)
     errors = validate_schema(data, schema)
 
-    if artifact_type in {"research-plan", "validated-data", "analysis-result", "quality-report", "snapshot", "patch-plan", "analysis-patch", "patch-loop-result"}:
+    if artifact_type in {
+        "research-plan",
+        "validated-data",
+        "evidence-pack",
+        "context-budget",
+        "analysis-result",
+        "quality-report",
+        "snapshot",
+        "patch-plan",
+        "analysis-patch",
+        "patch-loop-result",
+    }:
         errors.extend(validate_run_context(data))
-    if artifact_type in {"research-plan", "validated-data", "analysis-result", "snapshot"}:
+    if artifact_type in {"research-plan", "validated-data", "evidence-pack", "analysis-result", "snapshot"}:
         errors.extend(validate_source_profile_contract(data))
 
     market = data.get("market")
     if artifact_type == "validated-data":
         errors.extend(validate_metric_mapping(data.get("validated_metrics", {}), market=market))
         errors.extend(validate_formula_metrics(data.get("validated_metrics", {}), path="$.validated_metrics"))
+    if artifact_type == "evidence-pack":
+        errors.extend(validate_evidence_pack_contract(data))
+    if artifact_type == "context-budget":
+        errors.extend(validate_context_budget_contract(data))
     if artifact_type in {"analysis-result", "snapshot"}:
         errors.extend(validate_metric_mapping(data.get("key_metrics", {}), market=market, path="$.key_metrics"))
         errors.extend(validate_scenarios(data))
@@ -1833,6 +1995,8 @@ def validate_run_directory(run_dir: str | Path, base_dir: str | Path | None = No
             "quality-report": ticker_dir / "quality-report.json",
         }
         optional_artifact_specs = {
+            "evidence-pack": ticker_dir / "evidence-pack.json",
+            "context-budget": ticker_dir / "context-budget.json",
             "patch-plan": ticker_dir / "patch-plan.json",
             "analysis-patch": ticker_dir / "analysis-patch.json",
             "patch-loop-result": ticker_dir / "patch-loop-result.json",

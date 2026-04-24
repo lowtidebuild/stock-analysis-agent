@@ -48,6 +48,7 @@ CORE_GENERATED_ITEMS = (
     "semantic_consistency",
     "verdict_policy",
     "cross_artifact_consistency",
+    "raw_artifact_access",
 )
 BASELINE_GENERATED_ITEMS = (
     "financial_consistency",
@@ -547,12 +548,18 @@ def build_contract_validation_item(
     research_plan: dict[str, Any],
     validated: dict[str, Any],
     analysis: dict[str, Any],
+    evidence_pack: dict[str, Any] | None = None,
+    context_budget: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     artifact_payloads = {
         "research-plan": research_plan,
         "validated-data": validated,
         "analysis-result": analysis,
     }
+    if isinstance(evidence_pack, dict):
+        artifact_payloads["evidence-pack"] = evidence_pack
+    if isinstance(context_budget, dict):
+        artifact_payloads["context-budget"] = context_budget
     artifact_results = {}
     all_errors: list[str] = []
     for artifact_type, payload in artifact_payloads.items():
@@ -613,6 +620,84 @@ def build_cross_artifact_item(
     }
     if errors:
         item["errors"] = errors
+    return item
+
+
+def build_raw_artifact_access_item(
+    evidence_pack: dict[str, Any] | None,
+    analysis: dict[str, Any],
+) -> dict[str, Any]:
+    access_entries = analysis.get("raw_artifact_access")
+    if not access_entries:
+        return {
+            "status": "PASS",
+            "raw_access_count": 0,
+        }
+
+    if not isinstance(access_entries, list):
+        return {
+            "status": "FAIL",
+            "severity": "MAJOR",
+            "delivery_impact": "non_blocking_flag",
+            "raw_access_count": 0,
+            "errors": ["raw_artifact_access must be an array when present"],
+        }
+
+    policy = evidence_pack.get("raw_access_policy") if isinstance(evidence_pack, dict) else {}
+    allowed_reasons = set(policy.get("allowed_reasons") or []) if isinstance(policy, dict) else set()
+    errors: list[str] = []
+    unsanitized = False
+    normalized_entries: list[dict[str, Any]] = []
+
+    for index, entry in enumerate(access_entries):
+        entry_path = f"raw_artifact_access[{index}]"
+        if not isinstance(entry, dict):
+            errors.append(f"{entry_path}: entry must be an object")
+            continue
+        file_value = entry.get("file")
+        reason = entry.get("reason")
+        fields_read = entry.get("fields_read")
+        sanitization_present = entry.get("sanitization_present")
+
+        if not file_value:
+            errors.append(f"{entry_path}.file: missing raw artifact file")
+        if not reason:
+            errors.append(f"{entry_path}.reason: missing raw access reason")
+        elif allowed_reasons and reason not in allowed_reasons:
+            errors.append(f"{entry_path}.reason: {reason!r} is not allowed by evidence-pack raw_access_policy")
+        if not isinstance(fields_read, list) or not fields_read:
+            errors.append(f"{entry_path}.fields_read: must list the raw fields read")
+        if sanitization_present is not True:
+            unsanitized = True
+            errors.append(f"{entry_path}.sanitization_present: raw artifact access requires sanitization_present=true")
+
+        normalized_entries.append(
+            {
+                "file": file_value,
+                "reason": reason,
+                "fields_read": fields_read,
+                "sanitization_present": sanitization_present,
+            }
+        )
+
+    item: dict[str, Any] = {
+        "status": "FAIL" if errors else "PASS_WITH_FLAGS",
+        "raw_access_count": len(access_entries),
+        "entries": normalized_entries,
+    }
+    if errors:
+        item["errors"] = errors
+        if unsanitized:
+            item["severity"] = "BLOCKER"
+            item["delivery_impact"] = "delivery_blocking_flag"
+            item["blocker_action"] = "terminal"
+        else:
+            item["severity"] = "MAJOR"
+            item["delivery_impact"] = "non_blocking_flag"
+    else:
+        item["warnings"] = ["Raw artifact access was used; confirm the listed reason is necessary."]
+        item["severity"] = "MINOR"
+        item["delivery_impact"] = "non_blocking_flag"
     return item
 
 
@@ -1037,6 +1122,8 @@ def build_quality_report(
     validated: dict[str, Any],
     analysis: dict[str, Any],
     *,
+    evidence_pack: dict[str, Any] | None = None,
+    context_budget: dict[str, Any] | None = None,
     existing_report: dict[str, Any] | None = None,
     report_path: str | Path | None = None,
 ) -> dict[str, Any]:
@@ -1045,11 +1132,18 @@ def build_quality_report(
         "financial_consistency": build_financial_consistency_item(validated, analysis),
         "price_and_date": build_price_and_date_item(validated, analysis),
         "blank_over_wrong": build_blank_over_wrong_item(validated, analysis),
-        "contract_validation": build_contract_validation_item(research_plan, validated, analysis),
+        "contract_validation": build_contract_validation_item(
+            research_plan,
+            validated,
+            analysis,
+            evidence_pack,
+            context_budget,
+        ),
         "scenario_consistency": build_scenario_consistency_item(analysis),
         "semantic_consistency": build_semantic_consistency_item(analysis),
         "verdict_policy": build_verdict_policy_item(analysis),
         "cross_artifact_consistency": build_cross_artifact_item(research_plan, validated, analysis),
+        "raw_artifact_access": build_raw_artifact_access_item(evidence_pack, analysis),
     }
     if report_path is not None:
         generated_items["rendered_output"] = build_rendered_output_item(report_path, analysis, validated)
@@ -1098,10 +1192,22 @@ def build_quality_report_from_run_dir(run_dir: str | Path, report_path: str | Pa
     ticker_dir = ticker_dirs[0]
     research_plan = load_json(ticker_dir / "research-plan.json")
     validated = load_json(ticker_dir / "validated-data.json")
+    evidence_pack_path = ticker_dir / "evidence-pack.json"
+    evidence_pack = load_json(evidence_pack_path) if evidence_pack_path.exists() else None
+    context_budget_path = ticker_dir / "context-budget.json"
+    context_budget = load_json(context_budget_path) if context_budget_path.exists() else None
     analysis = load_json(ticker_dir / "analysis-result.json")
     quality_report_path = ticker_dir / "quality-report.json"
     existing_report = load_json(quality_report_path) if quality_report_path.exists() else None
-    return build_quality_report(research_plan, validated, analysis, existing_report=existing_report, report_path=report_path)
+    return build_quality_report(
+        research_plan,
+        validated,
+        analysis,
+        evidence_pack=evidence_pack,
+        context_budget=context_budget,
+        existing_report=existing_report,
+        report_path=report_path,
+    )
 
 
 def write_quality_report(run_dir: str | Path, report_path: str | Path | None = None) -> Path:

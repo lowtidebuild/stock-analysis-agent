@@ -18,6 +18,7 @@ PROMOTED_ARTIFACTS = (
     ("validated_data", "validated-data.json"),
     ("quality_report", "quality-report.json"),
     ("evidence_pack", "evidence-pack.json"),
+    ("context_budget", "context-budget.json"),
     ("tier1_raw", "tier1-raw.json"),
     ("dart_api_raw", "dart-api-raw.json"),
     ("tier2_raw", "tier2-raw.json"),

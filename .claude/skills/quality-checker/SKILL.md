@@ -2,7 +2,7 @@
 
 **Role**: Step 9 — Perform output-facing quality checks and rebuild the deterministic run-local quality report before delivery to user. Auto-patch minor issues; flag persistent failures inline.
 **Triggered by**: CLAUDE.md after Step 8 (output generation), before final delivery
-**Reads**: Generated output file (or inline response), run-local `validated-data.json`, run-local `analysis-result.json`
+**Reads**: Generated output file (or inline response), run-local `validated-data.json`, run-local `evidence-pack.json`, optional run-local `context-budget.json`, run-local `analysis-result.json`
 **Writes**: Patches to the output file; run-local `quality-report.json`
 **References**: None (quality standards defined in this file)
 
@@ -15,8 +15,10 @@
 Load:
 1. The generated output (HTML file, Markdown file, or inline text)
 2. run-local `validated-data.json` (for grade reference)
-3. run-local `analysis-result.json` (for scenario probabilities and R/R Score)
-4. Existing run-local `quality-report.json` if present (merge output-facing checks with contract/semantic checks)
+3. run-local `evidence-pack.json` (for compact fact/source references and raw access policy)
+4. run-local `context-budget.json` if present (for deterministic context budget and routing policy confirmation)
+5. run-local `analysis-result.json` (for scenario probabilities and R/R Score)
+6. Existing run-local `quality-report.json` if present (merge output-facing checks with contract/semantic checks)
 
 After the output-facing checks, rebuild the canonical run-local quality report:
 
@@ -48,7 +50,13 @@ IF output_mode = "A":
 
 ## 5-Item Output-Facing Checklist
 
-These manual checks focus on the rendered user output. The canonical quality-report builder also adds deterministic artifact checks, including `contract_validation`, `scenario_consistency`, `semantic_consistency`, `verdict_policy`, `cross_artifact_consistency`, and optional `rendered_output`. Do not delegate these mechanical checks to the critic agent.
+These manual checks focus on the rendered user output. The canonical quality-report builder also adds deterministic artifact checks, including `contract_validation`, `scenario_consistency`, `semantic_consistency`, `verdict_policy`, `cross_artifact_consistency`, optional `rendered_output`, and optional `context-budget` schema validation. Do not delegate these mechanical checks to the critic agent.
+
+Also check raw artifact access:
+- If `analysis-result.json.raw_artifact_access[]` is absent or empty, pass this item
+- If present, every entry must include `file`, `reason`, `fields_read`, and `sanitization_present=true`
+- `reason` must be one of `evidence-pack.json.raw_access_policy.allowed_reasons`
+- Missing or unapproved raw access is a `MAJOR` non-blocking flag unless it consumed unsanitized fetched content, which is a `BLOCKER`
 
 ### Item 1 — Financial Data Consistency
 

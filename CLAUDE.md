@@ -128,12 +128,15 @@ Read `.claude/skills/data-validator/SKILL.md`
 - Assign confidence grades A/B/C/D
 - Apply blank-over-wrong: Grade D → null + exclusion record
 - Write `output/runs/{run_id}/{ticker}/validated-data.json`
-- Verify output: file exists AND overall_grade computed
+- Write `output/runs/{run_id}/{ticker}/evidence-pack.json`
+- Write `output/runs/{run_id}/{ticker}/context-budget.json` with deterministic Analyst input token estimates
+- Verify output: validated-data exists with overall_grade, evidence-pack exists with compact facts, and context-budget exists
 
 ### Steps 6 & 7 — Deep Analysis (Analyst Agent)
 **Dispatch Analyst Agent** for Mode A, C, and D:
 - Read `.claude/agents/analyst/AGENT.md`
-- Load: run-local validated-data.json, research-plan.json, appropriate framework file
+- Load: run-local validated-data.json, evidence-pack.json, context-budget.json, research-plan.json, appropriate framework file
+- Do not pass raw tier artifacts by default; Analyst may open raw artifacts only for logged conflict/recheck/source-mismatch reasons
 - Mode A: analyst produces lightweight `output/runs/{run_id}/{ticker}/analysis-result.json` (verdict + timeline)
 - Mode B: execute inline (no subagent)
 - Mode C/D: analyst produces full `output/runs/{run_id}/{ticker}/analysis-result.json`
@@ -173,6 +176,8 @@ Step 2 writes:  output/runs/{run_id}/{ticker}/research-plan.json
 Step 3 writes:  output/runs/{run_id}/{ticker}/tier1-raw.json
 Step 4 writes:  output/runs/{run_id}/{ticker}/tier2-raw.json
 Step 5 writes:  output/runs/{run_id}/{ticker}/validated-data.json
+Step 5 also:    output/runs/{run_id}/{ticker}/evidence-pack.json
+Step 5 also:    output/runs/{run_id}/{ticker}/context-budget.json
 Step 7 writes:  output/runs/{run_id}/{ticker}/analysis-result.json
 Step 7 also:  .claude/agents/analyst/scripts/dcf-calculator.py (called by analyst)
 Step 8 writes:  output/reports/{ticker}_{mode}_{lang}_{date}.{ext}
@@ -249,15 +254,27 @@ Write to `output/portfolio.json`.
 | Agent | Trigger | Inputs | Outputs | Max Dispatches |
 |-------|---------|--------|---------|---------------|
 | data-researcher | ≥3 tickers in Workflow 2 not in session cache | run-local research-plan.json | tier1-raw.json + tier2-raw.json per ticker | 1 per workflow run |
-| analyst | Mode A, C, or D (always); Mode B (inline, no dispatch) | run-local validated-data.json, run-local research-plan.json, framework file | run-local analysis-result.json | 2 (original + patch) |
+| analyst | Mode A, C, or D (always); Mode B (inline, no dispatch) | run-local validated-data.json, run-local evidence-pack.json, run-local context-budget.json, run-local research-plan.json, framework file | run-local analysis-result.json | 2 (original + patch) |
 | critic | Mode C/D (always); Mode B with ≥3 tickers; Mode A (skip) | run-local analysis-result.json, run-local validated-data.json | run-local quality-report.json | 1 per output (re-check after patch = 1 more) |
 
 **Sub-agent file paths** (pass explicitly when dispatching):
 ```
 data-researcher receives: ["output/runs/{run_id}/{ticker}/research-plan.json", "{ticker list}"]
-analyst receives: ["output/runs/{run_id}/{ticker}/validated-data.json", "output/runs/{run_id}/{ticker}/research-plan.json", "{framework path}"]
+analyst receives: ["output/runs/{run_id}/{ticker}/validated-data.json", "output/runs/{run_id}/{ticker}/evidence-pack.json", "output/runs/{run_id}/{ticker}/context-budget.json", "output/runs/{run_id}/{ticker}/research-plan.json", "{framework path}"]
 critic receives: ["output/runs/{run_id}/{ticker}/analysis-result.json", "output/runs/{run_id}/{ticker}/validated-data.json"]
 ```
+
+---
+
+## Section 7.1 — Model Routing Cost Policy
+
+The orchestrator writes `context-budget.json` before Analyst dispatch and uses it to keep the strong-model context limited to validated compact inputs.
+
+- **No LLM**: schema validation, source tag count, scenario probability sum, word count, HTML required section checks, DOCX heading/table checks, ratio recomputation, path contract validation, renderer execution, context budget measurement, and canonical `quality-report.json` construction.
+- **Cheap model or deterministic preprocess**: analyst coverage summary, news catalyst grouping, and first-pass critic narrative comments. Outputs from this tier must remain evidence-bound and may not set the final verdict.
+- **Strong model**: final investment reasoning, variant view, risk mechanism critique, and `what_would_make_me_wrong`. This tier receives validated-data, evidence-pack, context-budget, research-plan, and the selected framework by default.
+
+If `context-budget.json.totals.within_soft_limit` is false, do not compensate by loading raw artifacts. Rebuild a smaller evidence pack or split the Analyst task.
 
 ---
 
@@ -417,6 +434,8 @@ Project Root
 │   │           ├── dart-api-raw.json      ← Step 4 output (KR DART-Enhanced only)
 │   │           ├── tier2-raw.json         ← Step 4 output
 │   │           ├── validated-data.json    ← Step 5 output
+│   │           ├── evidence-pack.json     ← Step 5 compact Analyst input
+│   │           ├── context-budget.json    ← Step 5 Analyst context measurement
 │   │           ├── analysis-result.json   ← Step 7 output
 │   │           └── quality-report.json    ← Step 9 output
 │   ├── data/macro/
@@ -430,7 +449,8 @@ Project Root
 │   │       ├── tier1-raw.json
 │   │       ├── dart-api-raw.json
 │   │       ├── tier2-raw.json
-│   │       └── evidence-pack.json
+│   │       ├── evidence-pack.json
+│   │       └── context-budget.json
 │   └── reports/
 │       ├── {ticker}_A_{lang}_{date}.html
 │       ├── {ticker}_C_{lang}_{date}.html

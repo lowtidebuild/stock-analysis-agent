@@ -1,9 +1,9 @@
 # Data Validator — SKILL.md
 
-**Role**: Step 5 — Validate all collected data through 3-layer fact-checking, assign confidence grades, and enforce the Blank-Over-Wrong principle.
+**Role**: Step 5 — Validate all collected data through 3-layer fact-checking, assign confidence grades, build the evidence pack, measure Analyst context budget, and enforce the Blank-Over-Wrong principle.
 **Triggered by**: CLAUDE.md after Step 4 (web researcher)
 **Reads**: `output/runs/{run_id}/{ticker}/tier1-raw.json` (Enhanced), `output/runs/{run_id}/{ticker}/tier2-raw.json`, `references/validation-rules.md`, `references/confidence-grading.md`, `references/source-metadata-contract.md`
-**Writes**: `output/runs/{run_id}/{ticker}/validated-data.json`
+**Writes**: `output/runs/{run_id}/{ticker}/validated-data.json`, `output/runs/{run_id}/{ticker}/evidence-pack.json`, `output/runs/{run_id}/{ticker}/context-budget.json`
 **References**: `validation-rules.md`, `confidence-grading.md`, `source-metadata-contract.md`
 
 ---
@@ -349,7 +349,56 @@ full enhanced source quality. Use:
 }
 ```
 
-### Step 5.7 — Report Validation Summary
+### Step 5.7 — Build Evidence Pack
+
+After `validated-data.json` is written, create the run-local evidence pack:
+
+```bash
+python tools/evidence_pack.py \
+  --validated-data output/runs/{run_id}/{ticker}/validated-data.json \
+  --output output/runs/{run_id}/{ticker}/evidence-pack.json
+```
+
+Contract:
+- Include only Grade A/B/C facts selected from `validated_metrics`
+- Put Grade D metrics only in `exclusions`
+- Keep raw files as `raw_artifact_refs`; do not embed snippets, article bodies, filings text, or raw search result payloads
+- Set `raw_access_policy.default_load = "deny"` and require a logged reason before any Analyst raw artifact access
+
+Validate it:
+
+```bash
+python .claude/skills/data-validator/scripts/validate-artifacts.py \
+  --artifact-type evidence-pack \
+  --input output/runs/{run_id}/{ticker}/evidence-pack.json
+```
+
+### Step 5.8 — Measure Analyst Context Budget
+
+After `evidence-pack.json` is validated, measure the default Analyst handoff:
+
+```bash
+python tools/context_budget.py \
+  --run-dir output/runs/{run_id} \
+  --ticker {ticker} \
+  --output output/runs/{run_id}/{ticker}/context-budget.json
+```
+
+Validate it:
+
+```bash
+python .claude/skills/data-validator/scripts/validate-artifacts.py \
+  --artifact-type context-budget \
+  --input output/runs/{run_id}/{ticker}/context-budget.json
+```
+
+Contract:
+- The included context is `validated-data.json`, `evidence-pack.json`, `research-plan.json`, and the selected framework file
+- Raw artifacts are listed only under `excluded_raw_artifacts`
+- `routing_policy.no_llm` covers deterministic checks and renderer execution
+- If `totals.within_soft_limit = false`, rebuild a smaller evidence pack or split Analyst work before dispatch
+
+### Step 5.9 — Report Validation Summary
 
 ```
 === Data Validation: {TICKER} ===
@@ -387,4 +436,6 @@ If `ratio-calculator.py` cannot be executed:
 - [ ] Korean stocks: dart-api-raw.json loaded (Grade A IS/BS/CF); fallback to Grade B if missing
 - [ ] Grade D metrics → value = null, exclusion_reason filled
 - [ ] run-local `validated-data.json` written
+- [ ] run-local `evidence-pack.json` written and validated
+- [ ] run-local `context-budget.json` written and validated
 - [ ] Validation summary printed

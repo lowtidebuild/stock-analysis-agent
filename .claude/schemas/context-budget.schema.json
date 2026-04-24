@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Context Budget",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "artifact_type",
+    "target_agent",
+    "measurement_timestamp",
+    "token_estimator",
+    "run_context",
+    "included_files",
+    "excluded_raw_artifacts",
+    "totals",
+    "routing_policy"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "enum": ["1.0"] },
+    "artifact_type": { "type": "string", "enum": ["context-budget"] },
+    "target_agent": { "type": "string", "enum": ["analyst"] },
+    "measurement_timestamp": { "type": "string" },
+    "token_estimator": { "type": "string", "enum": ["chars_div_4_ceil"] },
+    "run_context": {
+      "type": "object",
+      "required": ["run_id", "artifact_root", "ticker"],
+      "properties": {
+        "run_id": { "type": "string" },
+        "artifact_root": { "type": "string" },
+        "ticker": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "included_files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "role", "bytes", "chars", "estimated_tokens"],
+        "properties": {
+          "path": { "type": "string" },
+          "role": {
+            "type": "string",
+            "enum": ["validated_metrics", "compact_evidence", "routing_plan", "analysis_framework"]
+          },
+          "bytes": { "type": "integer", "minimum": 0 },
+          "chars": { "type": "integer", "minimum": 0 },
+          "estimated_tokens": { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": true
+      }
+    },
+    "excluded_raw_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "role", "bytes", "chars", "estimated_tokens"],
+        "properties": {
+          "path": { "type": "string" },
+          "role": { "type": "string", "enum": ["raw_artifact_excluded_by_default"] },
+          "bytes": { "type": "integer", "minimum": 0 },
+          "chars": { "type": "integer", "minimum": 0 },
+          "estimated_tokens": { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": true
+      }
+    },
+    "totals": {
+      "type": "object",
+      "required": [
+        "included_estimated_tokens",
+        "excluded_raw_estimated_tokens",
+        "estimated_tokens_avoided_by_default_raw_exclusion",
+        "strong_model_soft_limit_tokens",
+        "within_soft_limit"
+      ],
+      "properties": {
+        "included_estimated_tokens": { "type": "integer", "minimum": 0 },
+        "excluded_raw_estimated_tokens": { "type": "integer", "minimum": 0 },
+        "estimated_tokens_avoided_by_default_raw_exclusion": { "type": "integer", "minimum": 0 },
+        "strong_model_soft_limit_tokens": { "type": "integer", "minimum": 1 },
+        "within_soft_limit": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "routing_policy": {
+      "type": "object",
+      "required": ["strong_model", "cheap_model_or_deterministic_preprocess", "no_llm"],
+      "properties": {
+        "strong_model": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "cheap_model_or_deterministic_preprocess": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "no_llm": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

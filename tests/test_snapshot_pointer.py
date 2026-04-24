@@ -66,6 +66,7 @@ class SnapshotPointerTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (run_dir / "quality-report.json").write_text(json.dumps({"status": "PASS"}), encoding="utf-8")
+            (run_dir / "context-budget.json").write_text(json.dumps({"status": "PASS"}), encoding="utf-8")
 
             save_result = run_json([
                 sys.executable,
@@ -86,6 +87,7 @@ class SnapshotPointerTests(unittest.TestCase):
             self.assertEqual(latest["latest_snapshot_id"], save_result["snapshot_id"])
             self.assertIn("analysis_result", latest["refs"])
             self.assertIn("quality_report", latest["refs"])
+            self.assertIn("context_budget", latest["refs"])
             self.assertNotIn("scenarios", latest)
 
             snapshot_path = pathlib.Path(save_result["snapshot_path"])

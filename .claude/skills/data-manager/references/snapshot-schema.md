@@ -64,6 +64,8 @@ New writes store the latest reference as a compact pointer:
   "refs": {
     "analysis_result": "output/data/<TICKER>/snapshots/<SNAPSHOT_ID>/analysis-result.json",
     "validated_data": "output/data/<TICKER>/snapshots/<SNAPSHOT_ID>/validated-data.json",
+    "evidence_pack": "output/data/<TICKER>/snapshots/<SNAPSHOT_ID>/evidence-pack.json",
+    "context_budget": "output/data/<TICKER>/snapshots/<SNAPSHOT_ID>/context-budget.json",
     "quality_report": "output/data/<TICKER>/snapshots/<SNAPSHOT_ID>/quality-report.json"
   }
 }

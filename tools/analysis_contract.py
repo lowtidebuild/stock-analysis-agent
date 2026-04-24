@@ -232,6 +232,8 @@ def build_run_paths(
         "dart_api_raw": ticker_root / "dart-api-raw.json",
         "tier2_raw": ticker_root / "tier2-raw.json",
         "validated_data": ticker_root / "validated-data.json",
+        "evidence_pack": ticker_root / "evidence-pack.json",
+        "context_budget": ticker_root / "context-budget.json",
         "analysis_result": ticker_root / "analysis-result.json",
         "quality_report": ticker_root / "quality-report.json",
         "reports_dir": output_dir / "reports",
@@ -264,6 +266,7 @@ def build_snapshot_paths(
         "analysis_result": snapshot_root / "analysis-result.json",
         "quality_report": snapshot_root / "quality-report.json",
         "evidence_pack": snapshot_root / "evidence-pack.json",
+        "context_budget": snapshot_root / "context-budget.json",
     }
 
 

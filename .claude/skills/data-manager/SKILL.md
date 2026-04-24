@@ -2,7 +2,7 @@
 
 **Role**: Step 10 (post-analysis persistence) + Workflow 3 (portfolio & watchlist management)
 **Triggered by**: CLAUDE.md after Step 9 (quality check) for persistence; directly for Workflow 3 commands
-**Reads**: run-local `analysis-result.json`, `output/watchlist.json`, `output/portfolio.json`
+**Reads**: run-local `analysis-result.json`, optional run-local `evidence-pack.json`, optional run-local `context-budget.json`, `output/watchlist.json`, `output/portfolio.json`
 **Writes**: Snapshot files, `output/watchlist.json`, `output/portfolio.json`, `output/catalyst-calendar.json`
 **References**: `references/snapshot-schema.md`, `references/watchlist-schema.md`, `references/portfolio-schema.md`
 
@@ -20,7 +20,7 @@ python .claude/skills/data-manager/scripts/snapshot-manager.py save \
   --data-file output/runs/{run_id}/{ticker}/analysis-result.json
 ```
 
-Expected output: confirms `output/data/{ticker}/snapshots/{snapshot_id}/analysis-result.json` created and `output/data/{ticker}/latest.json` updated as a pointer.
+Expected output: confirms `output/data/{ticker}/snapshots/{snapshot_id}/analysis-result.json` created, sibling artifacts such as `validated-data.json`, `evidence-pack.json`, `context-budget.json`, and raw artifacts promoted when present, and `output/data/{ticker}/latest.json` updated as a pointer.
 
 If script fails because the input is not schema-compliant, run:
 

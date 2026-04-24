@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Evidence Pack",
+  "type": "object",
+  "required": [
+    "ticker",
+    "market",
+    "as_of",
+    "generated_at",
+    "run_context",
+    "facts",
+    "exclusions",
+    "conflicts",
+    "raw_artifact_refs",
+    "raw_access_policy"
+  ],
+  "properties": {
+    "ticker": { "type": "string" },
+    "market": { "type": "string", "enum": ["US", "KR"] },
+    "data_mode": { "type": "string", "enum": ["enhanced", "standard"] },
+    "requested_mode": { "type": ["string", "null"], "enum": ["enhanced", "standard", null] },
+    "effective_mode": { "type": ["string", "null"], "enum": ["enhanced", "standard", null] },
+    "source_profile": {
+      "type": ["string", "null"],
+      "enum": ["financial_datasets", "sec_or_dart_primary", "yfinance_fallback", "web_only", "mixed", null]
+    },
+    "source_tier": {
+      "type": ["string", "null"],
+      "enum": ["filing_primary", "api_structured", "portal_structured", "search_snippet", "user_supplied", null]
+    },
+    "confidence_cap": { "type": ["string", "null"], "enum": ["A", "B", "C", "D", null] },
+    "as_of": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "generated_at": { "type": "string" },
+    "run_context": {
+      "type": "object",
+      "required": ["run_id", "artifact_root", "ticker"],
+      "properties": {
+        "run_id": { "type": "string" },
+        "artifact_root": { "type": "string" },
+        "ticker": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "facts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "metric", "claim", "value", "grade", "sources"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^fact_[0-9]{3,}$" },
+          "metric": { "type": "string" },
+          "claim": { "type": "string" },
+          "value": {},
+          "unit": { "type": ["string", "null"] },
+          "currency": { "type": ["string", "null"] },
+          "grade": { "type": "string", "enum": ["A", "B", "C"] },
+          "display_tag": { "type": ["string", "null"] },
+          "source_type": { "type": ["string", "null"] },
+          "source_authority": { "type": ["string", "null"] },
+          "sources": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "as_of_date": { "type": ["string", "null"] },
+          "period_end": { "type": ["string", "null"] },
+          "notes": { "type": ["string", "null"] },
+          "candidate_trace": {
+            "type": ["object", "null"],
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "exclusions": { "type": "array" },
+    "conflicts": { "type": "array" },
+    "macro_context": { "type": ["object", "null"] },
+    "raw_artifact_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "raw_access_policy": {
+      "type": "object",
+      "required": ["default_load", "raw_access_log_required", "allowed_reasons"],
+      "properties": {
+        "default_load": { "type": "string", "enum": ["deny"] },
+        "raw_access_log_required": { "type": "boolean", "const": true },
+        "allowed_reasons": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "validator_conflict_review",
+              "grade_c_or_d_metric_recheck",
+              "critic_source_mismatch"
+            ]
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
