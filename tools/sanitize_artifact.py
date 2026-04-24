@@ -7,7 +7,7 @@ in `.claude/skills/web-researcher/SKILL.md` Step 4.10.
 Usage
 -----
   # In-place (most common — the collectors call it this way)
-  python tools/sanitize_artifact.py --in output/data/AAPL/tier2-raw.json --in-place
+  python tools/sanitize_artifact.py --in output/runs/20260424T000000Z_AAPL/AAPL/tier2-raw.json --in-place
 
   # Separate output file
   python tools/sanitize_artifact.py --in src.json --out cleaned.json

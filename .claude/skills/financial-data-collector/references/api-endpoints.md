@@ -91,7 +91,7 @@ These calls are only made if FMP MCP is configured. They supplement analyst data
    - Revenue data available for ≥4 quarters? → sufficient for TTM calculations
    - Current price available? → if not, this is critical — stop and retry or switch to Standard Mode
    - Key metrics available? → if not, fall back to web for those specific gaps
-5. **Output**: Write ALL retrieved data to `output/data/{ticker}/tier1-raw.json`
+5. **Output**: Write ALL retrieved data to `output/runs/{run_id}/{ticker}/tier1-raw.json`
 
 ---
 
@@ -106,7 +106,7 @@ Before running the full bundle, validate the ticker exists:
 
 ## Data Output Format
 
-Write to `output/data/{ticker}/tier1-raw.json`:
+Write to `output/runs/{run_id}/{ticker}/tier1-raw.json`:
 ```json
 {
   "ticker": "AAPL",

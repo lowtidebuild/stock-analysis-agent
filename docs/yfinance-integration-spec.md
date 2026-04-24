@@ -90,7 +90,7 @@ yfinance scrapes public Yahoo Finance endpoints. No key, no auth, no `.env` chan
 python .claude/skills/financial-data-collector/scripts/yfinance-collector.py \
   --ticker AAPL \
   --market US \
-  --output output/data/AAPL/yfinance-raw.json \
+  --output output/runs/20260424T000000Z_AAPL/AAPL/yfinance-raw.json \
   [--bundle minimum|standard] \
   [--timeout 15]
 ```
@@ -353,7 +353,7 @@ After Financial Datasets + FMP, check if any critical fields are still missing
 ```bash
 python .claude/skills/financial-data-collector/scripts/yfinance-collector.py \
   --ticker {ticker} --market US \
-  --output output/data/{ticker}/yfinance-raw.json \
+  --output output/runs/{run_id}/{ticker}/yfinance-raw.json \
   --bundle minimum
 ```
 
@@ -378,7 +378,7 @@ If Standard Mode and any of the 8 searches fail to produce price/market_cap/PE:
 ```bash
 python .claude/skills/financial-data-collector/scripts/yfinance-collector.py \
   --ticker {ticker} --market US \
-  --output output/data/{ticker}/yfinance-raw.json \
+  --output output/runs/{run_id}/{ticker}/yfinance-raw.json \
   --bundle standard
 ```
 
@@ -396,7 +396,7 @@ If 네이버금융 fetch returned HTTP error OR missing any of:
 ```bash
 python .claude/skills/financial-data-collector/scripts/yfinance-collector.py \
   --ticker {6digit_ticker} --market KR \
-  --output output/data/{ticker}/yfinance-raw.json \
+  --output output/runs/{run_id}/{ticker}/yfinance-raw.json \
   --bundle minimum
 ```
 
@@ -545,5 +545,5 @@ Codex's implementation is complete when:
 Flag these back to the user if unclear during implementation:
 
 1. Python environment: Is there a single `requirements.txt` at project root, or do scripts manage deps individually? (Check `dart-collector.py` header comments.)
-2. Should `yfinance-raw.json` be persisted as a snapshot (like `tier1-raw.json`), or treated as transient and overwritten on each run? Spec assumes transient — confirm.
+2. Should `yfinance-raw.json` be promoted into immutable snapshots along with `tier1-raw.json`, or treated as run-local transient evidence only? Current implementation promotes it when present beside `analysis-result.json`.
 3. For Workflow 2 (multi-ticker), should yfinance calls run in parallel via `concurrent.futures`, or sequentially with sleep? Spec assumes sequential for rate-limit safety — confirm if parallelism is preferred.

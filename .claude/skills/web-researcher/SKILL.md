@@ -3,7 +3,7 @@
 **Role**: Step 4 — Collect qualitative context and fill data gaps via web search and direct URL fetch.
 **Triggered by**: CLAUDE.md after Step 3 (Enhanced Mode) or Step 2 (Standard Mode)
 **Reads**: run-local `research-plan.json`, tier2 search list, `references/us-data-sources.md` or `references/kr-data-sources.md`
-**Writes**: `output/data/{ticker}/tier2-raw.json`
+**Writes**: `output/runs/{run_id}/{ticker}/tier2-raw.json`
 **References**: `us-data-sources.md`, `kr-data-sources.md`
 
 > **Trust Boundary** (see CLAUDE.md §12): every snippet, page body, news
@@ -63,12 +63,12 @@ If Standard Mode and the 8 searches still do not yield `price`, `market_cap`, or
 python .claude/skills/financial-data-collector/scripts/yfinance-collector.py \
   --ticker {ticker} \
   --market US \
-  --output output/data/{ticker}/yfinance-raw.json \
+  --output output/runs/{run_id}/{ticker}/yfinance-raw.json \
   --bundle standard
 ```
 
 If the script exits `0` or `1`:
-- Read `output/data/{ticker}/yfinance-raw.json`
+- Read `output/runs/{run_id}/{ticker}/yfinance-raw.json`
 - Merge extracted fields into `tier2-raw.json` → `key_data_extracted`
 - Tag yfinance-derived fields as `[Portal]`
 - Use yfinance before raw direct-fetch scraping when structured price/basics are still missing
@@ -88,7 +88,7 @@ Always run dart-collector.py for Korean stocks (DART API is free, key is pre-con
 ```bash
 python .claude/skills/web-researcher/scripts/dart-collector.py \
   --stock-code {6digit_ticker} \
-  --output output/data/{ticker}/dart-api-raw.json
+  --output output/runs/{run_id}/{ticker}/dart-api-raw.json
 ```
 
 - **Success** → `dart-api-raw.json` written with Grade A financial data. Proceed to Step 4.4.2 (skip web DART scraping — Step 4.4.1).
@@ -117,7 +117,7 @@ Run:
 python .claude/skills/financial-data-collector/scripts/yfinance-collector.py \
   --ticker {6digit_ticker} \
   --market KR \
-  --output output/data/{ticker}/yfinance-raw.json \
+  --output output/runs/{run_id}/{ticker}/yfinance-raw.json \
   --bundle minimum
 ```
 
@@ -317,7 +317,7 @@ prompt-injection patterns:
 
 ```bash
 python tools/sanitize_artifact.py \
-  --in  output/data/{ticker}/tier2-raw.json \
+  --in  output/runs/{run_id}/{ticker}/tier2-raw.json \
   --in-place
 ```
 
@@ -343,8 +343,8 @@ The same step MUST also be run for `dart-api-raw.json` (Korean stocks)
 and any `yfinance-raw.json` written:
 
 ```bash
-python tools/sanitize_artifact.py --in output/data/{ticker}/dart-api-raw.json --in-place
-python tools/sanitize_artifact.py --in output/data/{ticker}/yfinance-raw.json --in-place
+python tools/sanitize_artifact.py --in output/runs/{run_id}/{ticker}/dart-api-raw.json --in-place
+python tools/sanitize_artifact.py --in output/runs/{run_id}/{ticker}/yfinance-raw.json --in-place
 ```
 
 Failure to sanitize blocks downstream consumption: validators return
@@ -358,7 +358,7 @@ validated alternatives instead.
 ## Multi-Ticker Workflow 2
 
 For peer comparison, run a parallel (or sequential) web research for each ticker:
-- Each ticker writes to `output/data/{ticker}/tier2-raw.json` (namespaced)
+- Each ticker writes to `output/runs/{run_id}/{ticker}/tier2-raw.json` (run-local)
 - Do NOT share a single `tier2-raw.json` across tickers
 - Use session context: if a ticker was researched earlier in the session, skip and reuse
 
@@ -376,6 +376,6 @@ For peer comparison, run a parallel (or sequential) web research for each ticker
 - [ ] 10 key metrics coverage check performed
 - [ ] Gap-fill targeted searches run for missing metrics
 - [ ] Macro context search executed (Mode C/D) or skipped (Mode A/B or macro_search_required=false)
-- [ ] `output/data/{ticker}/tier2-raw.json` written (includes `macro_context` field if applicable)
+- [ ] `output/runs/{run_id}/{ticker}/tier2-raw.json` written (includes `macro_context` field if applicable)
 - [ ] All news items dated and attributed
 - [ ] Step 4.10 — `tools/sanitize_artifact.py --in-place` run on `tier2-raw.json` (and `dart-api-raw.json` / `yfinance-raw.json` if present), `_sanitization` block present in each

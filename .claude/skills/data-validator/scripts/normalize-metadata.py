@@ -3,7 +3,7 @@
 normalize-metadata.py — Rewrites metric metadata to the canonical source contract.
 
 Usage:
-    python normalize-metadata.py --artifact-type validated-data --input output/data/005930/validated-data.json
+    python normalize-metadata.py --artifact-type validated-data --input output/runs/<run_id>/005930/validated-data.json
     python normalize-metadata.py --artifact-type analysis-result --input output/runs/<run_id>/AAPL/analysis-result.json --in-place
 """
 

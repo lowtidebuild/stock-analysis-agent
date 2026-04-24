@@ -21,7 +21,7 @@ output_mode = "D" → Mode D: DOCX investment memo (this file, uses docx-generat
 
 ## Mode B — Comparative Matrix (HTML File)
 
-Load `mode-b-template.md`. Populate from each ticker's `output/data/{ticker}/validated-data.json`.
+Load `mode-b-template.md`. Populate from each ticker's run-local `validated-data.json`.
 
 Preferred scripted path:
 
@@ -33,7 +33,7 @@ python .claude/skills/output-generator/scripts/render-comparison.py \
 
 `render-comparison.py` resolves peer `analysis-result.json` / `validated-data.json` files from
 the run-local artifact root first, then falls back to peer-specific run-local legacy promotions,
-and finally to `output/data/{ticker}/validated-data.json` if needed.
+and finally to immutable snapshot refs from `output/data/{ticker}/latest.json` if needed.
 
 **Pre-output checks**:
 1. Same metric set applied to all peers?

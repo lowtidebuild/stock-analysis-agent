@@ -317,7 +317,7 @@ def build_rendered_output_item(report_path, analysis, validated):
 
 문서와 코드가 raw artifact 위치를 다르게 본다.
 
-- 일부 문서와 skill은 `output/data/{ticker}/tier1-raw.json`, `output/data/{ticker}/tier2-raw.json`을 사용한다.
+- 일부 문서와 skill은 과거 shared ticker data directory에 raw artifact를 직접 쓰는 경로를 사용한다.
 - `tools/analysis_contract.py`의 `build_run_paths`는 run-local path 아래 raw artifact를 둔다.
 
 이 구조에서는 같은 티커를 동시에 분석하거나 재실행할 때 raw data가 덮일 수 있다.
@@ -417,13 +417,13 @@ output/data/{ticker}/snapshots/{snapshot_id}/...
 output/runs/{run_id}/run-manifest.json
 ```
 
-6. skill 문서의 모든 `output/data/{ticker}/tier*-raw.json` 예시를 run-local path로 바꾼다.
+6. skill 문서의 모든 shared raw artifact 예시를 run-local path로 바꾼다.
 7. collector script의 `--output` 예시도 run-local path로 바꾼다.
 8. `CLAUDE.md`의 analyst handoff 표와 `.claude/agents/analyst/AGENT.md`의 raw artifact 입력 목록을 일치시킨다.
 
 #### 완료 기준
 
-- `rg "output/data/\\{ticker\\}/tier" .` 결과가 0개가 된다.
+- runtime/skill 문서에서 shared raw artifact path 검색 결과가 0개가 된다.
 - 같은 ticker 두 개 run을 동시에 실행해도 raw artifact가 충돌하지 않는다.
 - report metadata에서 run-local input path를 추적할 수 있다.
 - 24시간 staleness 재사용이 깨지지 않고 `latest.json` pointer를 통해 동작한다.

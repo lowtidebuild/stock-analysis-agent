@@ -26,7 +26,7 @@ DART OpenAPI is always attempted first (free API, key pre-configured). If it fai
 ```bash
 python .claude/skills/web-researcher/scripts/dart-collector.py \
   --stock-code {6digit} \
-  --output output/data/{ticker}/dart-api-raw.json
+  --output output/runs/{run_id}/{ticker}/dart-api-raw.json
 ```
 API key is read from `DART_API_KEY` environment variable (set in `.claude/settings.local.json`).
 

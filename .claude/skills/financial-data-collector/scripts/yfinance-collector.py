@@ -7,7 +7,7 @@ Usage:
   python .claude/skills/financial-data-collector/scripts/yfinance-collector.py \
     --ticker AAPL \
     --market US \
-    --output output/data/AAPL/yfinance-raw.json \
+    --output output/runs/20260424T000000Z_AAPL/AAPL/yfinance-raw.json \
     [--bundle minimum|standard] \
     [--timeout 15]
 

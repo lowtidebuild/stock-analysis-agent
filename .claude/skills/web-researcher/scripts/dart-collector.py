@@ -4,8 +4,8 @@ DART OpenAPI Collector
 Fetches structured financial data for Korean stocks from DART (금융감독원 전자공시).
 
 Usage:
-  python dart-collector.py --stock-code 005930 --output output/data/005930/dart-api-raw.json
-  python dart-collector.py --stock-code 005930 --output output/data/005930/dart-api-raw.json --api-key YOUR_KEY
+  python dart-collector.py --stock-code 005930 --output output/runs/20260424T000000Z_005930/005930/dart-api-raw.json
+  python dart-collector.py --stock-code 005930 --output output/runs/20260424T000000Z_005930/005930/dart-api-raw.json --api-key YOUR_KEY
 
 API Key priority:
   1. --api-key argument

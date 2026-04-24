@@ -33,8 +33,8 @@ or sanitized alternatives instead.
    - Mode B → `references/analysis-framework-comparison.md`
    - Mode C → `references/analysis-framework-dashboard.md`
    - Mode D → `references/analysis-framework-memo.md` + `references/investment-memo-prompt.md`
-4. `output/data/{ticker}/tier1-raw.json` (if Enhanced Mode) — for detailed quarterly tables
-5. `output/data/{ticker}/tier2-raw.json` — for qualitative context, news, analyst coverage
+4. Run-local `tier1-raw.json` (if Enhanced Mode) — for detailed quarterly tables, only after checking `_sanitization`
+5. Run-local `tier2-raw.json` — for qualitative context, news, analyst coverage, only after checking `_sanitization`
 
 **Do NOT load prior conversation history.** Work from these files only.
 
@@ -140,7 +140,7 @@ Follow `analysis-framework-dashboard.md` exactly:
     - Write results to `analysis-result.json` under `sections.dcf_analysis`
     - **Timeout budget**: Execute DCF FIRST in the analysis phase. If DCF + scenario analysis approaches 3.5 minutes, skip remaining DCF scenarios and proceed with available results.
 7b. **Macro Context Integration (Mode C/D only)**
-    - Read `macro_context` from `output/data/{ticker}/tier2-raw.json` (or run-local `validated-data.json`)
+    - Read `macro_context` from run-local `tier2-raw.json` (or run-local `validated-data.json`)
     - **Structured data (FRED)**: If `macro_context.structured` is present:
       - Use FRED values for quantitative macro references (e.g., "10Y yield at 4.25% [Macro]")
       - Generate `macro_sensitivity` section:

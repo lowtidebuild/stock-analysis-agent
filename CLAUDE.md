@@ -109,15 +109,15 @@ Read `.claude/skills/financial-data-collector/SKILL.md`
 - Execute 10-call API bundle
 - Execute FMP calls
 - Compute TTM derived fields
-- Write `output/data/{ticker}/tier1-raw.json`
+- Write `output/runs/{run_id}/{ticker}/tier1-raw.json`
 - Verify output: file exists AND current_price is non-null
 
 ### Step 4 — Web Research
 Read `.claude/skills/web-researcher/SKILL.md`
 - Execute 8 US searches (Standard Mode) or 4 supplement searches (Enhanced Mode)
 - Korean: DART OpenAPI (dart-collector.py) first → 네이버금융 → yfinance → FnGuide → KIND → general
-- Write `output/data/{ticker}/dart-api-raw.json` (Korean, if DART API available)
-- Write `output/data/{ticker}/tier2-raw.json`
+- Write `output/runs/{run_id}/{ticker}/dart-api-raw.json` (Korean, if DART API available)
+- Write `output/runs/{run_id}/{ticker}/tier2-raw.json`
 - Mode C/D: execute macro context search (→ macro_context in tier2-raw.json)
 - Verify output: tier2-raw.json exists
 
@@ -160,22 +160,23 @@ Read `.claude/skills/quality-checker/SKILL.md`
 
 ### Step 10 — Persistence
 Read `.claude/skills/data-manager/SKILL.md` (Part A)
-- Save snapshot: `output/data/{ticker}/{ticker}_{date}_snapshot.json`
+- Save snapshot: `output/data/{ticker}/snapshots/{snapshot_id}/analysis-result.json`
+- Update latest pointer: `output/data/{ticker}/latest.json`
 - Update watchlist entry (if ticker in watchlist)
 - Rebuild catalyst calendar
-- Verify: snapshot file exists
+- Verify: snapshot path and latest pointer exist
 
 ### Data Handoff File Paths (critical — verify each before proceeding)
 ```
 Step 2 writes:  output/runs/{run_id}/{ticker}/research-plan.json
-Step 3 writes:  output/data/{ticker}/tier1-raw.json
-Step 4 writes:  output/data/{ticker}/tier2-raw.json
+Step 3 writes:  output/runs/{run_id}/{ticker}/tier1-raw.json
+Step 4 writes:  output/runs/{run_id}/{ticker}/tier2-raw.json
 Step 5 writes:  output/runs/{run_id}/{ticker}/validated-data.json
 Step 7 writes:  output/runs/{run_id}/{ticker}/analysis-result.json
 Step 7 also:  .claude/agents/analyst/scripts/dcf-calculator.py (called by analyst)
 Step 8 writes:  output/reports/{ticker}_{mode}_{lang}_{date}.{ext}
 Step 9 writes:  output/runs/{run_id}/{ticker}/quality-report.json
-Step 10 writes: output/data/{ticker}/{ticker}_{date}_snapshot.json
+Step 10 writes: output/data/{ticker}/snapshots/{snapshot_id}/analysis-result.json
                 output/data/{ticker}/latest.json
 ```
 
@@ -193,7 +194,7 @@ Steps:
 3. Session check: reuse cached data for any already-analyzed tickers
 4. IF ≥3 tickers AND not all in session cache:
    → Dispatch data-researcher AGENT (parallel collection)
-5. Validate each ticker: output/data/{ticker}/validated-data.json
+5. Validate each ticker: `output/runs/{run_id}/{ticker}/validated-data.json`
 6. Dispatch Analyst Agent (Mode B) for comparison analysis
 7. Quality check + Critic (Critic dispatched for ≥3 tickers)
 8. Generate HTML output
@@ -201,11 +202,11 @@ Steps:
 ```
 
 **File namespace for Workflow 2**:
-- Each ticker uses `output/data/{ticker}/` directory
+- Each ticker uses `output/runs/{run_id}/{ticker}/` under the shared batch `run_id`
 - Do NOT use deprecated shared `output/validated-data.json` (prevents collision)
-- Analyst reads from each ticker's namespaced validated-data
+- Analyst reads from each ticker's run-local validated-data
 
-**Session reuse rule**: If AAPL was analyzed 30 minutes ago, do not re-collect AAPL data for a new comparison — reuse `output/data/AAPL/tier1-raw.json` and `output/data/AAPL/tier2-raw.json`.
+**Session reuse rule**: If AAPL was analyzed 30 minutes ago, do not re-collect AAPL data for a new comparison — reuse the current session's run-local AAPL artifacts, or seed the new run from `output/data/AAPL/latest.json` if the latest pointer is still fresh.
 
 ---
 
@@ -343,9 +344,9 @@ During deep research (Steps 3–4) and analysis (Steps 6–7), individual operat
 
 ```
 ❌ WRONG — will loop forever if agent fails:
-   sleep 10 && ls output/data/000660/tier2-raw.json
-   sleep 15 && ls output/data/000660/tier2-raw.json
-   sleep 20 && ls output/data/000660/tier2-raw.json
+   sleep 10 && ls output/runs/{run_id}/000660/tier2-raw.json
+   sleep 15 && ls output/runs/{run_id}/000660/tier2-raw.json
+   sleep 20 && ls output/runs/{run_id}/000660/tier2-raw.json
 
 ✅ CORRECT — use agent result directly:
    1. Dispatch sub-agent with Agent tool (run_in_background: true)
@@ -411,19 +412,24 @@ Project Root
 │   │       ├── run-manifest.json
 │   │       └── {ticker}/
 │   │           ├── research-plan.json     ← Step 2 output
+│   │           ├── tier1-raw.json         ← Step 3 output (US Enhanced only)
+│   │           ├── dart-api-raw.json      ← Step 4 output (KR DART-Enhanced only)
+│   │           ├── tier2-raw.json         ← Step 4 output
 │   │           ├── validated-data.json    ← Step 5 output
 │   │           ├── analysis-result.json   ← Step 7 output
 │   │           └── quality-report.json    ← Step 9 output
 │   ├── data/macro/
 │   │   └── fred-snapshot.json            ← FRED cache (shared across tickers)
 │   ├── data/{ticker}/
-│   │   ├── tier1-raw.json             ← Step 3 output (US Enhanced only)
-│   │   ├── dart-api-raw.json          ← Step 4 output (KR DART-Enhanced only)
-│   │   ├── tier2-raw.json             ← Step 4 output
-│   │   ├── validated-data.json        ← Step 5 output (Workflow 2)
-│   │   ├── research-plan.json         ← Step 2 output (Workflow 2)
-│   │   ├── latest.json                ← Always points to most recent snapshot
-│   │   └── {ticker}_{date}_snapshot.json  ← Versioned archive
+│   │   ├── latest.json                ← Pointer to most recent immutable snapshot
+│   │   └── snapshots/{snapshot_id}/
+│   │       ├── analysis-result.json
+│   │       ├── validated-data.json
+│   │       ├── quality-report.json
+│   │       ├── tier1-raw.json
+│   │       ├── dart-api-raw.json
+│   │       ├── tier2-raw.json
+│   │       └── evidence-pack.json
 │   └── reports/
 │       ├── {ticker}_A_{lang}_{date}.html
 │       ├── {ticker}_C_{lang}_{date}.html

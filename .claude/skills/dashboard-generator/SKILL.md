@@ -231,7 +231,7 @@ When called for Mode B (comparison), use `mode-b-template.md` instead of `html-t
 
 Path: `output/reports/{T1}_{T2}_{T3}_B_{lang}_{YYYY-MM-DD}.html`
 
-Load each ticker's validated-data from `output/data/{ticker}/validated-data.json`.
+Load each ticker's validated-data from the run-local artifact root, or from `output/data/{ticker}/latest.json` refs when explicitly reusing a fresh snapshot.
 
 ---
 

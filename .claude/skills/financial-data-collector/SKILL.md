@@ -3,7 +3,7 @@
 **Role**: Step 3 — Execute Financial Datasets MCP and FMP MCP API calls to collect structured financial data. Enhanced Mode only.
 **Triggered by**: CLAUDE.md when `data_mode = "enhanced"` after Step 2
 **Reads**: run-local `research-plan.json`, `references/api-endpoints.md`
-**Writes**: `output/data/{ticker}/tier1-raw.json`
+**Writes**: `output/runs/{run_id}/{ticker}/tier1-raw.json`
 **References**: `api-endpoints.md`
 
 ---
@@ -89,12 +89,12 @@ If any are missing, run:
 python .claude/skills/financial-data-collector/scripts/yfinance-collector.py \
   --ticker {ticker} \
   --market US \
-  --output output/data/{ticker}/yfinance-raw.json \
+  --output output/runs/{run_id}/{ticker}/yfinance-raw.json \
   --bundle minimum
 ```
 
 If `yfinance-collector.py` exits `0` or `1`:
-- Read `output/data/{ticker}/yfinance-raw.json`
+- Read `output/runs/{run_id}/{ticker}/yfinance-raw.json`
 - Merge it into `tier1-raw.json` under `yfinance_supplement`
 - Fill missing values only — do not overwrite existing Grade A fields
 - Tag merged values `[Portal]`
@@ -164,7 +164,7 @@ From the collected data, extract and compute these key fields for `tier1-raw.jso
 
 ### Step 3.6 — Write tier1-raw.json
 
-Write all collected data to `output/data/{ticker}/tier1-raw.json`:
+Write all collected data to `output/runs/{run_id}/{ticker}/tier1-raw.json`:
 
 ```json
 {
@@ -222,7 +222,7 @@ If MCP tools are temporarily unavailable but Python environment works, do NOT us
 If all API calls fail:
 1. Log: `"Enhanced Mode API calls all failed — attempting yfinance fallback"`
 2. Run:
-   `python .claude/skills/financial-data-collector/scripts/yfinance-collector.py --ticker {ticker} --market US --output output/data/{ticker}/yfinance-raw.json --bundle standard`
+   `python .claude/skills/financial-data-collector/scripts/yfinance-collector.py --ticker {ticker} --market US --output output/runs/{run_id}/{ticker}/yfinance-raw.json --bundle standard`
 3. If yfinance succeeds:
    `data_source = "yfinance"` and `data_mode = "enhanced"`
    proceed without a Standard Mode downgrade
@@ -241,6 +241,6 @@ If all API calls fail:
 - [ ] FMP calls attempted (if FMP configured)
 - [ ] Data sufficiency check completed
 - [ ] TTM values computed from quarterly data
-- [ ] `output/data/{ticker}/tier1-raw.json` written
+- [ ] `output/runs/{run_id}/{ticker}/tier1-raw.json` written
 - [ ] Summary log printed
 - [ ] Current price available (critical — halts if missing)

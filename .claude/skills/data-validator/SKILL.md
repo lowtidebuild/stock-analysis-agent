@@ -2,7 +2,7 @@
 
 **Role**: Step 5 — Validate all collected data through 3-layer fact-checking, assign confidence grades, and enforce the Blank-Over-Wrong principle.
 **Triggered by**: CLAUDE.md after Step 4 (web researcher)
-**Reads**: `output/data/{ticker}/tier1-raw.json` (Enhanced), `output/data/{ticker}/tier2-raw.json`, `references/validation-rules.md`, `references/confidence-grading.md`, `references/source-metadata-contract.md`
+**Reads**: `output/runs/{run_id}/{ticker}/tier1-raw.json` (Enhanced), `output/runs/{run_id}/{ticker}/tier2-raw.json`, `references/validation-rules.md`, `references/confidence-grading.md`, `references/source-metadata-contract.md`
 **Writes**: `output/runs/{run_id}/{ticker}/validated-data.json`
 **References**: `validation-rules.md`, `confidence-grading.md`, `source-metadata-contract.md`
 
@@ -28,24 +28,24 @@ This principle is ABSOLUTE. No exceptions. Grade D = excluded.
 
 **Enhanced Mode**:
 ```
-Load: output/data/{ticker}/tier1-raw.json    (API data)
-Load: output/data/{ticker}/tier2-raw.json    (web data)
+Load: output/runs/{run_id}/{ticker}/tier1-raw.json    (API data)
+Load: output/runs/{run_id}/{ticker}/tier2-raw.json    (web data)
 Primary source: tier1 (API)
 Cross-check source: tier2 (web)
 ```
 
 **Standard Mode (US stocks)**:
 ```
-Load: output/data/{ticker}/tier2-raw.json    (web data only)
+Load: output/runs/{run_id}/{ticker}/tier2-raw.json    (web data only)
 Primary source: tier2 (first source found)
 Cross-check source: tier2 (second source found)
 ```
 
 **Korean stocks**:
 ```
-Load: dart-api-raw.json    (DART OpenAPI — Grade A financials, always attempted)
-Load: tier2-raw.json       (web — price from 네이버금융, consensus, qualitative)
-Primary financial source: dart-api-raw.json (if exists)
+Load: output/runs/{run_id}/{ticker}/dart-api-raw.json    (DART OpenAPI — Grade A financials, always attempted)
+Load: output/runs/{run_id}/{ticker}/tier2-raw.json       (web — price from 네이버금융, consensus, qualitative)
+Primary financial source: run-local dart-api-raw.json (if exists)
 Primary market data source: tier2 (네이버금융)
 Fallback: if dart-api-raw.json missing → tier2-raw.json only (aggregator-only, max Grade B)
 ```
