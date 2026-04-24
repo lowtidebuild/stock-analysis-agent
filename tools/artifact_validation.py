@@ -96,6 +96,39 @@ FETCHED_ARTIFACT_TYPES = {
 }
 FETCHED_ARTIFACT_FILENAMES = {f"{artifact_type}.json" for artifact_type in FETCHED_ARTIFACT_TYPES}
 UNSANITIZED_FETCHED_CONTENT_FLAG = "unsanitized fetched content (sanitizer block missing)"
+EMPTY_VALUES = (None, "", [], {})
+MODE_C_REQUIRED_SECTIONS = (
+    "variant_view_q1",
+    "variant_view_q2",
+    "variant_view_q3",
+    "precision_risks",
+    "valuation_metrics",
+    "dcf_analysis",
+    "macro_context",
+    "peer_comparison",
+    "analyst_coverage",
+    "qoe_summary",
+    "portfolio_strategy",
+    "what_would_make_me_wrong",
+)
+MODE_D_REQUIRED_SECTIONS = (
+    "executive_summary",
+    "business_overview",
+    "financial_performance",
+    "valuation_analysis",
+    "variant_view_q1",
+    "variant_view_q2",
+    "variant_view_q3",
+    "variant_view_q4",
+    "variant_view_q5",
+    "precision_risks",
+    "investment_scenarios",
+    "peer_comparison",
+    "management_governance",
+    "quality_of_earnings",
+    "what_would_make_me_wrong",
+    "appendix_data_sources",
+)
 
 
 def load_schema(schema_name: str, base_dir: str | Path | None = None) -> dict[str, Any]:
@@ -448,6 +481,52 @@ def validate_analysis_semantics(data: dict[str, Any], path: str = "$") -> list[s
             errors.append(
                 f"{path}.rr_score: expected {expected_rr_score:.2f} from scenario formula, got {rr_score}"
             )
+
+    return errors
+
+
+def validate_analysis_completeness(data: dict[str, Any], path: str = "$") -> list[str]:
+    output_mode = str(data.get("output_mode") or "").upper()
+    sections = data.get("sections")
+    errors: list[str] = []
+
+    if output_mode not in {"C", "D"}:
+        return errors
+    if not isinstance(sections, dict):
+        return [f"{path}.sections: Mode {output_mode} completeness requires sections object"]
+
+    required_sections = MODE_C_REQUIRED_SECTIONS if output_mode == "C" else MODE_D_REQUIRED_SECTIONS
+    for key in required_sections:
+        if sections.get(key) in EMPTY_VALUES:
+            errors.append(f"{path}.sections.{key}: Mode {output_mode} completeness missing required section")
+
+    risks = sections.get("precision_risks")
+    if not isinstance(risks, list) or len(risks) < 3:
+        errors.append(f"{path}.sections.precision_risks: Mode {output_mode} completeness requires at least 3 risks")
+
+    if output_mode == "C":
+        dcf = sections.get("dcf_analysis")
+        if dcf not in EMPTY_VALUES and not isinstance(dcf, dict):
+            errors.append(f"{path}.sections.dcf_analysis: Mode C completeness requires DCF object")
+        elif isinstance(dcf, dict):
+            for key in ("base", "bull", "bear", "methodology"):
+                if dcf.get(key) in EMPTY_VALUES:
+                    errors.append(f"{path}.sections.dcf_analysis.{key}: Mode C completeness missing DCF field")
+        analyst_coverage = sections.get("analyst_coverage")
+        if analyst_coverage not in EMPTY_VALUES and not isinstance(analyst_coverage, dict):
+            errors.append(f"{path}.sections.analyst_coverage: Mode C completeness requires coverage object")
+        elif isinstance(analyst_coverage, dict):
+            if analyst_coverage.get("consensus") in EMPTY_VALUES and analyst_coverage.get("price_target") in EMPTY_VALUES:
+                errors.append(
+                    f"{path}.sections.analyst_coverage: Mode C completeness requires consensus or price_target"
+                )
+
+    if output_mode == "D":
+        qoe = sections.get("quality_of_earnings")
+        if qoe not in EMPTY_VALUES and not isinstance(qoe, dict):
+            errors.append(f"{path}.sections.quality_of_earnings: Mode D completeness requires QoE object")
+        elif isinstance(qoe, dict) and qoe.get("narrative") in EMPTY_VALUES:
+            errors.append(f"{path}.sections.quality_of_earnings.narrative: Mode D completeness missing QoE narrative")
 
     return errors
 
@@ -1100,6 +1179,8 @@ def validate_artifact_data(
                 price_override=data.get("price_at_analysis"),
             )
         )
+    if artifact_type == "analysis-result":
+        errors.extend(validate_analysis_completeness(data))
 
     if artifact_type == "run-manifest":
         tickers = data.get("tickers", [])

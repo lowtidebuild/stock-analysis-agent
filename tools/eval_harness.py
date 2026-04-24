@@ -271,52 +271,9 @@ def load_delta_module():
 
 
 def completeness_checks(artifact_type: str, artifact_path: Path) -> list[str]:
-    if artifact_type != "analysis-result":
-        return []
-
-    payload = load_json(artifact_path)
-    output_mode = payload.get("output_mode")
-    sections = payload.get("sections") or {}
-    issues: list[str] = []
-
-    if output_mode == "C":
-        required_section_keys = [
-            "variant_view_q1",
-            "variant_view_q2",
-            "variant_view_q3",
-            "precision_risks",
-            "valuation_metrics",
-            "peer_comparison",
-            "portfolio_strategy",
-            "what_would_make_me_wrong",
-        ]
-        for key in required_section_keys:
-            if key not in sections or sections.get(key) in (None, "", [], {}):
-                issues.append(f"Mode C completeness: missing sections.{key}")
-        risks = sections.get("precision_risks", [])
-        if isinstance(risks, list) and len(risks) < 3:
-            issues.append("Mode C completeness: precision_risks should contain at least 3 items")
-
-    if output_mode == "D":
-        required_section_keys = [
-            "executive_summary",
-            "business_overview",
-            "financial_performance",
-            "valuation_analysis",
-            "variant_view_q1",
-            "variant_view_q2",
-            "variant_view_q3",
-            "precision_risks",
-            "investment_scenarios",
-            "peer_comparison",
-            "management_governance",
-            "what_would_make_me_wrong",
-        ]
-        for key in required_section_keys:
-            if key not in sections or sections.get(key) in (None, "", [], {}):
-                issues.append(f"Mode D completeness: missing sections.{key}")
-
-    return issues
+    # Completeness now lives in tools.artifact_validation so normal artifact
+    # validation and run-dir validation share the same contract.
+    return []
 
 
 def evaluate_case(case: dict[str, Any]) -> dict[str, Any]:

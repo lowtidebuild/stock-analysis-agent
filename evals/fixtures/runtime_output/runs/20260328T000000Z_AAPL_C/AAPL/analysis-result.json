@@ -141,6 +141,28 @@
         "assessment": "In line"
       }
     ],
+    "dcf_analysis": {
+      "base": {
+        "fair_value": 210,
+        "upside_pct": 9.1,
+        "sensitivity_table": [
+          {
+            "wacc": "8.0%",
+            "terminal_growth": "2.5%",
+            "fair_value": 210
+          }
+        ]
+      },
+      "bull": {
+        "fair_value": 230,
+        "upside_pct": 19.5
+      },
+      "bear": {
+        "fair_value": 163.5,
+        "upside_pct": -15.0
+      },
+      "methodology": "Fixture DCF uses filing-backed FCF, scenario-specific growth assumptions, and a terminal value sensitivity table."
+    },
     "peer_comparison": [
       {
         "ticker": "MSFT",
@@ -153,6 +175,15 @@
         "value": "24x [Portal]"
       }
     ],
+    "analyst_coverage": {
+      "consensus": "Neutral",
+      "price_target": "210 [Portal]",
+      "source": "Fixture analyst coverage summary"
+    },
+    "qoe_summary": {
+      "narrative": "Free cash flow conversion remains the key quality anchor in this fixture, with Services mix offsetting hardware cyclicality.",
+      "fcf_conversion": "Operating cash flow and free cash flow remain positive on a TTM basis [Calc]"
+    },
     "portfolio_strategy": "Treat the name as a quality compounder where position sizing should expand only if Services and cash conversion continue to offset hardware cyclicality.",
     "what_would_make_me_wrong": [
       "Services growth slips below low double digits for two consecutive quarters.",
