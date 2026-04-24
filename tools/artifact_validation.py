@@ -1235,7 +1235,7 @@ def _infer_blocker_action(item_name: str, item_payload: dict[str, Any]) -> str:
         return "none"
     if _has_terminal_input_failure(item_payload):
         return "terminal"
-    if item_name in {"rendered_output", "price_and_date", "blank_over_wrong"}:
+    if item_name in {"rendered_output", "price_and_date", "blank_over_wrong", "scenario_consistency"}:
         return "patchable"
     if item_name in {"contract_validation", "semantic_consistency", "verdict_policy", "cross_artifact_consistency"}:
         return "patchable"

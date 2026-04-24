@@ -11,6 +11,7 @@ from typing import Any
 from tools.analysis_contract import extract_numeric_value, utc_now_iso
 from tools.artifact_validation import (
     validate_analysis_semantics,
+    validate_scenarios,
     validate_artifact_data,
     validate_cross_artifact_consistency,
     validate_formula_metrics,
@@ -43,6 +44,7 @@ CRITIC_ITEM_SEVERITY = {
 }
 CORE_GENERATED_ITEMS = (
     "contract_validation",
+    "scenario_consistency",
     "semantic_consistency",
     "verdict_policy",
     "cross_artifact_consistency",
@@ -354,6 +356,39 @@ def build_blank_over_wrong_item(validated: dict[str, Any], analysis: dict[str, A
     return item
 
 
+def build_scenario_consistency_item(analysis: dict[str, Any]) -> dict[str, Any]:
+    scenarios = analysis.get("scenarios")
+    errors: list[str] = []
+    if not isinstance(scenarios, dict):
+        errors.append("$.scenarios: missing scenario object")
+        scenarios = {}
+    else:
+        errors.extend(validate_scenarios(analysis))
+        errors.extend(
+            error
+            for error in validate_analysis_semantics(analysis)
+            if ".scenarios" in error or ".rr_score" in error
+        )
+
+    probabilities: dict[str, float | None] = {}
+    targets: dict[str, float | None] = {}
+    for case in ("bull", "base", "bear"):
+        case_data = scenarios.get(case) if isinstance(scenarios.get(case), dict) else {}
+        probabilities[case] = extract_numeric_value(case_data.get("probability"))
+        targets[case] = extract_numeric_value(case_data.get("target"))
+
+    probability_values = [value for value in probabilities.values() if value is not None]
+    item: dict[str, Any] = {
+        "status": _build_status(errors),
+        "probabilities": probabilities,
+        "probability_sum": round(sum(probability_values), 4) if len(probability_values) == 3 else None,
+        "targets": targets,
+    }
+    if errors:
+        item["errors"] = errors
+    return item
+
+
 def build_contract_validation_item(
     research_plan: dict[str, Any],
     validated: dict[str, Any],
@@ -497,7 +532,7 @@ def infer_blocker_action(item_name: str, item_payload: dict[str, Any]) -> str:
         return "none"
     if _has_terminal_input_failure(item_payload):
         return "terminal"
-    if item_name in {"rendered_output", "price_and_date", "blank_over_wrong"}:
+    if item_name in {"rendered_output", "price_and_date", "blank_over_wrong", "scenario_consistency"}:
         return "patchable"
     if item_name in {"contract_validation", "semantic_consistency", "verdict_policy", "cross_artifact_consistency"}:
         return "patchable"
@@ -857,6 +892,7 @@ def build_quality_report(
         "price_and_date": build_price_and_date_item(validated, analysis),
         "blank_over_wrong": build_blank_over_wrong_item(validated, analysis),
         "contract_validation": build_contract_validation_item(research_plan, validated, analysis),
+        "scenario_consistency": build_scenario_consistency_item(analysis),
         "semantic_consistency": build_semantic_consistency_item(analysis),
         "verdict_policy": build_verdict_policy_item(analysis),
         "cross_artifact_consistency": build_cross_artifact_item(research_plan, validated, analysis),

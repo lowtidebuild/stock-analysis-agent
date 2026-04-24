@@ -34,6 +34,21 @@ class ContractChecksPathTests(unittest.TestCase):
             self.assertTrue((pathlib.Path(tmp) / "runs" / "20260328T000000Z_AAPL_C").exists())
             self.assertTrue(all(str(path).startswith(resolved_tmp) for path in copied))
 
+    def test_contract_checks_default_to_temp_data_dir(self):
+        os.environ.pop("STOCK_ANALYSIS_DATA_DIR", None)
+        from tools.contract_checks import contract_check_data_dir, ensure_runtime_output_fixtures
+        from tools.paths import REPO_ROOT, data_dir
+
+        with contract_check_data_dir() as tmp:
+            self.assertIsNotNone(tmp)
+            self.assertNotEqual(data_dir(), REPO_ROOT / "output")
+            copied = ensure_runtime_output_fixtures()
+            resolved_tmp = str(pathlib.Path(tmp).resolve())
+            self.assertTrue(copied)
+            self.assertTrue(all(str(path).startswith(resolved_tmp) for path in copied))
+
+        self.assertIsNone(os.environ.get("STOCK_ANALYSIS_DATA_DIR"))
+
     def test_eval_harness_resolves_output_paths_to_configured_data_dir(self):
         with tempfile.TemporaryDirectory() as tmp:
             os.environ["STOCK_ANALYSIS_DATA_DIR"] = tmp

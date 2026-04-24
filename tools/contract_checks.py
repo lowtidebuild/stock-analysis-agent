@@ -12,9 +12,12 @@ from __future__ import annotations
 
 import argparse
 import compileall
+import contextlib
 import json
+import os
 import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 THIS_FILE = Path(__file__).resolve()
@@ -37,6 +40,24 @@ COMPILE_DIRS = [
     REPO_ROOT / ".claude" / "skills" / "output-generator" / "scripts",
 ]
 RUNTIME_OUTPUT_FIXTURE_ROOT = REPO_ROOT / "evals" / "fixtures" / "runtime_output"
+
+
+@contextlib.contextmanager
+def contract_check_data_dir():
+    if os.environ.get("STOCK_ANALYSIS_DATA_DIR"):
+        yield None
+        return
+
+    previous = os.environ.get("STOCK_ANALYSIS_DATA_DIR")
+    with tempfile.TemporaryDirectory(prefix="stock-agent-contract-check-") as tmp:
+        os.environ["STOCK_ANALYSIS_DATA_DIR"] = tmp
+        try:
+            yield Path(tmp)
+        finally:
+            if previous is None:
+                os.environ.pop("STOCK_ANALYSIS_DATA_DIR", None)
+            else:
+                os.environ["STOCK_ANALYSIS_DATA_DIR"] = previous
 
 
 def ensure_runtime_output_fixtures() -> list[str]:
@@ -130,11 +151,12 @@ def main() -> None:
     parser.add_argument("--verbose", action="store_true", help="Print full per-case eval payloads.")
     args = parser.parse_args()
 
-    fixture_copies = ensure_runtime_output_fixtures()
-    compile_failures = run_compile_checks()
-    manifests = resolve_manifests(args.manifest, args.manifest_glob)
-    summaries = [run_manifest(manifest) for manifest in manifests]
-    all_evals_passed = all(summary["all_matched_expectation"] for summary in summaries)
+    with contract_check_data_dir():
+        fixture_copies = ensure_runtime_output_fixtures()
+        compile_failures = run_compile_checks()
+        manifests = resolve_manifests(args.manifest, args.manifest_glob)
+        summaries = [run_manifest(manifest) for manifest in manifests]
+        all_evals_passed = all(summary["all_matched_expectation"] for summary in summaries)
 
     payload = (
         {

@@ -1,6 +1,6 @@
 # Quality Checker — SKILL.md
 
-**Role**: Step 9 — Perform 5-item quality check on the generated output before delivery to user. Auto-patch minor issues; flag persistent failures inline.
+**Role**: Step 9 — Perform output-facing quality checks and rebuild the deterministic run-local quality report before delivery to user. Auto-patch minor issues; flag persistent failures inline.
 **Triggered by**: CLAUDE.md after Step 8 (output generation), before final delivery
 **Reads**: Generated output file (or inline response), run-local `validated-data.json`, run-local `analysis-result.json`
 **Writes**: Patches to the output file; run-local `quality-report.json`
@@ -40,7 +40,9 @@ IF output_mode = "A":
 
 ---
 
-## 5-Item Quality Checklist
+## 5-Item Output-Facing Checklist
+
+These manual checks focus on the rendered user output. The canonical quality-report builder also adds deterministic artifact checks, including `contract_validation`, `scenario_consistency`, `semantic_consistency`, `verdict_policy`, `cross_artifact_consistency`, and optional `rendered_output`. Do not delegate these mechanical checks to the critic agent.
 
 ### Item 1 — Financial Data Consistency
 
@@ -189,6 +191,10 @@ Write to `output/runs/{run_id}/{ticker}/quality-report.json`:
     },
     "contract_validation": {
       "status": "PASS"
+    },
+    "scenario_consistency": {
+      "status": "PASS",
+      "probability_sum": 1.0
     },
     "semantic_consistency": {
       "status": "PASS",
