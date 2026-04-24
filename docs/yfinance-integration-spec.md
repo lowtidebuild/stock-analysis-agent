@@ -196,8 +196,12 @@ Write to `--output` path. Schema:
       "period_end": "2025-12-31",
       "period_type": "quarterly",
       "operating_cashflow": 35000000000,
-      "capital_expenditure": -3500000000,
-      "free_cash_flow": 31500000000
+      "capital_expenditure": 3500000000,
+      "capex_raw": -3500000000,
+      "capex_outflow_abs": 3500000000,
+      "capex_sign_convention": "negative_outflow",
+      "free_cash_flow": 31500000000,
+      "free_cash_flow_calculated": 31500000000
     }
   ],
 

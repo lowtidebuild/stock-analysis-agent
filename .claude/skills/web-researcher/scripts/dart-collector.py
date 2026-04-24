@@ -242,51 +242,66 @@ def get_recent_disclosures(api_key, corp_code, days=90):
 def estimate_ttm(periods):
     """
     Estimate TTM (Trailing Twelve Months) for income statement items.
-    Uses the most recent available period data.
 
     Logic:
-    - If Annual available: use as-is (12M)
-    - If Q3 (9M cumulative) + prior Annual: TTM ≈ Q3_YTD + (Annual_prior - H1_prior)
-    - If H1 (6M) available: note limited TTM precision
-    - Fallback: use most recent period with a note
+    - If Q3 + prior Annual + prior Q3 are available:
+      TTM = current Q3 YTD + prior annual - prior Q3 YTD
+    - If only a current YTD period is available: expose it as a low-precision
+      YTD proxy, not as verified TTM
+    - If only Annual is available: expose latest annual as a 12M period, not
+      current TTM
 
-    Returns: {field: ttm_value} with a note on calculation method
+    Returns: ({field: value}, calculation_note, precision)
     """
     ttm = {}
-    ttm_note = ""
 
-    if "Annual" in periods:
-        # Annual is already 12M — use directly
-        annual = periods["Annual"]["parsed"]
-        for field, data in annual.items():
-            if data.get("statement_type") == "IS" and data.get("value") is not None:
-                ttm[field] = data["value"]
-        ttm_note = "TTM = Most recent annual (12M)"
+    def income_fields(label):
+        parsed = periods.get(label, {}).get("parsed", {})
+        return {
+            field: data.get("value")
+            for field, data in parsed.items()
+            if data.get("statement_type") == "IS" and data.get("value") is not None
+        }
 
-    elif "Q3" in periods and "Q3_prior" in periods:
-        # TTM = Q3 YTD (9M) + (Annual prior - Q3 YTD prior)
-        # But we may not have Q3_prior separately, so use best effort
-        q3 = periods["Q3"]["parsed"]
-        ttm_note = "TTM approximate: Q3 YTD (9M) — full TTM requires prior Q3 data"
-        for field, data in q3.items():
-            if data.get("statement_type") == "IS" and data.get("value") is not None:
-                ttm[field] = data["value"]  # 9M as proxy
+    q3 = income_fields("Q3")
+    annual = income_fields("Annual")
+    q3_prior = income_fields("Q3_prior")
+    if q3 and annual and q3_prior:
+        for field, current_value in q3.items():
+            prior_annual_value = annual.get(field)
+            prior_q3_value = q3_prior.get(field)
+            if prior_annual_value is not None and prior_q3_value is not None:
+                ttm[field] = current_value + prior_annual_value - prior_q3_value
+        if ttm:
+            return (
+                ttm,
+                "TTM = current Q3 YTD + prior annual - prior Q3 YTD",
+                "high",
+            )
 
-    elif "Q3" in periods:
-        q3 = periods["Q3"]["parsed"]
-        ttm_note = "TTM approximation: Q3 YTD (9M data, annualized where noted)"
-        for field, data in q3.items():
-            if data.get("statement_type") == "IS" and data.get("value") is not None:
-                ttm[field] = data["value"]
+    if q3:
+        return (
+            q3,
+            "YTD proxy only: current Q3 YTD (9M). True TTM requires prior annual and prior Q3 YTD.",
+            "low",
+        )
 
-    elif "H1" in periods:
-        h1 = periods["H1"]["parsed"]
-        ttm_note = "TTM approximation: H1 (6M data only — lower precision)"
-        for field, data in h1.items():
-            if data.get("statement_type") == "IS" and data.get("value") is not None:
-                ttm[field] = data["value"]
+    h1 = income_fields("H1")
+    if h1:
+        return (
+            h1,
+            "YTD proxy only: current H1 (6M). True TTM requires prior annual and prior H1 YTD.",
+            "low",
+        )
 
-    return ttm, ttm_note
+    if annual:
+        return (
+            annual,
+            "Latest annual 12M period; current trailing twelve months unavailable.",
+            "medium",
+        )
+
+    return {}, "No income statement period available for TTM calculation.", "unavailable"
 
 
 def main():
@@ -325,6 +340,8 @@ def main():
         (current_year - 2, "11011", "Annual_prior2"),
     ]
 
+    # Keep collecting the prior same-period report when available so true
+    # TTM can be reconstructed instead of using current YTD as a proxy.
     for year, reprt_code, label in attempts:
         rows = get_financial_statements(api_key, corp_code, str(year), reprt_code)
         if rows:
@@ -337,8 +354,6 @@ def main():
                 "row_count": len(rows),
             }
             collected.append(f"{year} {label}")
-        if len(collected) >= 4:
-            break
 
     if not periods:
         result = {"status": "fail", "error": f"No financial data found for {args.stock_code} ({corp_info.get('corp_name')}) in DART. Company may not file through DART (e.g. foreign-listed only)."}
@@ -346,7 +361,7 @@ def main():
         sys.exit(1)
 
     # Step 3: Estimate TTM for income statement
-    ttm_data, ttm_note = estimate_ttm(periods)
+    ttm_data, ttm_note, ttm_precision = estimate_ttm(periods)
 
     # Step 4: Extract balance sheet from most recent period
     balance_sheet = {}
@@ -375,6 +390,7 @@ def main():
         "collected_periods": collected,
         "ttm_income_statement": {
             "calculation_note": ttm_note,
+            "precision": ttm_precision,
             "currency": "KRW",
             "unit": "백만원 (millions KRW) — verify unit from source filing",
             **ttm_data,

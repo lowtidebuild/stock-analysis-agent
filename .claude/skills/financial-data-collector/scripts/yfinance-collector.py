@@ -302,11 +302,37 @@ def normalize_statement(
         for field_name, aliases in matched_aliases.items():
             row[field_name] = as_number(get_statement_value(frame, lookup, aliases, column))
 
-        if "operating_cashflow" in row and "capital_expenditure" in row and row.get("free_cash_flow") is None:
+        if "capital_expenditure" in row and row.get("capital_expenditure") is not None:
+            capex_raw = row["capital_expenditure"]
+            capex_outflow_abs = as_number(abs(capex_raw))
+            row["capex_raw"] = capex_raw
+            row["capex_outflow_abs"] = capex_outflow_abs
+            if capex_raw < 0:
+                row["capex_sign_convention"] = "negative_outflow"
+            elif capex_raw > 0:
+                row["capex_sign_convention"] = "positive_outflow"
+            else:
+                row["capex_sign_convention"] = "zero"
+            row["capital_expenditure"] = capex_outflow_abs
+
+        if "operating_cashflow" in row and "capex_outflow_abs" in row:
             op_cf = row.get("operating_cashflow")
-            capex = row.get("capital_expenditure")
-            if op_cf is not None and capex is not None:
-                row["free_cash_flow"] = as_number(op_cf + capex)
+            capex_outflow_abs = row.get("capex_outflow_abs")
+            if op_cf is not None and capex_outflow_abs is not None:
+                calculated_fcf = as_number(op_cf - capex_outflow_abs)
+                row["free_cash_flow_calculated"] = calculated_fcf
+                source_fcf = row.get("free_cash_flow")
+                if source_fcf is None:
+                    row["free_cash_flow"] = calculated_fcf
+                elif calculated_fcf is not None:
+                    threshold = max(abs(calculated_fcf) * 0.02, 1)
+                    difference = as_number(source_fcf - calculated_fcf)
+                    if difference is not None and abs(difference) > threshold:
+                        row["free_cash_flow_conflict"] = {
+                            "source_value": source_fcf,
+                            "calculated_value": calculated_fcf,
+                            "difference": difference,
+                        }
 
         if "short_term_debt" in row and "long_term_debt" in row and row.get("total_debt") is None:
             short_debt = row.get("short_term_debt")

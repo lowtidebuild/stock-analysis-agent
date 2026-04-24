@@ -51,7 +51,7 @@ def main() -> None:
         result = validate_artifact_file(Path(args.input), args.artifact_type, base_dir=REPO_ROOT)
 
     print(json.dumps(result, ensure_ascii=False, indent=2))
-    if not result.get("valid", False):
+    if not result.get("valid", False) or not result.get("ingestion_allowed", True):
         sys.exit(1)
 
 

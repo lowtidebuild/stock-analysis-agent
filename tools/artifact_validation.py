@@ -1136,10 +1136,14 @@ def validate_artifact_file(
         data = json.load(handle)
     errors = validate_artifact_data(artifact_type, data, base_dir=base_dir or path)
     flags: list[str] = []
+    security_flags: list[str] = []
     warnings: list[dict[str, str]] = []
+    sanitization_required = _requires_sanitization_check(artifact_type, path)
+    sanitization_present = _has_sanitization_block(data)
 
-    if _requires_sanitization_check(artifact_type, path) and not _has_sanitization_block(data):
+    if sanitization_required and not sanitization_present:
         flags.append(UNSANITIZED_FETCHED_CONTENT_FLAG)
+        security_flags.append("unsanitized_fetched_content")
         warnings.append(
             {
                 "code": "unsanitized_fetched_content",
@@ -1148,14 +1152,21 @@ def validate_artifact_file(
             }
         )
 
+    schema_valid = not errors
+    ingestion_allowed = schema_valid and not security_flags
     overall_grade = "D" if errors or flags else "A"
     return {
         "artifact_type": artifact_type,
         "path": str(path),
-        "valid": not errors,
+        "valid": schema_valid,
+        "schema_valid": schema_valid,
+        "ingestion_allowed": ingestion_allowed,
+        "sanitization_required": sanitization_required,
+        "sanitization_present": sanitization_present,
         "errors": errors,
         "overall_grade": overall_grade,
         "flags": flags,
+        "security_flags": security_flags,
         "quality_flag": flags[0] if flags else None,
         "quality_flags": flags,
         "warnings": warnings,
@@ -1179,6 +1190,8 @@ def validate_run_directory(run_dir: str | Path, base_dir: str | Path | None = No
                 "artifact_type": "run-manifest",
                 "path": str(manifest_path),
                 "valid": False,
+                "schema_valid": False,
+                "ingestion_allowed": False,
                 "errors": ["run-manifest.json is missing"],
             }
         )
@@ -1208,6 +1221,8 @@ def validate_run_directory(run_dir: str | Path, base_dir: str | Path | None = No
                         "artifact_type": artifact_type,
                         "path": str(artifact_path),
                         "valid": False,
+                        "schema_valid": False,
+                        "ingestion_allowed": False,
                         "errors": ["artifact is missing"],
                     }
                 )
@@ -1236,5 +1251,6 @@ def validate_run_directory(run_dir: str | Path, base_dir: str | Path | None = No
     return {
         "run_dir": str(path),
         "valid": all(result["valid"] for result in results),
+        "ingestion_allowed": all(result.get("ingestion_allowed", result["valid"]) for result in results),
         "results": results,
     }

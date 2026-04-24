@@ -347,9 +347,11 @@ python tools/sanitize_artifact.py --in output/data/{ticker}/dart-api-raw.json --
 python tools/sanitize_artifact.py --in output/data/{ticker}/yfinance-raw.json --in-place
 ```
 
-Failure to sanitize blocks downstream consumption: the analyst and critic
-treat any artifact lacking `_sanitization` as Grade D and surface
-`[Quality flag: unsanitized fetched content]`.
+Failure to sanitize blocks downstream consumption: validators return
+`ingestion_allowed = false`, and the analyst and critic must not consume
+the artifact as analysis input. Surface
+`[Quality flag: unsanitized fetched content]` and use sanitized or
+validated alternatives instead.
 
 ---
 

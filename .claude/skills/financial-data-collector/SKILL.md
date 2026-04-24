@@ -150,8 +150,11 @@ From the collected data, extract and compute these key fields for `tier1-raw.jso
 
 **From cash_flow_statements** (most recent 4 quarters for TTM):
 - Operating CF TTM = sum of last 4 quarters operating_cashflow
-- CapEx TTM = sum of last 4 quarters capital_expenditure (use absolute value)
+- Preserve source CapEx as `capex_raw`
+- Normalize CapEx outflow to positive `capex_outflow_abs`
+- Set `capital_expenditure = capex_outflow_abs` for downstream calculations
 - FCF TTM = Operating CF TTM - CapEx TTM
+- If source-provided FCF conflicts with calculated FCF, record the conflict instead of silently overwriting
 
 **From financial_metrics**:
 - P/E, EV/EBITDA, P/B, ROE, ROA, Current Ratio

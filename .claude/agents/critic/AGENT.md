@@ -47,7 +47,7 @@ That is all. No SKILL.md files, no framework files, no conversation history.
 **Pass**: Statement is company-specific — replacing the name makes it factually wrong or inapplicable.
 **Fail**: Statement reads equally well for any company in the sector.
 
-**How to check**: Read the Variant View. Ask: "Could I copy this paragraph, change 'AAPL' to 'GOOGL', and submit it as a GOOGL analysis?" If yes → FAIL.
+**How to check**: Read the Variant View. Ask: "Could I copy this paragraph, change `<TICKER>` to `<DIRECT_COMPETITOR>`, and submit it as a competitor analysis?" If yes → FAIL.
 
 **Output format**:
 ```json
@@ -55,8 +55,8 @@ That is all. No SKILL.md files, no framework files, no conversation history.
   "item": "generic_test",
   "status": "FAIL",
   "section": "Section 4 — Q1 Variant View",
-  "problem": "Paragraph 2 states 'The market underestimates the company's AI monetization timeline.' This applies equally to MSFT, META, GOOGL. No company-specific evidence cited.",
-  "fix": "Add specific data: e.g., 'AAPL's AI feature adoption rate in iPhone 15/16 (per App Store data) shows X% install rate for AI-native apps, vs. MSFT's Copilot at Y% enterprise adoption — fundamentally different monetization mechanism.'"
+  "problem": "Paragraph 2 states 'The market underestimates the company's AI monetization timeline.' This applies equally to direct peers. No company-specific evidence cited.",
+  "fix": "Add source-backed, company-specific adoption, monetization, or backlog data and contrast it with the closest direct competitor."
 }
 ```
 
@@ -84,7 +84,7 @@ If any of 1–4 is missing → FAIL.
   "status": "FAIL",
   "section": "Section 5 — Precision Risk",
   "problem": "Risk 2 ('Regulatory risk') states 'antitrust action could negatively impact the business.' No mechanism: which antitrust action, which business segment, what financial impact, what multiple compression?",
-  "fix": "Specify: 'DOJ App Store investigation (filed Q3 2025) could force 15-30% reduction in App Store commission rates. App Store generates ~$25B annual revenue at ~80% margins. A 20% cut would reduce EBITDA by ~$4B (3.3% of TTM EBITDA), potentially compressing P/E from 28x to 25x at current growth rate, implying $155 stock price (vs. $175 current).'"
+  "fix": "Specify the causal chain with sourced values: '<REGULATORY_EVENT> -> <BUSINESS_LINE> pricing or volume impact -> <EBITDA_OR_EPS_IMPACT> -> <MULTIPLE_OR_TARGET_PRICE_EFFECT>.'"
 }
 ```
 
@@ -105,7 +105,7 @@ If any of 1–4 is missing → FAIL.
   "item": "data_backing",
   "status": "FAIL",
   "section": "Section 4 — Q3 Optionality",
-  "problem": "Value '$14B potential licensing revenue' has no source tag. Value '35M enterprise seats' has no source tag.",
+  "problem": "Value '<UNTAGGED_REVENUE_CLAIM>' has no source tag. Value '<UNTAGGED_VOLUME_CLAIM>' has no source tag.",
   "fix": "Add source tags to every numerical claim, or label as '[Est]' if based on modeling."
 }
 ```
@@ -133,8 +133,8 @@ If any of 1–4 is missing → FAIL.
   "item": "scenario_consistency",
   "status": "FAIL",
   "section": "Section 6 — Investment Scenarios",
-  "problem": "Probabilities: Bull 35%, Base 35%, Bear 30% = 100% ✓. But Bull assumption ('Services revenue reaches 25% of total') and Bear assumption ('China revenue contracts 20%') could both occur simultaneously — they are not mutually exclusive.",
-  "fix": "Make assumptions mutually exclusive. Bull: 'China headwinds contained and Services acceleration occurs.' Bear: 'China revenue contracts >20% AND Services growth misses to below 10%.'"
+  "problem": "Probabilities: Bull <BULL_PROB>, Base <BASE_PROB>, Bear <BEAR_PROB> sum to 100%, but the bull and bear assumptions could both occur simultaneously — they are not mutually exclusive.",
+  "fix": "Make assumptions mutually exclusive. Bull: '<UPSIDE_DRIVER> occurs while <KEY_HEADWIND> is contained.' Bear: '<KEY_HEADWIND> worsens and <UPSIDE_DRIVER> misses below the defined threshold.'"
 }
 ```
 
@@ -165,8 +165,8 @@ Compare each calculated ratio to the value shown in the output.
   "item": "math_consistency",
   "status": "FAIL",
   "section": "Section 3 — Valuation",
-  "problem": "Output shows FCF Yield of 5.2%. ratio-calculator.py computes 3.8% from validated inputs (FCF=$89B, Mkt Cap=$2,345B → 3.8%). Discrepancy of 37%.",
-  "fix": "Correct FCF Yield to 3.8% [Calc] and verify which FCF figure was used in the output."
+  "problem": "Output shows FCF Yield of <OUTPUT_FCF_YIELD>. ratio-calculator.py computes <CALCULATED_FCF_YIELD> from validated inputs. Discrepancy exceeds threshold.",
+  "fix": "Correct FCF Yield to <CALCULATED_FCF_YIELD> [Calc] and verify which FCF figure was used in the output."
 }
 ```
 
@@ -233,7 +233,7 @@ Write to `output/runs/{run_id}/{ticker}/quality-report.json` and preserve the ex
 
 ```json
 {
-  "ticker": "AAPL",
+  "ticker": "<TICKER>",
   "output_mode": "D",
   "overall_result": "FAIL",
   "core_overall_result": "PASS",
@@ -248,21 +248,21 @@ Write to `output/runs/{run_id}/{ticker}/quality-report.json` and preserve the ex
   },
   "critic_review": {
     "reviewer": "critic-agent",
-    "review_timestamp": "2026-03-12T15:00:00Z",
+    "review_timestamp": "<REVIEW_TIMESTAMP>",
     "overall": "FAIL",
     "items": [
       {
         "item": "generic_test",
         "status": "PASS",
         "section": "Section 4 — Q1",
-        "notes": "Variant View cites specific H100 backlog figure not applicable to peers."
+        "notes": "Variant View cites a source-backed, company-specific metric not applicable to peers."
       },
       {
         "item": "mechanism_test",
         "status": "FAIL",
         "section": "Section 5 — Risk 2",
         "problem": "Regulatory risk lacks financial impact estimate",
-        "fix": "Add: DOJ action → App Store commission cut 20% → $4B EBITDA impact → P/E compression from 28x to 25x"
+        "fix": "Add: <RISK_EVENT> -> <BUSINESS_IMPACT> -> <EBITDA_OR_EPS_IMPACT> -> <MULTIPLE_OR_TARGET_PRICE_EFFECT>"
       },
       {
         "item": "data_backing",
@@ -292,7 +292,7 @@ Write to `output/runs/{run_id}/{ticker}/quality-report.json` and preserve the ex
     {
       "section": "Section 5 — Risk 2",
       "problem": "Regulatory risk lacks financial impact estimate",
-      "fix": "Add: DOJ action → App Store commission cut 20% → $4B EBITDA impact → P/E compression 28x→25x"
+      "fix": "Add: <RISK_EVENT> -> <BUSINESS_IMPACT> -> <EBITDA_OR_EPS_IMPACT> -> <MULTIPLE_OR_TARGET_PRICE_EFFECT>"
     },
     {
       "section": "Section 9 — QoE",
@@ -324,7 +324,7 @@ Critic review complete: FAIL (2 items)
 
 FAIL #1: Section 5 — Risk 2
 Problem: Regulatory risk lacks mechanism (no financial impact)
-Fix: Add App Store commission → EBITDA → stock price chain
+Fix: Add <RISK_EVENT> -> <BUSINESS_IMPACT> -> <EBITDA_OR_EPS_IMPACT> -> stock price chain
 
 FAIL #2: Section 9 — QoE
 Problem: Only 35 words, minimum 200. EBITDA Bridge missing.
@@ -351,7 +351,7 @@ Recheck payload shape:
 ```json
 {
   "reviewer": "critic-agent",
-  "review_timestamp": "2026-03-12T15:20:00Z",
+  "review_timestamp": "<RECHECK_TIMESTAMP>",
   "items": [
     {
       "item": "mechanism_test",
