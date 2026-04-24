@@ -1,6 +1,8 @@
 # ── Design & Private Docs ──────────────────────────────────────────────────
 # Project-specific private filenames live in .git/info/exclude (local-only,
 # not pushed) so they are not advertised in the public repository.
+docs/agent-audit-remediation-guide*.md
+docs/session-log-*.md
 
 # ── Runtime Output ─────────────────────────────────────────────────────────
 output/
