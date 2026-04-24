@@ -25,6 +25,7 @@ BASE_DIR = THIS_FILE.parents[4]
 sys.path.insert(0, str(BASE_DIR))
 
 from tools.analysis_contract import find_repo_root  # noqa: E402
+from tools.snapshot_store import load_snapshot_document  # noqa: E402
 
 BASE_DIR = find_repo_root(__file__)
 WATCHLIST_PATH = BASE_DIR / "output" / "watchlist.json"
@@ -69,7 +70,7 @@ def cmd_build():
             continue
 
         try:
-            snap = load_json(snap_path)
+            snap = load_snapshot_document(snap_path, BASE_DIR)
         except Exception as e:
             skipped.append({"ticker": ticker, "reason": f"JSON parse error: {e}"})
             continue

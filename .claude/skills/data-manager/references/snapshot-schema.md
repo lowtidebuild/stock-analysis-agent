@@ -1,8 +1,8 @@
 # Snapshot Schema Reference
 
-This file defines the complete JSON schema for a single-ticker analysis snapshot saved to `output/data/{ticker}/{ticker}_{YYYY-MM-DD}_snapshot.json`.
+This file defines the complete JSON schema for a single-ticker analysis snapshot saved to `output/data/{ticker}/snapshots/{snapshot_id}/analysis-result.json`.
 
-Snapshots are persisted artifacts. The working pipeline artifacts live under `output/runs/{run_id}/{ticker}/...`, and the snapshot should preserve `run_context` from that run.
+Snapshots are persisted artifacts. The working pipeline artifacts live under `output/runs/{run_id}/{ticker}/...`, and the snapshot should preserve `run_context` from that run. `output/data/{ticker}/latest.json` is a pointer document only; it must not duplicate the full snapshot body.
 
 ---
 
@@ -35,6 +35,36 @@ Snapshots are persisted artifacts. The working pipeline artifacts live under `ou
   "data_sources_used": [...]
 }
 ```
+
+---
+
+## `latest.json` Pointer
+
+New writes store the latest reference as a compact pointer:
+
+```json
+{
+  "schema_version": "1.0",
+  "kind": "stock-analysis.latest-snapshot-pointer",
+  "ticker": "AAPL",
+  "latest_snapshot_id": "2026-04-24_run_20260424T000000Z_AAPL_C",
+  "analysis_date": "2026-04-24",
+  "snapshot_saved_at": "2026-04-24T12:00:00Z",
+  "expires_at": "2026-04-25T12:00:00Z",
+  "freshness_ttl_hours": 24,
+  "data_mode": "enhanced",
+  "output_mode": "C",
+  "rr_score": 7.2,
+  "verdict": "Neutral",
+  "refs": {
+    "analysis_result": "output/data/AAPL/snapshots/2026-04-24_run_20260424T000000Z_AAPL_C/analysis-result.json",
+    "validated_data": "output/data/AAPL/snapshots/2026-04-24_run_20260424T000000Z_AAPL_C/validated-data.json",
+    "quality_report": "output/data/AAPL/snapshots/2026-04-24_run_20260424T000000Z_AAPL_C/quality-report.json"
+  }
+}
+```
+
+Readers must support legacy full-snapshot `latest.json` files, but writers must emit pointer-only `latest.json`.
 
 ### Field Definitions
 

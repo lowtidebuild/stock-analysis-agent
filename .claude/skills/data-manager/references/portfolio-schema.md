@@ -17,7 +17,7 @@ This file defines the schema for `output/portfolio.json`.
       "shares": 100,
       "avg_cost": 150.00,
       "currency": "USD",
-      "last_snapshot_path": "output/data/AAPL/AAPL_2026-03-12_snapshot.json",
+      "last_snapshot_path": "output/data/AAPL/snapshots/2026-03-12_run_20260312T000000Z_AAPL/analysis-result.json",
       "current_price": 175.50,
       "current_value": 17550.00,
       "unrealized_pnl": 2550.00,
@@ -54,7 +54,7 @@ This file defines the schema for `output/portfolio.json`.
 | `shares` | number | YES | Number of shares held |
 | `avg_cost` | number | YES | Average cost basis per share |
 | `currency` | string | YES | "USD" or "KRW" |
-| `last_snapshot_path` | string/null | NO | Link to most recent analysis snapshot |
+| `last_snapshot_path` | string/null | NO | Link to most recent immutable snapshot `analysis-result.json` |
 | `current_price` | number/null | NO | Price at last portfolio review |
 | `current_value` | number/null | NO | shares × current_price |
 | `unrealized_pnl` | number/null | NO | current_value - (shares × avg_cost) |
@@ -138,7 +138,7 @@ All three formats produce the same internal holding schema.
       "shares": 100,
       "avg_cost": 150.00,
       "currency": "USD",
-      "last_snapshot_path": "output/data/AAPL/AAPL_2026-03-12_snapshot.json",
+      "last_snapshot_path": "output/data/AAPL/snapshots/2026-03-12_run_20260312T000000Z_AAPL/analysis-result.json",
       "current_price": 175.50,
       "current_value": 17550.00,
       "unrealized_pnl": 2550.00,
@@ -152,7 +152,7 @@ All three formats produce the same internal holding schema.
       "shares": 200,
       "avg_cost": 72000,
       "currency": "KRW",
-      "last_snapshot_path": "output/data/005930/005930_2026-03-12_snapshot.json",
+      "last_snapshot_path": "output/data/005930/snapshots/2026-03-12_run_20260312T000000Z_005930/analysis-result.json",
       "current_price": 74500,
       "current_value": 14900000,
       "unrealized_pnl": 500000,

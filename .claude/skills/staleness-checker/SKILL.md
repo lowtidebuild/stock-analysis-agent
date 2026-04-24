@@ -12,7 +12,7 @@
 
 ### Step 0.1 — Check for Existing Snapshot
 
-Check if `output/data/{ticker}/latest.json` exists.
+Check if `output/data/{ticker}/latest.json` exists. New files are pointer-only documents; legacy full-snapshot files may still appear and must remain readable.
 
 ```
 IF file does not exist:
@@ -22,14 +22,17 @@ IF file does not exist:
 
 If file exists, read it and extract:
 - `analysis_date` (YYYY-MM-DD)
+- `expires_at` and `refs.analysis_result` when `kind` is `stock-analysis.latest-snapshot-pointer`
 - `data_mode` (enhanced / standard)
 - `output_mode` (A / B / C / D)
 - `rr_score`
 - `verdict`
 
+If `latest.json` is a pointer, verify that `refs.analysis_result` exists before routing to REUSE or DELTA_FAST. If the pointer is missing, expired, or points to a missing file, route to FRESH_COLLECTION.
+
 ### Step 0.2 — Calculate Staleness
 
-Calculate `days_since_analysis = today - analysis_date`.
+Calculate `days_since_analysis = today - analysis_date`. For pointer files, treat `expires_at` as the primary 24-hour reuse boundary; `analysis_date` remains the coarser fallback for older files and user-facing explanations.
 
 Apply staleness rules:
 
@@ -110,8 +113,8 @@ When called from Workflow 3 (watchlist scan), apply these rules per ticker:
 
 | Condition | Action |
 |-----------|--------|
-| `latest.json` age < 24 hours | SKIP — reuse existing data |
-| `latest.json` age 24h–7 days | QUICK_UPDATE — price + news only |
+| Pointer `expires_at` still valid, or legacy `latest.json` age < 24 hours | SKIP — reuse existing data |
+| Pointer expired but `analysis_date` < 7 days, or legacy `latest.json` age 24h–7 days | QUICK_UPDATE — price + news only |
 | `latest.json` age > 7 days | FULL_SCAN — abbreviated pipeline (Steps 3+4+simplified 5) |
 | No `latest.json` | FRESH — full pipeline |
 
@@ -122,6 +125,7 @@ For watchlist scan, do NOT run full Steps 6–9 (analysis generation). Only coll
 ## Completion Check
 
 - [ ] Confirmed whether `output/data/{ticker}/latest.json` exists
+- [ ] If pointer format, confirmed `refs.analysis_result` exists
 - [ ] Calculated days_since_analysis if snapshot exists
 - [ ] Applied staleness rules to determine routing
 - [ ] Checked for earnings override condition

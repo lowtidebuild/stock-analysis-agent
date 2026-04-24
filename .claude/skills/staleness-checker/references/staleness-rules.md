@@ -19,8 +19,16 @@ This file is read by `staleness-checker/SKILL.md` during Step 0. It defines the 
 ## Snapshot Location
 
 Check for snapshot existence at:
-1. `output/data/{ticker}/latest.json` — always the most recent snapshot (pointer)
-2. `output/data/{ticker}/{ticker}_{YYYY-MM-DD}_snapshot.json` — specific date
+1. `output/data/{ticker}/latest.json` — pointer to the most recent immutable snapshot
+2. `output/data/{ticker}/snapshots/{snapshot_id}/analysis-result.json` — immutable snapshot body
+3. `output/data/{ticker}/{ticker}_{YYYY-MM-DD}_snapshot.json` — legacy specific-date snapshot
+
+For pointer-format `latest.json`, first validate:
+- `kind == "stock-analysis.latest-snapshot-pointer"`
+- `refs.analysis_result` exists on disk
+- `expires_at` is still in the future for the 24-hour reuse path
+
+Legacy full-snapshot `latest.json` remains read-compatible. In that case, parse the snapshot body directly.
 
 To read snapshot age: parse the `analysis_date` field in the JSON, not the file modification timestamp (timestamps are unreliable across systems).
 

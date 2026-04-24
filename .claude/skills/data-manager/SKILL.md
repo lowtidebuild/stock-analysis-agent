@@ -20,7 +20,7 @@ python .claude/skills/data-manager/scripts/snapshot-manager.py save \
   --data-file output/runs/{run_id}/{ticker}/analysis-result.json
 ```
 
-Expected output: confirms `output/data/{ticker}/{ticker}_{date}_snapshot.json` created + `latest.json` updated.
+Expected output: confirms `output/data/{ticker}/snapshots/{snapshot_id}/analysis-result.json` created and `output/data/{ticker}/latest.json` updated as a pointer.
 
 If script fails because the input is not schema-compliant, run:
 
@@ -37,10 +37,10 @@ Check if ticker exists in `output/watchlist.json`. If yes:
 ```bash
 python .claude/skills/data-manager/scripts/watchlist-manager.py update-snapshot \
   --ticker {ticker} \
-  --snapshot-path output/data/{ticker}/{ticker}_{date}_snapshot.json
+  --snapshot-path output/data/{ticker}/snapshots/{snapshot_id}/analysis-result.json
 ```
 
-This updates: `last_snapshot_path`, `last_analysis_date`, `last_rr_score`, `last_price`, `last_verdict`.
+Use the `snapshot_path` returned by `snapshot-manager.py save`. Passing `latest.json` is accepted for compatibility, but the watchlist stores the resolved immutable snapshot path. This updates: `last_snapshot_path`, `last_analysis_date`, `last_rr_score`, `last_price`, `last_verdict`.
 
 ### Step 10.3 — Rebuild Catalyst Calendar
 
@@ -55,7 +55,8 @@ This reads all watchlist snapshot files and aggregates upcoming catalysts into `
 Log:
 ```
 === Data Manager: Persistence Complete ===
-Snapshot: output/data/{ticker}/{ticker}_{date}_snapshot.json ✓
+Snapshot: output/data/{ticker}/snapshots/{snapshot_id}/analysis-result.json ✓
+Latest pointer: output/data/{ticker}/latest.json ✓
 Watchlist updated: {YES/NO — not in watchlist}
 Catalyst calendar rebuilt: ✓ ({N} events)
 ```

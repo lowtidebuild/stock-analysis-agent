@@ -2,7 +2,7 @@
 
 This file defines the schema for `output/watchlist.json`.
 
-**Design principle**: The watchlist stores only metadata + snapshot pointer. It does NOT duplicate the full snapshot. The full snapshot is always read from `output/data/{ticker}/latest.json`.
+**Design principle**: The watchlist stores only metadata + an immutable snapshot path. It does NOT duplicate the full snapshot. Freshness checks read `output/data/{ticker}/latest.json`; watchlist and catalyst aggregation read the resolved `refs.analysis_result` path.
 
 ---
 
@@ -17,7 +17,7 @@ This file defines the schema for `output/watchlist.json`.
       "ticker": "AAPL",
       "market": "US",
       "added_date": "2026-02-01",
-      "last_snapshot_path": "output/data/AAPL/AAPL_2026-03-12_snapshot.json",
+      "last_snapshot_path": "output/data/AAPL/snapshots/2026-03-12_run_20260312T000000Z_AAPL/analysis-result.json",
       "last_analysis_date": "2026-03-12",
       "last_rr_score": 9.3,
       "last_price": 175.50,
@@ -47,7 +47,7 @@ This file defines the schema for `output/watchlist.json`.
 | `ticker` | string | YES | Canonical ticker (case-sensitive, uppercase) |
 | `market` | string | YES | "US" or "KR" |
 | `added_date` | string | YES | YYYY-MM-DD when added |
-| `last_snapshot_path` | string/null | YES | Relative path to most recent snapshot |
+| `last_snapshot_path` | string/null | YES | Relative path to most recent immutable snapshot `analysis-result.json` |
 | `last_analysis_date` | string/null | YES | YYYY-MM-DD of most recent analysis |
 | `last_rr_score` | number/null | YES | R/R Score from most recent analysis |
 | `last_price` | number/null | YES | Price at most recent analysis |
@@ -82,7 +82,7 @@ Alert flags are strings describing active alerts. The watchlist scan generates t
 
 ## Relationship to Catalyst Aggregation
 
-The `catalyst-aggregator.py` script reads `watchlist.json` to get the list of tickers, then reads each ticker's `last_snapshot_path` to extract `upcoming_catalysts`. This is why keeping `last_snapshot_path` current is critical — it is the link between the watchlist and the catalyst calendar.
+The `catalyst-aggregator.py` script reads `watchlist.json` to get the list of tickers, then reads each ticker's `last_snapshot_path` to extract `upcoming_catalysts`. `last_snapshot_path` should be the immutable snapshot path returned by `snapshot-manager.py save`; legacy `latest.json` pointer paths are resolved for compatibility. This is why keeping `last_snapshot_path` current is critical — it is the link between the watchlist and the catalyst calendar.
 
 ---
 
@@ -97,7 +97,7 @@ The `catalyst-aggregator.py` script reads `watchlist.json` to get the list of ti
       "ticker": "AAPL",
       "market": "US",
       "added_date": "2026-01-15",
-      "last_snapshot_path": "output/data/AAPL/AAPL_2026-03-12_snapshot.json",
+      "last_snapshot_path": "output/data/AAPL/snapshots/2026-03-12_run_20260312T000000Z_AAPL/analysis-result.json",
       "last_analysis_date": "2026-03-12",
       "last_rr_score": 9.3,
       "last_price": 175.50,
@@ -108,7 +108,7 @@ The `catalyst-aggregator.py` script reads `watchlist.json` to get the list of ti
       "ticker": "005930",
       "market": "KR",
       "added_date": "2026-02-01",
-      "last_snapshot_path": "output/data/005930/005930_2026-03-10_snapshot.json",
+      "last_snapshot_path": "output/data/005930/snapshots/2026-03-10_run_20260310T000000Z_005930/analysis-result.json",
       "last_analysis_date": "2026-03-10",
       "last_rr_score": 5.1,
       "last_price": 72000,

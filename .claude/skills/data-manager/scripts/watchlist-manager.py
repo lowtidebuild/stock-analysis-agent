@@ -7,7 +7,7 @@ Usage:
     python watchlist-manager.py add --ticker 005930 --market KR
     python watchlist-manager.py remove --ticker AAPL
     python watchlist-manager.py list
-    python watchlist-manager.py update-snapshot --ticker AAPL --snapshot-path output/data/AAPL/AAPL_2026-03-12_snapshot.json
+    python watchlist-manager.py update-snapshot --ticker AAPL --snapshot-path output/data/AAPL/snapshots/2026-03-12_run_20260312T000000Z_AAPL/analysis-result.json
     python watchlist-manager.py update-fields --ticker AAPL --rr-score 7.8 --verdict Overweight --price 175.50
 """
 
@@ -24,6 +24,13 @@ BASE_DIR = THIS_FILE.parents[4]
 sys.path.insert(0, str(BASE_DIR))
 
 from tools.analysis_contract import find_repo_root  # noqa: E402
+from tools.snapshot_store import (  # noqa: E402
+    display_path,
+    is_latest_pointer,
+    load_snapshot_document,
+    read_json,
+    resolve_pointer_snapshot_path,
+)
 
 BASE_DIR = find_repo_root(__file__)
 WATCHLIST_PATH = BASE_DIR / "output" / "watchlist.json"
@@ -153,11 +160,20 @@ def cmd_update_snapshot(ticker: str, snapshot_path: str):
         print(json.dumps({"status": "error", "message": f"Snapshot file not found: {snapshot_path}"}))
         sys.exit(1)
 
-    with open(snap_file, "r", encoding="utf-8") as f:
-        snap = json.load(f)
+    try:
+        raw_snapshot_ref = read_json(snap_file)
+        snap = load_snapshot_document(snap_file, BASE_DIR)
+    except Exception as e:
+        print(json.dumps({"status": "error", "message": f"Snapshot file could not be read: {e}"}))
+        sys.exit(1)
+
+    stored_snapshot_path = snapshot_path
+    if is_latest_pointer(raw_snapshot_ref):
+        resolved_snapshot = resolve_pointer_snapshot_path(raw_snapshot_ref, snap_file, BASE_DIR)
+        stored_snapshot_path = display_path(resolved_snapshot, BASE_DIR)
 
     entry = wl["tickers"][idx]
-    entry["last_snapshot_path"] = snapshot_path
+    entry["last_snapshot_path"] = stored_snapshot_path
     entry["last_analysis_date"] = snap.get("analysis_date")
     entry["last_rr_score"] = snap.get("rr_score")
     entry["last_price"] = snap.get("price_at_analysis")

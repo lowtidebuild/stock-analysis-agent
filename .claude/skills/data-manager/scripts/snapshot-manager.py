@@ -10,17 +10,15 @@ Usage:
     python snapshot-manager.py get --ticker AAPL --date 30d   (30 days ago)
 
 Snapshot storage:
-    output/data/{ticker}/{ticker}_{YYYY-MM-DD}_snapshot.json   — versioned archive
-    output/data/{ticker}/latest.json                           — always points to most recent
+    output/data/{ticker}/snapshots/{snapshot_id}/analysis-result.json — immutable archive
+    output/data/{ticker}/latest.json                                  — pointer to most recent
     Custom roots are supported via --data-root for fixture and CI usage.
 """
 
 import sys
-import os
 import json
 import argparse
-import shutil
-from datetime import datetime, timedelta, date, timezone
+from datetime import timedelta, date
 from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8")
@@ -32,6 +30,17 @@ sys.path.insert(0, str(BASE_DIR))
 from tools.analysis_contract import find_repo_root  # noqa: E402
 from tools.artifact_validation import validate_artifact_file  # noqa: E402
 from tools.paths import data_dir  # noqa: E402
+from tools.snapshot_store import (  # noqa: E402
+    atomic_write_json,
+    build_latest_pointer,
+    build_snapshot_id,
+    display_path,
+    ensure_snapshot_metadata,
+    iter_snapshot_entries,
+    load_snapshot_document,
+    promote_snapshot_artifacts,
+    read_json,
+)
 
 BASE_DIR = find_repo_root(__file__)
 DEFAULT_OUTPUT_DIR = data_dir() / "data"
@@ -48,21 +57,6 @@ def get_ticker_dir(ticker: str, data_root: str | None = None) -> Path:
     d = resolve_data_root(data_root) / ticker.upper()
     d.mkdir(parents=True, exist_ok=True)
     return d
-
-
-def atomic_write(path: Path, data: dict):
-    """Write JSON atomically via temp file + replace."""
-    tmp = path.with_suffix(".tmp")
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-    tmp.replace(path)
-
-
-def display_path(path: Path) -> str:
-    try:
-        return str(path.resolve().relative_to(BASE_DIR))
-    except ValueError:
-        return str(path.resolve())
 
 
 def cmd_save(ticker: str, data_file: str, skip_validation: bool = False, data_root: str | None = None):
@@ -83,37 +77,46 @@ def cmd_save(ticker: str, data_file: str, skip_validation: bool = False, data_ro
             }, ensure_ascii=False, indent=2))
             sys.exit(1)
 
-    with open(data_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    data = read_json(data_path)
 
     # Inject metadata if not already present
-    today = date.today().isoformat()
-    if "ticker" not in data:
-        data["ticker"] = ticker.upper()
-    if "analysis_date" not in data:
-        data["analysis_date"] = today
-    if "snapshot_saved_at" not in data:
-        data["snapshot_saved_at"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    data = ensure_snapshot_metadata(data, ticker)
     if "snapshot_source_artifact" not in data:
         try:
             data["snapshot_source_artifact"] = str(data_path.resolve().relative_to(BASE_DIR))
         except ValueError:
             data["snapshot_source_artifact"] = str(data_path.resolve())
 
-    ticker_dir = get_ticker_dir(ticker, data_root=data_root)
-    snapshot_name = f"{ticker.upper()}_{data['analysis_date']}_snapshot.json"
-    snapshot_path = ticker_dir / snapshot_name
+    ticker_upper = ticker.upper()
+    ticker_dir = get_ticker_dir(ticker_upper, data_root=data_root)
+    snapshot_id = build_snapshot_id(data)
+    snapshot_root = ticker_dir / "snapshots" / snapshot_id
     latest_path = ticker_dir / "latest.json"
 
-    atomic_write(snapshot_path, data)
-    atomic_write(latest_path, data)
+    refs = promote_snapshot_artifacts(
+        source_analysis_path=data_path,
+        snapshot_root=snapshot_root,
+        snapshot=data,
+        base_dir=BASE_DIR,
+    )
+    latest_pointer = build_latest_pointer(
+        ticker=ticker_upper,
+        snapshot=data,
+        snapshot_id=snapshot_id,
+        refs=refs,
+    )
+    atomic_write_json(latest_path, latest_pointer)
 
     print(json.dumps({
         "status": "ok",
-        "snapshot_path": display_path(snapshot_path),
-        "latest_path": display_path(latest_path),
+        "snapshot_id": snapshot_id,
+        "snapshot_root": display_path(snapshot_root, BASE_DIR),
+        "snapshot_path": refs["analysis_result"],
+        "latest_path": display_path(latest_path, BASE_DIR),
+        "latest_format": "pointer",
+        "promoted_refs": refs,
         "analysis_date": data["analysis_date"],
-        "ticker": ticker.upper(),
+        "ticker": ticker_upper,
         "validation_performed": not skip_validation,
         "validation_errors": [] if not validation_result else validation_result["errors"],
     }, ensure_ascii=False, indent=2))
@@ -122,24 +125,28 @@ def cmd_save(ticker: str, data_file: str, skip_validation: bool = False, data_ro
 def cmd_list(ticker: str, data_root: str | None = None):
     """List all snapshots for a ticker in reverse chronological order."""
     ticker_dir = get_ticker_dir(ticker, data_root=data_root)
-    pattern = f"{ticker.upper()}_*_snapshot.json"
-    snapshots = sorted(ticker_dir.glob(pattern), reverse=True)
-
     entries = []
-    for p in snapshots:
-        try:
-            with open(p, "r", encoding="utf-8") as f:
-                snap = json.load(f)
+    for entry in iter_snapshot_entries(ticker_dir, ticker, BASE_DIR):
+        if "error" in entry:
             entries.append({
-                "date": snap.get("analysis_date", "unknown"),
-                "rr_score": snap.get("rr_score"),
-                "verdict": snap.get("verdict"),
-                "data_mode": snap.get("data_mode"),
-                "output_mode": snap.get("output_mode"),
-                "path": display_path(p),
+                "snapshot_id": entry.get("snapshot_id"),
+                "path": entry.get("path_display"),
+                "storage": entry.get("storage"),
+                "error": entry["error"],
             })
-        except Exception as e:
-            entries.append({"path": str(p), "error": str(e)})
+            continue
+
+        snap = entry["data"]
+        entries.append({
+            "snapshot_id": entry.get("snapshot_id"),
+            "date": snap.get("analysis_date", "unknown"),
+            "rr_score": snap.get("rr_score"),
+            "verdict": snap.get("verdict"),
+            "data_mode": snap.get("data_mode"),
+            "output_mode": snap.get("output_mode"),
+            "storage": entry.get("storage"),
+            "path": entry.get("path_display"),
+        })
 
     print(json.dumps({"ticker": ticker.upper(), "snapshots": entries}, ensure_ascii=False, indent=2))
 
@@ -153,8 +160,7 @@ def cmd_get(ticker: str, date_arg: str, data_root: str | None = None):
         if not target_path.exists():
             print(json.dumps({"status": "error", "message": f"No latest.json found for {ticker}"}))
             sys.exit(1)
-        with open(target_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        data = load_snapshot_document(target_path, BASE_DIR)
         print(json.dumps(data, ensure_ascii=False, indent=2))
         return
 
@@ -165,28 +171,25 @@ def cmd_get(ticker: str, date_arg: str, data_root: str | None = None):
     else:
         target_date = date_arg
 
-    # Find closest snapshot on or before target_date
-    pattern = f"{ticker.upper()}_*_snapshot.json"
-    snapshots = sorted(ticker_dir.glob(pattern), reverse=True)
-
     best = None
-    for p in snapshots:
-        snap_date = p.stem.replace(f"{ticker.upper()}_", "").replace("_snapshot", "")
+    entries = iter_snapshot_entries(ticker_dir, ticker, BASE_DIR)
+    for entry in entries:
+        if "data" not in entry:
+            continue
+        snap_date = str(entry.get("analysis_date") or "")
         if snap_date <= target_date:
-            best = p
+            best = entry
             break
 
     if best is None:
         print(json.dumps({
             "status": "error",
             "message": f"No snapshot found for {ticker} on or before {target_date}",
-            "available": [p.stem for p in snapshots],
+            "available": [entry.get("snapshot_id") for entry in entries],
         }))
         sys.exit(1)
 
-    with open(best, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    print(json.dumps(data, ensure_ascii=False, indent=2))
+    print(json.dumps(best["data"], ensure_ascii=False, indent=2))
 
 
 def main():

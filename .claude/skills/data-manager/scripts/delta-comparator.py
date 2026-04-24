@@ -32,9 +32,11 @@ BASE_DIR = THIS_FILE.parents[4]
 sys.path.insert(0, str(BASE_DIR))
 
 from tools.analysis_contract import extract_numeric_value, find_repo_root  # noqa: E402
+from tools.paths import data_dir  # noqa: E402
+from tools.snapshot_store import iter_snapshot_entries, load_snapshot_document  # noqa: E402
 
 BASE_DIR = find_repo_root(__file__)
-DEFAULT_OUTPUT_DIR = BASE_DIR / "output" / "data"
+DEFAULT_OUTPUT_DIR = data_dir() / "data"
 
 KEY_METRICS = [
     "market_cap", "pe_ratio", "ev_ebitda", "fcf_yield",
@@ -62,8 +64,7 @@ def load_snapshot(ticker: str, date_arg: str, data_root: str | None = None) -> d
         p = ticker_dir / "latest.json"
         if not p.exists():
             raise FileNotFoundError(f"No latest.json for {ticker_upper}")
-        with open(p, "r", encoding="utf-8") as f:
-            return json.load(f)
+        return load_snapshot_document(p, BASE_DIR)
 
     # Handle Nd format
     if date_arg.endswith("d") and date_arg[:-1].isdigit():
@@ -72,14 +73,13 @@ def load_snapshot(ticker: str, date_arg: str, data_root: str | None = None) -> d
     else:
         target_date = date_arg
 
-    pattern = f"{ticker_upper}_*_snapshot.json"
-    snapshots = sorted(ticker_dir.glob(pattern), reverse=True)
-
-    for p in snapshots:
-        snap_date = p.stem.replace(f"{ticker_upper}_", "").replace("_snapshot", "")
+    entries = iter_snapshot_entries(ticker_dir, ticker_upper, BASE_DIR)
+    for entry in entries:
+        if "data" not in entry:
+            continue
+        snap_date = str(entry.get("analysis_date") or "")
         if snap_date <= target_date:
-            with open(p, "r", encoding="utf-8") as f:
-                return json.load(f)
+            return entry["data"]
 
     raise FileNotFoundError(f"No snapshot for {ticker_upper} on or before {target_date}")
 

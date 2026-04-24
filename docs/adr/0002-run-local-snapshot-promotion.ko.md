@@ -42,13 +42,19 @@ Run-local artifact는 다음 조건을 모두 만족할 때 shared snapshot으�
 
 ```json
 {
+  "schema_version": "1.0",
+  "kind": "stock-analysis.latest-snapshot-pointer",
   "ticker": "AAPL",
   "latest_snapshot_id": "2026-04-24_run_abc123",
-  "created_at": "2026-04-24T09:30:00Z",
+  "analysis_date": "2026-04-24",
+  "snapshot_saved_at": "2026-04-24T09:30:00Z",
   "expires_at": "2026-04-25T09:30:00Z",
-  "source_profile": "financial_datasets",
-  "overall_grade": "B",
-  "artifact_refs": {
+  "freshness_ttl_hours": 24,
+  "data_mode": "enhanced",
+  "output_mode": "C",
+  "rr_score": 7.2,
+  "verdict": "Neutral",
+  "refs": {
     "validated_data": "output/data/AAPL/snapshots/2026-04-24_run_abc123/validated-data.json",
     "analysis_result": "output/data/AAPL/snapshots/2026-04-24_run_abc123/analysis-result.json",
     "quality_report": "output/data/AAPL/snapshots/2026-04-24_run_abc123/quality-report.json",
@@ -67,7 +73,7 @@ Run-local artifact는 다음 조건을 모두 만족할 때 shared snapshot으�
 
 ## 후속 작업
 
-1. `snapshot-manager.py`를 pointer-only `latest.json` 형식으로 이관한다.
-2. legacy full-snapshot `latest.json`은 읽기 호환만 유지하고 새 저장은 pointer 형식으로 한다.
+1. 완료: `snapshot-manager.py`를 pointer-only `latest.json` 형식으로 이관한다.
+2. 완료: legacy full-snapshot `latest.json`은 읽기 호환만 유지하고 새 저장은 pointer 형식으로 한다.
 3. data collector와 validator skill 문서의 `output/data/{ticker}/tier*-raw.json` 예시를 run-local path로 교체한다.
 4. `contract_checks.py`가 fixture를 repo `output/`에 쓰지 않도록 temp dir isolation을 적용한다.

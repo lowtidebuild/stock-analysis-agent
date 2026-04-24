@@ -366,14 +366,22 @@ output/data/{ticker}/latest.json
 
 ```json
 {
+  "schema_version": "1.0",
+  "kind": "stock-analysis.latest-snapshot-pointer",
   "ticker": "AAPL",
   "latest_snapshot_id": "2026-04-24_run_abc123",
-  "created_at": "2026-04-24T09:30:00Z",
-  "source_profile": "financial_datasets",
-  "overall_grade": "B",
+  "analysis_date": "2026-04-24",
+  "snapshot_saved_at": "2026-04-24T09:30:00Z",
   "expires_at": "2026-04-25T09:30:00Z",
-  "artifact_refs": {
+  "freshness_ttl_hours": 24,
+  "data_mode": "enhanced",
+  "output_mode": "C",
+  "rr_score": 7.2,
+  "verdict": "Neutral",
+  "refs": {
     "validated_data": "output/data/AAPL/snapshots/2026-04-24_run_abc123/validated-data.json",
+    "analysis_result": "output/data/AAPL/snapshots/2026-04-24_run_abc123/analysis-result.json",
+    "quality_report": "output/data/AAPL/snapshots/2026-04-24_run_abc123/quality-report.json",
     "evidence_pack": "output/data/AAPL/snapshots/2026-04-24_run_abc123/evidence-pack.json"
   }
 }
@@ -397,7 +405,6 @@ output/runs/{run_id}/{ticker}/quality-report.json
 2. `output/data/{ticker}/`는 immutable snapshot/cache와 `latest.json` pointer 전용으로 축소한다.
 
 ```text
-output/data/{ticker}/{ticker}_{date}_snapshot.json
 output/data/{ticker}/latest.json
 output/data/{ticker}/snapshots/{snapshot_id}/...
 ```
