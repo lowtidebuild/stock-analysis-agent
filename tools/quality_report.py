@@ -154,6 +154,94 @@ def _source_tag_coverage(rendered_text: str) -> dict[str, Any]:
     }
 
 
+def _metric_label(metric_name: str) -> str:
+    return metric_name.replace("_", " ").title()
+
+
+def _metric_value_candidates(value: Any) -> list[str]:
+    numeric_value = extract_numeric_value(value)
+    if numeric_value is None:
+        text_value = str(value).strip() if value not in (None, "") else ""
+        return [text_value] if text_value else []
+
+    candidates = {
+        str(numeric_value),
+        f"{numeric_value:,.0f}",
+        f"{numeric_value:,.1f}",
+        f"{numeric_value:.1f}",
+        f"{numeric_value:,.2f}",
+        f"{numeric_value:.2f}",
+    }
+    if float(numeric_value).is_integer():
+        candidates.add(str(int(numeric_value)))
+        candidates.add(f"{int(numeric_value):,}")
+    return sorted((candidate for candidate in candidates if candidate), key=len, reverse=True)
+
+
+def _mode_a_minimum_output_check(visible_text: str, analysis: dict[str, Any]) -> dict[str, Any]:
+    lower_visible = visible_text.lower()
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    analysis_date = analysis.get("analysis_date")
+    if not isinstance(analysis_date, str) or not analysis_date:
+        errors.append("Mode A rendered output cannot verify as-of date because analysis_date is missing")
+    elif analysis_date not in visible_text:
+        errors.append(f"Mode A rendered output is missing as-of date {analysis_date}")
+
+    key_metrics = analysis.get("key_metrics")
+    metrics = [(name, metric) for name, metric in (key_metrics or {}).items() if isinstance(metric, dict)]
+    kpi_metrics = metrics[:3]
+    if len(kpi_metrics) < 3:
+        errors.append(f"Mode A rendered output requires 3 KPI metrics, found {len(kpi_metrics)}")
+
+    checked: list[dict[str, Any]] = []
+    attribution_count = len(SOURCE_TAG_PATTERN.findall(visible_text)) + len(
+        re.findall(r"\bgrade\s+[abcd]\b", lower_visible, flags=re.IGNORECASE)
+    )
+
+    for name, metric in kpi_metrics:
+        label = _metric_label(name)
+        value = metric.get("value")
+        label_present = label.lower() in lower_visible
+        value_present = any(candidate in visible_text for candidate in _metric_value_candidates(value))
+        display_tag = metric.get("display_tag") or metric.get("tag")
+        grade = metric.get("grade")
+        expected_grade = f"grade {str(grade).lower()}" if grade not in (None, "") else None
+        attribution_present = (
+            (isinstance(display_tag, str) and display_tag in visible_text)
+            or (expected_grade is not None and expected_grade in lower_visible)
+        )
+        checked.append(
+            {
+                "metric": name,
+                "label_present": label_present,
+                "value_present": value_present,
+                "attribution_present": attribution_present,
+            }
+        )
+        if not label_present:
+            errors.append(f"Mode A KPI {name} label is missing from rendered output")
+        if value not in (None, "") and not value_present:
+            errors.append(f"Mode A KPI {name} value is missing from rendered output")
+        if not attribution_present:
+            errors.append(f"Mode A KPI {name} is missing source tag or confidence grade")
+
+    if attribution_count < len(kpi_metrics):
+        errors.append(
+            f"Mode A KPI attribution count is below KPI count ({attribution_count}/{len(kpi_metrics)})"
+        )
+
+    return {
+        "status": "FAIL" if errors else ("PASS_WITH_FLAGS" if warnings else "PASS"),
+        "kpi_metrics_checked": [name for name, _metric in kpi_metrics],
+        "kpi_attribution_count": attribution_count,
+        "errors": errors,
+        "warnings": warnings,
+        "details": checked,
+    }
+
+
 def _macro_context_structured(analysis: dict[str, Any], validated: dict[str, Any]) -> dict[str, Any] | None:
     for payload in (analysis, validated):
         sections = payload.get("sections") if isinstance(payload, dict) else None
@@ -273,7 +361,12 @@ def build_rendered_output_item(
         errors.append("Rendered output displays values for metrics marked as excluded/Grade D")
 
     source_coverage = _source_tag_coverage(rendered_text)
-    if source_coverage["status"] == "FAIL":
+    mode_a_minimum_checks = None
+    if output_mode == "A":
+        mode_a_minimum_checks = _mode_a_minimum_output_check(visible_text, analysis)
+        errors.extend(mode_a_minimum_checks["errors"])
+        warnings.extend(mode_a_minimum_checks["warnings"])
+    elif source_coverage["status"] == "FAIL":
         warnings.append(
             "Rendered output source-tag coverage is below threshold "
             f"({source_coverage['source_tag_count']}/{source_coverage['expected_source_tags']})"
@@ -287,6 +380,8 @@ def build_rendered_output_item(
         "file_exists": True,
         "source_tag_coverage": source_coverage,
     }
+    if mode_a_minimum_checks is not None:
+        item["mode_a_minimum_checks"] = mode_a_minimum_checks
     if blank_violations:
         item["blank_over_wrong_violations"] = blank_violations
     if errors:

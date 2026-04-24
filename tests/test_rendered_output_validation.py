@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import importlib.util
 import pathlib
 import subprocess
 import sys
@@ -13,6 +14,15 @@ from tools.quality_report import build_rendered_output_item
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 QUALITY_REPORT_BUILDER = ROOT / ".claude" / "skills" / "quality-checker" / "scripts" / "quality-report-builder.py"
+BRIEFING_RENDERER = ROOT / ".claude" / "skills" / "briefing-generator" / "scripts" / "render-briefing.py"
+
+
+def _load_briefing_renderer():
+    spec = importlib.util.spec_from_file_location("render_briefing", BRIEFING_RENDERER)
+    module = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(module)
+    return module
 
 
 def _mode_c_html(body: str) -> str:
@@ -35,7 +45,105 @@ def _mode_c_html(body: str) -> str:
 </html>"""
 
 
+def _mode_a_analysis() -> dict:
+    return {
+        "ticker": "XYZ",
+        "company_name": "Example Co",
+        "output_mode": "A",
+        "output_language": "en",
+        "analysis_date": "2026-04-24",
+        "price_at_analysis": 100.0,
+        "currency": "USD",
+        "rr_score": 2.0,
+        "verdict": "neutral",
+        "key_metrics": {
+            "market_cap": {"value": 100_000_000, "grade": "B", "display_tag": "[Portal]"},
+            "pe_ratio": {"value": 20.5, "grade": "B", "display_tag": "[Calc]"},
+            "revenue_ttm": {"value": 50_000_000, "grade": "A", "display_tag": "[Filing]"},
+        },
+        "scenarios": {
+            "bull": {"target": 120, "return_pct": 20, "probability": 0.3, "key_assumption": "Upside"},
+            "base": {"target": 105, "return_pct": 5, "probability": 0.5, "key_assumption": "Base"},
+            "bear": {"target": 80, "return_pct": -20, "probability": 0.2, "key_assumption": "Downside"},
+        },
+        "sections": {"one_line_thesis": "A concise thesis with enough company-specific context."},
+        "top_risks": ["A specific risk chain could pressure margins."],
+        "upcoming_catalysts": [{"description": "Next report", "date": "2026-05-01"}],
+    }
+
+
+def _mode_a_html(body: str) -> str:
+    return f"""<!doctype html>
+<html>
+  <body>
+    <h1>Example Co</h1>
+    <p>As of 2026-04-24</p>
+    <section>
+      <div>Market Cap $100,000,000 [Portal] Grade B</div>
+      <div>Pe Ratio 20.5x [Calc] Grade B</div>
+      <div>Revenue Ttm $50,000,000 [Filing] Grade A</div>
+    </section>
+    <footer>Disclaimer: informational only, not investment advice.</footer>
+    {body}
+  </body>
+</html>"""
+
+
 class RenderedOutputValidationTests(unittest.TestCase):
+    def test_mode_a_briefing_renderer_satisfies_minimum_output_gate(self):
+        renderer = _load_briefing_renderer()
+        analysis = _mode_a_analysis()
+        with tempfile.TemporaryDirectory() as tmp:
+            report_path = pathlib.Path(tmp) / "briefing.html"
+            report_path.write_text(renderer.build_briefing_html(analysis), encoding="utf-8")
+
+            item = build_rendered_output_item(report_path, analysis, {"exclusions": []})
+
+            self.assertEqual(item["status"], "PASS")
+            self.assertEqual(item["mode_a_minimum_checks"]["status"], "PASS")
+
+    def test_mode_a_html_missing_disclaimer_fails(self):
+        analysis = _mode_a_analysis()
+        with tempfile.TemporaryDirectory() as tmp:
+            report_path = pathlib.Path(tmp) / "briefing.html"
+            report_path.write_text(
+                _mode_a_html("").replace("Disclaimer: informational only, not investment advice.", ""),
+                encoding="utf-8",
+            )
+
+            item = build_rendered_output_item(report_path, analysis, {"exclusions": []})
+
+            self.assertEqual(item["status"], "FAIL")
+            self.assertTrue(any("disclaimer" in error.lower() for error in item["errors"]))
+
+    def test_mode_a_html_missing_kpi_attribution_fails(self):
+        analysis = _mode_a_analysis()
+        with tempfile.TemporaryDirectory() as tmp:
+            report_path = pathlib.Path(tmp) / "briefing.html"
+            report_path.write_text(
+                _mode_a_html("")
+                .replace("[Portal] Grade B", "")
+                .replace("[Calc] Grade B", "")
+                .replace("[Filing] Grade A", ""),
+                encoding="utf-8",
+            )
+
+            item = build_rendered_output_item(report_path, analysis, {"exclusions": []})
+
+            self.assertEqual(item["status"], "FAIL")
+            self.assertTrue(any("kpi attribution" in error.lower() for error in item["errors"]))
+
+    def test_mode_a_html_missing_as_of_date_fails(self):
+        analysis = _mode_a_analysis()
+        with tempfile.TemporaryDirectory() as tmp:
+            report_path = pathlib.Path(tmp) / "briefing.html"
+            report_path.write_text(_mode_a_html("").replace("2026-04-24", ""), encoding="utf-8")
+
+            item = build_rendered_output_item(report_path, analysis, {"exclusions": []})
+
+            self.assertEqual(item["status"], "FAIL")
+            self.assertTrue(any("as-of date" in error.lower() for error in item["errors"]))
+
     def test_mode_c_html_with_required_sections_passes(self):
         with tempfile.TemporaryDirectory() as tmp:
             report_path = pathlib.Path(tmp) / "report.html"

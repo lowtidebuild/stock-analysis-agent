@@ -119,7 +119,11 @@ Timeline node styling:
 
 #### Footer
 
-Disclaimer (same as Mode C/D) + data source tags + generation timestamp.
+Footer requirements:
+- short disclaimer
+- data source tags or visible confidence grade for each KPI tile
+- analysis date shown as the as-of date
+- generation note based on run-local `analysis-result.json`
 
 ### Step 8A.3 — Write File
 
@@ -154,9 +158,10 @@ Action: {action signal}
 - [ ] HTML file generated with both parts (Verdict Card + Timeline)
 - [ ] TailwindCSS + FontAwesome CDN links present
 - [ ] Verdict and R/R Score badges colored correctly
-- [ ] 3 KPI tiles with source tags
+- [ ] 3 KPI tiles with source tags or visible confidence grades
 - [ ] 3 scenarios with company-specific assumptions
 - [ ] Timeline has ≥3 past events and ≥2 future events
 - [ ] Disclaimer present in footer
+- [ ] Analysis date visible as the as-of date
 - [ ] File written to correct path
 - [ ] Chat summary outputted with file path and upgrade prompt

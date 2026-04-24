@@ -26,16 +26,22 @@ python .claude/skills/quality-checker/scripts/quality-report-builder.py --run-di
 
 ---
 
-## Mode A Simplified Check (3 items only)
+## Mode A Lightweight Check
 
-Mode A uses a lightweight quality check — Items 1, 2, and 5 only. Skip Items 3 (disclaimer — checked during HTML generation) and 4 (source tag coverage — Mode A has only 3 KPIs). No Critic Agent is dispatched for Mode A.
+Mode A uses a lightweight quality check. It still checks disclaimer, as-of date,
+the three KPI tiles, and Grade D blank-over-wrong behavior, but it does not run
+the full 80% source-tag coverage rule across every number in the briefing. No
+Critic Agent is dispatched for Mode A.
 
 ```
 IF output_mode = "A":
-    Run Items 1, 2, 5 only
-    Skip Items 3, 4
+    Run Items 1, 2, 3, 5
+    Run Item 4 as the Mode A KPI-only attribution rule:
+        - three KPI tiles must be present
+        - each KPI value must have a source tag or confidence grade
+        - analysis_date must be visible as the as-of date
     Skip Critic dispatch
-    Write quality-report.json with 3-item result
+    Write quality-report.json with deterministic rendered_output result when report_path is available
 ```
 
 ---
@@ -87,7 +93,7 @@ These manual checks focus on the rendered user output. The canonical quality-rep
 **Test**: Verify that a disclaimer is present in the output.
 
 **Pass criteria**:
-- Mode A: Disclaimer in HTML footer (checked during generation — skip in quality check)
+- Mode A: Short disclaimer in HTML footer
 - Mode B/C: Full disclaimer in footer section
 - Mode D: Full disclaimer at end of Appendix section
 
@@ -100,6 +106,11 @@ These manual checks focus on the rendered user output. The canonical quality-rep
 ### Item 4 — Source Tag Coverage
 
 **Test**: Verify that ≥80% of numerical data points in the output have source tags.
+
+Mode A exception: verify only the three KPI tiles. Each KPI value must have a
+source tag (`[Filing]`, `[Portal]`, `[KR-Portal]`, `[Calc]`, `[Est]`) or a
+visible confidence grade. Do not apply the 80% whole-document threshold to
+Mode A scenario, date, and timeline numbers.
 
 **Procedure**:
 1. Count all numerical values in the output (prices, percentages, ratios, revenue figures, etc.)
