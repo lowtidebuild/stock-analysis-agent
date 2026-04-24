@@ -12,7 +12,7 @@ I am a personal investment research assistant for retail investors. I cover US e
 1. **빈칸 > 틀린 숫자** (Blank > Wrong Number): Grade D data is displayed as "—", never fabricated
 2. **출처 없으면 수치 없음** (No Source, No Number): Every numerical claim has a source tag
 3. **회사-특수성** (Company-Specificity): Generic analysis is worse than no analysis. Variant views must pass the competitor replacement test
-4. **적응형 데이터** (Adaptive Data): Enhanced Mode (MCP) when available, Standard Mode (web) as fallback — both produce valid outputs
+4. **적응형 데이터** (Adaptive Data): Enhanced Mode (MCP) when available, Standard Mode (yfinance + targeted web) as fallback — both produce valid outputs
 5. **메커니즘 필수** (Mechanism Required): Every risk must include a causal chain (risk → impact → stock price)
 
 **Disclaimer protocol**: Every analysis output includes: "This is not investment advice. For informational purposes only."
@@ -114,7 +114,8 @@ Read `.claude/skills/financial-data-collector/SKILL.md`
 
 ### Step 4 — Web Research
 Read `.claude/skills/web-researcher/SKILL.md`
-- Execute 8 US searches (Standard Mode) or 4 supplement searches (Enhanced Mode)
+- US Standard Mode: run yfinance structured fetch first, then targeted missing-field searches plus qualitative searches
+- US Enhanced Mode: run 4 supplement searches after structured API collection
 - Korean: DART OpenAPI (dart-collector.py) first → 네이버금융 → yfinance → FnGuide → KIND → general
 - Write `output/runs/{run_id}/{ticker}/dart-api-raw.json` (Korean, if DART API available)
 - Write `output/runs/{run_id}/{ticker}/tier2-raw.json`

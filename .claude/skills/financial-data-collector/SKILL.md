@@ -110,6 +110,25 @@ If Financial Datasets MCP completely fails but yfinance succeeds:
 - Keep `data_mode = "enhanced"` only as the requested pipeline mode; downstream confidence must use `effective_mode` + `source_profile`
 - Continue the pipeline without downgrading to Standard Mode
 
+### Step 3.3.6 — Standard Mode yfinance Handoff
+
+This skill owns the yfinance CLI contract even when Standard Mode is executed by
+`web-researcher`. In US Standard Mode, Step 4 must run:
+
+```bash
+python .claude/skills/financial-data-collector/scripts/yfinance-collector.py \
+  --ticker {ticker} \
+  --market US \
+  --output output/runs/{run_id}/{ticker}/yfinance-raw.json \
+  --bundle standard
+```
+
+Operational contract:
+- Run this structured fetch before broad price, market-cap, or valuation web searches
+- Treat `yfinance-raw.json` as run-local fetched evidence and sanitize it before downstream ingestion
+- Append normalized values to `tier2-raw.json` as `extracted_metric_candidates[]`
+- Search the web for price, market cap, P/E, or filing financials only when the yfinance output leaves those fields missing or unusable
+
 ### Step 3.4 — Data Sufficiency Check
 
 After all calls complete, verify:

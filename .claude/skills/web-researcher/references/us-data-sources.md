@@ -22,7 +22,7 @@ This file defines the priority-ordered list of web sources for US stock research
 
 **SEC EDGAR fetch URL patterns**:
 - Search for filings: `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={ticker}&type=10-Q&dateb=&owner=include&count=5`
-- For most recent 10-Q: search `{ticker} 10-Q SEC EDGAR 2026 site:sec.gov`
+- For most recent 10-Q: search `{ticker} 10-Q SEC EDGAR {YYYY} site:sec.gov`
 
 ### Earnings & Quarterly Results
 | Priority | Source | Notes |
@@ -33,7 +33,7 @@ This file defines the priority-ordered list of web sources for US stock research
 | 4 | Financial portal earnings tables | Yahoo Finance, Macrotrends |
 
 **Search queries**:
-- `"{ticker}" Q{N} 2026 earnings results revenue EPS`
+- `"{ticker}" Q{N} {YYYY} earnings results revenue EPS`
 - `"{ticker}" quarterly results press release site:prnewswire.com OR site:businesswire.com`
 
 ### Analyst Price Targets
@@ -44,7 +44,7 @@ This file defines the priority-ordered list of web sources for US stock research
 | 3 | Wall Street Horizon | Forward estimates |
 | 4 | Benzinga | Analyst actions |
 
-**Search query**: `"{ticker}" analyst price target 2026 site:tipranks.com OR site:marketbeat.com`
+**Search query**: `"{ticker}" analyst price target {YYYY} site:tipranks.com OR site:marketbeat.com`
 
 ### News & Qualitative Context
 | Priority | Source | Notes |
@@ -56,7 +56,7 @@ This file defines the priority-ordered list of web sources for US stock research
 | 5 | Seeking Alpha | Community analysis (opinion) |
 
 **Search queries**:
-- `"{ticker}" news 2026 site:reuters.com OR site:ft.com`
+- `"{ticker}" news {YYYY} site:reuters.com OR site:ft.com`
 - `"{ticker}" recent catalyst developments`
 
 ### Insider Trading
@@ -68,20 +68,43 @@ This file defines the priority-ordered list of web sources for US stock research
 
 ---
 
-## Standard Mode — Search Query Priority List
+## Standard Mode — Adaptive Search Policy
 
-Execute these 8 searches in order for Standard Mode data collection:
+Start Standard Mode US collection with the yfinance structured fetch:
 
-| # | Search Query | Priority | Data Obtained |
-|---|-------------|----------|---------------|
-| 1 | `"{ticker}" stock price market cap current` | Critical | Price, market cap |
-| 2 | `"{ticker}" latest quarterly earnings revenue EPS 2026` | Critical | Most recent financials |
-| 3 | `"{ticker}" P/E EV/EBITDA financial ratios` | Critical | Valuation metrics |
-| 4 | `"{ticker}" 10-Q SEC EDGAR financial statements` | High | Raw financial data |
-| 5 | `"{ticker}" analyst price target consensus buy hold sell` | High | Analyst views |
-| 6 | `"{ticker}" news catalyst 2026` | High | Qualitative context |
-| 7 | `"{ticker}" competitors sector comparison` | Medium | Peer context |
-| 8 | `"{ticker}" insider trading executives` | Medium (Mode C/D only) | Management alignment |
+```bash
+python .claude/skills/financial-data-collector/scripts/yfinance-collector.py \
+  --ticker {ticker} \
+  --market US \
+  --output output/runs/{run_id}/{ticker}/yfinance-raw.json \
+  --bundle standard
+```
+
+After yfinance, build a missing-field list for:
+`price_at_analysis`, `market_cap`, `pe_ratio`, `eps_ttm`, `revenue_ttm`,
+`fifty_two_week_high`, and `fifty_two_week_low`.
+
+Run these qualitative/context searches by default:
+
+| Search Query | Priority | Data Obtained |
+|-------------|----------|---------------|
+| `"{ticker}" latest quarterly earnings revenue EPS {YYYY}` | Critical | Most recent earnings context |
+| `"{ticker}" analyst price target consensus buy hold sell` | High | Analyst views |
+| `"{ticker}" news catalyst {YYYY}` | High | Qualitative context |
+| `"{ticker}" competitors sector comparison` | Medium | Peer context |
+| `"{ticker}" insider trading executives` | Medium (Mode C/D only) | Management alignment |
+
+Run these targeted searches only when yfinance leaves the related field missing
+or unusable:
+
+| Missing field | Targeted query | Data Obtained |
+|---------------|----------------|---------------|
+| `price_at_analysis` or `market_cap` | `"{ticker}" stock price market cap current` | Price, market cap |
+| `pe_ratio` or `ev_ebitda` | `"{ticker}" P/E EV/EBITDA financial ratios` | Valuation metrics |
+| `revenue_ttm`, `eps_ttm`, or `diluted_shares` | `"{ticker}" 10-Q SEC EDGAR financial statements` | Raw financial data |
+
+If yfinance supplies usable price, market cap, and valuation candidates, skip
+those targeted searches and keep only the default context searches.
 
 ---
 
@@ -91,8 +114,8 @@ These 4 searches are added in Enhanced Mode after API data collection:
 
 | # | Search Query | Purpose |
 |---|-------------|---------|
-| 1 | `"{ticker}" earnings call transcript guidance 2026` | Management outlook, qualitative guidance |
-| 2 | `"{company}" industry trends competitive landscape 2026` | Sector context |
+| 1 | `"{ticker}" earnings call transcript guidance {YYYY}` | Management outlook, qualitative guidance |
+| 2 | `"{company}" industry trends competitive landscape {YYYY}` | Sector context |
 | 3 | `"{ticker}" recent news developments last 90 days` | Catalyst monitoring |
 | 4 | `"{ticker}" vs competitors {peer1} {peer2}` | Relative positioning |
 

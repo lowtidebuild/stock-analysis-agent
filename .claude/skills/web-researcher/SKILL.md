@@ -42,24 +42,12 @@ Execute searches in the order defined in `research-plan.json`. For each search:
 - Store raw search hits only in `raw_search_results`; do not embed extracted values inside search result objects
 - Store every numeric or categorical value parsed from those hits as a separate `extracted_metric_candidates[]` entry
 
-### Step 4.3 — Standard Mode US Protocol (8 searches)
+### Step 4.3 — Standard Mode US Protocol (Structured First)
 
-Execute ALL 8 searches from `us-data-sources.md` Standard Mode section:
+For US Standard Mode, run structured collection before broad web search.
+Do not start with fixed price, market-cap, or valuation searches.
 
-| # | Query Template | Purpose |
-|---|----------------|---------|
-| 1 | `"{ticker}" stock price market cap current` | Price, market cap |
-| 2 | `"{ticker}" latest quarterly earnings revenue EPS {YYYY}` | Recent financials |
-| 3 | `"{ticker}" P/E EV/EBITDA financial ratios` | Valuation metrics |
-| 4 | `"{ticker}" 10-Q SEC EDGAR financial statements` | Raw financial data |
-| 5 | `"{ticker}" analyst price target consensus buy hold sell` | Analyst views |
-| 6 | `"{ticker}" news catalyst {YYYY}` | Qualitative context |
-| 7 | `"{ticker}" competitors sector comparison` | Peer context |
-| 8 | `"{ticker}" insider trading executives` | Management alignment |
-
-### Step 4.3.5 — yfinance Fallback
-
-If Standard Mode and the 8 searches still do not yield `price`, `market_cap`, or `pe_ratio`, run:
+**Step 4.3.1 — yfinance structured fetch**:
 
 ```bash
 python .claude/skills/financial-data-collector/scripts/yfinance-collector.py \
@@ -74,9 +62,48 @@ If the script exits `0` or `1`:
 - Append extracted fields to `tier2-raw.json` → `extracted_metric_candidates`
 - Leave `key_data_extracted` as a backward-compatible summary only; validator selection must not depend on it
 - Tag yfinance-derived fields as `[Portal]`
-- Use yfinance before raw direct-fetch scraping when structured price/basics are still missing
+- Mark structured candidates as `extraction_method="api_structured"` or `extraction_method="portal_table"` as appropriate
 
-**After search, attempt direct fetches** (if URLs found):
+**Step 4.3.2 — Missing field list**:
+
+After yfinance, calculate the missing field set for:
+- `price_at_analysis`
+- `market_cap`
+- `pe_ratio`
+- `eps_ttm`
+- `revenue_ttm`
+- `fifty_two_week_high`
+- `fifty_two_week_low`
+
+**Step 4.3.3 — Always-run qualitative searches**:
+
+Run only these context searches by default:
+
+| Query Template | Purpose |
+|----------------|---------|
+| `"{ticker}" latest quarterly earnings revenue EPS {YYYY}` | Earnings context and recent reported figures |
+| `"{ticker}" analyst price target consensus buy hold sell` | Analyst views |
+| `"{ticker}" news catalyst {YYYY}` | Qualitative context |
+| `"{ticker}" competitors sector comparison` | Peer context |
+
+For Mode C/D only, also run:
+- `"{ticker}" insider trading executives`
+
+**Step 4.3.4 — Targeted searches only for missing structured fields**:
+
+Run these only when yfinance left the related field missing or unusable:
+
+| Missing field | Targeted query |
+|---------------|----------------|
+| `price_at_analysis` or `market_cap` | `"{ticker}" stock price market cap current` |
+| `pe_ratio` or `ev_ebitda` | `"{ticker}" P/E EV/EBITDA financial ratios` |
+| `revenue_ttm`, `eps_ttm`, or `diluted_shares` | `"{ticker}" 10-Q SEC EDGAR financial statements` |
+
+If all structured fields are present from yfinance, skip those targeted
+searches. This is the expected Standard Mode cost-saving path.
+
+**Direct fetches** are allowed only when a targeted search is needed or an exact
+URL is already known:
 - Yahoo Finance: `https://finance.yahoo.com/quote/{ticker}/`
 - SEC EDGAR: `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={ticker}&type=10-Q`
 
@@ -394,8 +421,9 @@ For peer comparison, run a parallel (or sequential) web research for each ticker
 
 ## Completion Check
 
-- [ ] All planned searches executed (Standard: 8 minimum; Enhanced supplement: 4 minimum)
-- [ ] Standard Mode US: yfinance fallback attempted before raw direct-fetch scraping when price/basics remain missing
+- [ ] All planned searches executed (Standard: yfinance-first + adaptive targeted searches; Enhanced supplement: 4 minimum)
+- [ ] Standard Mode US: yfinance structured fetch attempted before price/market-cap/valuation searches
+- [ ] Standard Mode US: price/market-cap/P/E searches skipped when yfinance supplied usable candidates
 - [ ] Korean stocks: dart-collector.py attempted first; outcome logged (success/fallback)
 - [ ] Korean stocks: 네이버금융 fetched for price/market data regardless of DART API result
 - [ ] Korean stocks: yfinance fallback used only if 네이버금융 failed or left required fields blank

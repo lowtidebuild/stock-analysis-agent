@@ -371,12 +371,15 @@ confidence language must use the source profile fields.
 
 ### 8.2 `.claude/skills/web-researcher/SKILL.md`
 
-Add a new **Step 4.3.5 — yfinance Fallback (US Standard Mode)** before Step 4.3's direct fetches:
+Replace the US Standard Mode Step 4.3 flow with yfinance-first structured
+collection. Standard Mode must not begin with a fixed list of broad web
+searches for price, market cap, valuation, and filings.
 
-```
-### Step 4.3.5 — yfinance Fallback
+Required replacement summary:
 
-If Standard Mode and any of the 8 searches fail to produce price/market_cap/PE:
+#### Step 4.3 — Standard Mode US Protocol (Structured First)
+
+Before broad web search, run:
 
 ```bash
 python .claude/skills/financial-data-collector/scripts/yfinance-collector.py \
@@ -385,8 +388,13 @@ python .claude/skills/financial-data-collector/scripts/yfinance-collector.py \
   --bundle standard
 ```
 
-Merge extracted fields into tier2-raw.json key_data_extracted with tag [Portal].
-```
+Append yfinance-derived fields to `tier2-raw.json` under
+`extracted_metric_candidates[]`. Keep `key_data_extracted` only as a
+backward-compatible summary; validator selection must use metric candidates.
+
+After yfinance, calculate missing fields. Skip price, market-cap, P/E, and SEC
+financial-statement targeted searches when yfinance supplies usable candidates.
+Run those targeted searches only for fields still missing or unusable.
 
 Update **Step 4.4.2 — 네이버금융** to add a yfinance fallback:
 

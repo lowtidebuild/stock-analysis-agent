@@ -10,7 +10,7 @@ Enhanced Mode uses two MCP servers for structured financial data:
 1. **Financial Datasets MCP** — real-time price, 8 quarters of financials, analyst estimates, insider trades, SEC filings
 2. **FMP MCP (optional)** — analyst price targets, rating distributions, analyst grade history
 
-Without MCP, the agent operates in **Standard Mode** (web-only) — fully functional but with lower data confidence grades (max Grade B vs. Grade A).
+Without MCP, the agent operates in **Standard Mode** (yfinance + targeted web research) — fully functional but with lower data confidence grades (max Grade B vs. Grade A).
 
 ---
 
@@ -154,6 +154,7 @@ If you prefer not to use MCP servers (or cannot access APIs), the agent works fu
 
 - All analysis outputs remain available (Mode A, B, C, D)
 - Data confidence grades max at Grade B (vs. Grade A with MCP)
+- US stocks try yfinance first for price, basic ratios, and statements, then use targeted web searches only for missing fields and context
 - Source tags will show `[Portal]` (Grade B) or single-source (Grade C) instead of `[Filing]`
 - Korean stocks are always Standard Mode regardless
 

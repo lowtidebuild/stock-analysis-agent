@@ -23,7 +23,7 @@ get_current_stock_price("<TICKER>")
 |--------|----------|
 | Valid price returned | Enhanced Mode available |
 | Error / timeout | Retry once after 2 seconds |
-| Second failure | Standard Mode (web-only) |
+| Second failure | Standard Mode (yfinance + targeted web) |
 | Korean stock (any market) | Always Standard Mode regardless of MCP |
 
 **Korean stocks are ALWAYS Standard Mode** — Financial Datasets MCP does not support KRX.
@@ -87,15 +87,19 @@ FMP calls (if available):
 
 From `us-data-sources.md` (US) or `kr-data-sources.md` (KR), select searches:
 
-**Standard Mode — US** (8 searches minimum):
-1. `"{ticker}" stock price market cap current`
-2. `"{ticker}" latest quarterly earnings revenue EPS {YYYY}`
-3. `"{ticker}" P/E EV/EBITDA financial ratios`
-4. `"{ticker}" 10-Q SEC EDGAR financial statements`
-5. `"{ticker}" analyst price target consensus buy hold sell`
-6. `"{ticker}" news catalyst {YYYY}`
-7. `"{ticker}" competitors sector comparison`
-8. `"{ticker}" insider trading executives` (Mode C/D only)
+**Standard Mode — US** (structured first, adaptive search):
+1. Plan `yfinance_structured_fetch` before web search.
+2. Always plan context searches:
+   - `"{ticker}" latest quarterly earnings revenue EPS {YYYY}`
+   - `"{ticker}" analyst price target consensus buy hold sell`
+   - `"{ticker}" news catalyst {YYYY}`
+   - `"{ticker}" competitors sector comparison`
+3. Plan Mode C/D-only context search:
+   - `"{ticker}" insider trading executives`
+4. Mark these as conditional targeted searches, not default searches:
+   - `"{ticker}" stock price market cap current` only if yfinance lacks price or market cap
+   - `"{ticker}" P/E EV/EBITDA financial ratios` only if yfinance lacks valuation ratios
+   - `"{ticker}" 10-Q SEC EDGAR financial statements` only if yfinance lacks EPS/revenue/share inputs
 
 **Enhanced Mode — qualitative supplement** (4 searches):
 1. `"{ticker}" earnings call transcript guidance {YYYY}`
@@ -165,12 +169,25 @@ Write to `output/runs/{run_id}/{ticker}/research-plan.json`:
   "tier1_fmp_calls": ["price_target_summary", "grades_summary", "historical_grades"],
   "tier2_searches": [
     "\"<TICKER>\" latest quarterly earnings revenue EPS <YYYY>",
-    "\"<TICKER>\" P/E EV/EBITDA financial ratios",
     "\"<TICKER>\" analyst price target consensus buy hold sell",
     "\"<TICKER>\" news catalyst <YYYY>",
     "\"<TICKER>\" earnings call transcript guidance <YYYY>",
     "\"<TICKER>\" recent news developments last 90 days"
   ],
+  "tier2_search_policy": {
+    "standard_us_order": "yfinance_structured_fetch_then_missing_field_search",
+    "default_context_searches": [
+      "earnings",
+      "analyst_coverage",
+      "news_catalyst",
+      "competitors"
+    ],
+    "conditional_targeted_searches": {
+      "price_market_cap": "only_if_missing_after_yfinance",
+      "valuation_ratios": "only_if_missing_after_yfinance",
+      "sec_filing_financials": "only_if_missing_after_yfinance"
+    }
+  },
   "tier2_fetches": [
     "<PORTAL_QUOTE_URL>"
   ],
@@ -215,7 +232,7 @@ Macro factors: {Yes (N factors) / Skipped (Mode A/B)}
 - [ ] 3–5 peer tickers identified
 - [ ] Macro factors determined (Mode C/D) or skipped (Mode A/B)
 - [ ] Tier 1 API call list selected based on output_mode
-- [ ] Tier 2 search list built (≥5 searches for Standard Mode)
+- [ ] Tier 2 search policy built (Standard Mode uses yfinance-first adaptive searches)
 - [ ] Run-local artifact root initialized
 - [ ] `output/runs/{run_id}/{ticker}/research-plan.json` written
 - [ ] Analysis framework path set correctly for output_mode
