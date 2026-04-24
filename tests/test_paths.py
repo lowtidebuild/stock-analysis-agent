@@ -66,6 +66,30 @@ class DataDirTests(unittest.TestCase):
         result = data_path("reports", "x.html")
         self.assertTrue(str(result).endswith("output/reports/x.html"))
 
+    def test_build_run_paths_honors_data_dir_env(self):
+        os.environ["STOCK_ANALYSIS_DATA_DIR"] = "/tmp/stock-agent-runtime"
+        from tools.analysis_contract import build_run_paths
+
+        paths = build_run_paths(ROOT, "20260424T000000Z_AAPL", "AAPL")
+
+        self.assertEqual(
+            paths["tier1_raw"],
+            pathlib.Path("/tmp/stock-agent-runtime/runs/20260424T000000Z_AAPL/AAPL/tier1-raw.json").resolve(),
+        )
+        self.assertEqual(paths["snapshot_dir"], pathlib.Path("/tmp/stock-agent-runtime/data/AAPL").resolve())
+
+    def test_build_snapshot_paths_use_immutable_snapshot_namespace(self):
+        os.environ["STOCK_ANALYSIS_DATA_DIR"] = "/tmp/stock-agent-runtime"
+        from tools.analysis_contract import build_snapshot_paths
+
+        paths = build_snapshot_paths(ROOT, "aapl", "2026-04-24_run_abc123")
+
+        self.assertEqual(paths["latest_pointer"], pathlib.Path("/tmp/stock-agent-runtime/data/AAPL/latest.json").resolve())
+        self.assertEqual(
+            paths["validated_data"],
+            pathlib.Path("/tmp/stock-agent-runtime/data/AAPL/snapshots/2026-04-24_run_abc123/validated-data.json").resolve(),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

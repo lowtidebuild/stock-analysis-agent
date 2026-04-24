@@ -5,6 +5,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
+from tools.paths import data_dir
+
 CANONICAL_DISPLAY_TAGS = [
     "[Filing]",
     "[Company]",
@@ -202,10 +204,18 @@ def build_default_report_path(
     return f"output/reports/{key}_{mode}_{lang}_{date_value}.{extension}"
 
 
-def build_run_paths(base_dir: str | Path, run_id: str, ticker: str) -> dict[str, Path]:
+def build_run_paths(
+    base_dir: str | Path,
+    run_id: str,
+    ticker: str,
+    data_root: str | Path | None = None,
+) -> dict[str, Path]:
     base = Path(base_dir).resolve()
     ticker_upper = ticker.upper()
-    output_dir = base / "output"
+    output_dir = Path(data_root).expanduser() if data_root is not None else data_dir()
+    if not output_dir.is_absolute():
+        output_dir = base / output_dir
+    output_dir = output_dir.resolve()
     run_root = output_dir / "runs" / run_id
     ticker_root = run_root / ticker_upper
     return {
@@ -222,6 +232,34 @@ def build_run_paths(base_dir: str | Path, run_id: str, ticker: str) -> dict[str,
         "quality_report": ticker_root / "quality-report.json",
         "reports_dir": output_dir / "reports",
         "snapshot_dir": output_dir / "data" / ticker_upper,
+    }
+
+
+def build_snapshot_paths(
+    base_dir: str | Path,
+    ticker: str,
+    snapshot_id: str,
+    data_root: str | Path | None = None,
+) -> dict[str, Path]:
+    base = Path(base_dir).resolve()
+    ticker_upper = ticker.upper()
+    output_dir = Path(data_root).expanduser() if data_root is not None else data_dir()
+    if not output_dir.is_absolute():
+        output_dir = base / output_dir
+    output_dir = output_dir.resolve()
+    ticker_cache_root = output_dir / "data" / ticker_upper
+    snapshot_root = ticker_cache_root / "snapshots" / snapshot_id
+    return {
+        "ticker_cache_root": ticker_cache_root,
+        "latest_pointer": ticker_cache_root / "latest.json",
+        "snapshot_root": snapshot_root,
+        "tier1_raw": snapshot_root / "tier1-raw.json",
+        "dart_api_raw": snapshot_root / "dart-api-raw.json",
+        "tier2_raw": snapshot_root / "tier2-raw.json",
+        "validated_data": snapshot_root / "validated-data.json",
+        "analysis_result": snapshot_root / "analysis-result.json",
+        "quality_report": snapshot_root / "quality-report.json",
+        "evidence_pack": snapshot_root / "evidence-pack.json",
     }
 
 

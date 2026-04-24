@@ -31,9 +31,10 @@ sys.path.insert(0, str(BASE_DIR))
 
 from tools.analysis_contract import find_repo_root  # noqa: E402
 from tools.artifact_validation import validate_artifact_file  # noqa: E402
+from tools.paths import data_dir  # noqa: E402
 
 BASE_DIR = find_repo_root(__file__)
-DEFAULT_OUTPUT_DIR = BASE_DIR / "output" / "data"
+DEFAULT_OUTPUT_DIR = data_dir() / "data"
 
 
 def resolve_data_root(data_root: str | None = None) -> Path:
@@ -55,6 +56,13 @@ def atomic_write(path: Path, data: dict):
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     tmp.replace(path)
+
+
+def display_path(path: Path) -> str:
+    try:
+        return str(path.resolve().relative_to(BASE_DIR))
+    except ValueError:
+        return str(path.resolve())
 
 
 def cmd_save(ticker: str, data_file: str, skip_validation: bool = False, data_root: str | None = None):
@@ -102,8 +110,8 @@ def cmd_save(ticker: str, data_file: str, skip_validation: bool = False, data_ro
 
     print(json.dumps({
         "status": "ok",
-        "snapshot_path": str(snapshot_path.relative_to(BASE_DIR)),
-        "latest_path": str(latest_path.relative_to(BASE_DIR)),
+        "snapshot_path": display_path(snapshot_path),
+        "latest_path": display_path(latest_path),
         "analysis_date": data["analysis_date"],
         "ticker": ticker.upper(),
         "validation_performed": not skip_validation,
@@ -128,7 +136,7 @@ def cmd_list(ticker: str, data_root: str | None = None):
                 "verdict": snap.get("verdict"),
                 "data_mode": snap.get("data_mode"),
                 "output_mode": snap.get("output_mode"),
-                "path": str(p.relative_to(BASE_DIR)),
+                "path": display_path(p),
             })
         except Exception as e:
             entries.append({"path": str(p), "error": str(e)})

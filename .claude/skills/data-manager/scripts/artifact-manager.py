@@ -25,6 +25,7 @@ from tools.analysis_contract import (  # noqa: E402
     relativize_paths,
     utc_now_iso,
 )
+from tools.paths import data_dir  # noqa: E402
 
 
 def ensure_directory(path: Path) -> None:
@@ -71,7 +72,7 @@ def init_run(tickers: list[str], run_id: str | None = None) -> dict:
 
 
 def show_run(run_id: str) -> dict:
-    manifest_path = REPO_ROOT / "output" / "runs" / run_id / "run-manifest.json"
+    manifest_path = data_dir() / "runs" / run_id / "run-manifest.json"
     if not manifest_path.exists():
         raise FileNotFoundError(f"Run manifest not found: {manifest_path}")
     with open(manifest_path, "r", encoding="utf-8") as handle:
