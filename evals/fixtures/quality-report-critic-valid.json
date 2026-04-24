@@ -62,19 +62,22 @@
         "fix": "Add the revenue, EBITDA, and multiple-compression chain for the downside case."
       },
       {
-        "item": "scenario_consistency",
-        "status": "PASS"
+        "item": "scenario_assumption_distinctness",
+        "status": "PASS",
+        "section": "Section 6 — Investment Scenarios",
+        "notes": "Bull, base, and bear assumptions use distinct drivers."
       },
       {
-        "item": "math_consistency",
-        "status": "PASS"
+        "item": "conclusion_evidence_fit",
+        "status": "PASS",
+        "section": "Conclusion",
+        "notes": "Verdict strength matches the evidence caveats."
       },
       {
-        "item": "completeness",
-        "status": "FAIL",
-        "section": "Section 9 — Quality of Earnings",
-        "problem": "EBITDA Bridge table is missing.",
-        "fix": "Add EBITDA Bridge and FCF conversion commentary."
+        "item": "what_would_make_me_wrong_test",
+        "status": "PASS",
+        "section": "What Would Make Me Wrong",
+        "notes": "Disconfirming conditions are falsifiable."
       }
     ]
   },
@@ -83,11 +86,6 @@
       "section": "Section 5 — Precision Risk",
       "problem": "Regulatory risk lacks quantified stock-price transmission.",
       "fix": "Add the revenue, EBITDA, and multiple-compression chain for the downside case."
-    },
-    {
-      "section": "Section 9 — Quality of Earnings",
-      "problem": "EBITDA Bridge table is missing.",
-      "fix": "Add EBITDA Bridge and FCF conversion commentary."
     }
   ],
   "auto_fixes_applied": [],

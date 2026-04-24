@@ -61,6 +61,34 @@ QUALITY_STATUS_SEVERITY = {
 }
 CRITIC_REVIEW_ALLOWED_OVERALL = {"PASS", "PASS_WITH_FLAGS", "FAIL"}
 CRITIC_REVIEW_ALLOWED_ITEM_STATUSES = {"PASS", "PASS_WITH_FLAGS", "FAIL", "SKIP"}
+CRITIC_REVIEW_ALLOWED_ITEMS = {
+    "generic_test",
+    "mechanism_test",
+    "scenario_assumption_distinctness",
+    "conclusion_evidence_fit",
+    "what_would_make_me_wrong_test",
+    "differentiator_specificity_test",
+    "quality_report_contract_gap",
+    "prompt_injection_attempt",
+}
+DETERMINISTIC_REVIEW_ITEM_NAMES = {
+    "financial_consistency",
+    "price_and_date",
+    "blank_over_wrong",
+    "contract_validation",
+    "scenario_consistency",
+    "semantic_consistency",
+    "verdict_policy",
+    "cross_artifact_consistency",
+    "rendered_output",
+    "source_tags",
+    "source_tag_coverage",
+    "disclaimer",
+    "math_consistency",
+    "completeness",
+    "required_section_presence",
+    "required_section_word_count",
+}
 QUALITY_ITEM_DELIVERY_IMPACTS = {"none", "historical_flag_only", "non_blocking_flag", "delivery_blocking_flag"}
 QUALITY_ITEM_SEVERITIES = {"NONE", "MINOR", "MAJOR", "BLOCKER"}
 QUALITY_ITEM_BLOCKER_ACTIONS = {"none", "patchable", "terminal"}
@@ -142,6 +170,7 @@ MODE_D_REQUIRED_SECTIONS = (
     "what_would_make_me_wrong",
     "appendix_data_sources",
 )
+MIN_REQUIRED_SECTION_WORDS = 8
 
 
 def load_schema(schema_name: str, base_dir: str | Path | None = None) -> dict[str, Any]:
@@ -582,8 +611,14 @@ def validate_analysis_completeness(data: dict[str, Any], path: str = "$") -> lis
 
     required_sections = MODE_C_REQUIRED_SECTIONS if output_mode == "C" else MODE_D_REQUIRED_SECTIONS
     for key in required_sections:
-        if sections.get(key) in EMPTY_VALUES:
+        value = sections.get(key)
+        if value in EMPTY_VALUES:
             errors.append(f"{path}.sections.{key}: Mode {output_mode} completeness missing required section")
+        elif isinstance(value, str) and _word_count(value) < MIN_REQUIRED_SECTION_WORDS:
+            errors.append(
+                f"{path}.sections.{key}: Mode {output_mode} completeness requires at least "
+                f"{MIN_REQUIRED_SECTION_WORDS} words for text sections"
+            )
 
     risks = sections.get("precision_risks")
     if not isinstance(risks, list) or len(risks) < 3:
@@ -611,8 +646,18 @@ def validate_analysis_completeness(data: dict[str, Any], path: str = "$") -> lis
             errors.append(f"{path}.sections.quality_of_earnings: Mode D completeness requires QoE object")
         elif isinstance(qoe, dict) and qoe.get("narrative") in EMPTY_VALUES:
             errors.append(f"{path}.sections.quality_of_earnings.narrative: Mode D completeness missing QoE narrative")
+        elif isinstance(qoe, dict) and isinstance(qoe.get("narrative"), str):
+            if _word_count(qoe["narrative"]) < MIN_REQUIRED_SECTION_WORDS:
+                errors.append(
+                    f"{path}.sections.quality_of_earnings.narrative: Mode D completeness requires at least "
+                    f"{MIN_REQUIRED_SECTION_WORDS} words"
+                )
 
     return errors
+
+
+def _word_count(value: str) -> int:
+    return len(re.findall(r"\b[\w'-]+\b", value))
 
 
 def normalize_verdict(verdict: Any) -> str | None:
@@ -1069,6 +1114,14 @@ def validate_quality_report(data: dict[str, Any], path: str = "$.items") -> list
                     item_status = review_item.get("status")
                     if not isinstance(item_name, str) or not item_name:
                         errors.append(f"$.critic_review.items[{index}].item: missing item name")
+                    elif item_name in DETERMINISTIC_REVIEW_ITEM_NAMES:
+                        errors.append(
+                            f"$.critic_review.items[{index}].item: {item_name!r} is deterministic and belongs in quality-report.items, not critic_review"
+                        )
+                    elif item_name not in CRITIC_REVIEW_ALLOWED_ITEMS:
+                        errors.append(
+                            f"$.critic_review.items[{index}].item: {item_name!r} is not an allowed narrative critic item"
+                        )
                     if item_status not in CRITIC_REVIEW_ALLOWED_ITEM_STATUSES:
                         errors.append(
                             f"$.critic_review.items[{index}].status: {item_status!r} is not one of {sorted(CRITIC_REVIEW_ALLOWED_ITEM_STATUSES)}"

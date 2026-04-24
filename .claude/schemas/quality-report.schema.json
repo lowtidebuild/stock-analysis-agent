@@ -76,7 +76,17 @@
             "required": ["item", "status"],
             "properties": {
               "item": {
-                "type": "string"
+                "type": "string",
+                "enum": [
+                  "generic_test",
+                  "mechanism_test",
+                  "scenario_assumption_distinctness",
+                  "conclusion_evidence_fit",
+                  "what_would_make_me_wrong_test",
+                  "differentiator_specificity_test",
+                  "quality_report_contract_gap",
+                  "prompt_injection_attempt"
+                ]
               },
               "status": {
                 "type": "string",

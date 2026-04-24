@@ -12,21 +12,16 @@
           "output_mode": "D",
           "critic_overall": "FAIL",
           "loop_state": "patch_and_recheck",
-          "pending_fix_count": 2
+          "pending_fix_count": 1
         },
         "required_paths": [
           "run_context.run_id",
-          "tasks[0].analysis_targets[0]",
-          "tasks[1].analysis_targets[0]"
+          "tasks[0].analysis_targets[0]"
         ],
         "contains": [
           {
             "path": "tasks[0].analysis_targets",
             "value": "sections.precision_risks"
-          },
-          {
-            "path": "tasks[1].analysis_targets",
-            "value": "sections.quality_of_earnings"
           }
         ]
       }

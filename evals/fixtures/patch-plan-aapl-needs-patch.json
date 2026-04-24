@@ -12,7 +12,7 @@
   "critic_overall": "FAIL",
   "current_recheck_count": 0,
   "remaining_recheck_budget": 1,
-  "pending_fix_count": 2,
+  "pending_fix_count": 1,
   "ready_for_redelivery": false,
   "loop_state": "patch_and_recheck",
   "tasks": [
@@ -28,25 +28,6 @@
       ],
       "report_targets": [
         "Section 5 — Precision Risk"
-      ],
-      "edit_scope": "analysis_json_and_render",
-      "render_step_required": false,
-      "notes": [
-        "Patch only the failing section; preserve all previously passing critic items."
-      ]
-    },
-    {
-      "task_id": "02_completeness",
-      "priority": 2,
-      "source_item": "completeness",
-      "section": "Section 9 — Quality of Earnings",
-      "problem": "EBITDA Bridge table is missing.",
-      "requested_fix": "Add EBITDA Bridge and FCF conversion commentary.",
-      "analysis_targets": [
-        "sections.quality_of_earnings"
-      ],
-      "report_targets": [
-        "Section 9 — Quality of Earnings"
       ],
       "edit_scope": "analysis_json_and_render",
       "render_step_required": false,

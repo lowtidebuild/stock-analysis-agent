@@ -57,7 +57,27 @@ Only raise a critic finding for these areas if the existing quality report is mi
 
 ---
 
-## 3-Item Narrative Quality Review Checklist
+## Allowed Critic Item Names
+
+Use only these `critic_review.items[].item` values:
+
+- `generic_test`
+- `mechanism_test`
+- `scenario_assumption_distinctness`
+- `conclusion_evidence_fit`
+- `what_would_make_me_wrong_test`
+- `differentiator_specificity_test` (Mode B peer-comparison only)
+- `quality_report_contract_gap` (only when quality-report items are missing or contradictory)
+- `prompt_injection_attempt`
+
+Do not emit `scenario_consistency`, `math_consistency`, `completeness`,
+`source_tags`, `disclaimer`, `rendered_output`, or other mechanical item
+names in `critic_review`. Those belong in the deterministic
+`quality-report.items` contract.
+
+---
+
+## 5-Item Narrative Quality Review Checklist
 
 ### Item 1 — Generic Test (Variant View Specificity)
 
@@ -131,6 +151,50 @@ Do not recalculate probabilities, target ordering, return math, or R/R score. Th
 
 ---
 
+### Item 4 — Conclusion Evidence Fit
+
+**Test**: Does the final verdict match the strength and direction of the cited evidence, or does it overstate the case?
+
+**Pass**: The verdict is framed with caveats that match source quality, scenario spread, and key risks.
+**Fail**: The conclusion is stronger than the evidence supports, ignores a material risk already cited, or converts a weak/uncertain setup into a high-conviction call.
+
+Do not recompute the verdict thresholds. `verdict_policy` handles deterministic R/R-to-verdict alignment. This item is only about narrative overclaiming.
+
+**Output format**:
+```json
+{
+  "item": "conclusion_evidence_fit",
+  "status": "FAIL",
+  "section": "Conclusion",
+  "problem": "The conclusion presents the call as high conviction even though the analysis relies on <LOW_CONFIDENCE_INPUT> and unresolved <KEY_RISK>.",
+  "fix": "Reframe the verdict with source-confidence caveats and make the key risk an explicit condition for position sizing."
+}
+```
+
+---
+
+### Item 5 — What-Would-Make-Me-Wrong Test
+
+**Test**: Are the disconfirming conditions concrete enough that a future reviewer could tell whether the thesis broke?
+
+**Pass**: Each condition has a measurable trigger, time window, or observable event.
+**Fail**: Conditions are generic ("growth slows", "competition increases") or impossible to falsify.
+
+Do not require exact wording. Evaluate whether the condition can actually invalidate the thesis.
+
+**Output format**:
+```json
+{
+  "item": "what_would_make_me_wrong_test",
+  "status": "FAIL",
+  "section": "What Would Make Me Wrong",
+  "problem": "The section says '<GENERIC_FAILURE_CONDITION>' but does not define a measurable threshold or review window.",
+  "fix": "Replace it with a falsifiable trigger: '<METRIC> below <THRESHOLD> by <TIME_WINDOW>' or '<EVENT> causing <SPECIFIC_FINANCIAL_EFFECT>'."
+}
+```
+
+---
+
 ## Review Output Format
 
 Write to `output/runs/{run_id}/{ticker}/quality-report.json` and preserve the existing core `items` object from the quality checker. Attach critic findings under `critic_review` instead of replacing the report contract:
@@ -179,6 +243,18 @@ Write to `output/runs/{run_id}/{ticker}/quality-report.json` and preserve the ex
         "section": "Section 6",
         "problem": "Bull and bear cases are both the same AI monetization thesis with different target prices",
         "fix": "Make the bear case depend on a concrete failure mode and threshold"
+      },
+      {
+        "item": "conclusion_evidence_fit",
+        "status": "PASS",
+        "section": "Conclusion",
+        "notes": "Verdict strength matches source confidence and scenario spread."
+      },
+      {
+        "item": "what_would_make_me_wrong_test",
+        "status": "PASS",
+        "section": "What Would Make Me Wrong",
+        "notes": "Disconfirming conditions are measurable and time-bound."
       }
     ]
   },
