@@ -14,6 +14,7 @@ Cache: 24-hour TTL. If cache is valid, returns cached data (zero API calls).
 API Key priority:
   1. --api-key argument
   2. FRED_API_KEY environment variable
+  3. FRED_API_KEY in <repo-root>/.env (auto-loaded if python-dotenv installed)
 
 FRED API docs: https://fred.stlouisfed.org/docs/api/fred/
 """
@@ -31,6 +32,17 @@ from pathlib import Path
 _REPO_ROOT = Path(__file__).resolve().parents[4]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
+
+# Auto-load <repo>/.env if present so FRED_API_KEY in .env works without
+# manually exporting it before each call.
+try:
+    from dotenv import load_dotenv  # type: ignore
+    _env_file = _REPO_ROOT / ".env"
+    if _env_file.exists():
+        load_dotenv(_env_file, override=False)
+except ImportError:
+    pass
+
 from tools.prompt_injection_filter import SANITIZER_VERSION, sanitize_record  # noqa: E402
 
 FRED_BASE = "https://api.stlouisfed.org/fred/series/observations"

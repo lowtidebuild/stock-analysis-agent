@@ -683,7 +683,7 @@ def generate_docx(data: dict, output_path: str) -> str:
     gen_p = doc.add_paragraph()
     gen_run = gen_p.add_run(
         f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')} UTC  |  "
-        f"AI Research Assistant  |  Data Mode: {mode_str}"
+        f"AI Research Assistant  |  Data Mode: {data.get('effective_mode') or data.get('data_mode') or 'standard'}"
     )
     gen_run.font.size = Pt(8)
     gen_run.font.color.rgb = COLOR_GENERATED

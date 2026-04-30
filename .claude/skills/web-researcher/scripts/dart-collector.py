@@ -10,6 +10,7 @@ Usage:
 API Key priority:
   1. --api-key argument
   2. DART_API_KEY environment variable
+  3. DART_API_KEY in <repo-root>/.env (auto-loaded if python-dotenv installed)
 
 DART OpenAPI docs: https://opendart.fss.or.kr/guide/main.do
 """
@@ -30,6 +31,17 @@ from pathlib import Path
 _REPO_ROOT = Path(__file__).resolve().parents[4]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
+
+# Auto-load <repo>/.env if present so DART_API_KEY in .env works without
+# manually exporting it before each call.
+try:
+    from dotenv import load_dotenv  # type: ignore
+    _env_file = _REPO_ROOT / ".env"
+    if _env_file.exists():
+        load_dotenv(_env_file, override=False)
+except ImportError:
+    pass
+
 from tools.prompt_injection_filter import SANITIZER_VERSION, sanitize_record  # noqa: E402
 
 DART_BASE = "https://opendart.fss.or.kr/api"
