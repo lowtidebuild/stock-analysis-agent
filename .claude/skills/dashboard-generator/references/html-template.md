@@ -461,6 +461,66 @@ new Chart(document.getElementById('priceChart').getContext('2d'), {
 
 ---
 
+## Reverse DCF block (optional sub-section)
+
+Render only when `sections.dcf_analysis.reverse` exists with `status` set. Place after the existing DCF sensitivity table.
+
+For `status == "success"`:
+
+```html
+<div class="card p-5 mt-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200">
+  <h4 class="text-sm font-bold text-brand-700 mb-3">Reverse DCF — Market-Implied Growth</h4>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+    <div class="text-center p-3 bg-white rounded-lg">
+      <p class="text-xs text-gray-500">Market is pricing in</p>
+      <p class="text-2xl font-bold text-brand-700">{IMPLIED_GROWTH_PCT}%</p>
+      <p class="text-xs text-gray-400">annual FCF growth (10y)</p>
+    </div>
+    <div class="text-center p-3 bg-white rounded-lg">
+      <p class="text-xs text-gray-500">Our Base assumes</p>
+      <p class="text-2xl font-bold text-gray-700">{BASE_GROWTH_PCT}%</p>
+      <p class="text-xs text-gray-400">annual FCF growth</p>
+    </div>
+    <div class="text-center p-3 bg-white rounded-lg">
+      <p class="text-xs text-gray-500">Gap</p>
+      <p class="text-2xl font-bold {GAP_COLOR_CLASS}">{GAP_BP_SIGNED}bp</p>
+      <p class="text-xs text-gray-400">{GAP_VERDICT}</p>
+    </div>
+  </div>
+  <p class="text-xs text-gray-600 italic">{REVERSE_NOTES}</p>
+</div>
+```
+
+Substitution rules:
+- `{IMPLIED_GROWTH_PCT}`: `implied_fcf_growth × 100`, 1 decimal
+- `{BASE_GROWTH_PCT}`: `analyst_growth_assumption × 100`, 1 decimal
+- `{GAP_BP_SIGNED}`: `growth_gap_bp` with explicit sign (`+1638` not `1638`)
+- `{GAP_COLOR_CLASS}`: `text-red-700` if `growth_gap_bp > 500`, `text-green-700` if `< -500`, `text-gray-700` otherwise
+- `{GAP_VERDICT}` (output_language-aware):
+  - en: "Market more bullish" / "Market more bearish" / "Approximately aligned"
+  - ko: "시장이 우리 base보다 강세" / "시장이 우리 base보다 약세" / "대체로 정렬됨"
+- `{REVERSE_NOTES}`: pass through `reverse.notes` verbatim
+
+For `status == "exceeds_ceiling"`:
+
+```html
+<div class="card p-4 mt-4 bg-red-50 border border-red-300 text-sm text-red-800">
+  Market is pricing in implausibly high growth (>100% CAGR for {forecast_years} years). Valuation requires non-DCF justification (M&A optionality, narrative re-rating, etc.).
+</div>
+```
+
+For `status == "below_floor"`:
+
+```html
+<div class="card p-4 mt-4 bg-green-50 border border-green-300 text-sm text-green-800">
+  Market is pricing in growth at or below the perpetuity rate. Either undervalued by DCF logic, or FCF sustainability is questioned by the market.
+</div>
+```
+
+For `status` in {`wacc_invalid`, `negative_fcf`, `invalid_input`}: omit the entire block. Do NOT show a placeholder.
+
+---
+
 ## Population Instructions
 
 When generating a dashboard:

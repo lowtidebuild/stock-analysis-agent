@@ -155,8 +155,14 @@ Follow `analysis-framework-dashboard.md` exactly:
     - Run `dcf-calculator.py` (at `.claude/agents/analyst/scripts/dcf-calculator.py`):
       - Base scenario: full run with 9-cell sensitivity table
       - Bull/Bear scenarios: single-point DCF only (no sensitivity table)
+      - **Reverse DCF (Base scenario only)**: ALWAYS pass `current_price_for_reverse: <CURRENT_PRICE>` in the Base inline JSON when current price is available. The script returns a `reverse_dcf` block with `status`, `implied_fcf_growth`, `analyst_growth_assumption`, and `growth_gap_bp`. Write the entire block to `analysis-result.json` under `sections.dcf_analysis.reverse`.
     - If DCF fails (WACC ≤ terminal growth, missing FCF, etc.): omit DCF section, deliver R/R Score as primary valuation. Log warning.
-    - Write results to `analysis-result.json` under `sections.dcf_analysis`
+    - **Reverse DCF status handling**:
+      - `success`: render the implied growth + gap comparison (see dashboard framework Reverse DCF spec).
+      - `exceeds_ceiling`: render an explicit banner — "Market is pricing in implausibly high growth (>100% CAGR). Valuation requires non-DCF justification."
+      - `below_floor`: render an explicit banner — "Market is pricing in growth at or below the perpetuity rate. Either undervalued by DCF logic, or FCF sustainability is questioned by the market."
+      - `wacc_invalid` / `negative_fcf` / `invalid_input`: omit the reverse DCF subsection entirely. Do NOT show a placeholder.
+    - Write results to `analysis-result.json` under `sections.dcf_analysis` (with `reverse` sub-key when present)
     - **Timeout budget**: Execute DCF FIRST in the analysis phase. If DCF + scenario analysis approaches 3.5 minutes, skip remaining DCF scenarios and proceed with available results.
 7b. **Macro Context Integration (Mode C/D only)**
     - Read `macro_context` from run-local `evidence-pack.json` or `validated-data.json`
@@ -265,6 +271,13 @@ Write ALL content — narrative text and structured tables — to run-local `ana
     "base": {"fair_value": "<BASE_FAIR_VALUE>", "upside_pct": "<BASE_UPSIDE_PCT>", "sensitivity_table": "9-cell WACC × terminal growth"},
     "bull": {"fair_value": "<BULL_FAIR_VALUE>", "upside_pct": "<BULL_UPSIDE_PCT>"},
     "bear": {"fair_value": "<BEAR_FAIR_VALUE>", "upside_pct": "<BEAR_UPSIDE_PCT>"},
+    "reverse": {
+      "status": "success",
+      "implied_fcf_growth": "<IMPLIED_GROWTH_DECIMAL>",
+      "analyst_growth_assumption": "<BASE_GROWTH_DECIMAL>",
+      "growth_gap_bp": "<GAP_BP>",
+      "notes": "<SOLVER_NOTES>"
+    },
     "methodology": "<DCF_METHODOLOGY>",
     "assumptions_displayed": true
   },
@@ -421,6 +434,13 @@ request that only succeeded through yfinance must be written as
       "base": {"fair_value": "<BASE_FAIR_VALUE>", "upside_pct": "<BASE_UPSIDE_PCT>", "sensitivity_table": "9-cell WACC × terminal growth"},
       "bull": {"fair_value": "<BULL_FAIR_VALUE>", "upside_pct": "<BULL_UPSIDE_PCT>"},
       "bear": {"fair_value": "<BEAR_FAIR_VALUE>", "upside_pct": "<BEAR_UPSIDE_PCT>"},
+      "reverse": {
+        "status": "success",
+        "implied_fcf_growth": "<IMPLIED_GROWTH_DECIMAL>",
+        "analyst_growth_assumption": "<BASE_GROWTH_DECIMAL>",
+        "growth_gap_bp": "<GAP_BP>",
+        "notes": "<SOLVER_NOTES>"
+      },
       "methodology": "<DCF_METHODOLOGY>",
       "assumptions_displayed": true
     },

@@ -172,6 +172,33 @@ Display:
 
 If dcf_analysis is null or absent: omit this subsection entirely. Do NOT show placeholder.
 
+### Reverse DCF / Expectations Investing (Mode C, optional sub-section)
+
+**Trigger**: Only when `sections.dcf_analysis.reverse` exists with `status` set.
+
+**Purpose**: Reverse DCF is a transparency tool, not a verdict. It answers "what FCF growth rate is the market currently implying at this price?" — letting the analyst compare market expectations to the Base case growth assumption explicitly.
+
+Render based on status:
+
+- `success`: Display a 3-column card:
+  - "Market is pricing in **{implied_fcf_growth × 100:.1f}%** annual FCF growth (10y)"
+  - "Our Base assumes **{analyst_growth_assumption × 100:.1f}%** annual FCF growth"
+  - "Gap: **{growth_gap_bp:+d}bp** ({verdict})"
+    - verdict text (output_language-aware):
+      - `growth_gap_bp > 500` → en: "Market more bullish than our base" / ko: "시장이 우리 base보다 강세"
+      - `growth_gap_bp < -500` → en: "Market more bearish than our base" / ko: "시장이 우리 base보다 약세"
+      - otherwise → en: "Approximately aligned" / ko: "대체로 정렬됨"
+  - Color-code the gap value: red if `growth_gap_bp > 500`, green if `< -500`, gray otherwise.
+  - Footer line (italic, gray): "{notes}" — pass through the solver's notes string.
+
+- `exceeds_ceiling`: Single red banner — "⚠ Market is pricing in implausibly high growth (>100% CAGR for {forecast_years} years). Valuation requires non-DCF justification (M&A optionality, narrative re-rating, etc.)."
+
+- `below_floor`: Single green banner — "Market is pricing in growth at or below the perpetuity rate. Either undervalued by DCF logic, or FCF sustainability is questioned by the market."
+
+- `wacc_invalid`, `negative_fcf`, `invalid_input`: Omit this subsection entirely. Do NOT show a placeholder.
+
+This is NOT a verdict. The analyst's verdict comes from R/R Score + scenario probabilities. Reverse DCF makes the *implicit* market assumption *explicit* so the analyst can take a position on it.
+
 ### Section 6 — Peer Comparison
 
 Identify 3–5 most relevant peers (from tier2-raw.json or research-plan.json peer_tickers).

@@ -133,6 +133,24 @@ Include when dcf_analysis is present in analysis-result.json:
 
 Word count: 200-300 words for narrative + sensitivity table
 
+### Section 4a.1 — Reverse DCF / Expectations Investing (Mode D, optional)
+
+Include when `sections.dcf_analysis.reverse.status == "success"`. Otherwise (status `exceeds_ceiling`, `below_floor`) include a single explanatory paragraph; for other statuses (`wacc_invalid`, `negative_fcf`, `invalid_input`) omit entirely.
+
+Purpose: Reverse DCF is a transparency tool, not a standalone verdict. It runs the forward DCF backwards: given the current market price, what FCF growth rate would need to materialize over the forecast period to justify it?
+
+Required content (3-paragraph structure, ~150-200 words):
+
+1. **Headline number**: "Market is pricing in **{implied_fcf_growth}%/yr** FCF growth over {forecast_years} years to justify the current price of ${current_price}."
+2. **Comparison to Base**: "Our Base scenario assumes {analyst_growth_assumption}%/yr → Gap of {growth_gap_bp:+d}bp ({verdict in output_language})."
+3. **Interpretation paragraph**: 3-5 sentences grounding the abstract growth number in business reality. What specifically would have to happen for the implied growth to materialize? Reference the company's specific catalysts (Affirm Card adoption, Palantir Army Enterprise Agreement task orders, etc.) — not generic "AI tailwinds."
+
+Use `output_language` for verdict labels:
+- en: "Market more bullish/bearish than our base" / "Approximately aligned"
+- ko: "시장이 우리 base보다 강세/약세" / "대체로 정렬됨"
+
+Note explicitly: "Reverse DCF does NOT replace the verdict. The verdict comes from R/R Score and scenario probabilities. Reverse DCF makes the implicit market assumption explicit so the analyst can take a position on it."
+
 ---
 
 ## Section 5 — 5-Question Variant View

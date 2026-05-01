@@ -46,6 +46,7 @@ INPUT_SCHEMA = {
     "margin_expansion":    {"type": "float",  "required": False, "description": "Annual margin improvement (decimal, e.g., 0.005 = 0.5%/yr added to growth)", "default": 0},
     "sensitivity_wacc":    {"type": "list",   "required": False, "description": "WACC values for sensitivity table (3 values)", "default": "auto: [wacc-1%, wacc, wacc+1%]"},
     "sensitivity_tgr":     {"type": "list",   "required": False, "description": "Terminal growth rates for sensitivity (3 values)", "default": "auto: [tgr-0.5%, tgr, tgr+0.5%]"},
+    "current_price_for_reverse": {"type": "float", "required": False, "description": "If provided, additionally solve for the FCF growth rate that the market implicitly prices into this stock price (Reverse DCF / Expectations Investing).", "default": None},
 }
 
 OUTPUT_SCHEMA = {
@@ -60,6 +61,7 @@ OUTPUT_SCHEMA = {
     "assumptions":          "dict — all assumptions used, for transparency",
     "formulas":             "dict — human-readable formula strings",
     "wacc_derivation":      "dict or null — how WACC was determined (method, components, calculated value)",
+    "reverse_dcf":          "dict or null — implied FCF growth result when current_price_for_reverse is provided",
     "errors":               "list — warnings and errors",
 }
 
@@ -165,6 +167,106 @@ def compute_dcf(fcf_ttm, fcf_growth_rate, wacc, terminal_growth_rate, forecast_y
         "fair_value_per_share": fair_value_per_share,
         "formulas": formulas,
     }, errors
+
+
+def solve_implied_growth(
+    target_price,
+    fcf_ttm,
+    wacc,
+    terminal_growth_rate,
+    forecast_years,
+    net_debt,
+    diluted_shares,
+    *,
+    growth_floor_offset=0.001,
+    growth_ceiling=1.0,
+    tolerance=0.0005,
+    max_iterations=50,
+):
+    """Solve for the FCF growth rate the market implies at target_price.
+
+    Bisection over `compute_dcf` since fair_value is monotonically increasing
+    in growth (everything else held constant).
+    """
+    base = {
+        "target_price": target_price,
+        "implied_fcf_growth": None,
+        "iterations": 0,
+        "bracket_low": None,
+        "bracket_high": None,
+        "fair_value_at_floor": None,
+        "fair_value_at_ceiling": None,
+    }
+
+    if wacc is None or terminal_growth_rate is None or wacc <= terminal_growth_rate:
+        return {**base, "status": "wacc_invalid",
+                "notes": "WACC must exceed terminal growth."}
+    if fcf_ttm is None or fcf_ttm <= 0:
+        return {**base, "status": "negative_fcf",
+                "notes": "Reverse DCF requires positive FCF TTM."}
+    if target_price is None or target_price <= 0 or diluted_shares is None or diluted_shares <= 0:
+        return {**base, "status": "invalid_input",
+                "notes": "Target price and diluted shares must be positive."}
+
+    def fair_at(growth):
+        result, _errors = compute_dcf(
+            fcf_ttm=fcf_ttm,
+            fcf_growth_rate=growth,
+            wacc=wacc,
+            terminal_growth_rate=terminal_growth_rate,
+            forecast_years=forecast_years,
+            net_debt=net_debt,
+            diluted_shares=diluted_shares,
+            margin_expansion=0,
+        )
+        if result is None:
+            return None
+        return result.get("fair_value_per_share")
+
+    low = terminal_growth_rate + growth_floor_offset
+    high = growth_ceiling
+    fair_low = fair_at(low)
+    fair_high = fair_at(high)
+    base.update({
+        "bracket_low": low,
+        "bracket_high": high,
+        "fair_value_at_floor": fair_low,
+        "fair_value_at_ceiling": fair_high,
+    })
+
+    if fair_low is None or fair_high is None:
+        return {**base, "status": "did_not_converge",
+                "notes": "DCF failed at bracket bounds."}
+    if target_price > fair_high:
+        return {**base, "status": "exceeds_ceiling",
+                "notes": "Target price requires growth above ceiling."}
+    if target_price < fair_low:
+        return {**base, "status": "below_floor",
+                "notes": "Target price is below floor-growth DCF value."}
+
+    iterations = 0
+    while iterations < max_iterations:
+        iterations += 1
+        mid = (low + high) / 2
+        fair_mid = fair_at(mid)
+        if fair_mid is None:
+            return {**base, "status": "did_not_converge",
+                    "iterations": iterations,
+                    "notes": "DCF failed mid-bisection."}
+        if fair_mid < target_price:
+            low = mid
+        else:
+            high = mid
+        if (high - low) < tolerance:
+            implied = round((low + high) / 2, 4)
+            return {**base, "status": "success",
+                    "implied_fcf_growth": implied,
+                    "iterations": iterations,
+                    "notes": f"Converged in {iterations} iterations."}
+
+    return {**base, "status": "did_not_converge",
+            "iterations": iterations,
+            "notes": f"Bisection did not converge in {max_iterations} iterations."}
 
 
 def build_sensitivity_table(fcf_ttm, fcf_growth_rate, wacc, terminal_growth_rate,
@@ -309,6 +411,28 @@ def calculate_dcf(inputs: dict) -> dict:
             wacc_values, tgr_values, current_price
         )
 
+    # ── Reverse DCF (Expectations Investing) ──
+    # Solve for the FCF growth rate the market implies at current_price_for_reverse.
+    reverse_dcf = None
+    current_price_for_reverse = inputs.get("current_price_for_reverse")
+    if current_price_for_reverse is not None:
+        implied = solve_implied_growth(
+            target_price=current_price_for_reverse,
+            fcf_ttm=fcf_ttm,
+            wacc=wacc,
+            terminal_growth_rate=terminal_growth_rate,
+            forecast_years=forecast_years,
+            net_debt=net_debt,
+            diluted_shares=diluted_shares,
+        )
+        if implied.get("status") == "success" and fcf_growth_rate is not None:
+            implied["analyst_growth_assumption"] = fcf_growth_rate
+            implied["growth_gap_bp"] = round(
+                (implied["implied_fcf_growth"] - fcf_growth_rate) * 10000,
+                1,
+            )
+        reverse_dcf = implied
+
     return {
         "scenario": scenario_name,
         "pv_explicit_fcf": result["pv_explicit_fcf"],
@@ -321,6 +445,7 @@ def calculate_dcf(inputs: dict) -> dict:
         "assumptions": assumptions,
         "formulas": result["formulas"],
         "wacc_derivation": wacc_derivation,
+        "reverse_dcf": reverse_dcf,
         "errors": errors,
     }
 
