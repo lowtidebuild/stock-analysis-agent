@@ -67,7 +67,7 @@ Type a ticker. Get a buy-side note — not a chatbot summary.
     <td width="33%" valign="top" align="center">
       <h3>🧠 Analysis Layer</h3>
       <strong>Buy-side discipline</strong><br/><br/>
-      Scenario analysis, Variant View, precision risk, DCF, peer comparison — every number shipped with a confidence grade and source tag.
+      Scenario analysis, Variant View, precision risk, DCF + Reverse DCF (implied growth), peer comparison — every number shipped with a confidence grade and source tag.
     </td>
   </tr>
 </table>
@@ -181,7 +181,7 @@ Not sure which to pick? Start with **Mode C** — it's the default full-analysis
 | **Variant View** | Q1-Q3: where the market is wrong, with company-specific proof |
 | **Precision Risk** | 3 risks × mechanism chain × EBITDA impact × mitigation |
 | **Macro Environment** | macro factors · impact assessment · confidence badges |
-| **Valuation** | SOTP · comps · **DCF sensitivity table** |
+| **Valuation** | SOTP · comps · **DCF sensitivity table + Reverse DCF (implied growth)** |
 | **Analyst Targets** | consensus · high/low · rating distribution |
 | **Charts** | revenue trend · margin history · price vs targets |
 | **Quarterly Financials** | 8-quarter income statement · QoE bridge |
@@ -195,7 +195,7 @@ Not sure which to pick? Start with **Mode C** — it's the default full-analysis
 | Executive Summary | one-line thesis · verdict · R/R Score |
 | Business Overview | revenue mix · market share · TAM |
 | Financial Performance | 8-quarter tables · margin trends · FCF |
-| Valuation | P/E · EV/EBITDA · SOTP · **DCF fair value + sensitivity** |
+| Valuation | P/E · EV/EBITDA · SOTP · **DCF fair value + sensitivity + Reverse DCF** |
 | **5-Question Variant View** | where the market is wrong |
 | Precision Risk Analysis | 3 risks × full mechanism chain + EBITDA impact |
 | Macro Risk Overlay | top-down factors · sector sensitivity · impact pathways |
