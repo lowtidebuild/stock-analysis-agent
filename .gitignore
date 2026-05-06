@@ -50,3 +50,4 @@ Desktop.ini
 # ── Claude session artifacts ────────────────────────────────────────────────
 .claude/projects/
 .claude/worktrees/
+.claude/settings*.json
