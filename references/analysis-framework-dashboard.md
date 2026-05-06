@@ -228,6 +228,52 @@ Render based on status:
 
 This is NOT a verdict. The analyst's verdict comes from R/R Score + scenario probabilities. Reverse DCF makes the *implicit* market assumption *explicit* so the analyst can take a position on it.
 
+### Valuation Bridge (Mode C — required when DCF + comps + analyst targets are all available)
+
+**Trigger**: Render between DCF/Reverse DCF (Section 5) and Peer Comparison (Section 6) whenever `analysis-result.json` carries a top-level `valuation_bridge` object. Mode C analysts MUST produce this object whenever:
+
+- `sections.dcf_analysis.base.fair_value` is computable, AND
+- `sections.dcf_analysis.valuation_reconciliation.comp_implied_per_share` is non-null (peer-median multiple computed), AND
+- analyst median target price is available in `validated-data.json` (FMP, yfinance, or portal source).
+
+If any one of those three inputs is missing, omit the field entirely — do NOT render an empty bridge or substitute a Grade D number.
+
+**Purpose**: The bridge resolves the cognitive conflict that occurs when DCF disagrees sharply with peer multiples and analyst consensus (e.g., GOOGL DCF -38% vs Base +7.6%). Instead of asking the reader to silently reconcile four different numbers, the bridge surfaces all four anchors, weights them explicitly, and pairs the result with a 50+ word `reconciliation_logic` paragraph that explains the gap to current price and ties the weighted output back to the verdict.
+
+**Schema** (canonical, write to `analysis-result.json` at top level — NOT nested under `sections`):
+
+```json
+"valuation_bridge": {
+  "anchors": [
+    {"label": "DCF (Base)", "value_per_share": 241.20, "weight": 0.25, "method": "10Y FCF + terminal", "tag": "[Calc]"},
+    {"label": "Comp Multiples", "value_per_share": 299.67, "weight": 0.25, "method": "Peer median EV/EBITDA × TTM", "tag": "[Calc]"},
+    {"label": "Analyst Median Target", "value_per_share": 428.50, "weight": 0.25, "method": "52 analysts consensus", "tag": "[Est]"},
+    {"label": "우리 Base Scenario", "value_per_share": 418.00, "weight": 0.25, "method": "Probability-weighted 12M target", "tag": "[Calc]"}
+  ],
+  "current_price": 388.43,
+  "weighted_fair_value": 346.84,
+  "implied_view_vs_market": "-10.7%",
+  "reconciliation_logic": "[Korean paragraph, ≥50 words, explaining why DCF is conservative, why comps/analyst are bullish, what the weighted average tells us about the gap to current price, and how it ties to the verdict.]",
+  "decision_anchor": "scenarios.base"
+}
+```
+
+**Required fields per anchor**: `label`, `value_per_share` (numeric, USD or KRW per share), `weight` (decimal, 0–1), `method` (≤80 chars), `tag` (one of `[Calc]`, `[Filing]`, `[Est]`, `[Portal]`, `[Macro]`).
+
+**Default weights**: 0.25 each (equal-weight). Adjust ONLY when one anchor is materially more or less reliable in the current company's context, and explain the deviation in `reconciliation_logic`. Weights MUST sum to 1.0.
+
+**Arithmetic invariants** (Critic checks; analyst self-checks before writing):
+
+1. `sum(anchor.weight) == 1.0` (within ±0.001)
+2. `weighted_fair_value ≈ sum(anchor.value_per_share × anchor.weight)` within ±0.1
+3. `implied_view_vs_market` matches `(weighted_fair_value − current_price) / current_price × 100`, formatted as a signed percentage string with one decimal (e.g., `"-10.7%"`, `"+5.2%"`)
+4. `reconciliation_logic` ≥ 50 words/tokens (whitespace-split; Korean tokens count)
+5. `decision_anchor` ∈ {`scenarios.base`, `scenarios.bull`, `scenarios.bear`, `weighted_fair_value`}
+
+**Render contract**: 4 anchor cards side-by-side (md+) with method + weight + tag, downward arrow, weighted fair value box (3 columns: Weighted FV / Current Price / Implied View, color-coded — red for negative, green for positive, gray for ~0), then a reconciliation paragraph card. See `dashboard-generator/references/html-template.md` Section 5b comment block for the markup pattern.
+
+**Critic note**: This bridge is the dashboard's primary defense against the "DCF says one thing, analyst targets say another" criticism. The `reconciliation_logic` paragraph MUST address why the disagreement exists in mechanism terms (capex assumptions, terminal multiple, narrative re-rating, etc.), not merely restate the numbers.
+
 ### Section 6 — Peer Comparison
 
 Identify 3–5 most relevant peers (from tier2-raw.json or research-plan.json peer_tickers).
@@ -380,6 +426,7 @@ Before calling `dashboard-generator/SKILL.md` to generate HTML:
 - [ ] Precision Risk table: 3 risks, each with mechanism + quantified EBITDA impact
 - [ ] SOTP computed (or documented as not applicable)
 - [ ] Peer comparison includes ≥3 peers
+- [ ] Valuation Bridge produced when DCF + comps + analyst target are all available (4 anchors, weights sum to 1.0, weighted fair value arithmetic verified, ≥50-word reconciliation_logic)
 - [ ] "What Would Make Me Wrong" includes pre-mortem
 - [ ] All metrics have source tags
 - [ ] Grade D metrics excluded from analysis body (noted in data sources table)

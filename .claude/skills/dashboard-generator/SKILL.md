@@ -75,6 +75,7 @@ Populate each section of `html-template.md` with data from `analysis-result.json
 | `sections.valuation_metrics` | Section 5 | valuation table |
 | `sections.sotp` | Section 5 | SOTP section |
 | `sections.dcf_analysis` | Section 5 | DCF subsection (after SOTP) |
+| `valuation_bridge` (top-level) | Section 5b | `{VALUATION_BRIDGE_SECTION}` (4 anchors + weighted fair value + reconciliation paragraph) |
 | `sections.macro_context` | Section 4/6 | Macro Environment section |
 | `sections.peer_comparison` | Section 6 | peer table rows |
 | `sections.analyst_coverage` | Section 7 | analyst data |
@@ -177,6 +178,28 @@ HTML structure:
 - Bull/Bear line: "Bull: ${X} (+Y%) | Bear: ${X} (-Y%)"
 - Methodology note: small text below showing WACC, terminal growth, forecast years
 - If dcf_analysis is absent or null: omit entire subsection
+
+### Valuation Bridge Rendering (if top-level `valuation_bridge` exists)
+
+Place AFTER the DCF / Reverse DCF subsection and BEFORE the Peer Comparison
+section (Section 5b). The bridge reconciles 4 valuation anchors (DCF Base,
+Comp Multiples, Analyst Median Target, our Base Scenario) into a weighted
+fair value plus a ≥50-word `reconciliation_logic` paragraph.
+
+Substitute the `{VALUATION_BRIDGE_SECTION}` placeholder in `html-template.md`
+with the full section markup shown in the Section 5b comment block when
+`valuation_bridge` is present in `analysis-result.json`. When the field is
+absent (older snapshots, or runs without all three input anchors), replace
+the placeholder with an empty string — do NOT render an empty stub.
+
+Rendering rules:
+- 4 anchor cards in a `md:grid-cols-4` grid; show value, weight × 100 as
+  integer percentage, method, and source tag.
+- Implied view colour: `text-red-600` if negative, `text-green-600` if
+  positive, `text-gray-600` if ~0.
+- Pass `reconciliation_logic` through verbatim — do NOT truncate.
+- Display `decision_anchor` as a small footnote so the reader knows which
+  anchor drives the verdict (typically `scenarios.base`).
 
 ### Macro Context Rendering (if sections.macro_context exists)
 

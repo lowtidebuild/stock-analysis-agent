@@ -193,6 +193,30 @@ Follow `analysis-framework-dashboard.md` exactly:
       - `wacc_invalid` / `negative_fcf` / `invalid_input`: omit the reverse DCF subsection entirely. Do NOT show a placeholder.
     - Write results to `analysis-result.json` under `sections.dcf_analysis` (with `reverse` sub-key when present)
     - **Timeout budget**: Execute DCF FIRST in the analysis phase. If DCF + scenario analysis approaches 3.5 minutes, skip remaining DCF scenarios and proceed with available results.
+7a-bis. **Valuation Bridge (Mode C only)**
+    - Trigger: DCF base fair value AND `valuation_reconciliation.comp_implied_per_share` AND analyst median target are all available.
+    - Emit a top-level `valuation_bridge` field in `analysis-result.json` (NOT nested under `sections`). Schema:
+      ```json
+      "valuation_bridge": {
+        "anchors": [
+          {"label": "DCF (Base)", "value_per_share": <DCF_FV>, "weight": 0.25, "method": "10Y FCF + terminal", "tag": "[Calc]"},
+          {"label": "Comp Multiples", "value_per_share": <COMP_FV>, "weight": 0.25, "method": "Peer median EV/EBITDA × TTM", "tag": "[Calc]"},
+          {"label": "Analyst Median Target", "value_per_share": <ANALYST_MEDIAN>, "weight": 0.25, "method": "<N> analysts consensus", "tag": "[Est]"},
+          {"label": "우리 Base Scenario", "value_per_share": <BASE_TARGET>, "weight": 0.25, "method": "Probability-weighted 12M target", "tag": "[Calc]"}
+        ],
+        "current_price": <CURRENT_PRICE>,
+        "weighted_fair_value": <SUM_OF_WEIGHTED_VALUES>,
+        "implied_view_vs_market": "<SIGNED_PCT>",
+        "reconciliation_logic": "<KOREAN_PARAGRAPH_>=50_WORDS>",
+        "decision_anchor": "scenarios.base"
+      }
+      ```
+    - Default to equal weights (0.25 each). Adjust only when one anchor is materially more or less reliable; explain the deviation in `reconciliation_logic`. Weights MUST sum to 1.0.
+    - Compute `weighted_fair_value = sum(value_per_share × weight)` to 2 decimals, then derive `implied_view_vs_market = (weighted_fair_value − current_price) / current_price × 100`, formatted as a signed percentage string with one decimal (e.g., `"-10.7%"`).
+    - `reconciliation_logic` MUST (a) explain why DCF disagrees with comps/analyst (mechanism terms — capex normalization, terminal multiple, narrative re-rating, etc.), (b) describe what the weighted average says about the gap to current price, (c) tie the result back to the verdict, and (d) reach ≥50 whitespace-delimited tokens. For Korean output, write in Korean; for English, write in English.
+    - If any of DCF / comps / analyst target is missing, OMIT the entire `valuation_bridge` field — do not invent a Grade D anchor.
+    - See `references/analysis-framework-dashboard.md` "Valuation Bridge" section for the full spec and Critic checks.
+
 7b. **Macro Context Integration (Mode C/D only)**
     - Read `macro_context` from run-local `evidence-pack.json` or `validated-data.json`
     - **Structured data (FRED)**: If `macro_context.structured.status == "available"`:
@@ -476,6 +500,19 @@ request that only succeeded through yfinance must be written as
       "last_evidence_date": "<YYYY-MM-DD>"
     }
   ],
+  "valuation_bridge": {
+    "anchors": [
+      {"label": "DCF (Base)", "value_per_share": "<DCF_FV>", "weight": 0.25, "method": "10Y FCF + terminal", "tag": "[Calc]"},
+      {"label": "Comp Multiples", "value_per_share": "<COMP_FV>", "weight": 0.25, "method": "Peer median EV/EBITDA × TTM", "tag": "[Calc]"},
+      {"label": "Analyst Median Target", "value_per_share": "<ANALYST_MEDIAN>", "weight": 0.25, "method": "<N> analysts consensus", "tag": "[Est]"},
+      {"label": "우리 Base Scenario", "value_per_share": "<BASE_TARGET>", "weight": 0.25, "method": "Probability-weighted 12M target", "tag": "[Calc]"}
+    ],
+    "current_price": "<CURRENT_PRICE>",
+    "weighted_fair_value": "<SUM_OF_WEIGHTED>",
+    "implied_view_vs_market": "<SIGNED_PCT>",
+    "reconciliation_logic": "<RECONCILIATION_PARAGRAPH_>=50_WORDS>",
+    "decision_anchor": "scenarios.base"
+  },
   "sections": {
     "variant_view_q1": "...",
     "variant_view_q2": "...",
