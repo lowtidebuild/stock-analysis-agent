@@ -3,6 +3,7 @@
 # not pushed) so they are not advertised in the public repository.
 docs/agent-audit-remediation-guide*.md
 docs/session-log-*.md
+docs/superpowers/
 
 # ── Runtime Output ─────────────────────────────────────────────────────────
 output/
