@@ -88,6 +88,16 @@ Read `.claude/skills/staleness-checker/SKILL.md`
 - Check `output/data/{ticker}/latest.json` age
 - Apply freshness rules → REUSE / DELTA_FAST / STALE / FRESH_COLLECTION
 - Verify output file exists before proceeding to next step
+- **Auto Delta Mode (Phase B, default ON)**: when a prior snapshot exists for
+  `{ticker}`, set `pipeline_state.auto_delta = true`. After Step 10 persists
+  the fresh snapshot, run
+  `python .claude/skills/data-manager/scripts/delta-comparator.py compare
+  --ticker {ticker} --old-date latest --new-date latest --format html`
+  (and `--format markdown` for Mode D / chat-summary surfaces). Store stdout in
+  `pipeline_state.auto_delta_payload`. All four renderers (Mode A/B/C/D)
+  prepend the banner above their first content section; empty stdout = no
+  banner. The CLI/orchestrator flag `--no-delta` disables the call
+  (`auto_delta = false`, no banner emitted).
 
 ### Step 1 — Query Interpretation
 Read `.claude/skills/query-interpreter/SKILL.md`

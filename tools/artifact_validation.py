@@ -85,6 +85,7 @@ DETERMINISTIC_REVIEW_ITEM_NAMES = {
     "source_tag_coverage",
     "disclaimer",
     "math_consistency",
+    "valuation_bridge_consistency",
     "completeness",
     "required_section_presence",
     "required_section_word_count",
@@ -857,6 +858,167 @@ def validate_analysis_semantics(data: dict[str, Any], path: str = "$") -> list[s
             errors.append(
                 f"{path}.rr_score: expected {expected_rr_score:.2f} from scenario formula, got {rr_score}"
             )
+
+    return errors
+
+
+# Allowed values for valuation_bridge.decision_anchor — see
+# references/analysis-framework-dashboard.md §5b invariant #5.
+VALUATION_BRIDGE_DECISION_ANCHORS = (
+    "scenarios.base",
+    "scenarios.bull",
+    "scenarios.bear",
+    "weighted_fair_value",
+)
+# Minimum tokens (whitespace-split) for reconciliation_logic — invariant #4.
+VALUATION_BRIDGE_MIN_RECONCILIATION_TOKENS = 50
+
+
+def _classify_valuation_bridge_severity(error: str) -> str:
+    """Map an error message to its delivery severity per the framework spec.
+
+    Arithmetic invariants (#1 weights sum, #2 weighted FV, #3 implied view
+    formula) are BLOCKER. Narrative invariants (#4 reconciliation length,
+    #5 decision_anchor enum) are MAJOR.
+    """
+    arithmetic_markers = (
+        ".weights:",
+        ".weighted_fair_value:",
+        ".implied_view_vs_market:",
+        ".anchors:",  # missing/malformed anchors fail arithmetic preconditions
+        ".current_price:",
+    )
+    if any(marker in error for marker in arithmetic_markers):
+        return "BLOCKER"
+    return "MAJOR"
+
+
+def validate_valuation_bridge(data: dict[str, Any], path: str = "$") -> list[str]:
+    """Validate the optional ``valuation_bridge`` widget arithmetic invariants.
+
+    Invariants (analysis-framework-dashboard.md §5b lines 265–271):
+
+    1. ``sum(anchor.weight) == 1.0`` (within ±0.01).
+    2. ``weighted_fair_value ≈ Σ(value × weight)`` within ±0.1.
+    3. ``implied_view_vs_market`` matches the formula
+       ``(weighted_fair_value − current_price) / current_price × 100`` —
+       sign and magnitude (±0.2 pp tolerance for rounding).
+    4. ``reconciliation_logic`` ≥ 50 whitespace-delimited tokens.
+    5. ``decision_anchor`` ∈ ``VALUATION_BRIDGE_DECISION_ANCHORS``.
+
+    Returns an empty list when ``valuation_bridge`` is absent (graceful skip
+    for older snapshots / Mode A/B/D outputs that omit the widget).
+    """
+    bridge = data.get("valuation_bridge")
+    if bridge is None:
+        return []
+    errors: list[str] = []
+    bridge_path = f"{path}.valuation_bridge"
+    if not isinstance(bridge, dict):
+        return [f"{bridge_path}: must be an object"]
+
+    anchors = bridge.get("anchors")
+    weighted_sum: float | None = None
+    if not isinstance(anchors, list) or not anchors:
+        errors.append(f"{bridge_path}.anchors: must be a non-empty list")
+    else:
+        weight_total = 0.0
+        weight_total_known = True
+        running_sum = 0.0
+        for idx, anchor in enumerate(anchors):
+            if not isinstance(anchor, dict):
+                errors.append(f"{bridge_path}.anchors[{idx}]: must be an object")
+                weight_total_known = False
+                continue
+            value = extract_numeric_value(anchor.get("value_per_share"))
+            weight = extract_numeric_value(anchor.get("weight"))
+            if value is None:
+                errors.append(
+                    f"{bridge_path}.anchors[{idx}].value_per_share: missing or non-numeric"
+                )
+            if weight is None:
+                errors.append(f"{bridge_path}.anchors[{idx}].weight: missing or non-numeric")
+                weight_total_known = False
+                continue
+            weight_total += weight
+            if value is not None:
+                running_sum += value * weight
+        if weight_total_known:
+            if not _is_close(weight_total, 1.0, abs_tol=0.01, rel_tol=0.0):
+                errors.append(
+                    f"{bridge_path}.weights: anchor weights must sum to 1.0 (got {weight_total:.4f})"
+                )
+            weighted_sum = running_sum
+
+    weighted_fair_value = extract_numeric_value(bridge.get("weighted_fair_value"))
+    current_price = extract_numeric_value(bridge.get("current_price"))
+
+    if weighted_fair_value is None:
+        errors.append(f"{bridge_path}.weighted_fair_value: missing or non-numeric")
+    elif weighted_sum is not None:
+        # Invariant #2: weighted_fair_value ≈ Σ(value × weight) within 0.1.
+        if not _is_close(weighted_fair_value, weighted_sum, abs_tol=0.1, rel_tol=0.0):
+            errors.append(
+                f"{bridge_path}.weighted_fair_value: expected ≈ {weighted_sum:.4f} from "
+                f"Σ(value × weight), got {weighted_fair_value}"
+            )
+
+    if current_price is None:
+        errors.append(f"{bridge_path}.current_price: missing or non-numeric")
+
+    implied = bridge.get("implied_view_vs_market")
+    if not isinstance(implied, str):
+        errors.append(
+            f"{bridge_path}.implied_view_vs_market: must be a signed percentage string "
+            f"(e.g. '-10.7%')"
+        )
+    elif (
+        weighted_fair_value is not None
+        and current_price not in (None, 0)
+    ):
+        match = re.match(r"^([+-]?\d+(?:\.\d+)?)%$", implied.strip())
+        if match is None:
+            errors.append(
+                f"{bridge_path}.implied_view_vs_market: must match signed percentage "
+                f"format (e.g. '-10.7%'); got {implied!r}"
+            )
+        else:
+            declared_value = float(match.group(1))
+            expected = (
+                (weighted_fair_value - current_price) / current_price * 100.0
+            )
+            declared_sign = (declared_value > 0) - (declared_value < 0)
+            expected_sign = (expected > 0) - (expected < 0)
+            if declared_sign != expected_sign:
+                errors.append(
+                    f"{bridge_path}.implied_view_vs_market: sign mismatch — declared "
+                    f"{declared_value:+.2f}%, expected {expected:+.2f}%"
+                )
+            elif abs(declared_value - expected) > 0.2:
+                errors.append(
+                    f"{bridge_path}.implied_view_vs_market: magnitude mismatch — declared "
+                    f"{declared_value:+.2f}%, expected {expected:+.2f}% (formula: "
+                    f"(weighted_fair_value − current_price) / current_price × 100)"
+                )
+
+    reconciliation = bridge.get("reconciliation_logic")
+    if not isinstance(reconciliation, str) or not reconciliation.strip():
+        errors.append(f"{bridge_path}.reconciliation_logic: must be a non-empty string")
+    else:
+        token_count = len(reconciliation.split())
+        if token_count < VALUATION_BRIDGE_MIN_RECONCILIATION_TOKENS:
+            errors.append(
+                f"{bridge_path}.reconciliation_logic: must be ≥ "
+                f"{VALUATION_BRIDGE_MIN_RECONCILIATION_TOKENS} whitespace-delimited tokens "
+                f"(got {token_count})"
+            )
+
+    decision_anchor = bridge.get("decision_anchor")
+    if decision_anchor not in VALUATION_BRIDGE_DECISION_ANCHORS:
+        errors.append(
+            f"{bridge_path}.decision_anchor: must be one of "
+            f"{list(VALUATION_BRIDGE_DECISION_ANCHORS)}; got {decision_anchor!r}"
+        )
 
     return errors
 
@@ -1998,6 +2160,8 @@ def validate_artifact_data(
         )
     if artifact_type == "analysis-result":
         errors.extend(validate_analysis_completeness(data))
+    if artifact_type in {"analysis-result", "snapshot"}:
+        errors.extend(validate_valuation_bridge(data))
 
     if artifact_type == "run-manifest":
         tickers = data.get("tickers", [])

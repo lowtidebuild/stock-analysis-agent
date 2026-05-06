@@ -303,6 +303,33 @@ def generate_docx(data: dict, output_path: str) -> str:
     vr.bold = True
     vr.font.size = Pt(12)
 
+    # -----------------------------------------------------------------------
+    # AUTO DELTA BANNER (Phase B) — first cover-page section when present
+    # -----------------------------------------------------------------------
+    from tools.delta_banner import extract_payload, render_docx_lines  # noqa: E402
+
+    delta_payload = extract_payload(data)
+    if delta_payload:
+        korean_doc = lang == "ko"
+        banner_title = "지난 분석 대비 변화" if korean_doc else "Changes vs Last Analysis"
+        doc.add_paragraph()
+        heading_para = doc.add_paragraph()
+        heading_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        heading_run = heading_para.add_run(banner_title)
+        heading_run.bold = True
+        heading_run.font.size = Pt(13)
+        heading_run.font.color.rgb = COLOR_SECTION
+
+        delta_rows = render_docx_lines(delta_payload, korean=korean_doc)
+        if delta_rows:
+            label_header = "항목" if korean_doc else "Item"
+            value_header = "변화" if korean_doc else "Change"
+            add_table(
+                doc,
+                [label_header, value_header],
+                [[label, value] for label, value in delta_rows],
+            )
+
     doc.add_paragraph()
     doc.add_paragraph("─" * 70)
     doc.add_paragraph()

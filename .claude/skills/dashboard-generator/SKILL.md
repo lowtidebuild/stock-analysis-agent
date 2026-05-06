@@ -75,6 +75,7 @@ Populate each section of `html-template.md` with data from `analysis-result.json
 | `sections.valuation_metrics` | Section 5 | valuation table |
 | `sections.sotp` | Section 5 | SOTP section |
 | `sections.dcf_analysis` | Section 5 | DCF subsection (after SOTP) |
+| `valuation_bridge` (top-level) | Section 5b | `{VALUATION_BRIDGE_SECTION}` (4 anchors + weighted fair value + reconciliation paragraph) |
 | `sections.macro_context` | Section 4/6 | Macro Environment section |
 | `sections.peer_comparison` | Section 6 | peer table rows |
 | `sections.analyst_coverage` | Section 7 | analyst data |
@@ -178,6 +179,28 @@ HTML structure:
 - Methodology note: small text below showing WACC, terminal growth, forecast years
 - If dcf_analysis is absent or null: omit entire subsection
 
+### Valuation Bridge Rendering (if top-level `valuation_bridge` exists)
+
+Place AFTER the DCF / Reverse DCF subsection and BEFORE the Peer Comparison
+section (Section 5b). The bridge reconciles 4 valuation anchors (DCF Base,
+Comp Multiples, Analyst Median Target, our Base Scenario) into a weighted
+fair value plus a ≥50-word `reconciliation_logic` paragraph.
+
+Substitute the `{VALUATION_BRIDGE_SECTION}` placeholder in `html-template.md`
+with the full section markup shown in the Section 5b comment block when
+`valuation_bridge` is present in `analysis-result.json`. When the field is
+absent (older snapshots, or runs without all three input anchors), replace
+the placeholder with an empty string — do NOT render an empty stub.
+
+Rendering rules:
+- 4 anchor cards in a `md:grid-cols-4` grid; show value, weight × 100 as
+  integer percentage, method, and source tag.
+- Implied view colour: `text-red-600` if negative, `text-green-600` if
+  positive, `text-gray-600` if ~0.
+- Pass `reconciliation_logic` through verbatim — do NOT truncate.
+- Display `decision_anchor` as a small footnote so the reader knows which
+  anchor drives the verdict (typically `scenarios.base`).
+
 ### Macro Context Rendering (if sections.macro_context exists)
 
 Place BETWEEN Precision Risk and Peer Comparison sections.
@@ -193,6 +216,32 @@ HTML structure:
   - Confidence badge: High (green), Medium (amber), Low (gray)
 - If risk_slot_allocated is true: note with link to Precision Risk section
 - If macro_context is absent or null: omit entire section
+
+### Auto Delta Banner Rendering (Phase B — `{DELTA_BANNER}` placeholder)
+
+The dashboard skeleton in `references/html-template.md` reserves a
+`{DELTA_BANNER}` placeholder at the top of `<main>`, above the Scenario
+Valuation section. This is the Mode C surface for Phase B Auto Delta Mode.
+
+**Substitution rules**:
+
+1. If the orchestrator pipeline state holds `auto_delta_payload.html`
+   (stdout of `delta-comparator.py compare ... --format html`), substitute
+   that string verbatim.
+2. If no payload is available (no prior snapshot, `--no-delta` toggle,
+   sanitization failure, or empty stdout), substitute **the empty string**.
+   Do NOT render an empty stub, a fabricated banner, or the literal
+   placeholder. Empty-string substitution leaves the surrounding `space-y-8`
+   layout intact because the banner is a peer of other `<section>` blocks.
+3. Never modify the Scenario Valuation, Hero, or Variant View sections to
+   make room for the banner — the placeholder is positioned to keep the rest
+   of the document untouched.
+4. The banner is a self-contained `<section class="delta-banner ...">`. Do
+   not wrap it in another `<section>` or strip its outer element.
+
+When `pipeline_state.auto_delta == false` (because `--no-delta` was passed),
+treat the placeholder substitution as the empty string and skip the
+delta-comparator call entirely.
 
 ### Step 8.6 — Missing Data Handling
 

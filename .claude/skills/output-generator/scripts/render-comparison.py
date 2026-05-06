@@ -23,6 +23,7 @@ import sys
 sys.path.insert(0, str(REPO_ROOT))
 
 from tools.analysis_contract import build_default_report_path  # noqa: E402
+from tools.delta_banner import extract_payload, render_html_banner  # noqa: E402
 from tools.paths import data_path, runtime_path  # noqa: E402
 from tools.source_profile import effective_mode_label, source_profile_label  # noqa: E402
 
@@ -1165,6 +1166,137 @@ def render_relative_valuation(peers: list[dict[str, Any]], korean: bool) -> str:
     """
 
 
+def _format_macro_series_value(series: dict[str, Any]) -> str:
+    value = series.get("value")
+    unit = series.get("unit")
+    if value is None:
+        return "—"
+    if isinstance(value, bool):
+        return escape(str(value))
+    if isinstance(value, (int, float)):
+        normalized = (unit or "").lower()
+        if normalized in {"percent", "%"}:
+            return f"{value:.2f}%"
+        if normalized == "krw":
+            return f"₩{value:,.0f}"
+        if normalized == "usd":
+            return f"${value:,.2f}"
+        if normalized == "bps":
+            return f"{value:.0f}bps"
+        if normalized in {"x", "multiple"}:
+            return f"{value:.2f}x"
+        if normalized:
+            return f"{value:,.2f} {escape(unit)}"
+        # Choose decimals based on magnitude
+        if abs(value) >= 100:
+            return f"{value:,.0f}"
+        return f"{value:,.2f}"
+    text = str(value)
+    return escape(text)
+
+
+def render_macro_context_light(
+    peers: list[dict[str, Any]],
+    macro_payload: dict[str, Any] | None,
+    korean: bool,
+) -> str:
+    """Phase C — Mode B Macro Context (Light).
+
+    Renders 3-5 macro series as compact pills + per-peer narrative card grid.
+    Returns "" when ``macro_payload`` is missing or empty so existing Mode B
+    fixtures stay backward compatible.
+
+    The light bundle deliberately omits the Mode C sensitivity table per
+    OD-2 (Mode B is comparison-first; macro is differentiator highlight only).
+    """
+    if not isinstance(macro_payload, dict) or not macro_payload:
+        return ""
+
+    key_series = macro_payload.get("key_series") if isinstance(macro_payload.get("key_series"), list) else []
+    narrative_per_peer = macro_payload.get("narrative_per_peer") if isinstance(macro_payload.get("narrative_per_peer"), dict) else {}
+
+    if not key_series and not narrative_per_peer:
+        return ""
+
+    # Render compact pill list for key series
+    pill_html: list[str] = []
+    for series in key_series[:5]:
+        if not isinstance(series, dict):
+            continue
+        label = series.get("label") or series.get("id") or ""
+        value_str = _format_macro_series_value(series)
+        tag = series.get("tag")
+        tag_html = f" {tag_badge(tag)}" if tag else ""
+        pill_html.append(
+            f"""
+            <div class="inline-flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-full px-3 py-1.5">
+              <span class="text-slate-500 text-[11px] uppercase tracking-widest">{escape(label)}</span>
+              <span class="text-slate-900 text-sm font-semibold">{value_str}</span>
+              {tag_html}
+            </div>
+            """
+        )
+
+    series_block = ""
+    if pill_html:
+        series_block = (
+            f'<div class="flex flex-wrap gap-3 pb-4 border-b border-slate-100 mb-4">'
+            f'{"".join(pill_html)}</div>'
+        )
+
+    # Per-peer narrative cards
+    narrative_cards: list[str] = []
+    for peer in peers:
+        ticker = peer.get("ticker")
+        if not ticker:
+            continue
+        narrative = narrative_per_peer.get(ticker) if isinstance(narrative_per_peer, dict) else None
+        if not isinstance(narrative, str) or not narrative.strip():
+            continue
+        company = (peer.get("analysis") or {}).get("company_name") or ticker
+        narrative_cards.append(
+            f"""
+            <div>
+              <p class="font-semibold text-slate-900">{escape(ticker)} <span class="text-slate-500 font-medium text-sm">· {escape(company)}</span></p>
+              <p class="text-slate-700 text-sm leading-relaxed mt-1">{escape(narrative.strip())}</p>
+            </div>
+            """
+        )
+
+    # If we have neither pills nor narratives, suppress the section entirely
+    if not series_block and not narrative_cards:
+        return ""
+
+    grid_cols = max(1, min(len(narrative_cards) or 1, 3))
+    narrative_block = ""
+    if narrative_cards:
+        narrative_block = (
+            f'<div class="grid grid-cols-1 md:grid-cols-{grid_cols} gap-4">'
+            f'{"".join(narrative_cards)}</div>'
+        )
+
+    title = (
+        "매크로 컨텍스트 · 종목별 노출 차이"
+        if korean
+        else "Macro Context · Per-Peer Exposure"
+    )
+    subtitle = (
+        "회사타입별 핵심 매크로 지표와 각 종목의 민감도 차이를 한눈에 정리합니다."
+        if korean
+        else "Light bundle of company-type macro series with per-peer sensitivity narrative."
+    )
+    return f"""
+    <section>
+      <h2 class="text-xl font-bold text-slate-900 mb-4">{escape(title)}</h2>
+      <div class="card p-5">
+        <p class="text-slate-500 text-xs mb-4">{escape(subtitle)}</p>
+        {series_block}
+        {narrative_block}
+      </div>
+    </section>
+    """
+
+
 def render_risks_and_catalysts(peers: list[dict[str, Any]], korean: bool) -> str:
     """Per-ticker risks and catalysts side-by-side."""
     cards = []
@@ -1282,6 +1414,12 @@ def render_data_quality_panel(peers: list[dict[str, Any]], korean: bool) -> str:
     """
 
 
+def render_delta_banner(main_analysis: dict[str, Any], korean: bool) -> str:
+    """Phase B Auto Delta banner. Returns "" when no delta payload is present."""
+    payload = extract_payload(main_analysis)
+    return render_html_banner(payload, korean=korean)
+
+
 def render_html(peers: list[dict[str, Any]], main_analysis: dict[str, Any]) -> str:
     language = main_analysis.get("output_language")
     korean = is_korean(language)
@@ -1344,9 +1482,11 @@ def render_html(peers: list[dict[str, Any]], main_analysis: dict[str, Any]) -> s
   </header>
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+    {render_delta_banner(main_analysis, korean)}
     {render_executive_summary(peers, korean, analysis_date)}
     {render_comparison_table(peers)}
     {render_relative_valuation(peers, korean)}
+    {render_macro_context_light(peers, main_analysis.get("macro_context_light"), korean)}
     {render_scenario_cards(peers, korean)}
     {render_variant_views(peers, korean)}
     {render_ranking(peers, korean)}
