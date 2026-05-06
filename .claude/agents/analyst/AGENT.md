@@ -87,6 +87,24 @@ Before writing any paragraph, apply the **Competitor Replacement Test**:
 - "positioned for growth" → must cite specific growth driver + metric
 - "multiple revenue streams" → must cite each stream with approximate % breakdown
 
+**Insight-title rule (added 2026-05-06)**:
+
+Section and subsection titles must state an *insight* with a number, not a *topic*.
+The title carries information; the body adds detail.
+
+Bad (topic-only):
+- "Q3 실적"
+- "경쟁 환경"
+- "Strong Performance"
+- "Valuation Analysis"
+
+Good (insight + number):
+- "Q3 매출 +18% YoY, DTC 강세가 도매 약세 상쇄"
+- "Top-3 점유율 75% — 시장 집중도 가속화"
+- "EV/EBITDA 14배 — 동종 중간값 18배 대비 22% 디스카운트"
+
+If a section has no number-bearing insight, delete it or merge it into the adjacent section.
+
 ---
 
 ## Mode A Execution
@@ -100,6 +118,10 @@ Follow `analysis-framework-briefing.md` exactly:
 6. Identify next catalyst + action signal
 7. Build event timeline: past 90 days (≤8 events) + forward 90 days (≤5 events)
 8. Pattern detection (optional, only if 4+ quarters of data support it)
+
+If delta mode is active (`output/data/{ticker}/latest.json` points to a prior snapshot),
+emit the Old → New table/sentence required by the framework before the main thesis.
+Load the prior snapshot's `analysis-result.json` for the "old" column.
 
 Write to run-local `analysis-result.json` with Mode A fields (see framework for schema).
 Then signal to CLAUDE.md to call `briefing-generator/SKILL.md` for HTML rendering.
@@ -139,6 +161,7 @@ Follow `analysis-framework-dashboard.md` exactly:
 3. R/R Score with color badge selection
 4. 8–10 KPI tiles based on company type
 5. Variant View Q1–Q3 (150–250 words each)
+5a. Include the 4-axis Moat Scorecard in Variant View. Do not skip rows; use N/A only when the moat type does not apply to the business model.
 6. Precision Risk table (3 risks, each with mechanism + EBITDA impact)
 7. Valuation + SOTP
 7a. **DCF Valuation (Mode C/D only, US stocks v1)**
@@ -209,6 +232,11 @@ Then signal to CLAUDE.md to call `dashboard-generator/SKILL.md` for HTML renderi
 
 Follow `analysis-framework-memo.md` and `investment-memo-prompt.md` exactly.
 
+If delta mode is active (`output/data/{ticker}/latest.json` points to a prior snapshot),
+emit the Old → New table before the main thesis. Reference the prior snapshot's
+`analysis-result.json` for verdict, R/R Score, scenario probabilities, fair value,
+and top thesis pillar.
+
 **Critical**: Read `investment-memo-prompt.md` BEFORE writing any analysis. The philosophy in that document governs quality standards.
 
 Write sections **sequentially**. Do NOT rewrite earlier sections after completing later ones.
@@ -216,6 +244,7 @@ Write sections **sequentially**. Do NOT rewrite earlier sections after completin
 Section order:
 1. Executive Summary (thesis in ONE sentence)
 2. Business Overview & Competitive Position
+2a. 4-axis Moat Scorecard (Network Effects / Switching Costs / Scale Economies / Intangible Assets). Do not skip rows; use N/A only when the moat type does not apply to the business model.
 3. Financial Performance (tables + narrative)
 4. Valuation Analysis (SOTP if applicable)
 4a. **DCF Valuation**: Same as Mode C step 7a above. Write to `sections.dcf_analysis`.
