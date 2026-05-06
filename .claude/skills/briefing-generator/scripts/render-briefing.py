@@ -23,6 +23,7 @@ import sys
 sys.path.insert(0, str(REPO_ROOT))
 
 from tools.analysis_contract import build_default_report_path  # noqa: E402
+from tools.delta_banner import extract_payload, render_html_banner  # noqa: E402
 from tools.paths import data_path, runtime_path  # noqa: E402
 from tools.source_profile import source_confidence_label  # noqa: E402
 
@@ -189,6 +190,17 @@ def render_timeline(events: Any, empty_text: str) -> str:
     return "".join(rows)
 
 
+def render_delta_banner(data: dict[str, Any]) -> str:
+    """Phase B Auto Delta banner for Mode A briefings.
+
+    Returns "" when no delta payload is present in the analysis-result.json.
+    Korean-by-default (Mode A primary audience); English if output_language
+    starts with 'en'.
+    """
+    korean = (data.get("output_language") or "").lower() != "en"
+    return render_html_banner(extract_payload(data), korean=korean)
+
+
 def build_briefing_html(data: dict[str, Any]) -> str:
     sections = data.get("sections") if isinstance(data.get("sections"), dict) else {}
     key_metrics = data.get("key_metrics") if isinstance(data.get("key_metrics"), dict) else {}
@@ -237,6 +249,7 @@ def build_briefing_html(data: dict[str, Any]) -> str:
 </head>
 <body class="bg-gray-950 text-gray-100 min-h-screen">
   <main class="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+    {render_delta_banner(data)}
     <section class="glass rounded-3xl border border-white/10 overflow-hidden">
       <div class="bg-gradient-to-br from-slate-900 via-blue-950 to-blue-700 p-6 sm:p-8">
         <div class="flex flex-col lg:flex-row justify-between gap-6">

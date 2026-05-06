@@ -23,6 +23,7 @@ import sys
 sys.path.insert(0, str(REPO_ROOT))
 
 from tools.analysis_contract import build_default_report_path  # noqa: E402
+from tools.delta_banner import extract_payload, render_html_banner  # noqa: E402
 from tools.paths import data_path, runtime_path  # noqa: E402
 from tools.source_profile import effective_mode_label, source_profile_label  # noqa: E402
 
@@ -1282,6 +1283,12 @@ def render_data_quality_panel(peers: list[dict[str, Any]], korean: bool) -> str:
     """
 
 
+def render_delta_banner(main_analysis: dict[str, Any], korean: bool) -> str:
+    """Phase B Auto Delta banner. Returns "" when no delta payload is present."""
+    payload = extract_payload(main_analysis)
+    return render_html_banner(payload, korean=korean)
+
+
 def render_html(peers: list[dict[str, Any]], main_analysis: dict[str, Any]) -> str:
     language = main_analysis.get("output_language")
     korean = is_korean(language)
@@ -1344,6 +1351,7 @@ def render_html(peers: list[dict[str, Any]], main_analysis: dict[str, Any]) -> s
   </header>
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+    {render_delta_banner(main_analysis, korean)}
     {render_executive_summary(peers, korean, analysis_date)}
     {render_comparison_table(peers)}
     {render_relative_valuation(peers, korean)}

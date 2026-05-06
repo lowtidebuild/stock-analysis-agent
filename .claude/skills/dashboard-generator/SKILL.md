@@ -217,6 +217,32 @@ HTML structure:
 - If risk_slot_allocated is true: note with link to Precision Risk section
 - If macro_context is absent or null: omit entire section
 
+### Auto Delta Banner Rendering (Phase B — `{DELTA_BANNER}` placeholder)
+
+The dashboard skeleton in `references/html-template.md` reserves a
+`{DELTA_BANNER}` placeholder at the top of `<main>`, above the Scenario
+Valuation section. This is the Mode C surface for Phase B Auto Delta Mode.
+
+**Substitution rules**:
+
+1. If the orchestrator pipeline state holds `auto_delta_payload.html`
+   (stdout of `delta-comparator.py compare ... --format html`), substitute
+   that string verbatim.
+2. If no payload is available (no prior snapshot, `--no-delta` toggle,
+   sanitization failure, or empty stdout), substitute **the empty string**.
+   Do NOT render an empty stub, a fabricated banner, or the literal
+   placeholder. Empty-string substitution leaves the surrounding `space-y-8`
+   layout intact because the banner is a peer of other `<section>` blocks.
+3. Never modify the Scenario Valuation, Hero, or Variant View sections to
+   make room for the banner — the placeholder is positioned to keep the rest
+   of the document untouched.
+4. The banner is a self-contained `<section class="delta-banner ...">`. Do
+   not wrap it in another `<section>` or strip its outer element.
+
+When `pipeline_state.auto_delta == false` (because `--no-delta` was passed),
+treat the placeholder substitution as the empty string and skip the
+delta-comparator call entirely.
+
 ### Step 8.6 — Missing Data Handling
 
 For any section where data is null or Grade D:

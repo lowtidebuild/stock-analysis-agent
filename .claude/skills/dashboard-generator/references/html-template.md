@@ -116,6 +116,17 @@ This file provides the complete structural skeleton for the Mode C Deep Dive Das
 <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
 
 <!-- ============================================================ -->
+<!-- SECTION 0: AUTO DELTA BANNER (Phase B)                        -->
+<!-- ============================================================ -->
+<!-- {DELTA_BANNER} placeholder. The orchestrator substitutes this
+     with the HTML emitted by `delta-comparator.py compare ... --format html`
+     when a prior snapshot exists. When no delta payload is available
+     (first analysis, --no-delta flag, or sanitization failure),
+     substitute the empty string — do NOT leave the literal placeholder
+     and do NOT render an empty stub. -->
+{DELTA_BANNER}
+
+<!-- ============================================================ -->
 <!-- SECTION 2: SCENARIO VALUATION (dark gradient card)            -->
 <!-- ============================================================ -->
 <section id="section-scenarios" class="rounded-2xl overflow-hidden grad-ani" style="background: linear-gradient(135deg, #0d1b38, #1e3f80, #2a56b0, #142a55);">
