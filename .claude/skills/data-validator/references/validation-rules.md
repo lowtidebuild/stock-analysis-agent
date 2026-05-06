@@ -73,6 +73,11 @@ Use these ranges in Step 5c (Sanity Check). Values outside range → flag as sus
 - Market cap / Revenue < 0.1x → sanity check (possible data error)
 - Market cap / Revenue > 50x → sanity check (extremely high premium)
 
+**Peer-comp statistics block**:
+- Every peer set with ≥3 companies must include Min / 25th / Median / 75th / Max for each selected operating metric and valuation multiple.
+- For peer sets with n<5, 25th and 75th percentile values are interpolated and must be labelled `(interp, n=N)`.
+- Quartiles provide context only; they do not determine the investment verdict. R/R Score remains the ranking mechanism.
+
 ---
 
 ## Section D — Cross-Reference Disagreement Rules
@@ -89,15 +94,22 @@ When two independent sources disagree on the same data point:
 **Source hierarchy for disagreement resolution (US)**:
 1. SEC filing (10-K, 10-Q, 8-K earnings) — most primary
 2. Company earnings press release (IR website)
-3. Financial portals (Yahoo Finance, Google Finance)
-4. News articles
-5. Analyst reports (opinion, not fact)
+3. Earnings call transcript (management commentary; audited statements referenced during call)
+4. Sell-side analyst estimates / consensus (FactSet, Bloomberg, Refinitiv) — only when there is no primary disclosure, e.g. NTM revenue
+5. Financial portals (Yahoo Finance, Google Finance) — aggregator only
+6. Industry research (McKinsey, Gartner, trade bodies) — sizing/TAM only
+7. News articles
+8. Analyst opinion pieces (target prices, ratings) — opinion, not fact
 
 **Source hierarchy for disagreement resolution (KR)**:
 1. DART 전자공시 (공식 재무제표) — most primary
-2. 네이버금융 (official aggregation)
-3. FnGuide
-4. General web search
+2. 사업보고서/분기보고서 본문 및 IR 실적발표 자료 (회사 공시/IR 원문)
+3. IR 컨퍼런스콜 transcript 또는 회사 Q&A 자료 (경영진 commentary)
+4. Sell-side consensus / FnGuide estimates — forward metrics only when primary disclosure is unavailable
+5. 네이버금융 (official aggregation)
+6. FnGuide historical data
+7. 산업 리서치/협회 자료 — TAM/산업 규모 전용
+8. General web search / news
 
 ---
 
@@ -125,3 +137,33 @@ When two independent sources disagree on the same data point:
 7. **밸류업 프로그램**: Note if company has submitted a Value-up (기업가치 제고) plan. Check KIND corporate disclosures. This is relevant for valuation premium/discount assessment.
 
 8. **Earnings announcement format**: Korean companies report "잠정실적" (preliminary) before the formal DART filing. Preliminary figures are Grade C unless confirmed by DART filing.
+
+---
+
+## Section F — Cross-Source Sanity
+
+These checks are layered on top of Section C sector ranges. They produce `sanity_flags` and do not automatically downgrade confidence grades unless a human validator confirms the source data is wrong.
+
+### F1. Margin Invariant
+Always true by definition: Gross Margin ≥ EBITDA Margin ≥ Net Margin.
+
+Violation → flag MAJOR. Almost always an input error (unit mismatch, sign error, or adjusted-vs-GAAP confusion).
+
+### F2. Multiple Hard-Range Sanity
+| Multiple | Range | Action if outside |
+|---|---|---|
+| EV/Revenue | 0.5x–30x | Flag MINOR (regulated utilities can go below; biotech can exceed) |
+| EV/EBITDA | 4x–60x | Flag MINOR (negative EBITDA → use EV/Revenue) |
+| P/E | 5x–200x | Flag MINOR (>200 often means near-zero earnings; prefer P/S) |
+
+### F3. Growth-Multiple Correlation
+- P/E > 80x with revenue growth < 10% → flag MINOR (multiple expansion not justified by growth)
+- P/E < 10x with revenue growth > 30% → flag MINOR (likely cyclical earnings or accounting one-time)
+
+### F4. Comparability Red Flags (peer set inputs)
+Peer comp data is unreliable when:
+- Peer fiscal-year-end differs by >3 months from target (mixing Q3 vs Q4 data points)
+- Peer business mix is materially different (pure-play vs conglomerate)
+- Peer is in distress (negative TTM EBITDA, going-concern note in 10-K)
+
+When ≥1 of the above applies, exclude that peer with `_excluded_reason` rather than averaging it into the peer set.

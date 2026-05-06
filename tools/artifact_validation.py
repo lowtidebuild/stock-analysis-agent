@@ -176,6 +176,28 @@ CONTEXT_BUDGET_REQUIRED_ROUTING_ITEMS = {
         "context_budget_measurement",
     },
 }
+MULTIPLE_RANGES = {
+    # Absolute hard sanity ranges, distinct from the sector-specific ranges in
+    # validation-rules.md Section C.
+    "ev_revenue": (0.5, 30.0),
+    "ev_ebitda": (4.0, 60.0),
+    "p_e": (5.0, 200.0),
+}
+SANITY_METRIC_ALIASES = {
+    "gross_margin_pct": ("gross_margin_pct", "gross_margin", "gross_margin_percent"),
+    "ebitda_margin_pct": ("ebitda_margin_pct", "ebitda_margin", "adjusted_ebitda_margin"),
+    "net_margin_pct": ("net_margin_pct", "net_margin", "net_income_margin"),
+    "ev_revenue": ("ev_revenue", "ev_sales", "ev_to_revenue", "ev_revenue_multiple", "ev_sales_multiple"),
+    "ev_ebitda": ("ev_ebitda", "ev_to_ebitda", "ev_ebitda_multiple"),
+    "p_e": ("p_e", "pe", "pe_ratio", "p_e_ratio"),
+    "revenue_growth_pct": (
+        "revenue_growth_pct",
+        "revenue_growth",
+        "revenue_growth_yoy",
+        "revenue_growth_yoy_pct",
+        "rev_growth_pct",
+    ),
+}
 MODE_C_REQUIRED_SECTIONS = (
     "variant_view_q1",
     "variant_view_q2",
@@ -457,6 +479,99 @@ def validate_formula_metrics(
                 )
 
     return errors
+
+
+def check_margin_invariant(metrics: dict[str, Any]) -> list[dict[str, str]]:
+    """Flag impossible margin ordering: Gross >= EBITDA >= Net."""
+    flags: list[dict[str, str]] = []
+    g = _metric_value(metrics.get("gross_margin_pct"))
+    e = _metric_value(metrics.get("ebitda_margin_pct"))
+    n = _metric_value(metrics.get("net_margin_pct"))
+    if g is not None and e is not None and g < e:
+        flags.append(
+            {
+                "rule": "margin_invariant",
+                "severity": "MAJOR",
+                "detail": f"Gross margin ({g}%) < EBITDA margin ({e}%) - check inputs",
+            }
+        )
+    if e is not None and n is not None and e < n:
+        flags.append(
+            {
+                "rule": "margin_invariant",
+                "severity": "MAJOR",
+                "detail": f"EBITDA margin ({e}%) < Net margin ({n}%) - check inputs",
+            }
+        )
+    return flags
+
+
+def check_multiple_ranges(metrics: dict[str, Any]) -> list[dict[str, str]]:
+    flags: list[dict[str, str]] = []
+    for key, (lo, hi) in MULTIPLE_RANGES.items():
+        value = _metric_value(metrics.get(key))
+        if value is None or value < 0:
+            continue
+        if value < lo or value > hi:
+            flags.append(
+                {
+                    "rule": "multiple_range",
+                    "severity": "MINOR",
+                    "detail": f"{key}={value}x outside hard range [{lo}, {hi}]",
+                }
+            )
+    return flags
+
+
+def check_growth_multiple_correlation(metrics: dict[str, Any]) -> list[dict[str, str]]:
+    """Flag valuation/growth combinations that need a human sanity check."""
+    pe = _metric_value(metrics.get("p_e"))
+    growth = _metric_value(metrics.get("revenue_growth_pct"))
+    flags: list[dict[str, str]] = []
+    if pe is None or growth is None:
+        return flags
+    if pe > 80 and growth < 10:
+        flags.append(
+            {
+                "rule": "growth_multiple_mismatch",
+                "severity": "MINOR",
+                "detail": f"P/E={pe}x with revenue growth only {growth}% - likely outlier or earnings dip",
+            }
+        )
+    if pe < 10 and growth > 30:
+        flags.append(
+            {
+                "rule": "growth_multiple_mismatch",
+                "severity": "MINOR",
+                "detail": f"P/E={pe}x with revenue growth {growth}% - verify (possible cyclical or one-time gain)",
+            }
+        )
+    return flags
+
+
+def normalize_sanity_metrics(metrics: dict[str, Any]) -> dict[str, Any]:
+    """Return canonical metric keys used by cross-source sanity rules."""
+    normalized: dict[str, Any] = {}
+    for canonical, aliases in SANITY_METRIC_ALIASES.items():
+        for alias in aliases:
+            if alias in metrics:
+                normalized[canonical] = metrics[alias]
+                break
+    return normalized
+
+
+def build_sanity_flags(metrics: dict[str, Any]) -> list[dict[str, str]]:
+    normalized = normalize_sanity_metrics(metrics)
+    flags: list[dict[str, str]] = []
+    flags.extend(check_margin_invariant(normalized))
+    flags.extend(check_multiple_ranges(normalized))
+    flags.extend(check_growth_multiple_correlation(normalized))
+    return flags
+
+
+def build_validated_data_sanity_flags(data: dict[str, Any]) -> list[dict[str, str]]:
+    metrics = data.get("validated_metrics") if isinstance(data.get("validated_metrics"), dict) else data
+    return build_sanity_flags(metrics)
 
 
 def validate_tier2_raw_contract(data: dict[str, Any], path: str = "$") -> list[str]:
@@ -1921,6 +2036,7 @@ def validate_artifact_file(
     flags: list[str] = []
     security_flags: list[str] = []
     warnings: list[dict[str, str]] = []
+    sanity_flags = build_validated_data_sanity_flags(data) if artifact_type == "validated-data" else []
     sanitization_required = _requires_sanitization_check(artifact_type, path)
     sanitization_present = _has_sanitization_block(data)
 
@@ -1958,6 +2074,7 @@ def validate_artifact_file(
         "security_flags": security_flags,
         "quality_flag": flags[0] if flags else None,
         "quality_flags": flags,
+        "sanity_flags": sanity_flags,
         "warnings": warnings,
     }
 

@@ -195,6 +195,12 @@ From `validation-rules.md` sanity range tables, check each ratio against sector-
 
 Sanity alerts → log but do NOT automatically downgrade grade. Include in validated output under `sanity_alerts`.
 
+Also run Section F cross-source sanity checks and include the structured output under
+`_validation.sanity_flags[]`:
+- `margin_invariant` (MAJOR): Gross Margin must be ≥ EBITDA Margin ≥ Net Margin.
+- `multiple_range` (MINOR): EV/Revenue, EV/EBITDA, and P/E must sit inside hard absolute sanity ranges.
+- `growth_multiple_mismatch` (MINOR): extreme P/E must be directionally consistent with revenue growth.
+
 ### Step 5.4a — FRED Data Sanity Checks
 
 **Condition**: Only run if `macro_context.structured` exists in tier2-raw.json.
