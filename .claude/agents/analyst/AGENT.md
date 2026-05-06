@@ -87,7 +87,7 @@ Before writing any paragraph, apply the **Competitor Replacement Test**:
 - "positioned for growth" → must cite specific growth driver + metric
 - "multiple revenue streams" → must cite each stream with approximate % breakdown
 
-**Insight-title rule (added 2026-05-06)**:
+**Insight-title rule**:
 
 Section and subsection titles must state an *insight* with a number, not a *topic*.
 The title carries information; the body adds detail.

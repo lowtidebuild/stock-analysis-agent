@@ -155,7 +155,7 @@ Mode A scenario, date, and timeline numbers.
 
 ---
 
-## Section F — Insight-Title Rule (added 2026-05-06)
+## Section F — Insight-Title Rule
 
 For Mode C and Mode D outputs, every H2/H3 section title is checked.
 
