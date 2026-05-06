@@ -19,6 +19,7 @@ REPO_ROOT = THIS_FILE.parents[4]
 sys.path.insert(0, str(REPO_ROOT))
 
 from tools.analysis_contract import normalize_metric_mapping  # noqa: E402
+from tools.artifact_validation import build_validated_data_sanity_flags  # noqa: E402
 
 
 def normalize_payload(artifact_type: str, payload: dict) -> tuple[dict, list[str]]:
@@ -28,6 +29,11 @@ def normalize_payload(artifact_type: str, payload: dict) -> tuple[dict, list[str
     if artifact_type == "validated-data":
         normalized_metrics, metric_warnings = normalize_metric_mapping(payload.get("validated_metrics", {}), market=market)
         payload["validated_metrics"] = normalized_metrics
+        validation_meta = payload.get("_validation")
+        if not isinstance(validation_meta, dict):
+            validation_meta = {}
+        validation_meta["sanity_flags"] = build_validated_data_sanity_flags(payload)
+        payload["_validation"] = validation_meta
         warnings.extend(metric_warnings)
     elif artifact_type in {"analysis-result", "snapshot"}:
         normalized_metrics, metric_warnings = normalize_metric_mapping(payload.get("key_metrics", {}), market=market)
