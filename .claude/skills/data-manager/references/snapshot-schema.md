@@ -99,6 +99,7 @@ Readers must support legacy full-snapshot `latest.json` files, but writers must 
 | `top_risks` | array | YES | Max 3 risk strings |
 | `verdict` | string | YES | Overweight / Neutral / Underweight (or Korean equivalents) |
 | `upcoming_catalysts` | array | YES | Dated catalyst events |
+| `thesis_pillars` | array | NO | 3-5 falsifiable thesis pillars; legacy snapshots default to `[]` |
 | `report_path` | string | NO | Relative path to output file |
 | `data_sources_used` | array | YES | List of source tags used |
 
@@ -211,6 +212,9 @@ Grade meanings: A=규제기관 공시 원본+산술 일관성, B=2+소스 교차
   {
     "date": "<CATALYST_DATE>",
     "event": "<SOURCE_BACKED_EVENT>",
+    "category": "Earnings",
+    "impact": "H",
+    "pre_announce_risk": false,
     "significance": "high",
     "leading_indicators": "<SOURCE_BACKED_LEADING_INDICATOR>"
   },
@@ -223,7 +227,31 @@ Grade meanings: A=규제기관 공시 원본+산술 일관성, B=2+소스 교차
 ]
 ```
 
-`significance` must be one of: "high", "medium", "low"
+`significance` must be one of: "high", "medium", "low".
+`category`, `impact`, and `pre_announce_risk` are additive fields used by
+`catalyst-aggregator.py`; legacy catalyst entries without them are normalized
+when building `output/catalyst-calendar.json`.
+
+---
+
+## `thesis_pillars[]` (added 2026-05-06)
+
+Each snapshot stores 3-5 pillars derived from the analyst output. Pillars are
+falsifiable claims that can be checked against future data.
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `pillar` | string | YES | One sentence: "Margin expansion from pricing power" |
+| `original_expectation` | string | YES | Numerical target: "GM expands from 32% to 35% by FY27" |
+| `current_status` | string | YES | "On track" / "Behind" / "Ahead" / "Pending" |
+| `trend` | string | YES | "Stable" / "Improving" / "Concerning" / "Watch" |
+| `last_evidence` | string | YES | Most recent data point that informs status |
+| `last_evidence_date` | YYYY-MM-DD | YES | |
+
+Falsifiability rule: every pillar MUST have a numerical or binary outcome.
+"Strong management" is not a pillar. "FCF conversion >85% sustained for >=4Q" is.
+
+Legacy snapshots without `thesis_pillars` are read as an empty list.
 
 ---
 

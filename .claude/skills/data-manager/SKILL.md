@@ -4,7 +4,7 @@
 **Triggered by**: CLAUDE.md after Step 9 (quality check) for persistence; directly for Workflow 3 commands
 **Reads**: run-local `analysis-result.json`, optional run-local `evidence-pack.json`, optional run-local `context-budget.json`, `output/watchlist.json`, `output/portfolio.json`
 **Writes**: Snapshot files, `output/watchlist.json`, `output/portfolio.json`, `output/catalyst-calendar.json`
-**References**: `references/snapshot-schema.md`, `references/watchlist-schema.md`, `references/portfolio-schema.md`
+**References**: `references/snapshot-schema.md`, `references/watchlist-schema.md`, `references/portfolio-schema.md`, `references/catalyst-schema.md`
 
 ---
 
@@ -21,6 +21,10 @@ python .claude/skills/data-manager/scripts/snapshot-manager.py save \
 ```
 
 Expected output: confirms `output/data/{ticker}/snapshots/{snapshot_id}/analysis-result.json` created, sibling artifacts such as `validated-data.json`, `evidence-pack.json`, `context-budget.json`, and raw artifacts promoted when present, and `output/data/{ticker}/latest.json` updated as a pointer.
+
+Snapshots persist `thesis_pillars[]` when present in `analysis-result.json`.
+Legacy or analyst-missing pillars default to an empty list, but Mode A/C/D
+analyses should emit 3-5 falsifiable pillars.
 
 If script fails because the input is not schema-compliant, run:
 
@@ -49,6 +53,9 @@ python .claude/skills/data-manager/scripts/catalyst-aggregator.py build
 ```
 
 This reads all watchlist snapshot files and aggregates upcoming catalysts into `output/catalyst-calendar.json`.
+Each catalyst record includes `category` (Earnings / Corporate / Industry / Macro),
+`impact` (H/M/L), and `pre_announce_risk` (boolean). Legacy records without
+these fields are normalized at read time.
 
 ### Step 10.4 — Confirm Persistence
 
@@ -134,6 +141,18 @@ NVDA     | 9.2      | $875.00  | +8.1%   | PRICE_MOVE_5PCT
 
 Catalyst calendar rebuilt: {N} events in next 30 days
 ```
+
+### Delta Mode Pillar Diff
+
+When comparing an updated snapshot against the prior one, include a pillar-by-pillar
+diff alongside R/R and verdict changes:
+
+| Pillar | Prior status | Current status | Trend | New evidence |
+|---|---|---|---|---|
+| (per-pillar) | (per-pillar) | (per-pillar) | (per-pillar) | (per-pillar) |
+
+If a pillar disappeared between snapshots, mark `Dropped (analyst no longer cites)`.
+If a pillar appeared, mark `New (added current snapshot)`.
 
 ### Step B.4 — Portfolio Registration
 

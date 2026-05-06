@@ -141,6 +141,19 @@ Display:
 
 If macro_context is null or absent: omit this subsection entirely.
 
+### 섹터 트레이딩 멀티플 컨텍스트 (peer_set >=3 일 때만)
+
+Add 1-2 sentences after the macro factors block when peer set has at least 3
+companies with comparable EV/EBITDA data:
+
+`"{sector} 섹터는 현재 EV/EBITDA 중간값 {Y}배, 5년 평균 {Z}배에 거래 중이다.
+{ticker}는 EV/EBITDA {X}배로 섹터 중간값 대비 {(X-Y)/Y*100:+.1f}% 프리미엄/디스카운트.
+이 차이는 {one specific factor — 성장률 격차, 마진 격차, 시장 지위 등} 때문으로 보인다."`
+
+**작성 규칙**: 프리미엄/디스카운트의 근거는 1개의 비교 가능한 사실(growth gap,
+margin gap, share position)로 한정한다. "qualitative reasons"이라고 쓰면
+anti-generic 위반.
+
 ### Macro Sensitivity Card (Mode C — if `sections.macro_sensitivity` exists)
 
 Display a card with:

@@ -96,6 +96,7 @@ def ensure_snapshot_metadata(snapshot: dict[str, Any], ticker: str) -> dict[str,
     data.setdefault("ticker", ticker.upper())
     data.setdefault("analysis_date", datetime.now(timezone.utc).date().isoformat())
     data.setdefault("snapshot_saved_at", utc_now_iso())
+    data.setdefault("thesis_pillars", [])
     return data
 
 

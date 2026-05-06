@@ -32,6 +32,22 @@ BASE_DIR = find_repo_root(__file__)
 WATCHLIST_PATH = data_path("watchlist.json")
 CALENDAR_PATH = data_path("catalyst-calendar.json")
 
+CATEGORY_KEYWORDS = {
+    "Earnings": ["earnings", "quarterly", "annual", "10-q", "10-k", "실적", "분기", "결산"],
+    "Corporate": [
+        "product launch", "fda", "approval", "lockup", "m&a", "acquisition",
+        "merger", "spin-off", "buyback", "dividend", "guidance",
+        "신제품", "승인", "인수", "합병", "배당", "자사주", "가이던스",
+    ],
+    "Industry": ["conference", "trade show", "expo", "industry data", "컨퍼런스", "전시회", "산업 통계"],
+    "Macro": ["fomc", "fed", "cpi", "gdp", "jobs", "ecb", "boj", "bok", "금통위", "한은", "물가지수", "고용지표"],
+}
+IMPACT_KEYWORDS = {
+    "H": ["earnings", "fda", "guidance", "m&a", "fomc", "실적", "승인", "가이던스"],
+    "M": ["product launch", "conference", "신제품", "컨퍼런스"],
+    "L": ["industry data", "expo", "산업 통계", "전시회"],
+}
+
 
 def atomic_write(path: Path, data: dict):
     tmp = path.with_suffix(".tmp")
@@ -45,6 +61,32 @@ def load_json(path: Path) -> dict:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
     return {}
+
+
+def classify_category(event_text: str) -> str:
+    lowered = (event_text or "").lower()
+    for category, keywords in CATEGORY_KEYWORDS.items():
+        if any(keyword.lower() in lowered for keyword in keywords):
+            return category
+    return "Corporate"
+
+
+def classify_impact(event_text: str) -> str:
+    lowered = (event_text or "").lower()
+    for impact, keywords in IMPACT_KEYWORDS.items():
+        if any(keyword.lower() in lowered for keyword in keywords):
+            return impact
+    return "M"
+
+
+def build_catalyst_record(raw: dict) -> dict:
+    event_text = str(raw.get("event") or raw.get("description") or raw.get("event_type") or "")
+    return {
+        **raw,
+        "category": raw.get("category") or classify_category(event_text),
+        "impact": raw.get("impact") or classify_impact(event_text),
+        "pre_announce_risk": bool(raw.get("pre_announce_risk", False)),
+    }
 
 
 def cmd_build():
@@ -87,15 +129,17 @@ def cmd_build():
             event_date = cat.get("date", "")
             # Only include future events (date >= today)
             if event_date and event_date >= today:
-                events.append({
+                events.append(build_catalyst_record({
                     "date": event_date,
                     "ticker": ticker,
                     "market": market,
                     "event_type": cat.get("event_type", cat.get("event", "unknown")),
+                    "event": cat.get("event", cat.get("description", cat.get("event_type", ""))),
                     "description": cat.get("description", cat.get("event", "")),
                     "significance": cat.get("significance", "medium"),
+                    "source": cat.get("source", snap_path_str),
                     "source_snapshot": snap_path_str,
-                })
+                }))
 
     # Sort by date
     events.sort(key=lambda x: x["date"])
@@ -153,16 +197,16 @@ def cmd_show(days: int, ticker_filter: str = None):
     print(f"{'Upcoming Catalysts':^80}")
     print(f"{'Next ' + str(days) + ' days — as of ' + today_str:^80}")
     print(sep)
-    print(f"{'Date':<12} {'Ticker':<10} {'Market':<7} {'Significance':<13} {'Event'}")
+    print(f"{'Date':<12} {'Ticker':<10} {'Market':<7} {'Impact':<8} {'Category':<10} {'Event'}")
     print(sep)
 
     for e in filtered:
-        sig = e.get("significance", "medium").upper()
-        sig_marker = "!!!" if sig == "HIGH" else ("!!" if sig == "MEDIUM" else "!")
+        impact = e.get("impact") or {"high": "H", "medium": "M", "low": "L"}.get(str(e.get("significance", "medium")).lower(), "M")
+        category = e.get("category", "Corporate")
         desc = e.get("description") or e.get("event_type", "")
         if len(desc) > 45:
             desc = desc[:42] + "..."
-        print(f"{e['date']:<12} {e['ticker']:<10} {e['market']:<7} {sig_marker + ' ' + sig:<13} {desc}")
+        print(f"{e['date']:<12} {e['ticker']:<10} {e['market']:<7} {impact:<8} {category:<10} {desc}")
 
     print(sep)
     print(f"Total: {len(filtered)} events | Calendar built: {calendar.get('build_date', 'unknown')}")

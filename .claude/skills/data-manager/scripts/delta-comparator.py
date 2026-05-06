@@ -179,6 +179,37 @@ def compare_catalysts(old_snap: dict, new_snap: dict):
     }
 
 
+def compare_thesis_pillars(old_snap: dict, new_snap: dict) -> list[dict]:
+    def pillar_key(item):
+        if not isinstance(item, dict):
+            return str(item).strip().lower()
+        return str(item.get("pillar") or item.get("title") or item).strip().lower()
+
+    old_map = {pillar_key(item): item for item in old_snap.get("thesis_pillars", []) if pillar_key(item)}
+    new_map = {pillar_key(item): item for item in new_snap.get("thesis_pillars", []) if pillar_key(item)}
+    rows = []
+    for key in sorted(set(old_map) | set(new_map)):
+        old_item = old_map.get(key)
+        new_item = new_map.get(key)
+        if old_item is None:
+            change = "New"
+        elif new_item is None:
+            change = "Dropped"
+        elif old_item.get("current_status") != new_item.get("current_status") or old_item.get("trend") != new_item.get("trend"):
+            change = "Changed"
+        else:
+            change = "Unchanged"
+        rows.append({
+            "pillar": (new_item or old_item or {}).get("pillar") if isinstance(new_item or old_item, dict) else key,
+            "prior_status": old_item.get("current_status") if isinstance(old_item, dict) else None,
+            "current_status": new_item.get("current_status") if isinstance(new_item, dict) else None,
+            "trend": new_item.get("trend") if isinstance(new_item, dict) else None,
+            "new_evidence": new_item.get("last_evidence") if isinstance(new_item, dict) else None,
+            "change": change,
+        })
+    return rows
+
+
 def build_summary(delta: dict) -> list:
     """Generate human-readable summary of significant changes."""
     summary = []
@@ -218,6 +249,10 @@ def build_summary(delta: dict) -> list:
     if delta["catalyst_changes"]["new_catalysts"]:
         cats = delta["catalyst_changes"]["new_catalysts"]
         summary.append(f"{len(cats)} new catalyst(s) identified")
+
+    pillar_changes = [row for row in delta.get("thesis_pillar_changes", []) if row.get("change") in {"New", "Dropped", "Changed"}]
+    if pillar_changes:
+        summary.append(f"{len(pillar_changes)} thesis pillar change(s) identified")
 
     return summary if summary else ["No significant changes detected"]
 
@@ -275,6 +310,7 @@ def build_delta_report(ticker: str, old_date: str, new_date: str, data_root: str
         "scenario_changes": compare_scenarios(old_snap, new_snap),
         "risk_changes": compare_risks(old_snap, new_snap),
         "catalyst_changes": compare_catalysts(old_snap, new_snap),
+        "thesis_pillar_changes": compare_thesis_pillars(old_snap, new_snap),
     }
 
     delta["summary"] = build_summary(delta)

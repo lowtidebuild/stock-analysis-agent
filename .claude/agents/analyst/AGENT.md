@@ -124,6 +124,9 @@ emit the Old → New table/sentence required by the framework before the main th
 Load the prior snapshot's `analysis-result.json` for the "old" column.
 
 Write to run-local `analysis-result.json` with Mode A fields (see framework for schema).
+For Mode A, C, and D, include `thesis_pillars[]` with 3-5 falsifiable pillars.
+Each pillar must have a numerical or binary outcome, current status, trend, and
+latest evidence. Mode B is comparison-focused and may omit pillars.
 Then signal to CLAUDE.md to call `briefing-generator/SKILL.md` for HTML rendering.
 
 **Mode A minimum quality gates** (self-check before finalizing):
@@ -209,6 +212,10 @@ Follow `analysis-framework-dashboard.md` exactly:
       - If factors are contextual → include in `macro_context` narrative section only
     - Write `sections.macro_context` to `analysis-result.json`
     - If `macro_context` is null or absent: skip this step entirely
+    - Mode C only: if `peer_set >= 3` and peer median EV/EBITDA is computable,
+      emit the sector trading-multiple context line in the macro section. Source
+      5-year sector average from FRED if available; otherwise use peer history
+      if quarterly snapshots exist, or state "historical sector mean unavailable".
 
     **Macro sensitivity mapping by company type:**
 
@@ -459,6 +466,16 @@ request that only succeeded through yfinance must be written as
     {"date": "<CATALYST_DATE>", "event_type": "earnings", "description": "<SOURCE_BACKED_EARNINGS_EVENT>", "significance": "high"},
     {"date": "<CATALYST_DATE>", "event_type": "product", "description": "<SOURCE_BACKED_PRODUCT_EVENT>", "significance": "medium"}
   ],
+  "thesis_pillars": [
+    {
+      "pillar": "<FALSIFIABLE_THESIS_PILLAR>",
+      "original_expectation": "<NUMERICAL_OR_BINARY_TARGET>",
+      "current_status": "On track",
+      "trend": "Stable",
+      "last_evidence": "<LATEST_SOURCE_BACKED_DATA_POINT>",
+      "last_evidence_date": "<YYYY-MM-DD>"
+    }
+  ],
   "sections": {
     "variant_view_q1": "...",
     "variant_view_q2": "...",
@@ -529,6 +546,7 @@ Before writing any output, verify:
 - [ ] All Grade D metrics excluded from quantitative analysis
 - [ ] All claims have source tags
 - [ ] No banned phrases used without quantification
+- [ ] Mode A/C/D include 3-5 falsifiable `thesis_pillars[]` (Mode B may omit)
 - [ ] Mode-specific minimum quality gates met
 
 ---
