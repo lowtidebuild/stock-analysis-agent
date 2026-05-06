@@ -21,6 +21,14 @@ This file defines the 8 company types used for analysis focus customization. Rea
 
 ## Type-Specific Key Metrics
 
+<!-- updated 2026-05-06 -->
+
+**5-10 Rule (lock)**: for any peer-comp output (Mode B, Mode C peer table, Mode D peer comparison),
+include exactly **5 operating metrics + 5 valuation multiples = 10 metric rows max**.
+More than 12 rows means signal is being diluted. Prefer industry-specific metrics
+(Rule of 40, GPV, GMV, NIM) over generic ones (margins) when the industry has a clear
+operating KPI.
+
 ### Technology/Platform
 **Primary focus metrics**:
 - MAU/DAU, ARPU (for consumer platforms)
@@ -29,6 +37,7 @@ This file defines the 8 company types used for analysis focus customization. Rea
 - SBC as % of Revenue (key earnings quality indicator)
 - Gross Margin (software should be >70%; hardware ~40-60%)
 - CAC / LTV ratio (for subscription models)
+- CAC payback period (months to recover customer acquisition cost)
 
 **Variant View emphasis**: Technology moat durability, TAM penetration rate, platform network effects, AI integration optionality
 
@@ -40,6 +49,8 @@ This file defines the 8 company types used for analysis focus customization. Rea
 - Book-to-bill ratio
 - Capacity utilization %
 - Asset replacement value vs. book value
+- Asset turnover
+- Inventory turns
 - Working capital intensity (DIO + DSO - DPO)
 - Maintenance capex vs. growth capex split
 
@@ -54,6 +65,7 @@ This file defines the 8 company types used for analysis focus customization. Rea
 - Book Value and Tangible Book Value per share
 - Capital ratios (CET1, Tier 1 for banks)
 - Credit quality: NPL ratio, provision coverage, charge-offs
+- Loan-loss reserves / total loans
 - Fee income as % of total revenue (recurring quality)
 - Efficiency ratio (lower is better)
 
@@ -68,6 +80,8 @@ This file defines the 8 company types used for analysis focus customization. Rea
 - Risk-adjusted NPV of pipeline (rNPV)
 - Partnership/royalty agreements value
 - Market share for commercial assets
+- R&D as % of revenue (or R&D burn as % of cash for pre-revenue names)
+- Patent timeline / exclusivity runway for lead assets
 
 **Variant View emphasis**: Trial data catalyst, regulatory path, partnership optionality, competitive landscape for indication
 
@@ -80,6 +94,8 @@ This file defines the 8 company types used for analysis focus customization. Rea
 - Same-store sales growth (SSS%)
 - Brand equity metrics (pricing power, loyalty indicators)
 - Inventory turnover
+- Customer acquisition cost (CAC) where paid acquisition drives growth
+- Online vs. offline revenue split
 - Operating leverage (incremental margins)
 - Loyalty program metrics (if applicable)
 
@@ -92,8 +108,48 @@ This file defines the 8 company types used for analysis focus customization. Rea
 - Hedge book (% of production hedged, price)
 - Free cash flow yield at spot prices
 - Leverage (Net Debt/EBITDA at strip pricing)
+- EV/Production
+- EV/Reserves
 
 **Variant View emphasis**: Commodity price scenario, cost structure advantage, capital discipline
+
+---
+
+### Payments / Fintech Overlay
+**Primary focus metrics**:
+- Gross Payment Volume (GPV)
+- Take rate
+- Attach rate for value-added services
+- Transaction margin
+- Active merchants / active accounts
+
+**Variant View emphasis**: Merchant retention, pricing power in take rate, cross-sell depth, fraud/loss normalization
+
+**Risk emphasis**: Regulatory fee caps, credit exposure, payment-network dependency, chargeback/fraud spikes
+
+### Marketplace / Platform Overlay
+**Primary focus metrics**:
+- Gross Merchandise Value (GMV)
+- Take rate
+- Buyer/seller ratio
+- Repeat purchase or repeat booking rate
+- Contribution margin after incentives
+
+**Variant View emphasis**: Network-effect durability, supply-demand liquidity, incentive intensity, category expansion
+
+**Risk emphasis**: Disintermediation, seller concentration, regulatory classification, subsidy-driven growth
+
+### Logistics Overlay
+**Primary focus metrics**:
+- Shipment or unit volume
+- Cost per unit
+- On-time delivery %
+- Capacity utilization
+- Fuel/labor cost sensitivity
+
+**Variant View emphasis**: Density economics, route optimization, contract repricing, automation leverage
+
+**Risk emphasis**: Fuel costs, labor availability, union contracts, fixed-cost absorption in downturns
 
 ---
 

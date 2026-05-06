@@ -282,6 +282,8 @@ def metric_numeric_value(peer: dict[str, Any], key: str) -> float | None:
     entry = metric_entry(peer, key)
     if not isinstance(entry, dict):
         return None
+    if entry.get("grade") == "D":
+        return None
     value = entry.get("value")
     if isinstance(value, (int, float)) and not isinstance(value, bool):
         return float(value)
@@ -300,7 +302,7 @@ def metric_display(peer: dict[str, Any], key: str) -> str:
     unit = entry.get("unit")
     if key == "price":
         return format_currency_value(value, currency)
-    if key in {"per", "ev_ebitda", "pbr"} and isinstance(value, (int, float)):
+    if key in {"per", "ev_ebitda", "pbr", "net_debt_ebitda"} and isinstance(value, (int, float)):
         return f"{value:.2f}x"
     if key == "verdict":
         return verdict_badge(str(value))
@@ -335,6 +337,111 @@ def winner_for_metric(peers: list[dict[str, Any]], key: str, mode: str) -> str |
     if mode == "low":
         return min(values, key=lambda item: item[1])[0]
     return None
+
+
+def percentile(sorted_values: list[float], p: float) -> float | None:
+    if not sorted_values:
+        return None
+    if len(sorted_values) == 1:
+        return sorted_values[0]
+    pos = (len(sorted_values) - 1) * p
+    lower = int(pos)
+    upper = min(lower + 1, len(sorted_values) - 1)
+    if lower == upper:
+        return sorted_values[lower]
+    weight = pos - lower
+    return sorted_values[lower] * (1 - weight) + sorted_values[upper] * weight
+
+
+def metric_distribution(peers: list[dict[str, Any]], key: str) -> dict[str, Any] | None:
+    if key in {"price", "market_cap", "verdict"}:
+        return None
+    values = sorted(value for peer in peers if (value := metric_numeric_value(peer, key)) is not None)
+    if not values:
+        return None
+    return {
+        "n": len(values),
+        "values": values,
+        "min": values[0],
+        "p25": percentile(values, 0.25),
+        "median": percentile(values, 0.50),
+        "p75": percentile(values, 0.75),
+        "max": values[-1],
+    }
+
+
+def representative_metric_entry(peers: list[dict[str, Any]], key: str) -> dict[str, Any]:
+    for peer in peers:
+        entry = metric_entry(peer, key)
+        if isinstance(entry, dict):
+            return entry
+    return {}
+
+
+def metric_stat_display(peers: list[dict[str, Any]], key: str, value: float | None) -> str:
+    if value is None:
+        return '<span class="text-slate-300">—</span>'
+    entry = representative_metric_entry(peers, key)
+    currency = entry.get("currency")
+    if not currency:
+        for peer in peers:
+            analysis_currency = (peer.get("analysis") or {}).get("currency")
+            if analysis_currency:
+                currency = analysis_currency
+                break
+    if key == "price":
+        return format_currency_value(value, currency)
+    if key == "rr_score":
+        return format_number(value, 2)
+    if key in {"per", "ev_ebitda", "pbr", "net_debt_ebitda"}:
+        return f"{value:.2f}x"
+    return format_unit_value(value, entry.get("unit"), currency=currency)
+
+
+def interp_badge(distribution: dict[str, Any], key: str) -> str:
+    if key not in {"p25", "p75"}:
+        return ""
+    n = distribution["n"]
+    if n < 3:
+        return ""
+    if n < 5:
+        return f' <span class="text-[10px] text-slate-400">(interp, n={n})</span>'
+    return ""
+
+
+def stat_cell(peers: list[dict[str, Any]], key: str, distribution: dict[str, Any] | None, stat_key: str) -> str:
+    if not distribution:
+        return '<td class="p-3 text-right text-slate-300">—</td>'
+    if stat_key in {"p25", "p75"} and distribution["n"] < 3:
+        return '<td class="p-3 text-right text-slate-300">—</td>'
+    value = distribution.get(stat_key)
+    return (
+        f'<td class="p-3 text-right text-slate-500 whitespace-nowrap">'
+        f'{metric_stat_display(peers, key, value)}{interp_badge(distribution, stat_key)}</td>'
+    )
+
+
+def percentile_badge(value: float | None, distribution: dict[str, Any] | None) -> str:
+    if value is None or not distribution or distribution["n"] < 2:
+        return ""
+    values = distribution["values"]
+    tolerance = max(abs(values[-1] - values[0]) * 0.000001, 0.000001)
+    if abs(value - distribution["min"]) <= tolerance:
+        label = "Min"
+    elif abs(value - distribution["max"]) <= tolerance:
+        label = "Max"
+    elif abs(value - distribution["median"]) <= tolerance:
+        label = "Med"
+    elif distribution["p25"] is not None and value <= distribution["p25"] + tolerance:
+        label = "25th"
+    elif distribution["p75"] is not None and value >= distribution["p75"] - tolerance:
+        label = "75th"
+    else:
+        label = "Med"
+    return (
+        f' <span class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full '
+        f'bg-blue-50 text-blue-700 border border-blue-100">{escape(label)}</span>'
+    )
 
 
 def base_case(peer: dict[str, Any]) -> dict[str, Any]:
@@ -421,28 +528,62 @@ METRIC_ROWS = [
     ("Decision", "rr_score", "R/R Score", "high"),
     ("Decision", "verdict", "Verdict", "none"),
 ]
+COMPARISON_METRIC_KEYS = [key for section, key, _label, _mode in METRIC_ROWS if section != "Decision"]
+
+
+def grade_d_comparison_metric_count(peer: dict[str, Any]) -> int:
+    count = 0
+    for key in COMPARISON_METRIC_KEYS:
+        entry = metric_entry(peer, key)
+        if isinstance(entry, dict) and entry.get("grade") == "D":
+            count += 1
+    return count
+
+
+def select_best_peer(peers: list[dict[str, Any]]) -> tuple[dict[str, Any] | None, str | None]:
+    ranked = sorted(
+        peers,
+        key=lambda peer: metric_numeric_value(peer, "rr_score") if metric_numeric_value(peer, "rr_score") is not None else -999,
+        reverse=True,
+    )
+    if not ranked:
+        return None, None
+    top = ranked[0]
+    top_grade_d_count = grade_d_comparison_metric_count(top)
+    if top_grade_d_count <= 2:
+        return top, None
+    for candidate in ranked[1:]:
+        if grade_d_comparison_metric_count(candidate) <= 2:
+            return (
+                candidate,
+                f"{top['ticker']} had the highest R/R Score but Grade D on {top_grade_d_count} comparison metrics.",
+            )
+    return top, None
 
 
 def render_comparison_table(peers: list[dict[str, Any]]) -> str:
     rows: list[str] = []
     active_section = None
-    colspan = len(peers) + 2
-    for section, key, label, winner_mode in METRIC_ROWS:
+    colspan = len(peers) + 6
+    for section, key, label, _winner_mode in METRIC_ROWS:
         if section != active_section:
             active_section = section
             rows.append(
                 f'<tr class="bg-slate-50"><td class="p-3 text-xs uppercase tracking-[0.25em] text-slate-400 font-semibold" colspan="{colspan}">{escape(section)}</td></tr>'
             )
-        winner = winner_for_metric(peers, key, winner_mode)
+        distribution = metric_distribution(peers, key)
         tags = "".join(tag_badge(tag) for tag in metric_tags(peers, key))
         metric_label = f'<div class="flex items-center gap-1.5">{escape(label)} {tags}</div>' if tags else escape(label)
         cells: list[str] = []
         for peer in peers:
-            highlight = "text-green-700 font-semibold" if winner and peer["ticker"] == winner and key != "verdict" else "text-slate-900"
-            cells.append(f'<td class="p-3 text-right {highlight}">{metric_display(peer, key)}</td>')
-        winner_display = escape(winner) if winner else "—"
+            value = metric_numeric_value(peer, key)
+            cells.append(
+                f'<td class="p-3 text-right text-slate-900 whitespace-nowrap">'
+                f'{metric_display(peer, key)}{percentile_badge(value, distribution)}</td>'
+            )
+        stat_cells = "".join(stat_cell(peers, key, distribution, stat_key) for stat_key in ("min", "p25", "median", "p75", "max"))
         rows.append(
-            f'<tr class="border-t border-slate-100 hover:bg-slate-50"><td class="p-3 text-slate-600">{metric_label}</td>{"".join(cells)}<td class="p-3 text-right text-green-700 font-semibold">{winner_display}</td></tr>'
+            f'<tr class="border-t border-slate-100 hover:bg-slate-50"><td class="p-3 text-slate-600">{metric_label}</td>{"".join(cells)}{stat_cells}</tr>'
         )
     headers = "".join(f'<th class="p-4 text-right font-semibold text-slate-900">{escape(peer["ticker"])}</th>' for peer in peers)
     return f"""
@@ -454,7 +595,11 @@ def render_comparison_table(peers: list[dict[str, Any]]) -> str:
             <tr class="bg-slate-50 text-slate-500 text-xs uppercase">
               <th class="text-left p-4 font-semibold">Metric</th>
               {headers}
-              <th class="text-right p-4 font-semibold">Winner</th>
+              <th class="text-right p-4 font-semibold">Min</th>
+              <th class="text-right p-4 font-semibold">25th</th>
+              <th class="text-right p-4 font-semibold">Median</th>
+              <th class="text-right p-4 font-semibold">75th</th>
+              <th class="text-right p-4 font-semibold">Max</th>
             </tr>
           </thead>
           <tbody>
@@ -565,7 +710,13 @@ def render_ranking(peers: list[dict[str, Any]], korean: bool) -> str:
     """
 
 
-def build_best_pick_copy(best_peer: dict[str, Any] | None, peers: list[dict[str, Any]], korean: bool, analysis_date: str | None) -> str:
+def build_best_pick_copy(
+    best_peer: dict[str, Any] | None,
+    peers: list[dict[str, Any]],
+    korean: bool,
+    analysis_date: str | None,
+    caveat: str | None = None,
+) -> str:
     if best_peer is None or (metric_numeric_value(best_peer, "rr_score") or 0) < 1:
         return (
             "모든 종목의 기대보상비가 매력적이지 않아 뚜렷한 최선호를 제시하기 어렵습니다." if korean
@@ -578,34 +729,31 @@ def build_best_pick_copy(best_peer: dict[str, Any] | None, peers: list[dict[str,
     per_ratio = metric_numeric_value(best_peer, "per")
     margin = metric_numeric_value(best_peer, "operating_margin")
     catalyst = primary_catalyst(best_peer) or ("다음 실적/제품 이벤트" if korean else "the next earnings or product catalyst")
-    risk = primary_risk(best_peer) or ("리스크 공시는 레거시 샘플에서 제한적입니다." if korean else "risk disclosure remains thin in the legacy sample.")
+    risk = (primary_risk(best_peer) or ("리스크 공시는 레거시 샘플에서 제한적입니다" if korean else "risk disclosure remains thin in the legacy sample")).rstrip(".")
     leader = peer_label(best_peer)
     peers_text = ", ".join(peer["ticker"] for peer in peers if peer["ticker"] != best_peer["ticker"])
     if korean:
+        caveat_text = f" 단, {caveat}" if caveat else ""
         return (
             f"이 문단은 의견입니다. {leader}를 {analysis_date or '현재'} 기준 최선호로 봅니다. "
             f"기준 시나리오 목표가는 {format_currency_value(base_target, analysis.get('currency'))}, 기대수익률은 {format_percent(return_pct, 1)}이며, "
             f"P/E {format_number(per_ratio, 2)}x와 영업이익률 {format_percent(margin, 1)} 조합이 {peers_text} 대비 상대 강점입니다. "
-            f"핵심 촉매는 {catalyst}이고, 가장 중요한 리스크는 {risk}"
+            f"핵심 촉매는 {catalyst}이고, 가장 중요한 리스크는 {risk}.{caveat_text}"
         )
+    caveat_text = f" Caveat: {caveat}" if caveat else ""
     return (
         f"This is an opinion. {leader} is the best pick as of {analysis_date or 'today'} because its base-case target of "
         f"{format_currency_value(base_target, analysis.get('currency'))} implies {format_percent(return_pct, 1)} upside, while "
         f"{format_number(per_ratio, 2)}x P/E and {format_percent(margin, 1)} operating margin compare well versus {peers_text}. "
-        f"The next catalyst is {catalyst}, and the key risk is {risk}"
+        f"The next catalyst is {catalyst}, and the key risk is {risk}.{caveat_text}"
     )
 
 
 def render_best_pick(peers: list[dict[str, Any]], korean: bool, analysis_date: str | None) -> str:
-    ranked = sorted(
-        peers,
-        key=lambda peer: metric_numeric_value(peer, "rr_score") if metric_numeric_value(peer, "rr_score") is not None else -999,
-        reverse=True,
-    )
-    best_peer = ranked[0] if ranked else None
+    best_peer, caveat = select_best_peer(peers)
     verdict = (best_peer.get("analysis") or {}).get("verdict") if best_peer else None
     ticker = best_peer["ticker"] if best_peer else ("없음" if korean else "None")
-    copy_text = build_best_pick_copy(best_peer, peers, korean, analysis_date)
+    copy_text = build_best_pick_copy(best_peer, peers, korean, analysis_date, caveat)
     header = "최선호 종목" if korean else "Best Pick"
     date_label = analysis_date or "—"
     return f"""

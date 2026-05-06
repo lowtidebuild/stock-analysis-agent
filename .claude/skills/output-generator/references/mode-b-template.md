@@ -81,7 +81,11 @@ Data mode badge colors (on dark header):
           <th class="text-right p-4 font-semibold text-gray-900">{TICKER1}</th>
           <th class="text-right p-4 font-semibold text-gray-900">{TICKER2}</th>
           <th class="text-right p-4 font-semibold text-gray-900">{TICKER3}</th>
-          <th class="text-right p-4 font-semibold">Winner</th>
+          <th class="text-right p-4 font-semibold">Min</th>
+          <th class="text-right p-4 font-semibold">25th</th>
+          <th class="text-right p-4 font-semibold">Median</th>
+          <th class="text-right p-4 font-semibold">75th</th>
+          <th class="text-right p-4 font-semibold">Max</th>
         </tr>
       </thead>
       <tbody>
@@ -95,14 +99,22 @@ Data mode badge colors (on dark header):
           <td class="p-3 text-right text-gray-900 font-medium">{CURRENCY_SYMBOL}{t1_price}</td>
           <td class="p-3 text-right text-gray-900 font-medium">{CURRENCY_SYMBOL}{t2_price}</td>
           <td class="p-3 text-right text-gray-900 font-medium">{CURRENCY_SYMBOL}{t3_price}</td>
-          <td class="p-3 text-right text-gray-400">—</td>
+          <td class="p-3 text-right text-gray-500">{min_price}</td>
+          <td class="p-3 text-right text-gray-500">{p25_price}</td>
+          <td class="p-3 text-right text-gray-500">{median_price}</td>
+          <td class="p-3 text-right text-gray-500">{p75_price}</td>
+          <td class="p-3 text-right text-gray-500">{max_price}</td>
         </tr>
         <tr class="border-t border-gray-100 hover:bg-gray-50">
           <td class="p-3 text-gray-600">Market Cap</td>
           <td class="p-3 text-right text-gray-900 font-medium">{t1_mktcap}</td>
           <td class="p-3 text-right text-gray-900 font-medium">{t2_mktcap}</td>
           <td class="p-3 text-right text-gray-900 font-medium">{t3_mktcap}</td>
-          <td class="p-3 text-right text-gray-400">—</td>
+          <td class="p-3 text-right text-gray-500">{min_mktcap}</td>
+          <td class="p-3 text-right text-gray-500">{p25_mktcap}</td>
+          <td class="p-3 text-right text-gray-500">{median_mktcap}</td>
+          <td class="p-3 text-right text-gray-500">{p75_mktcap}</td>
+          <td class="p-3 text-right text-gray-500">{max_mktcap}</td>
         </tr>
 
         <!-- Valuation -->
@@ -111,10 +123,14 @@ Data mode badge colors (on dark header):
         </tr>
         <tr class="border-t border-gray-100 hover:bg-gray-50">
           <td class="p-3 text-gray-600">P/E (TTM) <span class="text-gray-400 text-xs">{[tag]}</span></td>
-          <td class="p-3 text-right {winner_class} font-medium">{t1_pe}x</td>
+          <td class="p-3 text-right {normal_class} font-medium">{t1_pe}x <span class="text-xs text-blue-600">{t1_percentile_badge}</span></td>
           <td class="p-3 text-right {normal_class} font-medium">{t2_pe}x</td>
           <td class="p-3 text-right {normal_class} font-medium">{t3_pe}x</td>
-          <td class="p-3 text-right text-green-600 font-semibold">{TICKER_lowest}</td>
+          <td class="p-3 text-right text-gray-500">{min_pe}x</td>
+          <td class="p-3 text-right text-gray-500">{p25_pe}x {interp_badge_if_needed}</td>
+          <td class="p-3 text-right text-gray-500">{median_pe}x</td>
+          <td class="p-3 text-right text-gray-500">{p75_pe}x {interp_badge_if_needed}</td>
+          <td class="p-3 text-right text-gray-500">{max_pe}x</td>
         </tr>
         <!-- Continue: EV/EBITDA, P/B rows -->
 
@@ -127,7 +143,11 @@ Data mode badge colors (on dark header):
           <td class="p-3 text-right {pos_neg_class} font-medium">{t1_rev_growth}%</td>
           <td class="p-3 text-right {pos_neg_class} font-medium">{t2_rev_growth}%</td>
           <td class="p-3 text-right {pos_neg_class} font-medium">{t3_rev_growth}%</td>
-          <td class="p-3 text-right text-green-600 font-semibold">{TICKER_highest}</td>
+          <td class="p-3 text-right text-gray-500">{min_rev_growth}%</td>
+          <td class="p-3 text-right text-gray-500">{p25_rev_growth}% {interp_badge_if_needed}</td>
+          <td class="p-3 text-right text-gray-500">{median_rev_growth}%</td>
+          <td class="p-3 text-right text-gray-500">{p75_rev_growth}% {interp_badge_if_needed}</td>
+          <td class="p-3 text-right text-gray-500">{max_rev_growth}%</td>
         </tr>
         <!-- Continue: EPS Growth rows -->
 
@@ -149,14 +169,22 @@ Data mode badge colors (on dark header):
           <td class="p-3 text-right"><span class="{rr_badge_class}">{t1_rr_score}</span></td>
           <td class="p-3 text-right"><span class="{rr_badge_class}">{t2_rr_score}</span></td>
           <td class="p-3 text-right"><span class="{rr_badge_class}">{t3_rr_score}</span></td>
-          <td class="p-3 text-right text-green-600 font-semibold">{TICKER_highest}</td>
+          <td class="p-3 text-right text-gray-500">—</td>
+          <td class="p-3 text-right text-gray-500">—</td>
+          <td class="p-3 text-right text-gray-500">—</td>
+          <td class="p-3 text-right text-gray-500">—</td>
+          <td class="p-3 text-right text-gray-500">—</td>
         </tr>
         <tr class="border-t border-gray-200 bg-gray-50">
           <td class="p-3 text-gray-900 font-semibold">Verdict</td>
           <td class="p-3 text-right"><span class="{verdict_badge}">{t1_verdict}</span></td>
           <td class="p-3 text-right"><span class="{verdict_badge}">{t2_verdict}</span></td>
           <td class="p-3 text-right"><span class="{verdict_badge}">{t3_verdict}</span></td>
-          <td class="p-3 text-right text-gray-400">—</td>
+          <td class="p-3 text-right text-gray-500">—</td>
+          <td class="p-3 text-right text-gray-500">—</td>
+          <td class="p-3 text-right text-gray-500">—</td>
+          <td class="p-3 text-right text-gray-500">—</td>
+          <td class="p-3 text-right text-gray-500">—</td>
         </tr>
       </tbody>
     </table>
@@ -164,18 +192,19 @@ Data mode badge colors (on dark header):
 </section>
 ```
 
-**Winner column logic**:
-- For valuation metrics (P/E, EV/EBITDA, P/B, Net Debt/EBITDA): lowest value = winner (cheapest)
-- For growth/profitability metrics: highest value = winner
-- For Dividend Yield: no winner (preference-dependent)
-- For price, market cap: no winner
-- If a ticker has Grade D for the metric: show "—" for that ticker and exclude from winner calculation
+**Quartile statistics logic**:
+- Replace the old Winner column with Min / 25th / Median / 75th / Max statistics.
+- For every numeric peer-comparison metric, compute distribution stats from valid Grade A/B/C peer values only.
+- Per-ticker cells show a compact percentile-position badge: `[Min]`, `[25th]`, `[Med]`, `[75th]`, or `[Max]`.
+- For n<5, label 25th/75th stats `(interp, n=N)` because they are interpolated.
+- For n=2, omit 25th/75th values and show Min / Median / Max only.
+- If a ticker has Grade D for the metric: show "—" for that ticker and exclude from statistics.
 
 **CSS classes for pos/neg values**:
 - Positive: `text-green-600`
 - Negative: `text-red-600`
 - Neutral: `text-gray-900`
-- Winner column winner: `text-green-600 font-semibold`
+- Percentile badge: `ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100`
 
 **R/R Score badge classes** (inline):
 - Score >3.0: `bg-green-50 text-green-700 border border-green-200 text-sm px-3 py-1 rounded-full font-bold`
@@ -276,6 +305,8 @@ Best Pick rules:
 - MUST cite ≥2 specific metrics or data points
 - MUST acknowledge the key risk to the thesis
 - MUST include "This is an opinion" language
+- MUST be selected by highest R/R Score, not by count of metric wins
+- If the top R/R ticker has Grade D on >2 of the 10 comparison metrics, use the next-highest R/R ticker with fuller data and state the caveat
 - If all R/R Scores are Unfavorable (<1.0): state "No clear best pick — all peers appear overvalued at current prices"
 
 ---
@@ -324,7 +355,7 @@ Differentiator rules:
 
 | Situation | Action |
 |-----------|--------|
-| Metric Grade D for one ticker | Show `<span class="text-gray-400">—</span>` for that ticker; exclude from winner column |
+| Metric Grade D for one ticker | Show `<span class="text-gray-400">—</span>` for that ticker; exclude from quartile statistics |
 | Metric Grade D for all tickers | Hide entire metric row; note at bottom: "X metrics excluded due to insufficient data" |
 | R/R Score unavailable for one ticker | Show "N/A" badge; exclude from ranking |
 | Scenario unavailable | Show "Scenarios not computed" in that ticker's card |
@@ -345,8 +376,11 @@ Differentiator rules:
 
 Before writing the file, verify:
 - [ ] All metric values have source tags in the Metric column
-- [ ] Winner column correctly identifies best value (low for valuation, high for growth/profitability)
+- [ ] 5 operating + 5 valuation metrics max (10 comparison metrics; R/R and Verdict can render as decision rows)
+- [ ] Quartile statistics columns render instead of Winner
+- [ ] n<5 peer sets label 25th/75th stats as interpolated
 - [ ] All R/R Scores computed with correct formula
+- [ ] Best Pick is based on R/R Score with Grade D caveat if needed
 - [ ] Best Pick section explicitly labeled as opinion
 - [ ] Key Differentiators contain specific numbers (not generic statements)
 - [ ] Disclaimer present

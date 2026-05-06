@@ -6,7 +6,7 @@ This file defines the analytical requirements for Mode B output. The Analyst age
 
 ## Purpose & Scope
 
-Mode B produces a comparative analysis of 2–5 peer companies side-by-side. The output is an HTML file showing a structured matrix with relative valuations, R/R Score rankings, and a reasoned Best Pick recommendation.
+Mode B produces a comparative analysis of 2–5 peer companies side-by-side. The output is an HTML file showing a structured matrix with quartile valuation context, R/R Score rankings, and a reasoned Best Pick recommendation.
 
 **Output target**: HTML file, 800–1,200 words of narrative
 **Output format**: HTML file (see `mode-b-template.md`)
@@ -29,7 +29,7 @@ Mode B produces a comparative analysis of 2–5 peer companies side-by-side. The
 
 For each ticker, perform a condensed mini-analysis:
 
-1. Select 5–8 key metrics (choose consistent metrics across all peers for comparability)
+1. Select 10 key comparison metrics max: 5 operating metrics + 5 valuation multiples (choose consistent metrics across all peers for comparability)
 2. Build 3 scenarios with company-specific assumptions
 3. Calculate R/R Score
 4. Write Q1 + Q2 Variant View (2 questions, not 5)
@@ -43,22 +43,29 @@ For each ticker, perform a condensed mini-analysis:
 
 ### Step 2 — Build the Comparison Matrix
 
-**Column structure**: Metric | Ticker1 | Ticker2 | Ticker3 | Winner
+**Column structure**: Metric | Ticker1 | Ticker2 | Ticker3 | Min | 25th | Median | 75th | Max
 
-**Metric categories** (use all applicable, skip if all peers have Grade D):
+**Metric categories** (use all applicable, skip if all peers have Grade D; total comparison metrics max = 10):
 1. Price & Size (current price, market cap)
 2. Valuation (P/E, EV/EBITDA, P/B)
 3. Growth (Revenue Growth YoY, EPS Growth YoY)
 4. Profitability (Gross Margin, Operating Margin, FCF Yield, ROE)
 5. Balance Sheet (Net Debt/EBITDA, Dividend Yield)
-6. R/R Score (bottom row, highlighted)
-7. Verdict (bottom row, color-coded)
+6. R/R Score (bottom row, highlighted; ranking input, not a peer-comp metric)
+7. Verdict (bottom row, color-coded; not a peer-comp metric)
 
-**Winner column rules**:
-- Valuation metrics (lower = better): P/E, EV/EBITDA, P/B, Net Debt/EBITDA → lowest value wins
-- Growth/profitability metrics (higher = better): Revenue Growth, Margins, FCF Yield, ROE → highest value wins
-- If only one peer has a valid value for a metric → no winner declared for that row
-- R/R Score: highest value wins
+**Quartile statistics rules (revised 2026-05-06)**:
+- Each numeric metric row must show Min / 25th / Median / 75th / Max across peers.
+- Each per-ticker numeric cell shows value + percentile-position badge: `[Min]`, `[25th]`, `[Med]`, `[75th]`, or `[Max]`.
+- For 3-ticker comparisons, percentiles collapse to Min / Median / Max for peer badges; 25th and 75th statistics are interpolated and labelled `(interp, n=3)`.
+- For 2-ticker comparisons, render Min / Median / Max and omit 25th / 75th values with `n<3`.
+- Quartiles contextualize the distribution. They do not vote on a winner.
+
+Example:
+```
+| Metric | AAPL | MSFT | GOOGL | Min | 25th | Median | 75th | Max |
+| EV/EBITDA | 12x [25th] | 18x [75th] | 14x [Med] | 12x | 12.5x | 14x | 16x | 18x |
+```
 
 ### Step 3 — Relative Valuation Assessment
 
@@ -94,6 +101,18 @@ Format:
 ```
 
 ### Step 5 — Best Pick Recommendation
+
+### Best Pick Selection Rule (revised 2026-05-06)
+
+Best Pick is the ticker with the highest R/R Score, NOT the ticker that "wins"
+the most metric rows. Reasoning: a ticker at the 25th percentile on EV/EBITDA
+but the 90th percentile on growth can have a better risk/reward profile than a
+company that is median on every metric. The quartile row exists to contextualize
+valuation and operating dispersion, not to vote on a winner.
+
+Caveat: if the R/R Score top-pick has Grade D on >2 of the 10 comparison
+metrics (per the 5-10 Rule), prefer the next-highest R/R ticker with fuller
+data. Note this caveat explicitly in the Best Pick paragraph.
 
 **When to give a Best Pick**:
 - At least one peer has R/R > 1.5
@@ -152,7 +171,7 @@ When one peer has higher data quality (Enhanced Mode) than others (Standard Mode
 1. Tag each ticker's data mode in the header
 2. When drawing comparisons involving higher-grade data, note the advantage: "MSFT data from API [Filing] is higher confidence than GOOGL data from web (Grade C, single source)"
 3. Do NOT elevate the confidence of lower-grade data when comparing
-4. If a metric is Grade A for one peer but Grade C for another: in the winner column, add a note like "Winner: {TICKER} [higher confidence data]"
+4. If a metric is Grade A for one peer but Grade C for another: keep the values in the same row, but include the lowest column grade in the Metric header and footnote the per-ticker grade difference.
 
 ---
 
@@ -171,9 +190,12 @@ If different peers have different source grades for the same metric, apply the l
 Before generating the HTML file:
 - [ ] All tickers have validated data loaded
 - [ ] Same metric set applied to all peers (no substitutions)
-- [ ] Winner column correctly identifies low (valuation) vs. high (growth/quality) winners
+- [ ] 5 operating + 5 valuation metrics max (10 metric rows; R/R and Verdict can appear as decision rows)
+- [ ] Quartile statistics row/cells show Min / 25th / Median / 75th / Max context
+- [ ] For n<5, 25th/75th values are labelled as interpolated
 - [ ] Premium/discount calculations verified arithmetically
 - [ ] R/R Score computed with formula for each peer
+- [ ] Best Pick selected by R/R Score, with Grade D caveat if top-R/R has >2 missing/Grade D comparison metrics
 - [ ] R/R ranking has company-specific rationale for each position
 - [ ] Best Pick explicitly labeled as opinion
 - [ ] Key Differentiators have ≥2 specific numbers each
