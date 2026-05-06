@@ -620,8 +620,29 @@ def render_scenario_cards(peers: list[dict[str, Any]], korean: bool) -> str:
         base = scenarios.get("base", {})
         bull = scenarios.get("bull", {})
         bear = scenarios.get("bear", {})
-        assumption = base.get("key_assumption") or primary_catalyst(peer) or primary_risk(peer) or (
-            "세부 시나리오 설명은 레거시 샘플에 남지 않았습니다." if korean else "Legacy sample did not preserve a richer scenario narrative."
+        rr_formula = analysis.get("rr_score_formula")
+        scenario_blocks: list[str] = []
+        for label, data, color, name in [
+            ("Bull", bull, "green", ("강세" if korean else "Bull")),
+            ("Base", base, "blue", ("기준" if korean else "Base")),
+            ("Bear", bear, "red", ("약세" if korean else "Bear")),
+        ]:
+            assumption_text = data.get("key_assumption") or ""
+            scenario_blocks.append(
+                f"""
+                <div class="bg-{color}-50/70 rounded-xl p-3 border border-{color}-100">
+                  <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-{color}-700 font-bold text-xs uppercase tracking-widest">{escape(name)} · {format_probability(data.get("probability"))}</span>
+                    <span class="text-slate-900 font-semibold text-sm">{format_currency_value(data.get("target"), currency)} <span class="text-{color}-700">({format_percent(data.get("return_pct"), 1)})</span></span>
+                  </div>
+                  {f'<p class="text-slate-600 text-xs leading-relaxed">{escape(assumption_text)}</p>' if assumption_text else ''}
+                </div>
+                """
+            )
+        formula_html = (
+            f'<p class="mt-3 text-[11px] text-slate-400 font-mono leading-relaxed">{escape(rr_formula)}</p>'
+            if isinstance(rr_formula, str) and rr_formula
+            else ""
         )
         cards.append(
             f"""
@@ -630,29 +651,16 @@ def render_scenario_cards(peers: list[dict[str, Any]], korean: bool) -> str:
                 <h3 class="font-bold text-slate-900 text-lg">{escape(peer_label(peer))}</h3>
                 {rr_badge(analysis.get("rr_score"))}
               </div>
-              <div class="space-y-2 text-sm">
-                <div class="flex justify-between p-2 bg-green-50 rounded-xl">
-                  <span class="text-green-700 font-medium">Bull ({format_probability(bull.get("probability"))})</span>
-                  <span class="text-slate-900 font-semibold">{format_currency_value(bull.get("target"), currency)} ({format_percent(bull.get("return_pct"), 1)})</span>
-                </div>
-                <div class="flex justify-between p-2 bg-blue-50 rounded-xl">
-                  <span class="text-blue-700 font-medium">Base ({format_probability(base.get("probability"))})</span>
-                  <span class="text-slate-900 font-semibold">{format_currency_value(base.get("target"), currency)} ({format_percent(base.get("return_pct"), 1)})</span>
-                </div>
-                <div class="flex justify-between p-2 bg-red-50 rounded-xl">
-                  <span class="text-red-700 font-medium">Bear ({format_probability(bear.get("probability"))})</span>
-                  <span class="text-slate-900 font-semibold">{format_currency_value(bear.get("target"), currency)} ({format_percent(bear.get("return_pct"), 1)})</span>
-                </div>
+              <div class="space-y-2.5">
+                {''.join(scenario_blocks)}
               </div>
-              <div class="mt-3 pt-3 border-t border-slate-100">
-                <p class="text-slate-500 text-xs">{escape(assumption)}</p>
-              </div>
+              {formula_html}
             </div>
             """
         )
     return f"""
     <section>
-      <h2 class="text-xl font-bold text-slate-900 mb-4">{"시나리오 비교" if korean else "Scenario Comparison"}</h2>
+      <h2 class="text-xl font-bold text-slate-900 mb-4">{"시나리오 비교 (가정 포함)" if korean else "Scenario Comparison (with Assumptions)"}</h2>
       <div class="grid grid-cols-1 md:grid-cols-{max(1, min(len(peers), 3))} gap-4">
         {"".join(cards)}
       </div>
@@ -724,28 +732,59 @@ def build_best_pick_copy(
         )
 
     analysis = best_peer.get("analysis") or {}
+
+    # Custom narrative wins if provided (analysis.best_pick_narrative or analysis.best_pick.narrative)
+    custom_narrative = analysis.get("best_pick_narrative")
+    if not isinstance(custom_narrative, str):
+        bp = analysis.get("best_pick") if isinstance(analysis.get("best_pick"), dict) else {}
+        custom_narrative = bp.get("narrative") if isinstance(bp.get("narrative"), str) else None
+    if isinstance(custom_narrative, str) and custom_narrative.strip():
+        suffix = ""
+        if caveat:
+            suffix = f" 단, {caveat}" if korean else f" Caveat: {caveat}"
+        return custom_narrative.strip() + suffix
+
     base_target = base_case(best_peer).get("target") or analysis.get("analyst_target")
     return_pct = base_return(best_peer)
     per_ratio = metric_numeric_value(best_peer, "per")
     margin = metric_numeric_value(best_peer, "operating_margin")
+    rr = analysis.get("rr_score")
     catalyst = primary_catalyst(best_peer) or ("다음 실적/제품 이벤트" if korean else "the next earnings or product catalyst")
     risk = (primary_risk(best_peer) or ("리스크 공시는 레거시 샘플에서 제한적입니다" if korean else "risk disclosure remains thin in the legacy sample")).rstrip(".")
     leader = peer_label(best_peer)
     peers_text = ", ".join(peer["ticker"] for peer in peers if peer["ticker"] != best_peer["ticker"])
+    # Compute peer comparison for at least 2 specific metrics
+    other_peer = next((p for p in peers if p["ticker"] != best_peer["ticker"]), None)
+    other_per = metric_numeric_value(other_peer, "per") if other_peer else None
+    other_margin = metric_numeric_value(other_peer, "operating_margin") if other_peer else None
     if korean:
         caveat_text = f" 단, {caveat}" if caveat else ""
+        compare_clause = ""
+        if other_peer and other_per is not None and per_ratio is not None:
+            compare_clause = (
+                f" {other_peer['ticker']}({format_number(other_per, 2)}x P/E"
+                + (f", {format_percent(other_margin, 1)} 영업이익률" if other_margin is not None else "")
+                + f") 대비 우위."
+            )
         return (
             f"이 문단은 의견입니다. {leader}를 {analysis_date or '현재'} 기준 최선호로 봅니다. "
-            f"기준 시나리오 목표가는 {format_currency_value(base_target, analysis.get('currency'))}, 기대수익률은 {format_percent(return_pct, 1)}이며, "
-            f"P/E {format_number(per_ratio, 2)}x와 영업이익률 {format_percent(margin, 1)} 조합이 {peers_text} 대비 상대 강점입니다. "
-            f"핵심 촉매는 {catalyst}이고, 가장 중요한 리스크는 {risk}.{caveat_text}"
+            f"기준 시나리오 목표가는 {format_currency_value(base_target, analysis.get('currency'))} (기대수익률 {format_percent(return_pct, 1)}), "
+            f"R/R Score {format_number(rr, 2)}, P/E {format_number(per_ratio, 2)}x, 영업이익률 {format_percent(margin, 1)}.{compare_clause} "
+            f"핵심 촉매: {catalyst}. 핵심 리스크: {risk}.{caveat_text}"
         )
     caveat_text = f" Caveat: {caveat}" if caveat else ""
+    compare_clause = ""
+    if other_peer and other_per is not None and per_ratio is not None:
+        compare_clause = (
+            f" Versus {other_peer['ticker']} ({format_number(other_per, 2)}x P/E"
+            + (f", {format_percent(other_margin, 1)} op margin" if other_margin is not None else "")
+            + ")."
+        )
     return (
-        f"This is an opinion. {leader} is the best pick as of {analysis_date or 'today'} because its base-case target of "
-        f"{format_currency_value(base_target, analysis.get('currency'))} implies {format_percent(return_pct, 1)} upside, while "
-        f"{format_number(per_ratio, 2)}x P/E and {format_percent(margin, 1)} operating margin compare well versus {peers_text}. "
-        f"The next catalyst is {catalyst}, and the key risk is {risk}.{caveat_text}"
+        f"This is an opinion. {leader} is the best pick as of {analysis_date or 'today'}. "
+        f"Base target {format_currency_value(base_target, analysis.get('currency'))} implies {format_percent(return_pct, 1)} upside, "
+        f"R/R Score {format_number(rr, 2)}, {format_number(per_ratio, 2)}x P/E, {format_percent(margin, 1)} operating margin.{compare_clause} "
+        f"Primary catalyst: {catalyst}. Key risk: {risk}.{caveat_text}"
     )
 
 
@@ -773,9 +812,42 @@ def render_best_pick(peers: list[dict[str, Any]], korean: bool, analysis_date: s
     """
 
 
+def parse_custom_differentiator(item: Any, korean: bool) -> tuple[str, str] | None:
+    """Parse a single custom differentiator entry.
+
+    Accepts: {"title": ..., "body": ...} or "Title: body text" or plain string.
+    """
+    if isinstance(item, dict):
+        title = item.get("title") or item.get("name") or ("차별화" if korean else "Differentiator")
+        body = item.get("body") or item.get("description") or item.get("text")
+        if isinstance(body, str) and body.strip():
+            return (str(title).strip(), body.strip())
+        return None
+    if isinstance(item, str) and item.strip():
+        text = item.strip()
+        if ":" in text:
+            head, tail = text.split(":", 1)
+            head, tail = head.strip(), tail.strip()
+            if head and tail and len(head) <= 30:
+                return (head, tail)
+        return (("핵심 차이" if korean else "Key difference"), text)
+    return None
+
+
 def build_differentiators(peers: list[dict[str, Any]], korean: bool) -> list[tuple[str, str]]:
-    differentiators: list[tuple[str, str]] = []
     main_peer = peers[0] if peers else None
+    custom_source = (main_peer.get("analysis") if main_peer else {}) or {}
+    custom_list = custom_source.get("differentiators")
+    if isinstance(custom_list, list) and custom_list:
+        parsed: list[tuple[str, str]] = []
+        for item in custom_list:
+            entry = parse_custom_differentiator(item, korean)
+            if entry is not None:
+                parsed.append(entry)
+        if parsed:
+            return parsed[:5]
+
+    differentiators: list[tuple[str, str]] = []
     per_values = [(peer, metric_numeric_value(peer, "per")) for peer in peers]
     per_values = [(peer, value) for peer, value in per_values if value is not None]
     if len(per_values) >= 2:
@@ -922,14 +994,326 @@ def disclaimer_text(korean: bool) -> str:
     )
 
 
+def render_executive_summary(peers: list[dict[str, Any]], korean: bool, analysis_date: str | None) -> str:
+    """Top-of-page snapshot: per-ticker price, R/R, verdict, base-case upside."""
+    cards = []
+    for peer in peers:
+        analysis = peer.get("analysis") or {}
+        price = analysis.get("price_at_analysis")
+        currency = analysis.get("currency")
+        rr = analysis.get("rr_score")
+        verdict = analysis.get("verdict") or ("관찰" if korean else "Watch")
+        base_ret = base_return(peer)
+        company = analysis.get("company_name") or peer.get("ticker")
+        ret_color = "text-emerald-600" if isinstance(base_ret, (int, float)) and base_ret > 0 else "text-rose-600"
+        cards.append(
+            f"""
+            <div class="card p-5 flex flex-col gap-3">
+              <div class="flex items-start justify-between">
+                <div>
+                  <p class="text-slate-500 text-xs uppercase tracking-widest">{escape(peer["ticker"])}</p>
+                  <p class="font-bold text-slate-900 text-lg">{escape(company)}</p>
+                </div>
+                {verdict_badge(verdict)}
+              </div>
+              <div class="grid grid-cols-3 gap-3 text-sm">
+                <div>
+                  <p class="text-slate-400 text-[11px] uppercase">{escape("현재가" if korean else "Price")}</p>
+                  <p class="font-semibold text-slate-900">{format_currency_value(price, currency)}</p>
+                </div>
+                <div>
+                  <p class="text-slate-400 text-[11px] uppercase">R/R</p>
+                  <p class="font-semibold">{rr_badge(rr)}</p>
+                </div>
+                <div>
+                  <p class="text-slate-400 text-[11px] uppercase">{escape("Base 수익률" if korean else "Base upside")}</p>
+                  <p class="font-semibold {ret_color}">{format_percent(base_ret, 1)}</p>
+                </div>
+              </div>
+            </div>
+            """
+        )
+    grid_cols = max(1, min(len(peers), 3))
+    title = "스냅샷" if korean else "Snapshot"
+    subtitle = f"{escape(analysis_date or '—')}"
+    return f"""
+    <section>
+      <div class="flex items-end justify-between mb-4">
+        <h2 class="text-xl font-bold text-slate-900">{escape(title)}</h2>
+        <p class="text-slate-400 text-xs">{subtitle}</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-{grid_cols} gap-4">{''.join(cards)}</div>
+    </section>
+    """
+
+
+def render_variant_views(peers: list[dict[str, Any]], korean: bool) -> str:
+    """Variant View Q1+Q2 per ticker (framework requirement for Mode B)."""
+    cards = []
+    for peer in peers:
+        analysis = peer.get("analysis") or {}
+        vv = analysis.get("variant_view") if isinstance(analysis.get("variant_view"), dict) else {}
+        q1 = vv.get("q1") if isinstance(vv.get("q1"), str) else None
+        q2 = vv.get("q2") if isinstance(vv.get("q2"), str) else None
+        if not q1 and not q2:
+            continue
+        company = analysis.get("company_name") or peer.get("ticker")
+        body_blocks = []
+        if q1:
+            body_blocks.append(
+                f"""
+                <div>
+                  <p class="text-[11px] uppercase tracking-widest text-purple-600 font-semibold mb-1">{escape("Q1 · 컨센서스 vs 우리 시각" if korean else "Q1 · Consensus vs our view")}</p>
+                  <p class="text-slate-700 text-sm leading-relaxed">{escape(q1)}</p>
+                </div>
+                """
+            )
+        if q2:
+            body_blocks.append(
+                f"""
+                <div>
+                  <p class="text-[11px] uppercase tracking-widest text-purple-600 font-semibold mb-1">{escape("Q2 · 핵심 카탈리스트" if korean else "Q2 · Primary catalyst")}</p>
+                  <p class="text-slate-700 text-sm leading-relaxed">{escape(q2)}</p>
+                </div>
+                """
+            )
+        cards.append(
+            f"""
+            <div class="card p-5 border-l-4 border-purple-500">
+              <div class="flex items-center gap-2 mb-3">
+                <h3 class="font-bold text-slate-900 text-lg">{escape(peer["ticker"])} <span class="text-slate-500 font-medium text-sm">· {escape(company)}</span></h3>
+              </div>
+              <div class="space-y-3">{''.join(body_blocks)}</div>
+            </div>
+            """
+        )
+    if not cards:
+        return ""
+    grid_cols = max(1, min(len(peers), 2))
+    title = "Variant View · 컨센서스 대비 차별 시각" if korean else "Variant View · Where We Differ from Consensus"
+    return f"""
+    <section>
+      <h2 class="text-xl font-bold text-slate-900 mb-4">{escape(title)}</h2>
+      <div class="grid grid-cols-1 md:grid-cols-{grid_cols} gap-4">{''.join(cards)}</div>
+    </section>
+    """
+
+
+def render_relative_valuation(peers: list[dict[str, Any]], korean: bool) -> str:
+    """Step 3 of framework: Premium/discount vs cheapest peer for each valuation metric."""
+    if len(peers) < 2:
+        return ""
+    metric_specs = [
+        ("per", "P/E", "x"),
+        ("ev_ebitda", "EV/EBITDA", "x"),
+        ("pbr", "P/B", "x"),
+    ]
+    rows: list[str] = []
+    for metric_key, label, _unit in metric_specs:
+        values = [(peer, metric_numeric_value(peer, metric_key)) for peer in peers]
+        values = [(peer, v) for peer, v in values if isinstance(v, (int, float)) and v > 0]
+        if len(values) < 2:
+            continue
+        cheapest = min(values, key=lambda item: item[1])
+        cheap_peer, cheap_val = cheapest
+        per_cells = []
+        for peer, value in values:
+            if peer["ticker"] == cheap_peer["ticker"]:
+                badge = '<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">기준</span>' if korean else '<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">cheapest</span>'
+                per_cells.append(
+                    f'<td class="p-3 text-right text-slate-900 whitespace-nowrap">{value:.2f}x{badge}</td>'
+                )
+            else:
+                premium = (value - cheap_val) / cheap_val * 100
+                color = "text-rose-600" if premium > 0 else "text-emerald-600"
+                arrow = "▲" if premium > 0 else "▼"
+                per_cells.append(
+                    f'<td class="p-3 text-right text-slate-900 whitespace-nowrap">{value:.2f}x <span class="ml-1 text-[11px] {color} font-semibold">{arrow} {abs(premium):.1f}%</span></td>'
+                )
+        rows.append(
+            f'<tr class="border-t border-slate-100"><td class="p-3 text-slate-700 font-medium">{escape(label)}</td>{"".join(per_cells)}</tr>'
+        )
+    if not rows:
+        return ""
+    headers = "".join(
+        f'<th class="p-4 text-right font-semibold text-slate-900">{escape(peer["ticker"])}</th>' for peer in peers
+    )
+    note = (
+        "각 지표에서 가장 낮은 멀티플(=cheapest) 종목을 기준선으로 삼아 다른 종목의 프리미엄/할인을 계산합니다. "
+        "프리미엄은 더 높은 성장률·마진·자본 효율로 정당화되어야 하며, 그렇지 않으면 멀티플 컴프레션 위험이 있습니다."
+        if korean
+        else
+        "Each row uses the lowest-multiple ticker as the cheapest baseline. Premiums must be justified by superior growth, margin, or capital efficiency — otherwise multiple compression risk applies."
+    )
+    title = "상대 밸류에이션 · 프리미엄/할인" if korean else "Relative Valuation · Premium/Discount"
+    return f"""
+    <section>
+      <h2 class="text-xl font-bold text-slate-900 mb-4">{escape(title)}</h2>
+      <div class="card overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-slate-50 text-slate-500 text-xs uppercase">
+              <th class="text-left p-4 font-semibold">{escape("지표" if korean else "Metric")}</th>
+              {headers}
+            </tr>
+          </thead>
+          <tbody>{''.join(rows)}</tbody>
+        </table>
+        <p class="px-4 py-3 text-[11px] text-slate-500 border-t border-slate-100">{escape(note)}</p>
+      </div>
+    </section>
+    """
+
+
+def render_risks_and_catalysts(peers: list[dict[str, Any]], korean: bool) -> str:
+    """Per-ticker risks and catalysts side-by-side."""
+    cards = []
+    for peer in peers:
+        analysis = peer.get("analysis") or {}
+        risks = analysis.get("top_risks") if isinstance(analysis.get("top_risks"), list) else []
+        catalysts = analysis.get("upcoming_catalysts") if isinstance(analysis.get("upcoming_catalysts"), list) else []
+        if not risks and not catalysts:
+            continue
+        company = analysis.get("company_name") or peer.get("ticker")
+        risk_items = []
+        for risk in risks[:3]:
+            if isinstance(risk, dict):
+                title_text = risk.get("risk") or risk.get("title") or ""
+                mech = risk.get("mechanism") or risk.get("description") or ""
+                risk_items.append(
+                    f"""
+                    <li class="border-l-2 border-rose-400 pl-3 py-1">
+                      <p class="font-semibold text-slate-900 text-sm">{escape(title_text)}</p>
+                      {f'<p class="text-slate-600 text-xs leading-relaxed mt-1">{escape(mech)}</p>' if mech else ''}
+                    </li>
+                    """
+                )
+            elif isinstance(risk, str) and risk.strip():
+                risk_items.append(
+                    f'<li class="border-l-2 border-rose-400 pl-3 py-1 text-slate-700 text-sm">{escape(risk)}</li>'
+                )
+        catalyst_items = []
+        for cat in catalysts[:3]:
+            label = parse_catalyst_label(cat)
+            if label:
+                catalyst_items.append(
+                    f'<li class="border-l-2 border-emerald-400 pl-3 py-1 text-slate-700 text-sm">{escape(label)}</li>'
+                )
+        risks_block = f"""
+            <div>
+              <p class="text-[11px] uppercase tracking-widest text-rose-600 font-semibold mb-2">{escape("핵심 리스크 (메커니즘 포함)" if korean else "Top Risks (with mechanism)")}</p>
+              <ul class="space-y-2">{''.join(risk_items) if risk_items else f'<li class="text-slate-400 text-xs">{escape("리스크 미기재" if korean else "No risks listed")}</li>'}</ul>
+            </div>
+        """
+        catalysts_block = f"""
+            <div>
+              <p class="text-[11px] uppercase tracking-widest text-emerald-600 font-semibold mb-2">{escape("예정 카탈리스트" if korean else "Upcoming Catalysts")}</p>
+              <ul class="space-y-2">{''.join(catalyst_items) if catalyst_items else f'<li class="text-slate-400 text-xs">{escape("카탈리스트 미기재" if korean else "No catalysts listed")}</li>'}</ul>
+            </div>
+        """
+        cards.append(
+            f"""
+            <div class="card p-5">
+              <h3 class="font-bold text-slate-900 text-lg mb-4">{escape(peer["ticker"])} <span class="text-slate-500 font-medium text-sm">· {escape(company)}</span></h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">{risks_block}{catalysts_block}</div>
+            </div>
+            """
+        )
+    if not cards:
+        return ""
+    title = "리스크 · 카탈리스트" if korean else "Risks · Catalysts"
+    return f"""
+    <section>
+      <h2 class="text-xl font-bold text-slate-900 mb-4">{escape(title)}</h2>
+      <div class="space-y-4">{''.join(cards)}</div>
+    </section>
+    """
+
+
+def render_data_quality_panel(peers: list[dict[str, Any]], korean: bool) -> str:
+    """Source coverage panel: how many metrics per peer at each grade."""
+    rows = []
+    for peer in peers:
+        validated = peer.get("validated_metrics") if isinstance(peer.get("validated_metrics"), dict) else {}
+        grade_count = {"A": 0, "B": 0, "C": 0, "D": 0}
+        tag_set: set[str] = set()
+        for entry in validated.values():
+            if isinstance(entry, dict):
+                grade = entry.get("grade")
+                if grade in grade_count:
+                    grade_count[grade] += 1
+                tag = entry.get("display_tag") or entry.get("tag")
+                if isinstance(tag, str):
+                    tag_set.add(tag)
+        total = sum(grade_count.values())
+        if total == 0:
+            continue
+        company = (peer.get("analysis") or {}).get("company_name") or peer.get("ticker")
+        bar_segments = []
+        colors = {"A": "bg-emerald-500", "B": "bg-sky-500", "C": "bg-amber-500", "D": "bg-rose-500"}
+        for grade in ("A", "B", "C", "D"):
+            if grade_count[grade] > 0:
+                pct = grade_count[grade] / total * 100
+                bar_segments.append(
+                    f'<div class="{colors[grade]}" style="width:{pct:.1f}%" title="Grade {grade}: {grade_count[grade]} metrics"></div>'
+                )
+        legend = " · ".join(f"{g}={n}" for g, n in grade_count.items() if n > 0)
+        tags_html = " ".join(tag_badge(t) for t in sorted(tag_set))
+        rows.append(
+            f"""
+            <div class="card p-4">
+              <div class="flex items-center justify-between mb-2">
+                <p class="font-semibold text-slate-900">{escape(peer["ticker"])} <span class="text-slate-500 font-medium text-sm">· {escape(company)}</span></p>
+                <p class="text-[11px] text-slate-500">{escape(legend)}</p>
+              </div>
+              <div class="flex h-2 rounded-full overflow-hidden bg-slate-100 mb-2">{''.join(bar_segments)}</div>
+              <div class="flex flex-wrap gap-1.5">{tags_html}</div>
+            </div>
+            """
+        )
+    if not rows:
+        return ""
+    title = "데이터 품질 · 출처 분포" if korean else "Data Quality · Source Coverage"
+    return f"""
+    <section>
+      <h2 class="text-xl font-bold text-slate-900 mb-4">{escape(title)}</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">{''.join(rows)}</div>
+    </section>
+    """
+
+
 def render_html(peers: list[dict[str, Any]], main_analysis: dict[str, Any]) -> str:
     language = main_analysis.get("output_language")
     korean = is_korean(language)
     analysis_date = main_analysis.get("analysis_date") or "—"
-    title = "피어 비교" if korean else "Peer Comparison"
-    subtitle = " vs ".join(peer["ticker"] for peer in peers)
+    title = "피어 비교 분석" if korean else "Peer Comparison"
+    subtitle_parts = []
+    for peer in peers:
+        company = (peer.get("analysis") or {}).get("company_name") or peer["ticker"]
+        subtitle_parts.append(f'{peer["ticker"]} · {company}')
+    subtitle = " vs ".join(subtitle_parts)
     badges = "".join(data_mode_badge(peer, korean) for peer in peers)
     source_list = collect_source_list(peers)
+    hero_stats: list[str] = []
+    for peer in peers:
+        analysis = peer.get("analysis") or {}
+        rr = analysis.get("rr_score")
+        verdict = analysis.get("verdict")
+        price = analysis.get("price_at_analysis")
+        currency = analysis.get("currency")
+        hero_stats.append(
+            f"""
+            <div class="bg-white/10 backdrop-blur-sm rounded-2xl px-4 py-3 border border-white/10">
+              <p class="text-blue-100/80 text-[11px] uppercase tracking-widest">{escape(peer["ticker"])}</p>
+              <p class="text-white font-bold text-lg">{format_currency_value(price, currency)}</p>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="text-blue-100 text-xs">R/R {format_number(rr, 2)}</span>
+                <span class="text-blue-100/60">·</span>
+                <span class="text-white text-xs font-semibold">{escape(verdict or '—')}</span>
+              </div>
+            </div>
+            """
+        )
     return f"""<!DOCTYPE html>
 <html lang="{escape('ko' if korean else 'en')}">
 <head>
@@ -944,23 +1328,32 @@ def render_html(peers: list[dict[str, Any]], main_analysis: dict[str, Any]) -> s
     * {{ font-family: 'Inter', 'Noto Sans KR', sans-serif; }}
     body {{ background: #f8fafc; }}
     .card {{ background: #fff; border-radius: 18px; box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08); }}
+    @keyframes grad {{ 0% {{ background-position: 0% 50%; }} 50% {{ background-position: 100% 50%; }} 100% {{ background-position: 0% 50%; }} }}
+    .grad-ani {{ background-size: 200% 200%; animation: grad 18s ease infinite; }}
   </style>
 </head>
 <body class="text-slate-800 min-h-screen">
-  <header class="bg-[linear-gradient(135deg,#071632_0%,#0f2d5f_45%,#1758ba_100%)]">
+  <header class="grad-ani" style="background: linear-gradient(135deg, #071632 0%, #0f2d5f 35%, #1758ba 70%, #0f2d5f 100%);">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-10">
-      <h1 class="text-3xl font-bold text-white tracking-tight mb-1">{escape(title)}</h1>
-      <p class="text-blue-100 text-sm">{escape(subtitle)} · {escape(analysis_date)}</p>
-      <div class="flex flex-wrap gap-2 mt-4">{badges}</div>
+      <p class="text-blue-200/80 text-xs uppercase tracking-[0.3em] mb-2">{escape("Mode B · 피어 비교 리포트" if korean else "Mode B · Peer Comparison Report")}</p>
+      <h1 class="text-3xl md:text-4xl font-bold text-white tracking-tight mb-2">{escape(title)}</h1>
+      <p class="text-blue-100 text-sm mb-5">{escape(subtitle)} · {escape(analysis_date)}</p>
+      <div class="grid grid-cols-1 md:grid-cols-{max(1, min(len(peers), 3))} gap-3 mb-5">{''.join(hero_stats)}</div>
+      <div class="flex flex-wrap gap-2">{badges}</div>
     </div>
   </header>
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+    {render_executive_summary(peers, korean, analysis_date)}
     {render_comparison_table(peers)}
+    {render_relative_valuation(peers, korean)}
     {render_scenario_cards(peers, korean)}
+    {render_variant_views(peers, korean)}
     {render_ranking(peers, korean)}
     {render_best_pick(peers, korean, analysis_date)}
     {render_differentiators(peers, korean)}
+    {render_risks_and_catalysts(peers, korean)}
+    {render_data_quality_panel(peers, korean)}
   </main>
 
   <footer class="bg-slate-950 text-slate-300 mt-12">
