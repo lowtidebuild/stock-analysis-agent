@@ -222,6 +222,97 @@ This file provides the complete structural skeleton for the Mode C Deep Dive Das
 </section>
 
 <!-- ============================================================ -->
+<!-- SECTION 5b: VALUATION BRIDGE (4-anchor reconciliation)        -->
+<!-- ============================================================ -->
+<!--
+  Render this section ONLY when analysis-result.json contains a top-level
+  `valuation_bridge` object (Mode C). The bridge reconciles 4 valuation
+  anchors (DCF Base, Comp Multiples, Analyst Median Target, our Base
+  Scenario) into a weighted fair value, plus a 50+ word
+  reconciliation_logic paragraph that explains the gap to current price.
+  If `valuation_bridge` is absent, omit the entire section silently
+  (backward compat — older snapshots don't have the field).
+-->
+{VALUATION_BRIDGE_SECTION}
+<!--
+Example markup (populate for each anchor; keep 4 cards side-by-side on md+,
+stack on mobile). Anchor card border colors: DCF=blue, Comp=indigo,
+Analyst=amber, Our Base=emerald. Replace {…} placeholders with values from
+`valuation_bridge.anchors[i]` and the surrounding bridge fields.
+
+<section id="section-valuation-bridge">
+  <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-bridge mr-2 text-brand-400"></i>Valuation Bridge</h2>
+  <p class="text-sm text-gray-500 mb-4">DCF, peer 멀티플, 애널리스트 컨센서스, 우리 base 시나리오를 동일 단위(주당 가치)로 정렬해 가중평균을 도출합니다.</p>
+
+  <!-- 4 anchor cards + arrow flow -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+    <div class="card p-4 stat-card" style="border-left-color: #3b82f6">
+      <p class="text-xs text-gray-500 mb-1">{ANCHOR_1_LABEL}</p>
+      <p class="text-2xl font-bold text-brand-700">{CURRENCY_SYMBOL}{ANCHOR_1_VALUE}</p>
+      <p class="text-xs text-gray-400 mt-1">Weight {ANCHOR_1_WEIGHT_PCT}% · {ANCHOR_1_METHOD}</p>
+      <p class="text-[10px] text-gray-400 mt-1"><span class="source-tag tag-calc">{ANCHOR_1_TAG}</span></p>
+    </div>
+    <div class="card p-4 stat-card" style="border-left-color: #6366f1">
+      <p class="text-xs text-gray-500 mb-1">{ANCHOR_2_LABEL}</p>
+      <p class="text-2xl font-bold text-brand-700">{CURRENCY_SYMBOL}{ANCHOR_2_VALUE}</p>
+      <p class="text-xs text-gray-400 mt-1">Weight {ANCHOR_2_WEIGHT_PCT}% · {ANCHOR_2_METHOD}</p>
+      <p class="text-[10px] text-gray-400 mt-1"><span class="source-tag tag-calc">{ANCHOR_2_TAG}</span></p>
+    </div>
+    <div class="card p-4 stat-card" style="border-left-color: #d97706">
+      <p class="text-xs text-gray-500 mb-1">{ANCHOR_3_LABEL}</p>
+      <p class="text-2xl font-bold text-brand-700">{CURRENCY_SYMBOL}{ANCHOR_3_VALUE}</p>
+      <p class="text-xs text-gray-400 mt-1">Weight {ANCHOR_3_WEIGHT_PCT}% · {ANCHOR_3_METHOD}</p>
+      <p class="text-[10px] text-gray-400 mt-1"><span class="source-tag tag-1s">{ANCHOR_3_TAG}</span></p>
+    </div>
+    <div class="card p-4 stat-card" style="border-left-color: #059669">
+      <p class="text-xs text-gray-500 mb-1">{ANCHOR_4_LABEL}</p>
+      <p class="text-2xl font-bold text-brand-700">{CURRENCY_SYMBOL}{ANCHOR_4_VALUE}</p>
+      <p class="text-xs text-gray-400 mt-1">Weight {ANCHOR_4_WEIGHT_PCT}% · {ANCHOR_4_METHOD}</p>
+      <p class="text-[10px] text-gray-400 mt-1"><span class="source-tag tag-calc">{ANCHOR_4_TAG}</span></p>
+    </div>
+  </div>
+
+  <!-- Arrow + weighted fair value box -->
+  <div class="flex items-center justify-center text-gray-400 mb-4">
+    <i class="fa-solid fa-arrow-down text-2xl"></i>
+  </div>
+  <div class="card p-6 mb-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="text-center">
+        <p class="text-xs text-gray-500 mb-1">Weighted Fair Value</p>
+        <p class="text-3xl font-extrabold text-brand-700">{CURRENCY_SYMBOL}{WEIGHTED_FAIR_VALUE}</p>
+      </div>
+      <div class="text-center">
+        <p class="text-xs text-gray-500 mb-1">Current Price</p>
+        <p class="text-3xl font-bold text-gray-700">{CURRENCY_SYMBOL}{BRIDGE_CURRENT_PRICE}</p>
+      </div>
+      <div class="text-center">
+        <p class="text-xs text-gray-500 mb-1">Implied View vs Market</p>
+        <p class="text-3xl font-bold {IMPLIED_VIEW_COLOR_CLASS}">{IMPLIED_VIEW_VS_MARKET}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reconciliation paragraph (>=50 words) -->
+  <div class="card p-5 bg-gray-50 border border-gray-200">
+    <h3 class="text-sm font-bold text-gray-700 mb-2"><i class="fa-solid fa-scale-balanced mr-2"></i>Reconciliation Logic</h3>
+    <p class="text-sm text-gray-700 leading-relaxed">{RECONCILIATION_LOGIC}</p>
+    <p class="text-xs text-gray-400 mt-2">Decision anchor: {DECISION_ANCHOR}</p>
+  </div>
+</section>
+
+Substitution rules:
+- `{ANCHOR_i_LABEL}` / `{ANCHOR_i_VALUE}` / `{ANCHOR_i_METHOD}` / `{ANCHOR_i_TAG}`: from `valuation_bridge.anchors[i]`
+- `{ANCHOR_i_WEIGHT_PCT}`: `weight × 100`, integer
+- `{WEIGHTED_FAIR_VALUE}`: from `valuation_bridge.weighted_fair_value`, formatted to 2 decimals
+- `{BRIDGE_CURRENT_PRICE}`: from `valuation_bridge.current_price`
+- `{IMPLIED_VIEW_VS_MARKET}`: from `valuation_bridge.implied_view_vs_market` (already a signed % string)
+- `{IMPLIED_VIEW_COLOR_CLASS}`: `text-red-600` if negative, `text-green-600` if positive, `text-gray-600` if ~0
+- `{RECONCILIATION_LOGIC}`: pass through `valuation_bridge.reconciliation_logic` verbatim
+- `{DECISION_ANCHOR}`: pass through `valuation_bridge.decision_anchor`
+-->
+
+<!-- ============================================================ -->
 <!-- SECTION 6: PEER COMPARISON TABLE                              -->
 <!-- ============================================================ -->
 <section id="section-peers">
@@ -543,3 +634,12 @@ If any section's data is unavailable or insufficient, render:
 </div>
 ```
 Never omit a section entirely — the structural skeleton must be preserved.
+
+**Exception — `{VALUATION_BRIDGE_SECTION}`**: This placeholder represents the
+optional Valuation Bridge widget (Section 5b). When `analysis-result.json`
+does not contain a top-level `valuation_bridge` object (e.g., older snapshots
+or a Mode C run where DCF + comps + analyst targets weren't all available),
+**replace `{VALUATION_BRIDGE_SECTION}` with an empty string** — do *not* show
+a "[Data unavailable]" stub. The bridge is a synthesis widget; its absence
+should be invisible rather than create a hole in the page. When the field is
+present, populate the markup pattern shown in the Section 5b comment block.
