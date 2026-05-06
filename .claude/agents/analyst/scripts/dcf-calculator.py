@@ -32,7 +32,9 @@ INPUT_SCHEMA = {
     "current_price":       {"type": "float",  "required": True,  "description": "Current stock price (USD)"},
     "diluted_shares":      {"type": "float",  "required": True,  "description": "Diluted shares outstanding (millions)"},
     "fcf_ttm":             {"type": "float",  "required": True,  "description": "TTM free cash flow (millions USD)"},
-    "fcf_growth_rate":     {"type": "float",  "required": True,  "description": "Projected FCF annual growth rate (decimal, e.g., 0.12 = 12%)"},
+    "fcf_growth_rate":     {"type": "float",  "required": False, "description": "Projected FCF annual growth rate (decimal, e.g., 0.12 = 12%). Optional when growth_rates is supplied."},
+    "growth_rates":        {"type": "list",   "required": False, "description": "Explicit per-year FCF growth path. Must contain at least forecast_years values.", "default": None},
+    "mid_year_convention": {"type": "boolean", "required": False, "description": "If true, discount projected FCFs at 0.5, 1.5, 2.5... periods. Default off.", "default": False},
     "wacc":                {"type": "float",  "required": False, "description": "Weighted average cost of capital (decimal, e.g., 0.08 = 8%). If omitted, auto-calculated from component inputs.", "default": None},
     "risk_free_rate":      {"type": "float",  "required": False, "description": "Risk-free rate from FRED DGS10 (decimal, e.g., 0.0425 = 4.25%)", "default": None},
     "beta":                {"type": "float",  "required": False, "description": "Equity beta from financial metrics", "default": None},
@@ -47,6 +49,11 @@ INPUT_SCHEMA = {
     "sensitivity_wacc":    {"type": "list",   "required": False, "description": "WACC values for sensitivity table (3 values)", "default": "auto: [wacc-1%, wacc, wacc+1%]"},
     "sensitivity_tgr":     {"type": "list",   "required": False, "description": "Terminal growth rates for sensitivity (3 values)", "default": "auto: [tgr-0.5%, tgr, tgr+0.5%]"},
     "current_price_for_reverse": {"type": "float", "required": False, "description": "If provided, additionally solve for the FCF growth rate that the market implicitly prices into this stock price (Reverse DCF / Expectations Investing).", "default": None},
+    "peer_median_ev_ebitda": {"type": "float", "required": False, "description": "Peer median EV/EBITDA multiple for trading-comp reconciliation.", "default": None},
+    "target_ttm_ebitda": {"type": "float", "required": False, "description": "Target company's TTM EBITDA (millions) for trading-comp reconciliation.", "default": None},
+    "weight_dcf": {"type": "float", "required": False, "description": "DCF weight in valuation reconciliation.", "default": 0.6},
+    "weight_comps": {"type": "float", "required": False, "description": "Trading comps weight in valuation reconciliation.", "default": 0.4},
+    "capex_growth_rate": {"type": "float", "required": False, "description": "Optional capex growth/reinvestment assumption for pitfall checks.", "default": None},
 }
 
 OUTPUT_SCHEMA = {
@@ -62,6 +69,7 @@ OUTPUT_SCHEMA = {
     "formulas":             "dict — human-readable formula strings",
     "wacc_derivation":      "dict or null — how WACC was determined (method, components, calculated value)",
     "reverse_dcf":          "dict or null — implied FCF growth result when current_price_for_reverse is provided",
+    "valuation_reconciliation": "dict — DCF vs trading-comp implied value, when inputs are available",
     "errors":               "list — warnings and errors",
 }
 
@@ -82,7 +90,18 @@ def safe_divide(numerator, denominator, error_msg=None):
     return numerator / denominator, None
 
 
-def compute_dcf(fcf_ttm, fcf_growth_rate, wacc, terminal_growth_rate, forecast_years, net_debt, diluted_shares, margin_expansion=0):
+def compute_dcf(
+    fcf_ttm,
+    fcf_growth_rate,
+    wacc,
+    terminal_growth_rate,
+    forecast_years,
+    net_debt,
+    diluted_shares,
+    margin_expansion=0,
+    growth_rates=None,
+    mid_year_convention=False,
+):
     """
     Core DCF computation.
 
@@ -107,6 +126,13 @@ def compute_dcf(fcf_ttm, fcf_growth_rate, wacc, terminal_growth_rate, forecast_y
 
     if fcf_ttm is None:
         return None, ["FAIL: fcf_ttm is None — cannot project future cash flows"]
+    if growth_rates is None and fcf_growth_rate is None:
+        return None, ["FAIL: fcf_growth_rate is None and growth_rates not supplied — cannot project future cash flows"]
+    if growth_rates is not None:
+        if not isinstance(growth_rates, list) or len(growth_rates) < forecast_years:
+            return None, [f"FAIL: growth_rates must contain at least forecast_years ({forecast_years}) values"]
+        if not all(isinstance(rate, (int, float)) and not isinstance(rate, bool) for rate in growth_rates[:forecast_years]):
+            return None, ["FAIL: growth_rates must contain only numeric decimal growth rates"]
 
     if fcf_ttm <= 0:
         errors.append(f"WARN: fcf_ttm is {fcf_ttm:.2f} (non-positive). DCF assumes positive FCF for meaningful valuation. Proceeding but result may be negative/misleading.")
@@ -116,32 +142,40 @@ def compute_dcf(fcf_ttm, fcf_growth_rate, wacc, terminal_growth_rate, forecast_y
 
     # ── Project explicit-period FCFs ──
     projected_fcfs = []
-    effective_growth = fcf_growth_rate + margin_expansion
+    effective_growth = (fcf_growth_rate or 0) + margin_expansion
     current_fcf = fcf_ttm
 
-    for year in range(1, forecast_years + 1):
-        current_fcf = current_fcf * (1 + effective_growth)
+    growth_path = []
+    for year_index in range(forecast_years):
+        growth = growth_rates[year_index] if growth_rates is not None else effective_growth
+        growth_path.append(growth)
+        current_fcf = current_fcf * (1 + growth)
         projected_fcfs.append(current_fcf)
 
-    formulas["projected_fcf_year1"] = f"{fcf_ttm:.2f}M × (1 + {effective_growth:.4f}) = {projected_fcfs[0]:.2f}M"
+    formulas["projected_fcf_year1"] = f"{fcf_ttm:.2f}M × (1 + {growth_path[0]:.4f}) = {projected_fcfs[0]:.2f}M"
     formulas["projected_fcf_yearN"] = f"Year {forecast_years} FCF = {projected_fcfs[-1]:.2f}M"
+    if growth_rates is not None:
+        formulas["growth_path"] = "Explicit per-year growth rates: " + ", ".join(f"{rate:.2%}" for rate in growth_path)
 
     # ── Discount explicit-period FCFs ──
     pv_explicit = 0
-    for year, fcf in enumerate(projected_fcfs, start=1):
-        pv_explicit += fcf / ((1 + wacc) ** year)
+    for year_index, fcf in enumerate(projected_fcfs):
+        discount_period = year_index + 0.5 if mid_year_convention else year_index + 1
+        pv_explicit += fcf / ((1 + wacc) ** discount_period)
 
     pv_explicit = round(pv_explicit, 2)
-    formulas["pv_explicit_fcf"] = f"Sum of {forecast_years} discounted FCFs = {pv_explicit:.2f}M"
+    timing_note = "mid-year convention" if mid_year_convention else "end-of-year convention"
+    formulas["pv_explicit_fcf"] = f"Sum of {forecast_years} discounted FCFs ({timing_note}) = {pv_explicit:.2f}M"
 
     # ── Terminal Value ──
     terminal_fcf = projected_fcfs[-1] * (1 + terminal_growth_rate)
     terminal_value = terminal_fcf / (wacc - terminal_growth_rate)
-    pv_terminal = terminal_value / ((1 + wacc) ** forecast_years)
+    terminal_discount_period = forecast_years - 0.5 if mid_year_convention else forecast_years
+    pv_terminal = terminal_value / ((1 + wacc) ** terminal_discount_period)
     pv_terminal = round(pv_terminal, 2)
 
     formulas["terminal_value"] = f"{terminal_fcf:.2f}M / ({wacc:.4f} - {terminal_growth_rate:.4f}) = {terminal_value:.2f}M"
-    formulas["pv_terminal_value"] = f"{terminal_value:.2f}M / (1 + {wacc:.4f})^{forecast_years} = {pv_terminal:.2f}M"
+    formulas["pv_terminal_value"] = f"{terminal_value:.2f}M / (1 + {wacc:.4f})^{terminal_discount_period:.1f} = {pv_terminal:.2f}M"
 
     # ── Enterprise Value → Equity Value → Per Share ──
     enterprise_value = round(pv_explicit + pv_terminal, 2)
@@ -158,6 +192,17 @@ def compute_dcf(fcf_ttm, fcf_growth_rate, wacc, terminal_growth_rate, forecast_y
     formulas["equity_value"] = f"{enterprise_value:.2f}M - {net_debt or 0:.2f}M net_debt = {equity_value:.2f}M"
     if fair_value_per_share is not None:
         formulas["fair_value_per_share"] = f"{equity_value:.2f}M / {diluted_shares:.2f}M shares = ${fair_value_per_share:.2f}"
+
+    if pv_terminal and enterprise_value and enterprise_value > 0:
+        terminal_ratio = pv_terminal / enterprise_value
+        if terminal_ratio > 0.75:
+            errors.append(
+                f"Terminal value is {terminal_ratio:.1%} of EV — model may be over-reliant on terminal assumptions (target: 40-75%)."
+            )
+        elif terminal_ratio < 0.40:
+            errors.append(
+                f"Terminal value is only {terminal_ratio:.1%} of EV — terminal assumptions may be too conservative or forecast period too long."
+            )
 
     return {
         "pv_explicit_fcf": pv_explicit,
@@ -271,7 +316,8 @@ def solve_implied_growth(
 
 def build_sensitivity_table(fcf_ttm, fcf_growth_rate, wacc, terminal_growth_rate,
                             forecast_years, net_debt, diluted_shares, margin_expansion,
-                            wacc_values, tgr_values, current_price):
+                            wacc_values, tgr_values, current_price, growth_rates=None,
+                            mid_year_convention=False):
     """Build 3×3 sensitivity table: WACC rows × terminal growth rate columns."""
     table = []
     for w in wacc_values:
@@ -280,8 +326,12 @@ def build_sensitivity_table(fcf_ttm, fcf_growth_rate, wacc, terminal_growth_rate
             if w <= tg:
                 row[f"tgr_{tg*100:.1f}%"] = None  # invalid combination
             else:
-                result, _ = compute_dcf(fcf_ttm, fcf_growth_rate, w, tg,
-                                        forecast_years, net_debt, diluted_shares, margin_expansion)
+                result, _ = compute_dcf(
+                    fcf_ttm, fcf_growth_rate, w, tg,
+                    forecast_years, net_debt, diluted_shares, margin_expansion,
+                    growth_rates=growth_rates,
+                    mid_year_convention=mid_year_convention,
+                )
                 if result and result["fair_value_per_share"] is not None:
                     fv = result["fair_value_per_share"]
                     upside = round((fv - current_price) / current_price * 100, 1) if current_price else None
@@ -290,6 +340,82 @@ def build_sensitivity_table(fcf_ttm, fcf_growth_rate, wacc, terminal_growth_rate
                     row[f"tgr_{tg*100:.1f}%"] = None
         table.append(row)
     return table
+
+
+def reconcile_with_comps(
+    dcf_fair_value_per_share,
+    peer_median_ev_ebitda,
+    target_ttm_ebitda,
+    diluted_shares,
+    net_debt,
+    weight_dcf=0.6,
+    weight_comps=0.4,
+):
+    """Combine DCF fair value with trading-comp implied value."""
+    if peer_median_ev_ebitda is None or target_ttm_ebitda is None or target_ttm_ebitda <= 0:
+        return {
+            "dcf_fair_value_per_share": dcf_fair_value_per_share,
+            "comp_implied_per_share": None,
+            "weighted_fair_value": dcf_fair_value_per_share,
+            "weights": {"dcf": 1.0, "comps": 0.0},
+            "method": "dcf_only",
+            "reason": "peer comp inputs missing",
+        }
+
+    comp_ev = peer_median_ev_ebitda * target_ttm_ebitda
+    comp_equity = comp_ev - (net_debt or 0)
+    comp_per_share, _ = safe_divide(comp_equity, diluted_shares)
+    if comp_per_share is not None:
+        comp_per_share = round(comp_per_share, 2)
+
+    if dcf_fair_value_per_share is None or comp_per_share is None:
+        return {
+            "dcf_fair_value_per_share": dcf_fair_value_per_share,
+            "comp_implied_per_share": comp_per_share,
+            "weighted_fair_value": dcf_fair_value_per_share or comp_per_share,
+            "weights": {
+                "dcf": 1.0 if dcf_fair_value_per_share else 0.0,
+                "comps": 1.0 if comp_per_share else 0.0,
+            },
+            "method": "single_method",
+        }
+
+    total_weight = weight_dcf + weight_comps
+    if total_weight <= 0:
+        weight_dcf, weight_comps = 0.6, 0.4
+        total_weight = 1.0
+    normalized_dcf = weight_dcf / total_weight
+    normalized_comps = weight_comps / total_weight
+    weighted = normalized_dcf * dcf_fair_value_per_share + normalized_comps * comp_per_share
+    return {
+        "dcf_fair_value_per_share": dcf_fair_value_per_share,
+        "comp_implied_per_share": comp_per_share,
+        "weighted_fair_value": round(weighted, 2),
+        "weights": {"dcf": round(normalized_dcf, 4), "comps": round(normalized_comps, 4)},
+        "method": "weighted_dcf_comps",
+        "premium_or_discount_pct": round((comp_per_share - dcf_fair_value_per_share) / dcf_fair_value_per_share * 100, 2)
+        if dcf_fair_value_per_share
+        else None,
+    }
+
+
+def pitfall_warnings(inputs, *, fcf_growth_rate, growth_rates, terminal_growth_rate, mid_year_convention):
+    warnings = []
+    growth_path = growth_rates if isinstance(growth_rates, list) and growth_rates else [fcf_growth_rate]
+    max_growth = max((rate for rate in growth_path if isinstance(rate, (int, float)) and not isinstance(rate, bool)), default=None)
+    if max_growth is not None and max_growth > 0.15 and inputs.get("capex_growth_rate") is None:
+        warnings.append(
+            "WARN: FCF growth above 15% without explicit capex/reinvestment assumption — check double-counting growth without reinvestment."
+        )
+    if terminal_growth_rate is not None and terminal_growth_rate > 0.04:
+        warnings.append(
+            "WARN: terminal_growth_rate exceeds 4% — verify against plausible long-run GDP growth."
+        )
+    if mid_year_convention and growth_rates:
+        warnings.append(
+            "INFO: mid_year_convention applied uniformly to the explicit per-year FCF growth path."
+        )
+    return warnings
 
 
 # ── Main ─────────────────────────────────────────────────────────────────
@@ -304,6 +430,8 @@ def calculate_dcf(inputs: dict) -> dict:
     diluted_shares = inputs.get("diluted_shares")
     fcf_ttm = inputs.get("fcf_ttm")
     fcf_growth_rate = inputs.get("fcf_growth_rate")
+    growth_rates = inputs.get("growth_rates")
+    mid_year_convention = bool(inputs.get("mid_year_convention", False))
     wacc = inputs.get("wacc")
     risk_free_rate = inputs.get("risk_free_rate")
     beta = inputs.get("beta")
@@ -356,18 +484,32 @@ def calculate_dcf(inputs: dict) -> dict:
         "scenario": scenario_name,
         "fcf_ttm": fcf_ttm,
         "fcf_growth_rate": fcf_growth_rate,
+        "growth_rates": growth_rates,
         "wacc": wacc,
         "terminal_growth_rate": terminal_growth_rate,
         "forecast_years": forecast_years,
         "net_debt": net_debt,
         "margin_expansion": margin_expansion,
+        "mid_year_convention": mid_year_convention,
         "tax_rate": tax_rate,
     }
+
+    errors.extend(
+        pitfall_warnings(
+            inputs,
+            fcf_growth_rate=fcf_growth_rate,
+            growth_rates=growth_rates,
+            terminal_growth_rate=terminal_growth_rate,
+            mid_year_convention=mid_year_convention,
+        )
+    )
 
     # ── Core DCF ──
     result, dcf_errors = compute_dcf(
         fcf_ttm, fcf_growth_rate, wacc, terminal_growth_rate,
-        forecast_years, net_debt, diluted_shares, margin_expansion
+        forecast_years, net_debt, diluted_shares, margin_expansion,
+        growth_rates=growth_rates,
+        mid_year_convention=mid_year_convention,
     )
     errors.extend(dcf_errors)
 
@@ -384,6 +526,16 @@ def calculate_dcf(inputs: dict) -> dict:
             "assumptions": assumptions,
             "formulas": {},
             "wacc_derivation": wacc_derivation,
+            "reverse_dcf": None,
+            "valuation_reconciliation": reconcile_with_comps(
+                None,
+                inputs.get("peer_median_ev_ebitda"),
+                inputs.get("target_ttm_ebitda"),
+                diluted_shares,
+                net_debt,
+                inputs.get("weight_dcf", 0.6),
+                inputs.get("weight_comps", 0.4),
+            ),
             "errors": errors,
         }
 
@@ -408,7 +560,9 @@ def calculate_dcf(inputs: dict) -> dict:
         sensitivity_table = build_sensitivity_table(
             fcf_ttm, fcf_growth_rate, wacc, terminal_growth_rate,
             forecast_years, net_debt, diluted_shares, margin_expansion,
-            wacc_values, tgr_values, current_price
+            wacc_values, tgr_values, current_price,
+            growth_rates=growth_rates,
+            mid_year_convention=mid_year_convention,
         )
 
     # ── Reverse DCF (Expectations Investing) ──
@@ -446,6 +600,15 @@ def calculate_dcf(inputs: dict) -> dict:
         "formulas": result["formulas"],
         "wacc_derivation": wacc_derivation,
         "reverse_dcf": reverse_dcf,
+        "valuation_reconciliation": reconcile_with_comps(
+            result["fair_value_per_share"],
+            inputs.get("peer_median_ev_ebitda"),
+            inputs.get("target_ttm_ebitda"),
+            diluted_shares,
+            net_debt,
+            inputs.get("weight_dcf", 0.6),
+            inputs.get("weight_comps", 0.4),
+        ),
         "errors": errors,
     }
 

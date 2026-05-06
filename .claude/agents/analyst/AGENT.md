@@ -178,7 +178,10 @@ Follow `analysis-framework-dashboard.md` exactly:
     - Run `dcf-calculator.py` (at `.claude/agents/analyst/scripts/dcf-calculator.py`):
       - Base scenario: full run with 9-cell sensitivity table
       - Bull/Bear scenarios: single-point DCF only (no sensitivity table)
+      - If you have an explicit year-by-year fade, pass `growth_rates: [y1, y2, ...]` instead of forcing a single `fcf_growth_rate`.
+      - `mid_year_convention` defaults false. Opt in only when you want intra-year cash-flow timing and state it in the methodology note.
       - **Reverse DCF (Base scenario only)**: ALWAYS pass `current_price_for_reverse: <CURRENT_PRICE>` in the Base inline JSON when current price is available. The script returns a `reverse_dcf` block with `status`, `implied_fcf_growth`, `analyst_growth_assumption`, and `growth_gap_bp`. Write the entire block to `analysis-result.json` under `sections.dcf_analysis.reverse`.
+      - When peer comp data is available in `validated-data.json.peers[]`, compute `peer_median_ev_ebitda = median(peer.ev_ebitda for peer in peers if peer.grade in ("A", "B"))` and pass it with the target's `ttm_ebitda` as `target_ttm_ebitda`. The calculator emits `valuation_reconciliation`; include it in Mode D output.
     - If DCF fails (WACC ≤ terminal growth, missing FCF, etc.): omit DCF section, deliver R/R Score as primary valuation. Log warning.
     - **Reverse DCF status handling**:
       - `success`: render the implied growth + gap comparison (see dashboard framework Reverse DCF spec).
@@ -306,6 +309,13 @@ Write ALL content — narrative text and structured tables — to run-local `ana
       "analyst_growth_assumption": "<BASE_GROWTH_DECIMAL>",
       "growth_gap_bp": "<GAP_BP>",
       "notes": "<SOLVER_NOTES>"
+    },
+    "valuation_reconciliation": {
+      "dcf_fair_value_per_share": "<DCF_FV>",
+      "comp_implied_per_share": "<COMP_FV_OR_NULL>",
+      "weighted_fair_value": "<WEIGHTED_FV>",
+      "weights": {"dcf": 0.6, "comps": 0.4},
+      "method": "weighted_dcf_comps"
     },
     "methodology": "<DCF_METHODOLOGY>",
     "assumptions_displayed": true
@@ -469,6 +479,13 @@ request that only succeeded through yfinance must be written as
         "analyst_growth_assumption": "<BASE_GROWTH_DECIMAL>",
         "growth_gap_bp": "<GAP_BP>",
         "notes": "<SOLVER_NOTES>"
+      },
+      "valuation_reconciliation": {
+        "dcf_fair_value_per_share": "<DCF_FV>",
+        "comp_implied_per_share": "<COMP_FV_OR_NULL>",
+        "weighted_fair_value": "<WEIGHTED_FV>",
+        "weights": {"dcf": 0.6, "comps": 0.4},
+        "method": "weighted_dcf_comps"
       },
       "methodology": "<DCF_METHODOLOGY>",
       "assumptions_displayed": true

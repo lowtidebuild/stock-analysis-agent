@@ -104,3 +104,82 @@ def test_calculate_dcf_includes_reverse_block_when_price_provided():
     out = dcf.calculate_dcf(inputs)
     assert "reverse_dcf" in out
     assert out["reverse_dcf"]["target_price"] == 100.0
+
+
+def test_terminal_value_warning_when_above_75pct():
+    inputs = {
+        "current_price": 100,
+        "diluted_shares": 1000,
+        "fcf_ttm": 100,
+        "fcf_growth_rate": 0.03,
+        "wacc": 0.08,
+        "terminal_growth_rate": 0.04,
+        "forecast_years": 5,
+        "net_debt": 0,
+    }
+
+    out = dcf.calculate_dcf(inputs)
+    ratio = out["pv_terminal_value"] / out["enterprise_value"]
+
+    assert ratio > 0.75
+    assert any("terminal value" in item.lower() and "75" in item for item in out["errors"])
+
+
+def test_mid_year_convention_increases_npv():
+    base = {
+        "current_price": 100,
+        "diluted_shares": 1000,
+        "fcf_ttm": 100,
+        "fcf_growth_rate": 0.10,
+        "wacc": 0.10,
+        "terminal_growth_rate": 0.025,
+        "forecast_years": 5,
+        "net_debt": 0,
+    }
+
+    end = dcf.calculate_dcf(base)
+    mid = dcf.calculate_dcf({**base, "mid_year_convention": True})
+
+    assert mid["enterprise_value"] > end["enterprise_value"]
+
+
+def test_per_year_growth_rates_override_single_rate():
+    inputs = {
+        "current_price": 100,
+        "diluted_shares": 1000,
+        "fcf_ttm": 100,
+        "growth_rates": [0.20, 0.18, 0.15, 0.12, 0.10],
+        "wacc": 0.10,
+        "terminal_growth_rate": 0.025,
+        "forecast_years": 5,
+        "net_debt": 0,
+    }
+
+    out = dcf.calculate_dcf(inputs)
+
+    assert out["assumptions"]["growth_rates"] == [0.20, 0.18, 0.15, 0.12, 0.10]
+    assert "20.00%" in out["formulas"]["growth_path"]
+    assert out["enterprise_value"] is not None
+
+
+def test_reconcile_with_comps_dcf_above_comps():
+    inputs = {
+        "current_price": 100,
+        "diluted_shares": 1000,
+        "fcf_ttm": 100,
+        "fcf_growth_rate": 0.10,
+        "wacc": 0.08,
+        "terminal_growth_rate": 0.025,
+        "forecast_years": 5,
+        "net_debt": 0,
+        "peer_median_ev_ebitda": 12,
+        "target_ttm_ebitda": 150,
+    }
+
+    out = dcf.calculate_dcf(inputs)
+    rec = out["valuation_reconciliation"]
+
+    assert rec["dcf_fair_value_per_share"] is not None
+    assert rec["comp_implied_per_share"] == 1.8
+    assert "weighted_fair_value" in rec
+    assert rec["method"] == "weighted_dcf_comps"

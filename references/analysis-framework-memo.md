@@ -166,6 +166,28 @@ Include when dcf_analysis is present in analysis-result.json:
 
 Word count: 200-300 words for narrative + sensitivity table
 
+### Section 4a.2 — 평가 통합 (DCF vs 트레이딩 컴프)
+
+Include when `sections.dcf_analysis.valuation_reconciliation` or the calculator output
+contains a reconciliation block. DCF 단독 평가가 모든 정보를 담지 못할 때 동종 중간값과의
+weighted 결과를 표시한다. M&A precedent transactions는 retail 데이터 신뢰도 문제로 제외한다.
+
+| 방법 | 적정가/주 | 가중치 | 기여분 |
+|---|---|---|---|
+| DCF | $XXX | 60% | $XXX |
+| 트레이딩 컴프 (peer median EV/EBITDA × TTM EBITDA) | $XXX | 40% | $XXX |
+| **가중 평균** | **$XXX** | 100% | $XXX |
+
+**의미 해석**:
+- DCF > 컴프 by >20% → 시장이 fundamentals 미반영 또는 forecast가 낙관적
+- 컴프 > DCF by >20% → 시장이 동종 대비 premium 인정 또는 DCF 입력이 보수적
+- |차이| < 10% → 두 관점 합치, conviction 상승
+
+**가중치 조정**:
+- 성숙한 dividend-paying 기업: DCF 50% / 컴프 50%
+- 고성장 / 손익분기 미달: DCF 70% / 컴프 30% (컴프 multiple 변동성 큼)
+- 사이클리컬: DCF 40% / 컴프 60% (정점 EBITDA가 DCF 입력 왜곡)
+
 ### Section 4a.1 — Reverse DCF / Expectations Investing (Mode D, optional)
 
 Include when `sections.dcf_analysis.reverse.status == "success"`. Otherwise (status `exceeds_ceiling`, `below_floor`) include a single explanatory paragraph; for other statuses (`wacc_invalid`, `negative_fcf`, `invalid_input`) omit entirely.
