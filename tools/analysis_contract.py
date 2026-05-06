@@ -238,6 +238,9 @@ def build_run_paths(
         "quality_report": ticker_root / "quality-report.json",
         "reports_dir": output_dir / "reports",
         "snapshot_dir": output_dir / "data" / ticker_upper,
+        # Phase D — peer mini-pipeline (Mode C/D only). Run-shared, not per-ticker.
+        "peers_dir": run_root / "peers",
+        "peers_cache_dir": output_dir / "data" / "peers-cache",
     }
 
 
