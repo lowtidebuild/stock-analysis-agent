@@ -1,0 +1,62 @@
+{
+  "ticker": "GOOGL",
+  "company_name": "Alphabet Inc.",
+  "exchange": "NASDAQ",
+  "market": "US",
+  "data_mode": "enhanced",
+  "output_mode": "C",
+  "output_language": "ko",
+  "analysis_date": "2026-05-06",
+  "price_at_analysis": 388.43,
+  "currency": "USD",
+  "rr_score": 1.69,
+  "verdict": "Watch",
+  "company_type": "Technology/Platform",
+  "scenarios": {
+    "bull": {"target": 480.00, "return_pct": "+23.6%", "probability": 0.30, "key_assumption": "Cloud op margin 18% by 2026Q4 + Anthropic compute revenue $25B run-rate"},
+    "base": {"target": 418.00, "return_pct": "+7.6%", "probability": 0.50, "key_assumption": "Cloud op margin 14%, Search ad +9% YoY, capex $80B normalizes 2027"},
+    "bear": {"target": 320.00, "return_pct": "-17.6%", "probability": 0.20, "key_assumption": "DOJ remedy forces Chrome divestiture + Search share -300bp"}
+  },
+  "valuation_bridge": {
+    "anchors": [
+      {
+        "label": "DCF (Base)",
+        "value_per_share": 241.20,
+        "weight": 0.25,
+        "method": "10Y FCF + terminal",
+        "tag": "[Calc]"
+      },
+      {
+        "label": "Comp Multiples",
+        "value_per_share": 299.67,
+        "weight": 0.25,
+        "method": "Peer median EV/EBITDA × TTM",
+        "tag": "[Calc]"
+      },
+      {
+        "label": "Analyst Median Target",
+        "value_per_share": 428.50,
+        "weight": 0.25,
+        "method": "52 analysts consensus",
+        "tag": "[Est]"
+      },
+      {
+        "label": "우리 Base Scenario",
+        "value_per_share": 418.00,
+        "weight": 0.25,
+        "method": "Probability-weighted 12M target",
+        "tag": "[Calc]"
+      }
+    ],
+    "current_price": 388.43,
+    "weighted_fair_value": 346.84,
+    "implied_view_vs_market": "-10.7%",
+    "reconciliation_logic": "DCF $241은 capex $80B 정상화 가정과 WACC 8.5%에 매우 민감하며 (WACC ±100bp = $35 swing), 4개 앵커 중 가장 보수적이다. Comp Multiples $300은 peer median EV/EBITDA 22배에 TTM EBITDA $161B을 적용한 결과로 sector multiple compression 리스크에 노출되어 있다. Analyst median $428.50과 우리 Base 시나리오 $418은 Cloud monetization 가속과 Anthropic 컴퓨트 약정의 multi-year 수익 인식을 반영한 강세 의견이다. 4개 앵커를 동일 가중(각 0.25)으로 평균 낸 $346.84는 현재가 $388.43 대비 -10.7%로, 시장이 단기 낙관 편향을 가지고 있다는 점을 시사한다. 이 결과는 R/R 1.69의 'Watch' 결론과 정합하며, base 시나리오 진입 조건(Cloud 마진 14% 달성)이 확인되기 전까지 추가 매수는 보류한다.",
+    "decision_anchor": "scenarios.base"
+  },
+  "sections": {
+    "variant_view_q1": "Cloud 마진은 2026Q4까지 14%를 달성하는가? — 가장 차별적인 base case 변수.",
+    "variant_view_q2": "DOJ 잔여 시정명령이 검색 광고 매출에 미치는 실질 영향은?",
+    "variant_view_q3": "Anthropic 컴퓨트 약정의 GAAP 매출 인식 시점과 데이터센터 capex peak의 FCF 압박."
+  }
+}

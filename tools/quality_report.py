@@ -15,7 +15,9 @@ from tools.artifact_validation import (
     validate_artifact_data,
     validate_cross_artifact_consistency,
     validate_formula_metrics,
+    validate_valuation_bridge,
     validate_verdict_alignment,
+    _classify_valuation_bridge_severity,
 )
 
 QUALITY_ITEM_STATUSES = {"PASS", "PASS_WITH_FLAGS", "CRITICAL_FLAG", "FAIL", "SKIP"}
@@ -49,6 +51,7 @@ CORE_GENERATED_ITEMS = (
     "verdict_policy",
     "cross_artifact_consistency",
     "raw_artifact_access",
+    "valuation_bridge_consistency",
 )
 BASELINE_GENERATED_ITEMS = (
     "financial_consistency",
@@ -803,6 +806,63 @@ def build_raw_artifact_access_item(
     return item
 
 
+def build_valuation_bridge_consistency_item(analysis: dict[str, Any]) -> dict[str, Any]:
+    """Deterministic check for the Mode C ``valuation_bridge`` widget.
+
+    Enforces the five framework invariants
+    (`references/analysis-framework-dashboard.md` §5b lines 265–271):
+
+    1. Anchor weights sum to 1.0 (within ±0.01).
+    2. ``weighted_fair_value ≈ Σ(value × weight)`` within 0.1.
+    3. ``implied_view_vs_market`` matches
+       ``(weighted_fair_value − current_price) / current_price × 100``.
+    4. ``reconciliation_logic`` ≥ 50 whitespace-delimited tokens.
+    5. ``decision_anchor`` is one of the framework's allowed targets.
+
+    Severity: arithmetic violations (1, 2, 3) are ``BLOCKER`` (patchable);
+    narrative violations (4, 5) are ``MAJOR``. When ``valuation_bridge``
+    is absent (older snapshots / Mode A/B/D), the item returns
+    ``status="SKIP"`` so backward compatibility is preserved and the
+    delivery gate stays clean.
+    """
+    if "valuation_bridge" not in (analysis or {}):
+        return {
+            "status": "SKIP",
+            "reason": "valuation_bridge not present",
+            "severity": "NONE",
+            "delivery_impact": "none",
+            "blocker_action": "none",
+        }
+
+    errors = validate_valuation_bridge(analysis)
+    if not errors:
+        return {
+            "status": "PASS",
+            "severity": "NONE",
+            "delivery_impact": "none",
+            "blocker_action": "none",
+        }
+
+    severities = {_classify_valuation_bridge_severity(error) for error in errors}
+    if "BLOCKER" in severities:
+        severity = "BLOCKER"
+        delivery_impact = "delivery_blocking_flag"
+        blocker_action = "patchable"
+    else:
+        severity = "MAJOR"
+        delivery_impact = "non_blocking_flag"
+        blocker_action = "none"
+
+    item: dict[str, Any] = {
+        "status": "FAIL",
+        "errors": errors,
+        "severity": severity,
+        "delivery_impact": delivery_impact,
+        "blocker_action": blocker_action,
+    }
+    return item
+
+
 def infer_delivery_impact(item_name: str, item_payload: dict[str, Any]) -> str:
     severity = infer_delivery_severity(item_name, item_payload)
     if severity == "NONE":
@@ -1246,6 +1306,7 @@ def build_quality_report(
         "verdict_policy": build_verdict_policy_item(analysis),
         "cross_artifact_consistency": build_cross_artifact_item(research_plan, validated, analysis),
         "raw_artifact_access": build_raw_artifact_access_item(evidence_pack, analysis),
+        "valuation_bridge_consistency": build_valuation_bridge_consistency_item(analysis),
     }
     if report_path is not None:
         generated_items["rendered_output"] = build_rendered_output_item(report_path, analysis, validated)

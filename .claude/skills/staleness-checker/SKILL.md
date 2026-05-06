@@ -60,21 +60,40 @@ IF EARNINGS_OVERRIDE:
     → Reason: earnings data fundamentally changes valuation inputs
 ```
 
-### Step 0.4 — Delta Analysis Detection
+### Step 0.4 — Delta Analysis Detection (Auto Delta Mode, default ON)
 
-Check if the user's query contains delta analysis trigger keywords:
+Auto Delta Mode (Phase B) defaults ON. Whenever a previous snapshot exists for
+the ticker the orchestrator must auto-run the delta comparator regardless of
+keyword detection. Keyword detection is retained only as a manual fallback for
+older single-snapshot states (treat it as advisory, not gating).
 
-**English triggers**: "compare", "vs last time", "since last analysis", "what changed", "update", "delta", "difference from before", "how has it changed"
-
-**Korean triggers**: "이전이랑", "지난번이랑", "비교해줘", "달라진 것", "바뀐 것", "업데이트", "뭐가 달라졌어", "전이랑 비교"
+**Auto trigger rule**:
 
 ```
-IF delta keywords detected AND snapshot exists:
-    → Set delta_mode = true
-    → After new analysis completes (Steps 1–9), run:
-      python delta-comparator.py compare --ticker {ticker} --old-date {previous_date} --new-date latest
-    → Prepend delta report to output
+IF previous snapshot exists for {ticker} (latest pointer or snapshots dir):
+    → Set auto_delta = true (unless orchestrator received --no-delta)
+    → After Step 10 persists the new snapshot, the prior snapshot becomes the
+      "old" side and the new one becomes the "new" side.
+    → Run:
+      python .claude/skills/data-manager/scripts/delta-comparator.py compare \
+          --ticker {ticker} --old-date latest --new-date latest --format html
+    → Capture stdout into pipeline state as `auto_delta_payload.html`.
+      Also capture --format markdown into `auto_delta_payload.markdown` for
+      Mode D / chat-summary surfaces.
+    → Renderers (Mode A/B/C/D) prepend the banner above their first content
+      section. Empty stdout = no banner (graceful skip / single snapshot /
+      --no-delta).
 ```
+
+Keyword triggers (manual fallback only):
+
+**English**: "compare", "vs last time", "since last analysis", "what changed", "update", "delta", "difference from before", "how has it changed"
+
+**Korean**: "이전이랑", "지난번이랑", "비교해줘", "달라진 것", "바뀐 것", "업데이트", "뭐가 달라졌어", "전이랑 비교"
+
+When `--no-delta` is passed by the orchestrator (CLAUDE.md Workflow 1 Step 0),
+set `auto_delta = false` and skip the comparator call. The renderers must
+still tolerate a missing banner (no fallback content required).
 
 ### Step 0.5 — Session Context Check
 

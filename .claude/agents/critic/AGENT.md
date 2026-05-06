@@ -51,9 +51,30 @@ The quality checker owns:
 - `contract_validation`: artifact schema and contract validation
 - `scenario_consistency`: probability sum, base probability priority, target ordering, return math, and R/R formula
 - `semantic_consistency`: deterministic semantic and formula checks
+- `valuation_bridge_consistency`: arithmetic and narrative invariants for the Mode C `valuation_bridge` widget (see below)
 - `rendered_output`: disclaimer, rendered structure, source-tag coverage, Grade D rendered values, and Mode C chart initialization
 
 Only raise a critic finding for these areas if the existing quality report is missing, internally contradictory, or the rendered output plainly contradicts a PASS item. In that case use `item: "quality_report_contract_gap"` and describe the contradiction precisely.
+
+### `valuation_bridge_consistency` — invariants enforced
+
+This deterministic item runs only when the analysis result includes a top-level `valuation_bridge` object (Mode C). When the field is absent (older snapshots, Mode A/B/D, or analyses produced before the widget shipped), the item returns `status: "SKIP"` so backward compatibility is preserved.
+
+The five invariants (verbatim from `references/analysis-framework-dashboard.md` lines 265–271):
+
+1. **Weights sum to 1.0** — `sum(anchor.weight) == 1.0` within ±0.01.
+2. **Weighted FV arithmetic** — `weighted_fair_value ≈ Σ(anchor.value_per_share × anchor.weight)` within ±0.1.
+3. **Implied view formula** — `implied_view_vs_market` matches `(weighted_fair_value − current_price) / current_price × 100`, including sign and magnitude (±0.2 pp tolerance for one-decimal rounding).
+4. **Reconciliation length** — `reconciliation_logic` ≥ 50 whitespace-delimited tokens (Korean tokens count).
+5. **Decision anchor enum** — `decision_anchor` ∈ `{scenarios.bull, scenarios.base, scenarios.bear, weighted_fair_value}`.
+
+Severity classification (set on the item payload before delivery-gate computation):
+
+- Arithmetic violation (#1, #2, #3) → `severity: BLOCKER`, `blocker_action: patchable`. The bridge is the dashboard's primary defense against the "DCF says one thing, analyst targets say another" criticism — a malformed bridge silently shipping is exactly what this check exists to prevent.
+- Narrative violation (#4 reconciliation length, #5 decision_anchor enum) → `severity: MAJOR`, delivered with flag.
+- Mixed errors → BLOCKER takes priority.
+
+The Critic does NOT re-run these arithmetic invariants in `critic_review`. If the deterministic item is missing or its PASS verdict plainly contradicts the rendered output (e.g. the HTML shows a different weighted_fair_value than the JSON), raise `quality_report_contract_gap` instead.
 
 ---
 
@@ -212,6 +233,7 @@ Write to `output/runs/{run_id}/{ticker}/quality-report.json` and preserve the ex
     "contract_validation": {"status": "PASS"},
     "scenario_consistency": {"status": "PASS"},
     "semantic_consistency": {"status": "PASS"},
+    "valuation_bridge_consistency": {"status": "PASS"},
     "verdict_policy": {"status": "PASS"},
     "cross_artifact_consistency": {"status": "PASS"},
     "rendered_output": {"status": "PASS"}

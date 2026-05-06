@@ -132,6 +132,44 @@ Example:
 - FAIL: "AAPL is the best pick due to its strong brand and ecosystem"
 - PASS: "AAPL is the preferred pick at current prices. At 28x P/E vs. MSFT's 35x, AAPL offers better valuation with comparable FCF yield (3.8% vs. 3.2% [Filing]), and iPhone services revenue growing 15% YoY provides more visible earnings than GOOGL's ad-cyclical revenue. Primary risk: China revenue (18% of total [Filing]) faces regulatory pressure. This is an opinion — not a buy recommendation."
 
+### Step 5b — Macro Context (Light)
+
+Mode B includes a **light** macro context block (Phase C, OD-2). Goal: surface
+the 3-5 macro series that matter for the subject's company type AND show how
+each peer differs in macro sensitivity (Beta, FX exposure, sector cyclicality).
+
+**Light bundle rules**:
+- 3-5 macro series only — no full Mode C sensitivity table
+- Series selection driven by Step 2.5a (market-router) using subject (peer index 0) `company_type`
+- Korean stocks always include `USD/KRW`
+- 1 short narrative paragraph **per peer** (≤ ~120 characters), highlighting how that specific peer differs (Beta, business mix, FX leverage)
+- Variant view rule applies: narrative must NOT be generic — replacing the ticker with a competitor should make the sentence false
+
+**Schema** (top-level `analysis-result.json` field for Mode B):
+
+```json
+"macro_context_light": {
+  "key_series": [
+    {"id": "DGS10", "label": "10Y Treasury", "value": 4.45, "unit": "%", "tag": "[Macro]"},
+    {"id": "USD_KRW", "label": "USD/KRW", "value": 1380, "unit": "KRW", "tag": "[Macro]"},
+    {"id": "Memory_ASP_index", "label": "Memory ASP", "value": "Strong", "tag": "[News]"}
+  ],
+  "narrative_per_peer": {
+    "005930": "삼성전자는 메모리 + 모바일 + VD 다각화로 USD/KRW 강세 시 환차익 부분 상쇄. Beta 1.3은 매크로 둔화 시 SK 대비 상대적으로 안정.",
+    "000660": "SK하이닉스는 메모리 단일 베팅으로 메모리 ASP 사이클에 100% 노출. Beta 2.0은 금리 +50bp 시 -10~15% 추가 하락 risk."
+  }
+}
+```
+
+**Render contract** (output-generator/render-comparison.py):
+- Section heading: "매크로 컨텍스트 · 종목별 노출 차이" (Korean) or "Macro Context · Per-Peer Exposure" (English)
+- Top: compact pill list of key series (label + value + tag badge)
+- Bottom: per-peer narrative card grid (1 column on mobile, up to 3 columns desktop)
+- Inserted between Relative Valuation and Scenario Cards
+- Backward-compatible: missing `macro_context_light` → section is omitted entirely (no empty heading)
+
+**Source tags**: `[Macro]` for FRED-derived series, `[News]` or `[Calc]` for qualitative or computed indices.
+
 ### Step 6 — Key Differentiators
 
 Identify 2–3 fundamental differences that explain divergent valuations or risk profiles:
@@ -200,5 +238,6 @@ Before generating the HTML file:
 - [ ] Best Pick explicitly labeled as opinion
 - [ ] Key Differentiators have ≥2 specific numbers each
 - [ ] All metric values in table have source tags
+- [ ] Macro Context (Light) populated with 3-5 series + per-peer narrative (or omitted if no macro signal available)
 - [ ] Disclaimer present
 - [ ] HTML file saved to correct path
