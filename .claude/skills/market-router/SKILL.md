@@ -109,9 +109,11 @@ From `us-data-sources.md` (US) or `kr-data-sources.md` (KR), select searches:
 
 **Standard Mode — KR** (see `kr-data-sources.md` for full 8-query list)
 
-### Step 2.5a — Macro Factor Determination (Mode C/D only)
+### Step 2.5a — Macro Factor Determination (Mode B/C/D)
 
-**Condition**: Only execute when `output_mode` is `"C"` or `"D"`. Skip entirely for Mode A and Mode B.
+**Condition**: Execute for `output_mode` in `{"B", "C", "D"}`. Mode A skips this step entirely. Mode B uses a **light bundle** (3-5 series, no sensitivity table); Mode C/D use the full bundle.
+
+#### 2.5a.1 — Mode C/D (full bundle)
 
 1. Read `company_type` from the Step 2.2 classification result.
 2. Look up macro risk factors in `company-type-classification.md` → "Macro Risk Factors by Type" section for the matching `company_type`.
@@ -129,6 +131,32 @@ From `us-data-sources.md` (US) or `kr-data-sources.md` (KR), select searches:
    - `macro_factors`: list of factor names from the classification lookup (+ KR overlay if applicable)
 
 If `company_type` is not found in the macro factors table, use the sector's closest match or default to `["GDP growth", "interest rates", "inflation"]`.
+
+#### 2.5a.2 — Mode B (light bundle, Phase C / OD-2)
+
+For Mode B (peer comparison), select **3-5 macro series** based on the **subject** company's `company_type` (the subject is `peer_tickers[0]` — the first ticker in the comparison set, treated as the analysis primary).
+
+**Company type → Light series bundle**:
+
+| Company Type | Light Series Bundle (3-5 series) |
+|--------------|----------------------------------|
+| Tech / Software / Platform | DGS10, USD index (DTWEXBGS), Consumer Sentiment (UMCSENT) |
+| Tech - Memory Semiconductor | DGS10, USD/KRW (KR override), Memory ASP (qualitative tag) |
+| Bank / Insurance / Financial | DGS10, DGS2 (yield curve), BAA10Y credit spread |
+| Energy / Oil / Gas | WTI crude, USD index, Real GDP |
+| Consumer / Retail | UMCSENT, CPI YoY, UNRATE |
+| Pharma / Biotech | DGS10, FDA approval pipeline (qualitative), healthcare sector ETF (XLV) |
+| Default / Other | DGS10, CPI YoY, Real GDP |
+
+**Korean stocks**: ALWAYS include `USD/KRW` regardless of company type (overlay rule). Drop the lowest-priority US series if including USD/KRW would push the bundle past 5 series.
+
+Set output fields in `research-plan.json`:
+- `macro_search_required`: `true`
+- `macro_bundle`: `"light"` (signals to Analyst inline Mode B that the light bundle is required)
+- `macro_factors`: light bundle series ids (3-5 series)
+- `macro_search`: optional — typically Mode B reuses the FRED snapshot already cached for the session
+
+**Mode B contract**: Mode B's Analyst inline step writes `macro_context_light` into `analysis-result.json` with two fields: `key_series[]` (3-5 entries with `id`, `label`, `value`, `unit`, `tag`) and `narrative_per_peer{}` (one short paragraph per ticker, highlighting how that peer's macro sensitivity differs from the others — Beta, FX exposure, sector cyclicality, etc.). See `references/analysis-framework-comparison.md` Step 5b for the full schema and render contract.
 
 ### Step 2.6 — Write Research Plan
 
@@ -217,7 +245,7 @@ Language: {en/ko}
 Peers: {list}
 Tier 1 calls: {N} API calls planned
 Tier 2 searches: {N} web searches planned
-Macro factors: {Yes (N factors) / Skipped (Mode A/B)}
+Macro factors: {Yes - full bundle (N factors) [Mode C/D] / Yes - light bundle (3-5 series) [Mode B] / Skipped (Mode A)}
 
 → Proceeding to Step 3 (Financial Data Collector) [Enhanced] or Step 4 (Web Researcher) [Standard]
 ```
@@ -230,7 +258,7 @@ Macro factors: {Yes (N factors) / Skipped (Mode A/B)}
 - [ ] Korean stock correctly routed to Standard Mode
 - [ ] Company type classified with confidence level
 - [ ] 3–5 peer tickers identified
-- [ ] Macro factors determined (Mode C/D) or skipped (Mode A/B)
+- [ ] Macro factors determined: full bundle for Mode C/D, light 3-5 series for Mode B (Phase C), skipped for Mode A
 - [ ] Tier 1 API call list selected based on output_mode
 - [ ] Tier 2 search policy built (Standard Mode uses yfinance-first adaptive searches)
 - [ ] Run-local artifact root initialized

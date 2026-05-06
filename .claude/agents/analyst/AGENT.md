@@ -149,6 +149,12 @@ Follow `analysis-framework-comparison.md` exactly:
 3. Relative valuation assessment (premium/discount justified?)
 4. R/R Score ranking with company-specific rationale
 5. Best Pick (labeled as opinion)
+5b. **Macro Context (Light) — Phase C**:
+   - Read the light macro bundle from `research-plan.json.macro_factors` (3-5 series chosen by Step 2.5a per the subject's `company_type`).
+   - Pull current values for each series from the FRED snapshot (`output/data/macro/fred-snapshot.json`) when available; for qualitative entries (e.g., Memory ASP), use the latest `[News]`-tagged signal from validated-data or evidence-pack.
+   - Generate ONE narrative paragraph per peer (≤ ~120 characters) that highlights how THAT specific peer's macro sensitivity differs from the others — Beta-driven rate exposure, FX leverage, sector cyclicality, business mix. The narrative must fail the variant-view replacement test: substituting another peer's ticker should make the sentence false.
+   - Write the result to `analysis-result.json` (top level) as `macro_context_light = {"key_series": [...], "narrative_per_peer": {...}}` per the schema in `references/analysis-framework-comparison.md` Step 5b.
+   - If the FRED snapshot is unavailable AND no qualitative signal can be built, OMIT the field rather than emit Grade D placeholders (blank > wrong number).
 6. Key Differentiators (2–3, with specific numbers from ≥2 peers)
 7. Apply `mode-b-template.md` for HTML structure
 
