@@ -157,6 +157,33 @@ class RenderedOutputValidationTests(unittest.TestCase):
 
             self.assertEqual(item["status"], "PASS")
 
+    def test_mode_c_topic_only_heading_gets_insight_title_warning(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            report_path = pathlib.Path(tmp) / "report.html"
+            report_path.write_text(_mode_c_html("<h2>Valuation Analysis</h2>"), encoding="utf-8")
+
+            item = build_rendered_output_item(
+                report_path,
+                {"ticker": "XYZ", "output_mode": "C", "sections": {"macro_context": None}},
+                {"exclusions": []},
+            )
+
+            self.assertEqual(item["status"], "PASS_WITH_FLAGS")
+            self.assertTrue(any(flag["rule"] == "insight_title_rule" for flag in item["insight_title_flags"]))
+
+    def test_mode_c_numbered_heading_passes_insight_title_rule(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            report_path = pathlib.Path(tmp) / "report.html"
+            report_path.write_text(_mode_c_html("<h2>EV/EBITDA 14x, 22% discount vs peers</h2>"), encoding="utf-8")
+
+            item = build_rendered_output_item(
+                report_path,
+                {"ticker": "XYZ", "output_mode": "C", "sections": {"macro_context": None}},
+                {"exclusions": []},
+            )
+
+            self.assertEqual(item["status"], "PASS")
+
     def test_mode_c_html_missing_disclaimer_fails(self):
         with tempfile.TemporaryDirectory() as tmp:
             report_path = pathlib.Path(tmp) / "report.html"

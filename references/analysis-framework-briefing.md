@@ -29,6 +29,25 @@ Mode A produces a single-page HTML briefing — the fastest output mode. It comb
 
 ## Part 1 — Quick Verdict Card (~200 words)
 
+### Delta Mode — Old → New Table/Sentence (added 2026-05-06)
+
+When a prior snapshot exists for this ticker (`output/data/{ticker}/latest.json` is non-null),
+lead the briefing with a quantified delta sentence before the one-line thesis:
+
+> "지난 분석 ({YYYY-MM-DD}) 대비 R/R 1.8 → 1.4 (-22%), DCF fair value $190 → $172 (-9.5%) — Q1 가이던스 하향이 주 원인."
+
+Then include a compact Old → New table if space allows:
+
+| 항목 | 이전 ({YYYY-MM-DD}) | 현재 | 변화 | 근거 |
+|---|---|---|---|---|
+| Verdict | OW / N / UW | OW / N / UW | maintained / upgrade / downgrade | One-line reason |
+| R/R Score | x.xx | x.xx | +/- | What moved |
+| Bull/Base/Bear prob | xx% / xx% / xx% | xx% / xx% / xx% | +/- | New evidence |
+| DCF fair value | $xxx | $xxx | +/-X% | Which assumption moved |
+| Top thesis pillar | "..." | "..." | unchanged / changed | If changed, what disconfirmed it |
+
+Bad: "지난번 분석에서 일부 조정." This adds no information and fails the insight-title spirit.
+
 ### 1.1 — One-Line Thesis (20 words max)
 
 A single sentence capturing the investment thesis. Must pass the competitor replacement test.

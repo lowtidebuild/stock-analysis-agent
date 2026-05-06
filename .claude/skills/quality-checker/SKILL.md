@@ -155,6 +155,24 @@ Mode A scenario, date, and timeline numbers.
 
 ---
 
+## Section F — Insight-Title Rule (added 2026-05-06)
+
+For Mode C and Mode D outputs, every H2/H3 section title is checked.
+
+**Pass criterion**: title contains at least one of `{digit, "%", "x", "$"}`.
+
+**Fail action**: append `[Quality flag: insight-title-rule]` next to the title in the
+delivered output when patching is available. The deterministic quality report records
+`rendered_output.insight_title_flags[]`. Critic loop treats this as MINOR severity,
+so it surfaces as a non-blocking quality flag rather than blocking delivery.
+
+**Exemptions**:
+- Universal navigation labels: "Executive Summary", "Disclaimer", "Sources", "Appendix"
+- Korean equivalents: "요약", "면책", "출처", "부록", "데이터 소스"
+- Mode A briefing (format is too tight for prose-style insight titles)
+
+---
+
 ## Quality Report Output
 
 Write to `output/runs/{run_id}/{ticker}/quality-report.json`:

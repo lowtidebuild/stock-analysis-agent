@@ -77,6 +77,18 @@ MODE_REQUIRED_RENDERED_TERMS = {
         ("risk", ("risk", "리스크")),
     ),
 }
+INSIGHT_TITLE_EXEMPTIONS = {
+    "executive summary",
+    "disclaimer",
+    "sources",
+    "appendix",
+    "요약",
+    "면책",
+    "출처",
+    "부록",
+    "데이터 소스",
+}
+INSIGHT_TITLE_SIGNAL = re.compile(r"[\d%x$]")
 
 
 def load_json(path: str | Path) -> dict[str, Any]:
@@ -120,6 +132,90 @@ def _html_body_text(rendered_text: str) -> str:
     text = re.sub(r"<style\b[^>]*>.*?</style>", " ", text, flags=re.IGNORECASE | re.DOTALL)
     text = re.sub(r"<[^>]+>", " ", text)
     return re.sub(r"\s+", " ", text).strip()
+
+
+def _strip_markup(text: str) -> str:
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", text)).strip()
+
+
+def _docx_heading_texts(report_path: Path) -> list[str]:
+    headings: list[str] = []
+    try:
+        with zipfile.ZipFile(report_path) as archive:
+            document_xml = archive.read("word/document.xml").decode("utf-8", errors="replace")
+    except Exception:  # noqa: BLE001
+        return headings
+
+    for paragraph in re.findall(r"<w:p\b.*?</w:p>", document_xml, flags=re.DOTALL):
+        if not re.search(r'<w:pStyle\b[^>]*w:val="Heading[12]"', paragraph):
+            continue
+        fragments = re.findall(r"<w:t\b[^>]*>(.*?)</w:t>", paragraph, flags=re.DOTALL)
+        text = html_unescape("".join(fragments))
+        text = re.sub(r"\s+", " ", text).strip()
+        if text:
+            headings.append(text)
+    return headings
+
+
+def html_unescape(text: str) -> str:
+    return (
+        text.replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&amp;", "&")
+        .replace("&quot;", '"')
+        .replace("&apos;", "'")
+    )
+
+
+def _extract_heading_texts(report_path: Path, rendered_text: str) -> list[str]:
+    suffix = report_path.suffix.lower()
+    if suffix in {".html", ".htm"}:
+        return [
+            _strip_markup(match)
+            for match in re.findall(r"<h[23]\b[^>]*>(.*?)</h[23]>", rendered_text, flags=re.IGNORECASE | re.DOTALL)
+            if _strip_markup(match)
+        ]
+    if suffix == ".docx":
+        return _docx_heading_texts(report_path)
+    return [
+        line.lstrip("#").strip()
+        for line in rendered_text.splitlines()
+        if re.match(r"^#{2,3}\s+", line)
+    ]
+
+
+def check_insight_titles(
+    report_path: str | Path,
+    rendered_text: str | None = None,
+    *,
+    output_mode: str | None = None,
+) -> list[dict[str, str]]:
+    """Return flags for Mode C/D headings that are topic-only."""
+    mode = (output_mode or "").upper()
+    if mode == "A":
+        return []
+    path = Path(report_path)
+    if rendered_text is None:
+        rendered_text, read_error = _read_rendered_text(path)
+        if rendered_text is None:
+            return [{"rule": "insight_title_rule", "severity": "MINOR", "title": "", "detail": read_error or "unreadable output"}]
+
+    flags: list[dict[str, str]] = []
+    for title in _extract_heading_texts(path, rendered_text):
+        normalized = title.strip().lower()
+        if not normalized or normalized in INSIGHT_TITLE_EXEMPTIONS:
+            continue
+        if INSIGHT_TITLE_SIGNAL.search(title):
+            continue
+        flags.append(
+            {
+                "rule": "insight_title_rule",
+                "severity": "MINOR",
+                "title": title,
+                "detail": "Heading lacks a number-bearing insight",
+            }
+        )
+    return flags
 
 
 def _stringify_metric_value(value: float) -> list[str]:
@@ -373,6 +469,10 @@ def build_rendered_output_item(
             f"({source_coverage['source_tag_count']}/{source_coverage['expected_source_tags']})"
         )
 
+    insight_title_flags = check_insight_titles(path, rendered_text, output_mode=output_mode) if output_mode in {"C", "D"} else []
+    if insight_title_flags:
+        warnings.append(f"Insight-title rule flagged {len(insight_title_flags)} topic-only headings")
+
     errors.extend(_validate_unavailable_macro_rendering(visible_text, analysis, validated))
 
     item: dict[str, Any] = {
@@ -383,6 +483,8 @@ def build_rendered_output_item(
     }
     if mode_a_minimum_checks is not None:
         item["mode_a_minimum_checks"] = mode_a_minimum_checks
+    if insight_title_flags:
+        item["insight_title_flags"] = insight_title_flags
     if blank_violations:
         item["blank_over_wrong_violations"] = blank_violations
     if errors:

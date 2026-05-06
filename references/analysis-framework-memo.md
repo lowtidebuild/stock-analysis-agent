@@ -24,6 +24,23 @@ Read `investment-memo-prompt.md` BEFORE starting Mode D analysis. The philosophy
 - If a later section reveals a factual inconsistency in an earlier section, add an inline note: `[Correction: Section X stated Y; actual value is Z per [tag]]`
 - If a section requires data that is Grade D: write the heading and note "Excluded: insufficient verified data for this section component. See Appendix."
 
+### Delta Mode — Old → New Table (added 2026-05-06)
+
+When a prior snapshot exists for this ticker (`output/data/{ticker}/latest.json` is non-null),
+emit this table near the top of the memo, before the main thesis:
+
+| 항목 | 이전 ({YYYY-MM-DD}) | 현재 | 변화 | 근거 |
+|---|---|---|---|---|
+| Verdict | OW / N / UW | OW / N / UW | maintained / upgrade / downgrade | One-line reason |
+| R/R Score | x.xx | x.xx | +/- | What moved (price ↑, fair value ↓, scenario reweight, etc.) |
+| Bull case prob | xx% | xx% | +/- | New evidence |
+| Base case prob | xx% | xx% | +/- |  |
+| Bear case prob | xx% | xx% | +/- |  |
+| DCF fair value | $xxx | $xxx | +/-X% | Which assumption moved (growth, WACC, terminal g) |
+| Top thesis pillar | "..." | "..." | unchanged / changed | If changed, what disconfirmed it |
+
+If no prior snapshot exists, omit this table entirely.
+
 ---
 
 ## Section 1 — Executive Summary
@@ -58,6 +75,22 @@ Read `investment-memo-prompt.md` BEFORE starting Mode D analysis. The philosophy
    - "Network effects" → cite engagement metric or user growth [tag]
    - "IP/Patents" → cite patent count or revenue from licensed IP [tag]
    - Generic claim with no data → NOT ACCEPTABLE
+
+   Add this structured supplement after the competitive-position prose:
+
+   ### 해자(Moat) 평가 — 4축 스코어카드
+
+   | 해자 종류 | 강도 | 근거 (1 사실) |
+   |---|---|---|
+   | 네트워크 효과 | Strong / Moderate / Weak / N/A | 사용자 ↔ 사용자 또는 구매자 ↔ 판매자 플라이휠 강도 |
+   | 전환 비용 | Strong / Moderate / Weak / N/A | 기술 통합 깊이, 계약 락인, 행동적 습관 |
+   | 규모의 경제 | Strong / Moderate / Weak / N/A | 단위 비용 우위, 최소 효율 규모 |
+   | 무형 자산 | Strong / Moderate / Weak / N/A | 브랜드, 독점 데이터, 규제 라이선스, 특허 |
+
+   **Rules**:
+   - Each row requires exactly one verifiable supporting fact.
+   - N/A means the moat type does not apply to the business model; it does not mean "weak".
+   - If all four rows are Weak/N/A, explicitly call the company a "moat-less commodity business" and reframe valuation around P/B or EV/Revenue.
 
 3. **Addressable market** — TAM [tag], company penetration %, market growth rate [tag]
 

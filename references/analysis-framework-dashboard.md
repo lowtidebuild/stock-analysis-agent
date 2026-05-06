@@ -99,6 +99,22 @@ Q3 — Optionality Not in Consensus (100–150 words)
 - Each with rough size estimate: "If {option} achieves $X revenue by {date} at {Y}x multiple, it adds ~${Z} to fair value"
 - Be explicit about why consensus excludes this
 
+### Moat 스코어카드 (Mode C)
+
+Add a compact 4-axis moat table after Q1/Q2/Q3 and before Precision Risk:
+
+| 해자 종류 | 강도 | 근거 (1 사실) |
+|---|---|---|
+| 네트워크 효과 | Strong / Moderate / Weak / N/A | 사용자 ↔ 사용자 또는 구매자 ↔ 판매자 플라이휠 강도 |
+| 전환 비용 | Strong / Moderate / Weak / N/A | 기술 통합 깊이, 계약 락인, 행동적 습관 |
+| 규모의 경제 | Strong / Moderate / Weak / N/A | 단위 비용 우위, 최소 효율 규모 |
+| 무형 자산 | Strong / Moderate / Weak / N/A | 브랜드, 독점 데이터, 규제 라이선스, 특허 |
+
+**작성 규칙**:
+- 각 행은 정확히 1개의 검증 가능한 사실로 뒷받침되어야 함 (anti-generic 원칙)
+- N/A는 "이 회사는 이 해자가 없다"가 아니라 "이 해자 종류가 이 비즈니스 모델에 적용되지 않는다"는 뜻
+- 4축 모두 Weak/N/A이면 → variant view에서 "moat-less commodity 비즈니스"로 명시하고 valuation framework를 P/B 또는 EV/Revenue 중심으로 재조정
+
 **Precision Risk Table**:
 
 For each risk (3 risks minimum):
