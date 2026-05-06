@@ -234,7 +234,7 @@ when building `output/catalyst-calendar.json`.
 
 ---
 
-## `thesis_pillars[]` (added 2026-05-06)
+## `thesis_pillars[]`
 
 Each snapshot stores 3-5 pillars derived from the analyst output. Pillars are
 falsifiable claims that can be checked against future data.
