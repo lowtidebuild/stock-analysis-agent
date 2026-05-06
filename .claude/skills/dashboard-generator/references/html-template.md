@@ -333,21 +333,53 @@ Substitution rules:
       <thead>
         <tr class="bg-gray-50 text-gray-600 text-xs uppercase">
           <th class="text-left p-4 font-semibold">Company</th>
+          <th class="text-center p-4 font-semibold">Source</th>
           <th class="text-right p-4 font-semibold">Mkt Cap</th>
-          <th class="text-right p-4 font-semibold">Revenue (FY)</th>
           <th class="text-right p-4 font-semibold">Rev Growth</th>
           <th class="text-right p-4 font-semibold">Op Margin</th>
-          <th class="text-right p-4 font-semibold">P/E</th>
+          <th class="text-right p-4 font-semibold">P/E (Fwd)</th>
           <th class="text-right p-4 font-semibold">EV/EBITDA</th>
+          <th class="text-right p-4 font-semibold">FCF Yield</th>
         </tr>
       </thead>
       <tbody>
         {PEER_TABLE_ROWS}
-        <!-- Subject company row: class="bg-blue-50/60 border-b font-semibold" -->
-        <!-- Peer rows: class="border-b hover:bg-gray-50" -->
-        <!-- Positive growth: class="text-green-600" -->
+        <!--
+          Phase D peer-mini-pipeline rendering rules:
+          - Subject company row:  class="bg-blue-50/60 border-b font-semibold"
+          - Peer rows (full data):  class="border-b hover:bg-gray-50"
+          - Positive growth:  class="text-green-600"; negative:  class="text-red-600"
+          - Source badge column shows the canonical tag + grade pair, e.g.:
+              <span class="inline-block px-2 py-0.5 text-[10px] font-semibold rounded
+                           bg-emerald-100 text-emerald-700">[Filing] · A</span>   (subject, validated)
+              <span class="inline-block px-2 py-0.5 text-[10px] font-semibold rounded
+                           bg-blue-100 text-blue-700">[Portal] · B</span>          (Phase D peer)
+              <span class="inline-block px-2 py-0.5 text-[10px] font-semibold rounded
+                           bg-amber-100 text-amber-700">[Est] · C</span>           (estimate, last-resort)
+              <span class="inline-block px-2 py-0.5 text-[10px] font-semibold rounded
+                           bg-gray-200 text-gray-600">— · D</span>                 (no data)
+          - Per-cell missing data → render the literal "—" character (never "N/A", never 0).
+          - When a peer has no data at all (Mode C/D requested but Step 2.7 returned status="error"
+            for every peer, OR peer_tickers[] was empty), emit ONE placeholder row at the end of
+            tbody:
+              <tr class="border-b bg-amber-50/60">
+                <td colspan="8" class="p-4 text-center text-amber-700 text-sm">
+                  <i class="fa-solid fa-triangle-exclamation mr-2"></i>
+                  데이터 미수집 — peer-fetch.py가 동종업체 데이터를 가져오지 못했습니다.
+                  비교 분석 없이 subject ticker 단독으로 표시합니다.
+                </td>
+              </tr>
+          - When SOME peers fetched but a single peer failed, emit that peer's row with
+            grade="D", tag="—", every metric cell = "—", and prepend the
+            <i class="fa-solid fa-triangle-exclamation text-amber-500 mr-1"></i> icon
+            in the Company column.
+        -->
       </tbody>
     </table>
+    <p class="text-[11px] text-gray-400 mt-3 px-2">
+      Subject row uses validated filings ([Filing] Grade A); peer rows use the Phase D mini-pipeline
+      yfinance snapshot ([Portal] Grade B, 24h cache). Empty cells display "—" rather than fabricated values.
+    </p>
   </div>
 </section>
 

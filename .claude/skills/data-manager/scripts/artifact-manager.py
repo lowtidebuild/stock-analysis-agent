@@ -46,14 +46,29 @@ def init_run(tickers: list[str], run_id: str | None = None) -> dict:
 
     artifacts: dict[str, dict] = {}
     manifest_path = None
+    run_level_paths: dict[str, str] = {}
 
     for ticker in normalized_tickers:
         paths = build_run_paths(REPO_ROOT, resolved_run_id, ticker)
         ensure_directory(paths["ticker_root"])
         ensure_directory(paths["reports_dir"])
+        # Phase D: ensure run-shared peers/ dir AND the long-lived peer cache
+        # dir exist so the orchestrator can drop peer-fetch JSONs into them
+        # without an extra mkdir.
+        ensure_directory(paths["peers_dir"])
+        ensure_directory(paths["peers_cache_dir"])
         manifest_path = paths["run_manifest"]
         relpaths = relativize_paths(REPO_ROOT, paths)
         relpaths.pop("ticker_root", None)
+        # peers_dir / peers_cache_dir live at the run level, not the ticker
+        # level — promote them out of per-ticker artifacts to keep the
+        # manifest readable.
+        peers_dir_rel = relpaths.pop("peers_dir", None)
+        peers_cache_rel = relpaths.pop("peers_cache_dir", None)
+        if peers_dir_rel and "peers_dir" not in run_level_paths:
+            run_level_paths["peers_dir"] = peers_dir_rel
+        if peers_cache_rel and "peers_cache_dir" not in run_level_paths:
+            run_level_paths["peers_cache_dir"] = peers_cache_rel
         artifacts[ticker] = relpaths
 
     manifest = {
@@ -62,6 +77,7 @@ def init_run(tickers: list[str], run_id: str | None = None) -> dict:
         "tickers": normalized_tickers,
         "artifact_layout": "output/runs/{run_id}/{ticker}/",
         "artifacts": artifacts,
+        "run_level_artifacts": run_level_paths,
     }
 
     if manifest_path is None:
