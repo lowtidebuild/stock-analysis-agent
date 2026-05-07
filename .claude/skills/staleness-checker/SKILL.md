@@ -34,7 +34,23 @@ If `latest.json` is a pointer, verify that `refs.analysis_result` exists before 
 
 Calculate `days_since_analysis = today - analysis_date`. For pointer files, treat `expires_at` as the primary 24-hour reuse boundary; `analysis_date` remains the coarser fallback for older files and user-facing explanations.
 
-Apply staleness rules:
+**Mode E hard override (OD-F1)**: When the orchestrator has set
+`pipeline_state.mode_override == "E"` (because earnings-window-detector
+returned `window in {preview, review}` at CLAUDE.md Step 0.5, or the
+user passed `--mode E` / `--earnings-mode preview|review`), **skip the
+staleness table entirely and route to FRESH_COLLECTION**. Mode E should
+never reuse a stale snapshot — implied moves, options chains, and
+consensus EPS shift fast in the D-7~D+3 window.
+
+```
+IF pipeline_state.mode_override == "E":
+    → Routing decision: FRESH_COLLECTION
+    → Reason: Mode E (earnings window) per OD-F1
+    → Skip Step 0.2 / 0.3 / 0.4 staleness rules
+    → Proceed to Step 1 (query-interpreter)
+```
+
+Otherwise apply the standard staleness rules:
 
 | Days Since Analysis | Data Mode | Routing Decision |
 |--------------------|-----------|-----------------|
@@ -118,11 +134,20 @@ Snapshot found: {YES/NO}
 Analysis date: {date or N/A}
 Days since: {N or N/A}
 Earnings override: {YES/NO}
+Mode E override: {YES/NO}        # set when CLAUDE.md Step 0.5 detected window
+Earnings window: {preview/review/none/—}
 Delta mode: {YES/NO}
 
 → Routing: {REUSE / DELTA_FAST / STALE / FRESH_COLLECTION / EARNINGS_OVERRIDE}
 → Action: {brief description of what will happen next}
 ```
+
+When `Mode E override = YES`, the routing block must always read
+`Routing: FRESH_COLLECTION` and the action must mention "Mode E
+(earnings preview/review) — fresh collection per OD-F1". Auto-delta is
+also applicable to Mode E (Section 0.4 still runs after Step 10) so
+that Review reports can show the price/EPS delta against the prior Mode
+C snapshot — but the staleness table itself is bypassed.
 
 ---
 
@@ -145,8 +170,9 @@ For watchlist scan, do NOT run full Steps 6–9 (analysis generation). Only coll
 
 - [ ] Confirmed whether `output/data/{ticker}/latest.json` exists
 - [ ] If pointer format, confirmed `refs.analysis_result` exists
-- [ ] Calculated days_since_analysis if snapshot exists
-- [ ] Applied staleness rules to determine routing
+- [ ] **If `mode_override=="E"`: forced FRESH_COLLECTION (OD-F1) and skipped staleness table**
+- [ ] Calculated days_since_analysis if snapshot exists (skipped for Mode E)
+- [ ] Applied staleness rules to determine routing (skipped for Mode E)
 - [ ] Checked for earnings override condition
 - [ ] Checked for delta analysis trigger in user query
 - [ ] Checked session context for recently analyzed tickers

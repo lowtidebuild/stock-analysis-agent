@@ -161,9 +161,12 @@ def build_run_id(tickers: Iterable[str], timestamp: datetime | None = None) -> s
     return f"{stamp}_{suffix}"
 
 
+MODE_E_SUB_MODES = ("preview", "review")
+
+
 def default_report_extension(output_mode: str) -> str | None:
     mode = (output_mode or "").upper()
-    if mode in {"A", "B", "C"}:
+    if mode in {"A", "B", "C", "E"}:
         return "html"
     if mode == "D":
         return "docx"
@@ -178,11 +181,33 @@ def build_default_report_path(
     analysis_date: str | None,
     report_key: str | None = None,
     peer_tickers: Iterable[str] | None = None,
+    sub_mode: str | None = None,
 ) -> str | None:
+    """Build the canonical `output/reports/...` path for a mode's HTML/DOCX file.
+
+    Mode-specific filename patterns:
+    - Mode A/C: `{ticker}_{mode}_{lang}_{date}.html`
+    - Mode B:   `{T1}_{T2}_{T3}_B_{lang}_{date}.html`
+    - Mode D:   `{ticker}_D_{lang}_{date}.docx`
+    - Mode E:   `{ticker}_E_{sub_mode}_{lang}_{date}.html` (sub_mode ∈ {preview, review})
+    """
     mode = (output_mode or "").upper()
     extension = default_report_extension(mode)
     if extension is None:
         return None
+
+    if mode == "E":
+        if sub_mode is None:
+            raise ValueError(
+                "Mode E requires sub_mode to be 'preview' or 'review'"
+            )
+        normalized_sub = str(sub_mode).strip().lower()
+        if normalized_sub not in MODE_E_SUB_MODES:
+            raise ValueError(
+                f"Mode E sub_mode must be one of {MODE_E_SUB_MODES}, got {sub_mode!r}"
+            )
+    else:
+        normalized_sub = None
 
     key = report_key
     if key is None and mode == "B":
@@ -196,12 +221,20 @@ def build_default_report_path(
         key = "_".join(ordered_tickers) if ordered_tickers else None
     if key is None:
         key = ticker
+    if isinstance(key, str):
+        key = key.upper()
     if not isinstance(key, str) or not key:
         return None
 
     lang = (output_language or "en").upper()
     date_value = analysis_date or datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    report_path = data_path("reports", f"{key}_{mode}_{lang}_{date_value}.{extension}")
+
+    if mode == "E":
+        filename = f"{key}_E_{normalized_sub}_{lang}_{date_value}.{extension}"
+    else:
+        filename = f"{key}_{mode}_{lang}_{date_value}.{extension}"
+
+    report_path = data_path("reports", filename)
     try:
         return str(report_path.resolve().relative_to(REPO_ROOT))
     except ValueError:
