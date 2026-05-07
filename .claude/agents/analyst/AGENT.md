@@ -485,7 +485,48 @@ without `_sanitization` per Trust Boundary.
      line for catalyst-driven traders (straddle / butterfly / put spread).
      This is event-trade tactical guidance, NOT a verdict change. Do NOT
      write `rr_score` or `verdict` for Mode E Preview.
-7. **P7 — Write `analysis-result.json`** with the schema below.
+7. **P_accessibility — Generate Accessibility Layer (REQUIRED, SKIP-impossible)**:
+   This step is the Mode E v2 contract. It produces the four blocks the
+   renderer surfaces above the section content (TL;DR, beginner notes)
+   and below it (glossary footer). Without these blocks the report
+   regresses to v1 (`~22KB` instead of `~33KB`+) and Critic E8 fails.
+
+   Write the following fields into `analysis-result.json`:
+
+   - **`tldr_preview.bullets`**: EXACTLY 3 short Korean bullets (English
+     when `output_language="en"`), each ≤ 80 characters post-render
+     including any source tag. Each bullet must include at least one
+     quantified data point pulled from `consensus_snapshot`,
+     `beat_miss_history`, `options_snapshot`, `pre_mortem`, or
+     `pre_print_position`. At least 2 of 3 bullets must carry an inline
+     source tag (`[Est]`, `[Options]`, `[History]`, `[Calc]`, …). Plain
+     Korean — gloss any jargon inline OR ensure the term appears in
+     `glossary[]`.
+   - **`tldr_preview.tone`**: derived from window posture.
+     `mixed` is the Preview default; `positive` only when hit-rate
+     history + options skew + thesis pillars all point one way; `negative`
+     when a clear downside skew exists (e.g., capex shock probability
+     ≥ 0.4, Pre-mortem scenarios cluster on miss).
+   - **`beginner_notes`**: ≥ 2 of `consensus_snapshot`,
+     `options_snapshot`, `key_questions`. Each value is a single Korean
+     paragraph (≥ 3 sentences) explaining "why this matters" to a retail
+     investor unfamiliar with the company. Tie back to a number from the
+     surrounding data. Do NOT repeat the analytical conclusion verbatim
+     — translate it into retail-investor language.
+   - **`glossary[]`**: ≥ 5 entries. Each is `{"term": str, "def": str}`
+     covering jargon actually used in this Preview (e.g., `Surprise %`,
+     `Implied Move`, `ATM Straddle`, `Forward P/E`, `Pre-mortem`,
+     `Hit Rate`, `IV Percentile`). Each definition ≥ 1 sentence and
+     ≥ 25 characters. Plain Korean.
+
+   All output Korean by default; switch to English only when
+   `research-plan.json.output_language == "en"`.
+
+   **이 단계는 Mode E의 핵심 차별화 — 전문가가 보기에도 단단하면서 일반
+   투자자가 따라갈 수 있는 깊이를 동시에 제공. 생략 시 Mode E 보고서가
+   v1 수준으로 후퇴하므로 SKIP 불가.**
+8. **P7 — Write `analysis-result.json`** with the schema below
+   (including the accessibility layer fields written in P_accessibility).
 
 ### Preview Output Schema (analysis-result.json)
 
@@ -536,6 +577,18 @@ Required top-level fields (subset — see framework for full list):
     "rationale": "<COMPANY_SPECIFIC_RATIONALE>",
     "options_strategy": "<OPTIONAL_OPTIONS_STRATEGY>"
   },
+  "tldr_preview": {
+    "bullets": ["<BULLET_1_LE_80_CHARS>", "<BULLET_2_LE_80_CHARS>", "<BULLET_3_LE_80_CHARS>"],
+    "tone": "mixed"
+  },
+  "beginner_notes": {
+    "consensus_snapshot": "<KOREAN_PARAGRAPH_GE_3_SENTENCES>",
+    "options_snapshot": "<KOREAN_PARAGRAPH_GE_3_SENTENCES>",
+    "key_questions": "<KOREAN_PARAGRAPH_GE_3_SENTENCES_OPTIONAL>"
+  },
+  "glossary": [
+    {"term": "<JARGON_TERM>", "def": "<KOREAN_DEFINITION_GE_25_CHARS>"}
+  ],
   "data_sources": [{"data_category": "Earnings History", "source": "yfinance.earnings_history", "confidence": "B", "tag": "[History]"}]
 }
 ```
@@ -552,6 +605,10 @@ Required top-level fields (subset — see framework for full list):
 - [ ] `beat_miss_history[]` ≥ 4 quarters, every row tagged `[History]`
 - [ ] No `rr_score` field, no `verdict` field (those belong to Mode C/D)
 - [ ] No DCF call (Preview is event-driven, not valuation-driven)
+- [ ] **Accessibility Layer (P_accessibility) emitted: `tldr_preview`
+      (3 bullets + tone), `beginner_notes` (≥ 2 keys), `glossary` (≥ 5
+      entries). SKIP-impossible — see framework "Accessibility Layer"
+      section.**
 
 ---
 
@@ -614,6 +671,53 @@ Required top-level fields (subset — see framework for full list):
    - This is tactical positioning guidance, not a new verdict.
    - Surface `[Quality flag: outdated verdict]` on the verdict if any
      prior Mode C field is reused beyond 7 days old.
+7. **R_accessibility — Generate Accessibility Layer (REQUIRED, SKIP-impossible)**:
+   This step is the Mode E v2 contract. It produces the four blocks the
+   renderer surfaces above the section content (TL;DR, segment table,
+   beginner notes) and below it (glossary footer). Without these blocks
+   the report regresses to v1 (`~22KB` instead of `~33KB`+) and Critic
+   E8 fails.
+
+   Write the following fields into `analysis-result.json`:
+
+   - **`tldr_review.bullets`**: EXACTLY 3 short Korean bullets (English
+     when `output_language="en"`), each ≤ 80 characters post-render
+     including any source tag. Each bullet must include at least one
+     quantified data point pulled from `actual_vs_consensus`,
+     `stock_reaction`, `guidance_delta`, or `segment_breakdown`. At least
+     2 of 3 bullets must carry an inline source tag (`[Company]`,
+     `[Filing]`, `[Est]`, `[Portal]`, `[Calc]`, …). Plain Korean — gloss
+     any jargon inline OR ensure the term appears in `glossary[]`.
+   - **`tldr_review.tone`**: derived from print posture. `positive` if
+     EPS beat AND guidance raised; `negative` if EPS miss OR guidance
+     lowered; `mixed` otherwise.
+   - **`segment_breakdown`**: `{tag, sources, segments[], concentration_note}`.
+     Pull all reportable segments from the press release. ≥ 3 segment
+     rows required (or `[Quality flag: limited segment disclosure]` if
+     the company reports < 3). Each row carries `name`, `revenue_b?`,
+     `yoy_growth_pct`, `share_of_revenue_pct?`, `operating_margin_pct?`,
+     and a 1–2 sentence Korean `highlights` field that is
+     company-specific (Competitor Replacement Test). Sum of
+     `share_of_revenue_pct` across rows ≈ 100% (±5pp tolerance).
+   - **`beginner_notes`**: ≥ 2 of `print_snapshot`, `guidance`,
+     `key_questions`. Each value is a single Korean paragraph
+     (≥ 3 sentences) explaining "why this matters" to a retail investor
+     unfamiliar with the company. Tie back to a number from the print.
+     Translate the analytical conclusion into retail-investor language
+     (e.g., "단순히 비트했다는 헤드라인보다 중요한 것은 segment 구성").
+   - **`glossary[]`**: ≥ 5 entries. Each is `{"term": str, "def": str}`
+     covering jargon actually used in this Review (e.g., `Surprise %`,
+     `Beat / Miss`, `Forward P/E`, `Guidance Raise`, `Multiple Re-rating`,
+     `Capex`, `FCF`, `TAM`, segment names that are company-specific
+     acronyms). Each definition ≥ 1 sentence and ≥ 25 characters.
+     Plain Korean.
+
+   All output Korean by default; switch to English only when
+   `research-plan.json.output_language == "en"`.
+
+   **이 단계는 Mode E의 핵심 차별화 — 전문가가 보기에도 단단하면서 일반
+   투자자가 따라갈 수 있는 깊이를 동시에 제공. 생략 시 Mode E 보고서가
+   v1 수준으로 후퇴하므로 SKIP 불가.**
 
 ### Review Output Schema (analysis-result.json)
 
@@ -669,6 +773,26 @@ Required top-level fields (subset — see framework for full list):
     "exit_level": "<NUMBER_OR_NULL>",
     "rationale": "<COMPANY_SPECIFIC_RATIONALE>"
   },
+  "tldr_review": {
+    "bullets": ["<BULLET_1_LE_80_CHARS>", "<BULLET_2_LE_80_CHARS>", "<BULLET_3_LE_80_CHARS>"],
+    "tone": "positive"
+  },
+  "segment_breakdown": {
+    "tag": "[Company]",
+    "sources": ["<PRESS_RELEASE_URL>", "<SUPPLEMENTAL_FINANCIALS_URL>"],
+    "segments": [
+      {"name": "<SEGMENT_NAME>", "revenue_b": "<NUMBER_OR_NULL>", "yoy_growth_pct": "<NUMBER>", "share_of_revenue_pct": "<NUMBER_OR_NULL>", "operating_margin_pct": "<NUMBER_OR_NULL>", "highlights": "<COMPANY_SPECIFIC_KOREAN_COMMENT>"}
+    ],
+    "concentration_note": "<OPTIONAL_STRUCTURAL_READ>"
+  },
+  "beginner_notes": {
+    "print_snapshot": "<KOREAN_PARAGRAPH_GE_3_SENTENCES>",
+    "guidance": "<KOREAN_PARAGRAPH_GE_3_SENTENCES>",
+    "key_questions": "<OPTIONAL_KOREAN_PARAGRAPH_GE_3_SENTENCES>"
+  },
+  "glossary": [
+    {"term": "<JARGON_TERM>", "def": "<KOREAN_DEFINITION_GE_25_CHARS>"}
+  ],
   "data_sources": [...]
 }
 ```
@@ -685,6 +809,10 @@ Required top-level fields (subset — see framework for full list):
 - [ ] No DCF call. No scenario probability recomputation.
 - [ ] If prior Mode C snapshot is missing, `thesis_impact.baseline=null`
       and `light_verdict_update.prior_rr_score=null` (graceful degrade).
+- [ ] **Accessibility Layer (R_accessibility) emitted: `tldr_review`
+      (3 bullets + tone), `segment_breakdown` (≥ 3 segment rows),
+      `beginner_notes` (≥ 2 keys), `glossary` (≥ 5 entries).
+      SKIP-impossible — see framework "Accessibility Layer" section.**
 
 ---
 
