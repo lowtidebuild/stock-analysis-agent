@@ -1,6 +1,6 @@
 # Stock Analysis Agent — Master Orchestrator
 
-**Version**: 2.0 | **Last updated**: 2026-03-12
+**Version**: 2.1 | **Last updated**: 2026-05-07
 
 ---
 
@@ -411,7 +411,7 @@ If `context-budget.json.totals.within_soft_limit` is false, do not compensate by
 
 ## Section 8 — Quality Gate Summary
 
-Quality check runs at Step 9 for all outputs. Mode A uses simplified 3-item check (no Critic). Critic adds 7-item review for Mode C/D.
+Quality check runs at Step 9 for all outputs. Mode A uses simplified 3-item check (no Critic). Critic adds 7-item review for Mode C/D/E (Mode E uses the Mode E variant — see critic AGENT.md).
 
 **5-item auto-check** (quality-checker/SKILL.md):
 1. Financial data consistency (sample 3 values)

@@ -21,12 +21,27 @@
 <a href="https://codepen.io/lowtidebuild/full/emdgGdW"><img alt="Mode B" src="https://img.shields.io/badge/Mode_B-Peer_Comparison-1f2937?style=for-the-badge&logo=googlechrome&logoColor=white"></a>
 <a href="https://codepen.io/lowtidebuild/full/vEXgYGL"><img alt="Mode C" src="https://img.shields.io/badge/Mode_C-Deep_Dive-0f766e?style=for-the-badge&logo=googlechrome&logoColor=white"></a>
 <a href="https://docs.google.com/document/d/1PX4FIrb1a4nBeKj3L7HanoYBfG6hSwOS/edit?usp=sharing&ouid=105178834220477378953&rtpof=true&sd=true"><img alt="Mode D" src="https://img.shields.io/badge/Mode_D-Investment_Memo-f97316?style=for-the-badge&logo=googledocs&logoColor=white"></a>
+<img alt="Mode E" src="https://img.shields.io/badge/Mode_E-Earnings_Preview%2FReview-7c3aed?style=for-the-badge&logo=googlechrome&logoColor=white">
+<sub><br/>Mode E preview pending — generated locally during the earnings window.</sub>
 
 <br/><br/>
 
 <img src="docs/assets/readme-showcase.svg" alt="Stock Analysis Agent showcase" width="82%">
 
 </div>
+
+---
+
+## What's new
+
+**v2.1 (May 2026)** — six shipped enhancements across the analysis stack:
+
+- **Mode E (Earnings Preview/Review)** — new mode auto-detected in the D-7 ~ D+3 window around an earnings print. Preview covers consensus, beat/miss history, key questions, options-implied move, and pre-print position. Review covers actual vs consensus, guidance delta, key-questions answered, thesis impact, and post-print action.
+- **Valuation Bridge (Mode C)** — a new section reconciles four anchors (DCF, Comps, Analyst Target, Our Base) into a single weighted fair value with the reconciliation logic shown.
+- **Auto Delta Banner (all modes)** — when a prior snapshot exists, every report (A/B/C/D) prepends a banner showing R/R, target, and weighted-fair-value deltas plus risk/catalyst additions. Toggle off with `--no-delta`.
+- **Mode B Macro Context** — peer comparisons now render 3–5 macro series with a per-peer narrative paragraph (light bundle, no Mode C-style sensitivity table).
+- **Symmetric Peer Comparison (Mode C/D)** — peers fetched via an abbreviated yfinance pipeline (8 metrics, 24h cache) so peer cells are real Portal Grade B values instead of placeholder estimates.
+- **Catalyst Timeline (Mode C)** — catalyst lists now render as Gantt-style horizontal bars across five categories (earnings, regulatory, product, macro, other), merged with peer catalysts where relevant.
 
 ---
 
@@ -92,6 +107,7 @@ Built for research, not quote lookups. One natural-language prompt routes into t
 | Quick screen | a fast first pass before deeper work | `Analyze AAPL in Mode A` | Mode A briefing |
 | Peer comparison | ranking 2-5 names under one framework | `NVDA vs AMD vs INTC` | Mode B comparison |
 | Investment memo | a formal, shareable write-up | `AAPL investment memo` | Mode D DOCX |
+| Earnings preview / review | the D-7 ~ D+3 window around an earnings print | `GOOGL earnings preview` / `AAPL Q1 review` | Mode E HTML |
 | Watchlist / delta | monitoring what changed since the last run | `Scan my watchlist` / `Compare NVDA to the last analysis` | refreshed artifacts + delta context |
 
 > Need just a quote? Use a market-data app. This repo is built for the work that comes *after* the price check.
@@ -138,6 +154,13 @@ Not sure which to pick? Start with **Mode C** — it's the default full-analysis
     <td valign="top">Formal write-ups you can circulate</td>
     <td valign="top"><a href="https://docs.google.com/document/d/1PX4FIrb1a4nBeKj3L7HanoYBfG6hSwOS/edit?usp=sharing&ouid=105178834220477378953&rtpof=true&sd=true">Open example</a></td>
   </tr>
+  <tr>
+    <td valign="top"><strong>E — Earnings Preview / Review</strong><br/>Earnings window only</td>
+    <td valign="top">You're in the D-7 ~ D+3 window around an earnings print and need a focused preview or review — not a full Mode C rerun.</td>
+    <td valign="top">HTML preview or review<br/>consensus + key questions<br/>options-implied move (Preview)<br/>actual vs consensus + thesis impact (Review)</td>
+    <td valign="top">Trading the print: pre-position before earnings or judge the print after</td>
+    <td valign="top">Preview pending — generated locally</td>
+  </tr>
 </table>
 
 <sub>Mode D opens as a Google Docs preview — GitHub does not render `.docx` inline.</sub>
@@ -167,6 +190,7 @@ Not sure which to pick? Start with **Mode C** — it's the default full-analysis
 | **Per-Ticker Variant View** | Q1 + Q2 short form — consensus disagreement + primary catalyst |
 | **Best Pick** | reasoned recommendation · why this peer wins on risk-adjusted basis |
 | **Relative Valuation** | premium / discount vs peer median with mechanism |
+| **Macro Lens** *(new)* | 3–5 macro series rendered with a per-peer narrative paragraph (light bundle, no Mode C-style sensitivity table) |
 | **Consistency Rule** | same metric set across all peers · missing → "—" (never substituted) |
 
 ### 📈 Mode C — Deep Dive Dashboard *(default)*
@@ -182,6 +206,9 @@ Not sure which to pick? Start with **Mode C** — it's the default full-analysis
 | **Precision Risk** | 3 risks × mechanism chain × EBITDA impact × mitigation |
 | **Macro Environment** | macro factors · impact assessment · confidence badges |
 | **Valuation** | SOTP · comps · **DCF sensitivity table + Reverse DCF (implied growth)** |
+| **Valuation Bridge** *(new)* | 4 anchors (DCF · Comps · Analyst Target · Our Base) reconciled into a weighted fair value, with the reconciliation logic shown |
+| **Peer Comparison** *(symmetric, new)* | peers fetched via abbreviated yfinance pipeline (8 metrics, 24h cache) — real Portal Grade B values instead of placeholder estimates |
+| **Catalyst Timeline** *(new)* | Gantt-style horizontal bars across 5 categories (earnings · regulatory · product · macro · other), merged with peer catalysts |
 | **Analyst Targets** | consensus · high/low · rating distribution |
 | **Charts** | revenue trend · margin history · price vs targets |
 | **Quarterly Financials** | 8-quarter income statement · QoE bridge |
@@ -206,7 +233,41 @@ Not sure which to pick? Start with **Mode C** — it's the default full-analysis
 | What Would Make Me Wrong | 3 assumptions · pre-mortem |
 | Appendix | data sources · confidence grades · exclusions |
 
+### 📅 Mode E — Earnings Preview / Review
+**E** as in **E**arnings. A focused report for the D-7 ~ D+3 window around an earnings print. Auto-detected by the earnings-window-detector skill; outside the window the agent falls back to Mode C. Override with `--earnings-mode preview|review` or `--mode E`.
+
+Mode E is **not** Mode C plus a timeline — it has its own framework, sub-modes, and renderer. Outputs land at `output/reports/{TICKER}_E_{preview|review}_{lang}_{date}.html`.
+
+**Preview (D-7 ~ D-1)** — six sections:
+
+| Section | Contents |
+|---------|----------|
+| **Consensus Snapshot** | EPS · revenue consensus · key segment expectations |
+| **Beat / Miss History** | last 8 quarters: actual vs consensus · surprise % · 1-day reaction |
+| **Key Questions** | 3–5 specific questions the print needs to answer |
+| **Options Snapshot** | ATM straddle · IV percentile · implied move % (best-effort via yfinance) |
+| **Pre-Mortem** | what would invalidate the long / short going into the print |
+| **Pre-Print Position** | sizing, hedges, and the explicit pre-print stance |
+
+**Review (D ~ D+3)** — six sections:
+
+| Section | Contents |
+|---------|----------|
+| **Print Snapshot** | actual vs consensus on EPS, revenue, segments |
+| **Guidance Delta** | next-quarter / FY guidance vs prior expectation |
+| **Key Questions Answered** | each Preview question marked answered / partial / unanswered with evidence |
+| **Thesis Impact** | long & short pillars from the prior Mode C re-evaluated |
+| **Light Verdict Update** | forward EPS only — DCF and price targets are carried forward with `outdated=true` and a Mode C rerun banner |
+| **Post-Print Action** | concrete next move: add / trim / hold / flip with rationale |
+
+> **Mode E rules**
+> - Entry to Mode E forces `FRESH_COLLECTION` — a stale snapshot is never reused for an earnings print.
+> - If options data is unavailable, Section 4 renders a stub with `[Quality flag]` rather than blocking the report.
+> - The Review verdict is intentionally light: targets are not re-derived. The report flags itself `outdated=true` and recommends a full Mode C rerun.
+
 </details>
+
+> **Auto Delta Banner.** When a prior snapshot exists for the same ticker, every report (Mode A/B/C/D) prepends a banner with R/R, target, and weighted-fair-value deltas plus risk/catalyst additions. Disable with `--no-delta`.
 
 ---
 
@@ -214,11 +275,14 @@ Not sure which to pick? Start with **Mode C** — it's the default full-analysis
 
 ```mermaid
 flowchart LR
-    Q[🗣️ User asks<br/>e.g. Analyze NVDA] --> R[🧭 Market routing<br/>US / KR]
+    Q[🗣️ User asks<br/>e.g. Analyze NVDA] --> W[📅 Earnings window?<br/>D-7 ~ D+3]
+    W -->|yes| E[🎯 Mode E<br/>Preview / Review]
+    W -->|no| R[🧭 Market routing<br/>US / KR]
     R --> C[📥 Data collection<br/>SEC · DART · Web]
     C --> V[✅ Validation + grading<br/>A / B / C / D]
     V --> A[🧠 Analyst layer<br/>Variant View · DCF · Risk]
     A --> O[📄 Output rendering<br/>Mode A / B / C / D]
+    E --> O
 ```
 
 Five stages, no shortcuts:
@@ -242,6 +306,8 @@ Confidence grades are **part of the product**, not a hidden implementation detai
 | **B** | `[Company]` | company IR material, earnings release, transcript | company IR / newsroom |
 | **B** | `[Portal]` / `[KR-Portal]` | 2+ sources cross-checked | web cross-reference |
 | **B/C** | `[Portal]` | yfinance fallback; Grade B when cross-confirmed, Grade C when standalone | yfinance supplement |
+| **B/C** | `[Options]` | options chain (Mode E Preview) — ATM straddle, IV percentile, implied move | yfinance option_chain |
+| **B/C** | `[History]` | earnings history (Mode E Preview/Review) — last 8Q actual vs consensus, surprise %, 1d reaction | yfinance earnings_history |
 | **C** | `Grade C` | single-source, unverified | one web mention |
 | **D** | `—` | cannot verify → shown as blank | never fabricated |
 
@@ -284,6 +350,7 @@ R/R Score = (Bull_return% × Bull_prob + Base_return% × Base_prob)
 - **Claude Code** installed locally
 - **Python 3.8+** for helper scripts
 - **`python-docx`** for Mode D DOCX output
+- **`yfinance`** options-chain access for Mode E Preview (best-effort — Mode E gracefully renders a stub if the chain is unavailable)
 
 ### Setup path — pick what you need
 
@@ -366,6 +433,9 @@ Ready. Send a ticker or question to begin.
 | Korean single-stock analysis | `005930 심층 분석` |
 | Formal memo | `AAPL investment memo` / `삼성전자 투자 메모 써줘` |
 | Peer comparison | `NVDA vs AMD vs INTC` / `삼성전자 vs SK하이닉스 비교` |
+| Earnings preview (D-7 ~ D-1) | `GOOGL 프리뷰` / `earnings preview AAPL` / `Q1 preview NVDA` |
+| Earnings review (D ~ D+3) | `AAPL Q1 review` / `MSFT 실적 리뷰` / `earnings review TSLA` |
+| Force Mode E outside the auto window | append `--mode E` or `--earnings-mode preview\|review` |
 | Watchlist scan | `Scan my watchlist` |
 | Delta comparison | `Compare NVDA to the last analysis` |
 
@@ -453,6 +523,7 @@ All generated files live under `output/`.
 | `output/reports/{tickers}_B_*.html` | Mode B peer comparison |
 | `output/reports/{ticker}_C_*.html` | Mode C dashboard |
 | `output/reports/{ticker}_D_*.docx` | Mode D investment memo |
+| `output/reports/{ticker}_E_{preview\|review}_*.html` | Mode E earnings preview / review |
 | `output/data/{ticker}/latest.json` | snapshot pointer for delta analysis |
 | `output/watchlist.json` | watchlist registry |
 | `output/catalyst-calendar.json` | catalyst calendar |
