@@ -269,6 +269,13 @@ Follow `analysis-framework-dashboard.md` exactly:
 10. Charts data (prepare JSON arrays for Chart.js)
 11. Quarterly financials table + QoE summary
 12. Portfolio strategy + "What Would Make Me Wrong"
+13. **Catalyst Timeline schema (Phase E — Mode C only)**:
+    - Each entry in `upcoming_catalysts[]` MUST carry `start_date`, `end_date`, `category`, and `ticker` in addition to the legacy `date`, `event_type`, `description`, `significance`, and `expected_impact` fields. The new fields drive the Mode C Gantt-style 12-month timeline (`{CATALYST_TIMELINE}` placeholder).
+    - `category` is one of: `earnings`, `regulatory`, `product`, `macro`, `other`. Pick `other` only when none of the first four buckets apply.
+    - `start_date` / `end_date` are ISO `YYYY-MM-DD` strings. For single-day events set `end_date == start_date`. For multi-day events (e.g. a regulatory hearing window, a clinical readout window) set `end_date > start_date`. The renderer draws a bar across the range; single days render as a dot.
+    - `ticker` defaults to the subject ticker. Peer catalysts (when present) must carry the peer ticker.
+    - Backward-compat: legacy snapshots that only carry `date` are normalized by `catalyst-aggregator.py normalize_catalyst_for_timeline()`: `date` → `start_date == end_date`, missing `category` is inferred from description + event_type (defaults to `other`), missing `ticker` defaults to the subject ticker.
+    - Items with no parseable ISO date (e.g. fuzzy quarter strings, `"TBD"`) are kept in the text catalyst list but are silently dropped from the timeline visualization.
 
 Write to run-local `analysis-result.json` with all section content structured.
 Then signal to CLAUDE.md to call `dashboard-generator/SKILL.md` for HTML rendering.
@@ -501,8 +508,28 @@ request that only succeeded through yfinance must be written as
   },
   "top_risks": ["<SOURCE_BACKED_RISK_1>", "<SOURCE_BACKED_RISK_2>", "<SOURCE_BACKED_RISK_3>"],
   "upcoming_catalysts": [
-    {"date": "<CATALYST_DATE>", "event_type": "earnings", "description": "<SOURCE_BACKED_EARNINGS_EVENT>", "significance": "high"},
-    {"date": "<CATALYST_DATE>", "event_type": "product", "description": "<SOURCE_BACKED_PRODUCT_EVENT>", "significance": "medium"}
+    {
+      "date": "<CATALYST_DATE>",
+      "start_date": "<CATALYST_START_ISO>",
+      "end_date": "<CATALYST_END_ISO>",
+      "event_type": "earnings",
+      "category": "earnings",
+      "ticker": "<SUBJECT_OR_PEER_TICKER>",
+      "description": "<SOURCE_BACKED_EARNINGS_EVENT>",
+      "significance": "high",
+      "expected_impact": "<EXPECTED_IMPACT_OR_NULL>"
+    },
+    {
+      "date": "<CATALYST_DATE>",
+      "start_date": "<CATALYST_START_ISO>",
+      "end_date": "<CATALYST_END_ISO>",
+      "event_type": "product",
+      "category": "product",
+      "ticker": "<SUBJECT_OR_PEER_TICKER>",
+      "description": "<SOURCE_BACKED_PRODUCT_EVENT>",
+      "significance": "medium",
+      "expected_impact": "<EXPECTED_IMPACT_OR_NULL>"
+    }
   ],
   "thesis_pillars": [
     {
