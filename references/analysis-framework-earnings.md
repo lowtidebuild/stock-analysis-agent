@@ -149,6 +149,26 @@ metrics as Grade D.
     "rationale": "Implied move ±2.1%는 historical avg reaction 3.2% 보다 좁음. Asymmetric downside (cloud miss -8% vs upside +5%) 고려 시 add 매력도 낮음.",
     "options_strategy": "Catalyst-driven traders: nearest-expiry ATM straddle ($8.25) — implied move 도달 시 break-even, cloud miss/beat 양쪽 모두 수익."
   },
+  "tldr_preview": {
+    "bullets": [
+      "D-3 GOOGL — 컨센서스 EPS $2.62 / 매출 $109.2B, Cloud +35% YoY 기대 [Est]",
+      "옵션 시장 implied move ±2.1% — 평균 1일 반응 3.2% 대비 좁음 [Options]",
+      "Asymmetric: Cloud miss -8% vs strong beat +5% — Hold 권고 [Calc]"
+    ],
+    "tone": "mixed"
+  },
+  "beginner_notes": {
+    "consensus_snapshot": "애널리스트들이 평균적으로 분기 EPS $2.62, 매출 $109.2B를 예상한다. 이는 작년 동기 대비 한 자릿수 후반 성장으로, 이미 시장이 가격에 반영한 기대치다. 실제 발표가 이 숫자를 5% 이상 상회·하회할 때만 의미 있는 주가 반응이 나온다.",
+    "options_snapshot": "옵션 시장은 발표 직후 ±2.1% 정도 움직임을 가격에 반영하고 있다. 즉 트레이더들이 '큰 서프라이즈는 없을 것'으로 베팅 중이라는 뜻이다. 이 implied move보다 실제 반응이 크면 옵션 매수자가 이긴다.",
+    "key_questions": "발표 전에 '이 숫자만 보면 된다'를 정해두면 발표 직후 감정적 매매를 피할 수 있다. 본 보고서의 4–5개 질문은 GOOGL의 thesis pillar(투자 논리 기둥)을 직접 흔드는 metric에 한정했다."
+  },
+  "glossary": [
+    {"term": "Surprise %", "def": "실제 실적이 컨센서스(애널리스트 평균 추정)에서 얼마나 벗어났는지를 나타내는 지표. 양수면 '비트(beat)', 음수면 '미스(miss)'. ±2% 이내는 정상 범위, ±5% 이상이면 'big surprise'로 분류된다."},
+    {"term": "Implied Move", "def": "옵션 시장이 발표 직후 가격에 반영해 둔 예상 변동폭. ATM 콜+풋의 합을 현재가로 나눠 계산한다. 실제 반응이 이보다 크면 옵션 매수자, 작으면 옵션 매도자가 유리하다."},
+    {"term": "ATM Straddle", "def": "현재가와 가장 가까운 행사가의 콜+풋을 동시에 매수하는 옵션 전략. 방향 무관하게 큰 변동성에 베팅할 때 사용한다."},
+    {"term": "Forward P/E", "def": "현재 주가를 향후 12개월 예상 EPS로 나눈 값. 시장이 회사의 미래 이익을 어느 정도 가격에 반영했는지 가늠하는 지표다."},
+    {"term": "Pre-mortem", "def": "주가가 발표 이후 크게 하락(예: -10%)한 가상의 미래에서 출발해 그 원인을 역추적해 보는 분석 기법. 사전에 위험 시나리오를 강제로 떠올리게 만들어 'happy path' 편향을 줄인다."}
+  ],
   "report_path": "output/reports/GOOGL_E_preview_ko_2026-04-26.html",
   "run_context": {
     "run_id": "20260426-googl-mode-e-preview",
@@ -161,7 +181,11 @@ metrics as Grade D.
 `earnings_window`, `consensus_snapshot.eps`, `beat_miss_history`,
 `key_questions` (≥4), `options_snapshot` (or explicit
 `status="unavailable"` per OD-F2), `pre_mortem` (probabilities sum to
-1.0), `pre_print_position.recommendation`.
+1.0), `pre_print_position.recommendation`, **`tldr_preview` (3 bullets +
+tone)**, **`beginner_notes` (≥2 of {consensus_snapshot, options_snapshot,
+key_questions})**, **`glossary` (≥5 entries)**. The Accessibility Layer
+fields are part of the Mode E v2 contract — see "Accessibility Layer"
+section below for the full rules.
 
 ---
 
@@ -242,6 +266,40 @@ metrics as Grade D.
       {"price": 360.00, "trigger": "Cloud growth 둔화 초기 신호", "action": "Reassess"}
     ]
   },
+  "tldr_review": {
+    "bullets": [
+      "EPS $5.11 / 매출 $109.93B 양쪽 비트 — Cloud +63% YoY 폭증이 핵심 [Company]",
+      "FY 가이던스 $13.20 (+5.6%) 상향 + Capex $180-190B로 raised [Est]",
+      "주가 D+1 +6.5% — 비트 기 반영, 신규 추격 비추천 [Portal]"
+    ],
+    "tone": "positive"
+  },
+  "segment_breakdown": {
+    "tag": "[Company]",
+    "sources": [
+      "Alphabet Q1 2026 earnings press release 2026-04-29",
+      "Alphabet Q1 2026 supplemental financials"
+    ],
+    "segments": [
+      {"name": "Cloud", "revenue_b": 12.4, "yoy_growth_pct": 63, "share_of_revenue_pct": 11.3, "operating_margin_pct": 18, "highlights": "AI workload 수요 폭증 + capacity 증설 효과. 컨센서스 +35% 대비 +28pp 초과."},
+      {"name": "Search", "revenue_b": 56.7, "yoy_growth_pct": 12, "share_of_revenue_pct": 51.6, "operating_margin_pct": 35, "highlights": "광고 매출 안정성 유지. AI Overviews 도입에도 monetization 큰 변화 없음."},
+      {"name": "YouTube", "revenue_b": 9.6, "yoy_growth_pct": 14, "share_of_revenue_pct": 8.7, "operating_margin_pct": null, "highlights": "Shorts monetization 가속 + Subscription(YouTube Premium/Music) 두 자릿수 성장."},
+      {"name": "Other Bets", "revenue_b": 0.5, "yoy_growth_pct": -8, "share_of_revenue_pct": 0.5, "operating_margin_pct": null, "highlights": "Waymo 외 부문 정리 단계. 적자 지속이지만 비중 미미."}
+    ],
+    "concentration_note": "Search + Cloud 합산 62.9%. Cloud +63% 모멘텀이 전사 성장률을 끌어올리는 구조."
+  },
+  "beginner_notes": {
+    "print_snapshot": "이번 분기 EPS는 컨센서스 대비 +94%, 매출은 +0.7% 상회했다. EPS 서프라이즈가 큰 이유는 일회성 투자수익(other income) 때문이고, 실제 영업 모멘텀은 Cloud +63%에서 확인된다. '비트했다'는 헤드라인보다 segment 구성이 더 중요하다.",
+    "guidance": "회사가 제시한 FY26 가이던스가 컨센서스 대비 +5.6% 상향됐다는 것은, '내년에 시장 예상보다 더 벌 것'이라는 회사의 자신감 표현이다. 다만 Capex 가이던스도 동시에 $180-190B로 상향됐기 때문에 FCF(잉여현금흐름)는 단기 압박을 받는다. 성장 vs 현금흐름 trade-off 구간이다."
+  },
+  "glossary": [
+    {"term": "Surprise %", "def": "실제 실적이 컨센서스에서 벗어난 정도. ±2% 이내 정상, ±5% 이상이면 big surprise."},
+    {"term": "Beat / Miss", "def": "Beat는 컨센서스를 상회한 결과, Miss는 하회한 결과. 단순 헤드라인이 아니라 segment별 quality of beat을 봐야 한다."},
+    {"term": "Guidance Raise", "def": "회사가 향후 실적 전망(가이던스)을 이전보다 높여 발표하는 것. 시장에는 가장 강한 긍정 시그널 중 하나."},
+    {"term": "Forward P/E", "def": "현재 주가를 향후 12개월 예상 EPS로 나눈 값. 시장이 회사의 미래 이익을 가격에 어느 정도 반영했는지 가늠한다."},
+    {"term": "Multiple Re-rating", "def": "회사의 fundamentals에는 큰 변화가 없지만 시장이 부여하는 P/E·EV/EBITDA 배수 자체가 바뀌는 현상. 가이던스 상향이 동반되면 흔히 발생한다."},
+    {"term": "Capex", "def": "Capital Expenditure — 회사가 미래 매출을 위해 설비·데이터센터·R&D 인프라에 투입하는 자본적 지출. 단기 FCF는 줄지만 장기 capacity는 늘어난다."}
+  ],
   "report_path": "output/reports/GOOGL_E_review_ko_2026-04-30.html",
   "run_context": {
     "run_id": "20260430-googl-mode-e-review",
@@ -255,7 +313,11 @@ metrics as Grade D.
 `stock_reaction.post_market_pct` OR `next_day_pct` (whichever the window
 allows), `guidance_delta`, `key_questions_answered`, `thesis_impact`
 (or graceful "no prior baseline" stub), `light_verdict_update.outdated_flag`,
-`post_print_action.recommendation`.
+`post_print_action.recommendation`, **`tldr_review` (3 bullets + tone)**,
+**`segment_breakdown` (≥3 segment rows)**, **`beginner_notes` (≥2 of
+{print_snapshot, guidance, key_questions})**, **`glossary` (≥5 entries)**.
+The Accessibility Layer fields are part of the Mode E v2 contract — see
+"Accessibility Layer" section below for the full rules.
 
 ---
 
@@ -426,6 +488,109 @@ is generic.
 
 ---
 
+## Accessibility Layer (REQUIRED for both Preview and Review)
+
+This is the Mode E v2 contract. Every Mode E run — Preview AND Review —
+MUST emit four accessibility blocks in `analysis-result.json` so the
+HTML renderer can display TL;DR, segment breakdown (Review),
+beginner notes, and a glossary footer. **Skipping this layer regresses
+the report to v1 quality and is BLOCKER-severity for Critic.**
+
+The accessibility layer exists because Mode E targets two audiences
+simultaneously — domain experts who need depth and retail investors
+who need a guided read. The rest of the report is dense; this layer
+makes it navigable.
+
+### TL;DR (`tldr_preview` / `tldr_review`)
+
+| Field      | Type           | Rule                                                                                |
+|------------|----------------|-------------------------------------------------------------------------------------|
+| `bullets`  | `[str, str, str]` | EXACTLY 3 bullets. Each ≤ 80 characters (post-render, including source tag).     |
+| `tone`     | enum           | One of `positive`, `negative`, `mixed`. Drives the renderer border color.           |
+
+Rules:
+- Plain Korean by default (English when `output_language="en"`).
+- Each bullet must include at least one quantified data point.
+- Inline-gloss any jargon (e.g., "Surprise %(컨센서스 대비 차이)") OR
+  ensure the term appears in `glossary[]`. Do NOT leave a bare jargon
+  term with no support.
+- A source tag (`[Company]`, `[Est]`, `[Portal]`, `[Calc]`, …) MUST appear
+  inside at least 2 of the 3 bullets. Bullets that are pure narrative
+  must reference an upstream tagged metric.
+- `tone` is derived from the window posture:
+  - Preview: `mixed` by default; `positive`/`negative` only if hit-rate
+    history + options skew + thesis pillars all point one way.
+  - Review: `positive` if EPS beat AND guidance raised; `negative` if
+    EPS miss OR guidance lowered; `mixed` otherwise.
+
+### Segment Breakdown (`segment_breakdown`) — Review only
+
+| Field                | Type      | Rule                                                                          |
+|----------------------|-----------|-------------------------------------------------------------------------------|
+| `tag`                | str       | Source tag. Default `[Company]` (press release).                              |
+| `sources`            | `[str]`   | Citations (press release URL, supplemental financials, transcript).            |
+| `segments[]`         | array     | All reportable segments from press release. ≥ 3 rows required.                |
+| `segments[].name`              | str       | Reportable segment name as published.                                          |
+| `segments[].revenue_b`         | num?      | Segment revenue in billions of currency unit.                                  |
+| `segments[].yoy_growth_pct`    | num       | YoY growth %. Required.                                                        |
+| `segments[].share_of_revenue_pct` | num?  | % of total revenue. If included, sum across rows ≈ 100% (±5pp tolerance).     |
+| `segments[].operating_margin_pct` | num?  | Segment operating margin %. Optional — `null` when not disclosed.              |
+| `segments[].highlights`        | str       | 1–2 sentence Korean comment. Must be company-specific (Competitor Replacement Test). |
+| `concentration_note` | str?      | Optional 1-sentence overall structural read.                                  |
+
+Rules:
+- Pull from the press release / supplemental financials. Do NOT fabricate
+  segment splits the company does not publish.
+- If the company reports < 3 segments, mark `[Quality flag: limited
+  segment disclosure]` and emit only what is published. Critic E8 then
+  treats segment-row count as MINOR rather than MAJOR.
+- For Preview mode, segment breakdown is OPTIONAL; the `consensus_snapshot.segment_consensus[]`
+  block already covers the consensus-vs-segment view.
+
+### Beginner Notes (`beginner_notes`)
+
+| Mode    | Required keys (≥2 of)                                         |
+|---------|--------------------------------------------------------------|
+| Preview | `consensus_snapshot`, `options_snapshot`, `key_questions`    |
+| Review  | `print_snapshot`, `guidance`, `key_questions` (optional)     |
+
+Each value is a single Korean paragraph (English when
+`output_language="en"`) that explains "why this matters to a retail
+investor unfamiliar with the company". Rules:
+
+- ≥ 3 sentences per paragraph. (< 3 sentences → MINOR per E8.)
+- Plain language. If a jargon term is unavoidable, define it inline OR
+  reference `glossary[]`.
+- Tie back to a number: every paragraph must mention at least one
+  metric value or threshold from the surrounding data.
+- Do NOT repeat the analytical conclusion verbatim — translate it into
+  retail-investor language. ("이 숫자만 보면 됩니다", "지금 기준으로는…",
+  "단순히 비트했다는 헤드라인보다 중요한 것은…").
+
+### Glossary (`glossary[]`)
+
+Minimum 5 entries. Each entry is `{"term": str, "def": str}`. Rules:
+
+- Cover the jargon actually used in this specific report. Pull terms
+  from TL;DR, segment_breakdown.highlights, beginner_notes, and the
+  analytical sections.
+- Plain Korean definition (English when `output_language="en"`).
+- Each definition is ≥ 1 sentence and ≥ 25 characters. Stub
+  definitions ("EPS = earnings per share.") are MINOR per E8.
+- Recommended baseline terms when applicable: `Surprise %`, `Beat / Miss`,
+  `Forward P/E`, `Implied Move`, `ATM Straddle`, `Pre-mortem`,
+  `Multiple Re-rating`, `Beta`, `TAM`, `Capex`, `FCF`, `Guidance Raise`.
+
+### Renderer behaviour
+
+The Mode E renderer
+(`.claude/skills/output-generator/scripts/render-earnings.py`)
+emits these blocks when present and silently omits them when missing
+(backward compatibility for legacy v1 snapshots). Critic enforces
+presence at the analysis-result level via E8.
+
+---
+
 ## Quality Gates (Critic Mode E variant)
 
 The Critic 7-item review is adapted for Mode E sub-modes. Every item must
@@ -555,6 +720,11 @@ Before calling the renderer:
       `unavailable` is permitted (OD-F2)
 - [ ] `pre_mortem` probabilities sum to 1.0 (±0.01)
 - [ ] `pre_print_position.recommendation` ∈ {`Hold`, `Trim`, `Hedge`, `Add`}
+- [ ] **`tldr_preview` present with exactly 3 bullets + `tone` ∈
+      {`positive`, `negative`, `mixed`}; each bullet ≤ 80 chars**
+- [ ] **`beginner_notes` covers ≥ 2 of {`consensus_snapshot`,
+      `options_snapshot`, `key_questions`}; each paragraph ≥ 3 sentences**
+- [ ] **`glossary` has ≥ 5 entries; each definition ≥ 25 chars**
 - [ ] Disclaimer present in renderer footer
 - [ ] `output_language` matches `research-plan.json.output_language`
 - [ ] HTML file saved to `output/reports/{ticker}_E_preview_{lang}_{date}.html`
@@ -571,6 +741,14 @@ Before calling the renderer:
 - [ ] `light_verdict_update.mode_c_rerun_recommended` set
 - [ ] `post_print_action.recommendation` ∈
       {`Add`, `Trim`, `Hold`, `Reverse`}
+- [ ] **`tldr_review` present with exactly 3 bullets + `tone` ∈
+      {`positive`, `negative`, `mixed`}; each bullet ≤ 80 chars**
+- [ ] **`segment_breakdown.segments[]` populated with ≥ 3 rows; each
+      row carries `name`, `yoy_growth_pct`, `highlights` (or `[Quality
+      flag: limited segment disclosure]` if company reports < 3)**
+- [ ] **`beginner_notes` covers ≥ 2 of {`print_snapshot`, `guidance`,
+      `key_questions`}; each paragraph ≥ 3 sentences**
+- [ ] **`glossary` has ≥ 5 entries; each definition ≥ 25 chars**
 - [ ] Mode C rerun banner rendered in footer
 - [ ] Disclaimer present
 - [ ] `output_language` matches `research-plan.json.output_language`
