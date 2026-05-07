@@ -36,7 +36,15 @@ and rely on validated-data or the evidence pack instead.
    - Mode B → `references/analysis-framework-comparison.md`
    - Mode C → `references/analysis-framework-dashboard.md`
    - Mode D → `references/analysis-framework-memo.md` + `references/investment-memo-prompt.md`
+   - Mode E → `references/analysis-framework-earnings.md`
 6. **Mode C and Mode D only** — Run-local `output/runs/{run_id}/peers/*.json` (Phase D peer mini-pipeline). One JSON per peer ticker, each with the canonical 8-metric `[Portal]` Grade B snapshot. Refuse any file lacking `_sanitization`. If the directory is empty (Step 2.7 skipped because `peer_tickers[]` was empty), the analyst still proceeds and emits a single `⚠️ 데이터 미수집` placeholder peer row instead of fabricating `[Est]` peers.
+7. **Mode E only** — additional run-local artifacts:
+   - `output/runs/{run_id}/earnings-window/{ticker}.json` (Step 0.5 output)
+   - `output/runs/{run_id}/{ticker}/options-snapshot.json` (Preview only; OD-F2 graceful)
+   - `output/runs/{run_id}/{ticker}/earnings-history.json` (both sub-modes)
+   - **Review only**: prior Mode C snapshot via
+     `output/data/{ticker}/latest.json → refs.analysis_result`. Refuse if
+     missing `_sanitization` block on any of the above.
 
 Do not load raw artifacts by default. `tier1-raw.json`, `tier2-raw.json`,
 `dart-api-raw.json`, `yfinance-raw.json`, and `fred-snapshot.json` may be opened
@@ -418,6 +426,265 @@ Write ALL content — narrative text and structured tables — to run-local `ana
 - [ ] Scenario probabilities sum = 100%
 - [ ] R/R Score formula computed correctly
 - [ ] No `.md` file written (DOCX only)
+
+---
+
+## Mode E — Earnings Preview
+
+**Spec source**: `references/analysis-framework-earnings.md` (Preview schema +
+quality gates). Read it before writing Preview content.
+
+**Trigger**: orchestrator dispatches Mode E with
+`pipeline_state.earnings_sub_mode == "preview"` after Step 0.5
+(earnings-window-detector) returned `window == "preview"` (D-7 ~ D-1) or the
+user passed `--earnings-mode preview`.
+
+### Mode E Preview-specific Inputs (additional to the standard 5)
+
+Load these run-local artifacts in addition to the common inputs (validated,
+evidence-pack, context-budget, research-plan, framework). Refuse any file
+without `_sanitization` per Trust Boundary.
+
+- `output/runs/{run_id}/earnings-window/{ticker}.json` — `days_until`,
+  `next_earnings_date`, `next_earnings_confirmed`, `window`.
+- `output/runs/{run_id}/{ticker}/options-snapshot.json` — ATM straddle
+  price, implied 1-day move %, IV percentile, nearest expiry. **OD-F2**:
+  if this file is missing OR all numeric fields are null, do not abort.
+  Emit Section 4 with `status="unavailable"` and `[Quality flag: options
+  data unavailable]`.
+- `output/runs/{run_id}/{ticker}/earnings-history.json` — last 8Q actual /
+  consensus / surprise % / 1-day reaction %, plus summary
+  (hit_rate, avg_surprise_pct, avg_reaction_1d_pct).
+
+### Preview Pipeline (P1–P7)
+
+1. **P1 — Window check**: confirm `next_earnings_confirmed=true`. If false,
+   refuse Mode E; return error envelope so orchestrator can downgrade to Mode C.
+2. **P2 — Hero composition**: build hero with D-{N} badge from `days_until`,
+   ticker, `next_earnings_date`, consensus EPS / Revenue (from
+   validated-data or evidence-pack), implied 1-day move % (from options
+   snapshot — `—` if unavailable).
+3. **P3 — Section 1: Consensus Snapshot**: top-line EPS / Revenue
+   consensus + dispersion (high / mean / low if available) + segment
+   consensus (Cloud, Search, etc.) **only when validated-data carries
+   segment data**. No fabrication.
+4. **P4 — Section 2: Beat/Miss History**: render `beat_miss_history[]`
+   from earnings-history.json (last 8Q). Tag every row `[History]`. Compute
+   `summary.hit_rate` and `avg_surprise_pct` if not pre-computed.
+5. **P5 — Sections 3–4: Key Questions + Options Sentiment**:
+   - Section 3 (Key Questions): 4–5 company-specific questions, each with
+     answer-conditional stock impact (`"if X, then -Y%"`). Pass the
+     Competitor Replacement Test (Anti-Generic Enforcement above).
+   - Section 4 (Options): IV percentile + ATM straddle price + implied
+     1-day move %. Tag `[Options]`. OD-F2 fallback applies.
+6. **P6 — Section 5–6: Pre-Mortem + Pre-Print Position**:
+   - Section 5 (Pre-Mortem): 3 scenarios where stock drops ≥10%
+     post-print, each with mechanism + monitoring trigger.
+   - Section 6 (Pre-Print Position): one of {Hold / Trim / Hedge / Add}
+     for the **base case investor**, plus an optional options strategy
+     line for catalyst-driven traders (straddle / butterfly / put spread).
+     This is event-trade tactical guidance, NOT a verdict change. Do NOT
+     write `rr_score` or `verdict` for Mode E Preview.
+7. **P7 — Write `analysis-result.json`** with the schema below.
+
+### Preview Output Schema (analysis-result.json)
+
+Required top-level fields (subset — see framework for full list):
+
+```json
+{
+  "ticker": "<TICKER>",
+  "company_name": "<COMPANY_NAME>",
+  "exchange": "<EXCHANGE>",
+  "market": "US",
+  "output_mode": "E",
+  "earnings_sub_mode": "preview",
+  "earnings_window": "preview",
+  "next_earnings_date": "<NEXT_EARNINGS_DATE>",
+  "days_until_earnings": "<DAYS_UNTIL_EARNINGS>",
+  "output_language": "ko",
+  "analysis_date": "<ANALYSIS_DATE>",
+  "price_at_analysis": "<CURRENT_PRICE>",
+  "currency": "USD",
+  "consensus_snapshot": {
+    "eps_mean": "<NUMBER>",
+    "eps_high": "<NUMBER_OR_NULL>",
+    "eps_low": "<NUMBER_OR_NULL>",
+    "revenue_mean_b": "<NUMBER>",
+    "segments": [{"name": "<SEGMENT_NAME>", "metric": "Revenue", "consensus": "<NUMBER_OR_NULL>"}]
+  },
+  "beat_miss_history": [
+    {"quarter": "<QUARTER_LABEL>", "report_date": "<REPORT_DATE>", "actual_eps": "<NUMBER>", "consensus_eps": "<NUMBER>", "surprise_pct": "<NUMBER>", "beat": true, "stock_reaction_1d_pct": "<NUMBER>", "tag": "[History]"}
+  ],
+  "history_summary": {"hit_rate": "<RATE_DECIMAL>", "avg_surprise_pct": "<NUMBER>", "avg_reaction_1d_pct": "<NUMBER>", "tag": "[History]"},
+  "key_questions": [
+    {"question": "<COMPANY_SPECIFIC_QUESTION>", "what_to_watch": "<METRIC_NAME>", "stock_impact": "<IF_X_THEN_PCT_IMPACT>"}
+  ],
+  "options_snapshot": {
+    "status": "available",
+    "iv_percentile": "<NUMBER_OR_NULL>",
+    "atm_straddle_price": "<NUMBER>",
+    "implied_move_pct": "<NUMBER>",
+    "nearest_expiry": "<EXPIRY_DATE>",
+    "tag": "[Options]"
+  },
+  "pre_mortem": [
+    {"scenario": "<DOWNSIDE_SCENARIO>", "trigger": "<MEASURABLE_TRIGGER>", "expected_drop_pct": "<NEGATIVE_NUMBER>"}
+  ],
+  "pre_print_position": {
+    "stance": "Hold",
+    "rationale": "<COMPANY_SPECIFIC_RATIONALE>",
+    "options_strategy": "<OPTIONAL_OPTIONS_STRATEGY>"
+  },
+  "data_sources": [{"data_category": "Earnings History", "source": "yfinance.earnings_history", "confidence": "B", "tag": "[History]"}]
+}
+```
+
+### Mode E Preview minimum quality gates (self-check before finalizing)
+
+- [ ] `earnings_sub_mode == "preview"` AND `earnings_window == "preview"`
+- [ ] `next_earnings_date` non-null AND `days_until_earnings` ∈ [-7, -1]
+- [ ] All 6 sections (consensus, history, key_questions, options,
+      pre_mortem, pre_print_position) present (Section 4 may be
+      `status="unavailable"` per OD-F2)
+- [ ] `key_questions[]` has 4–5 entries, each passes Competitor
+      Replacement Test
+- [ ] `beat_miss_history[]` ≥ 4 quarters, every row tagged `[History]`
+- [ ] No `rr_score` field, no `verdict` field (those belong to Mode C/D)
+- [ ] No DCF call (Preview is event-driven, not valuation-driven)
+
+---
+
+## Mode E — Earnings Review
+
+**Spec source**: `references/analysis-framework-earnings.md` (Review schema).
+
+**Trigger**: orchestrator dispatches Mode E with
+`pipeline_state.earnings_sub_mode == "review"` after Step 0.5 returned
+`window == "review"` (D ~ D+3) or the user passed `--earnings-mode review`.
+
+### Mode E Review-specific Inputs (additional to the standard 5)
+
+- `output/runs/{run_id}/earnings-window/{ticker}.json` (same as Preview).
+- `output/runs/{run_id}/{ticker}/earnings-history.json` (now contains the
+  newly-released quarter as the most recent row).
+- **Prior Mode C `analysis-result.json` snapshot** — resolved through
+  `output/data/{ticker}/latest.json` → `refs.analysis_result`. This is
+  required for the thesis_impact + light_verdict_update sections. If no
+  prior Mode C exists, set `prior_mode_c_baseline = null` and degrade
+  Sections 4–5 (see "Backward compat" below).
+
+### Review Pipeline (R1–R6)
+
+1. **R1 — Hero composition**: D+{N} badge from `days_until`, beat/miss
+   summary one-liner ("EPS beat 8.2%, Revenue beat 1.1%, guidance raised"),
+   stock reaction (post-market % AND next-day % when available), prior
+   verdict carried forward.
+2. **R2 — Section 1: Print Snapshot**: actual_vs_consensus table with
+   color-coded beat/miss flags (color logic is the renderer's job; analyst
+   only emits `beat: true|false`). Top line, bottom line, segments,
+   margin, guidance.
+3. **R3 — Section 2: Guidance Update**: `pre_consensus_forward_eps` vs
+   `post_consensus_forward_eps`, plus company guidance (if changed).
+   When forward EPS rolled, mark `prior_rr_score=...`,
+   `forward_eps_delta_pct=...`. Do NOT recompute scenarios.
+4. **R4 — Section 3: Key Questions Answered**: read `key_questions[]`
+   from prior Mode E Preview (if it exists in the prior snapshot path).
+   Mark each `answer_status` ∈ {`answered_yes`, `answered_no`,
+   `partial`, `not_addressed`}. If no prior Preview exists, generate
+   3–4 questions ad hoc and mark all `answered_*` based on the print.
+5. **R5 — Section 4–5: Thesis Impact + Light Verdict Update**:
+   - **Thesis Impact**: read prior Mode C `bull_pillars[]`, `bear_pillars[]`
+     (or equivalent), assign each pillar a status ∈ {`On track`, `Watch`,
+     `Broken`} based on the print. Output `thesis_impact.long_pillars[]`,
+     `thesis_impact.short_pillars[]`. Backward compat: if prior Mode C
+     lacks pillar fields, write `thesis_impact = {"baseline": null,
+     "note": "Prior Mode C lacked thesis pillars — first-look review"}`.
+   - **Light Verdict Update (OD-F3)**: carry forward
+     `bull_target / base_target / bear_target` from prior Mode C
+     **as-is** with `outdated=true`. Update **only** the forward-EPS
+     based fair value heuristic (e.g., `light_fair_value = base_target *
+     (1 + forward_eps_delta_pct)`). Set `mode_c_rerun_recommended=true`
+     and a banner string suggesting "D+2~D+5 사이 Mode C 재실행 권고".
+     Do NOT call dcf-calculator.py for Review. Do NOT recompute scenario
+     probabilities.
+6. **R6 — Section 6: Post-Print Action**:
+   - One of {Add / Trim / Hold / Reverse} for the base-case investor.
+   - Specific entry / exit price levels keyed off the post-print price.
+   - This is tactical positioning guidance, not a new verdict.
+   - Surface `[Quality flag: outdated verdict]` on the verdict if any
+     prior Mode C field is reused beyond 7 days old.
+
+### Review Output Schema (analysis-result.json)
+
+Required top-level fields (subset — see framework for full list):
+
+```json
+{
+  "ticker": "<TICKER>",
+  "output_mode": "E",
+  "earnings_sub_mode": "review",
+  "earnings_window": "review",
+  "next_earnings_date": "<NEXT_EARNINGS_DATE>",
+  "days_until_earnings": "<DAYS_SINCE_PRINT>",
+  "output_language": "ko",
+  "analysis_date": "<ANALYSIS_DATE>",
+  "actual_vs_consensus": {
+    "eps_actual": "<NUMBER>",
+    "eps_consensus": "<NUMBER>",
+    "eps_surprise_pct": "<NUMBER>",
+    "revenue_actual_b": "<NUMBER>",
+    "revenue_consensus_b": "<NUMBER>",
+    "revenue_surprise_pct": "<NUMBER>",
+    "segments": [{"name": "<SEGMENT_NAME>", "actual": "<NUMBER>", "consensus": "<NUMBER>", "beat": true}]
+  },
+  "guidance_delta": {
+    "pre_consensus_forward_eps": "<NUMBER>",
+    "post_consensus_forward_eps": "<NUMBER>",
+    "forward_eps_delta_pct": "<NUMBER>",
+    "company_guidance_change": "raised|maintained|lowered|none"
+  },
+  "key_questions_answered": [
+    {"question": "<COMPANY_SPECIFIC_QUESTION>", "answer_status": "answered_yes", "evidence": "<PRINT_EVIDENCE>", "thesis_impact": "<PILLAR_DELTA>"}
+  ],
+  "thesis_impact": {
+    "long_pillars": [{"pillar": "<PILLAR_NAME>", "prior_status": "On track", "post_print_status": "On track", "delta_note": "<DELTA_NOTE>"}],
+    "short_pillars": [{"pillar": "<PILLAR_NAME>", "prior_status": "Watch", "post_print_status": "Watch", "delta_note": "<DELTA_NOTE>"}]
+  },
+  "light_verdict_update": {
+    "prior_rr_score": "<NUMBER_OR_NULL>",
+    "prior_verdict": "<VERDICT_OR_NULL>",
+    "forward_eps_delta_pct": "<NUMBER>",
+    "light_fair_value": "<NUMBER>",
+    "bull_target_carried_forward": "<NUMBER>",
+    "base_target_carried_forward": "<NUMBER>",
+    "bear_target_carried_forward": "<NUMBER>",
+    "outdated": true,
+    "mode_c_rerun_recommended": true,
+    "rerun_banner": "Mode C 재실행 권고: D+2~D+5 사이"
+  },
+  "post_print_action": {
+    "action": "Hold",
+    "entry_level": "<NUMBER_OR_NULL>",
+    "exit_level": "<NUMBER_OR_NULL>",
+    "rationale": "<COMPANY_SPECIFIC_RATIONALE>"
+  },
+  "data_sources": [...]
+}
+```
+
+### Mode E Review minimum quality gates (self-check before finalizing)
+
+- [ ] `earnings_sub_mode == "review"` AND `earnings_window == "review"`
+- [ ] `days_until_earnings` ∈ [-3, 0]
+- [ ] All 6 sections (print_snapshot, guidance_delta,
+      key_questions_answered, thesis_impact, light_verdict_update,
+      post_print_action) present
+- [ ] `light_verdict_update.outdated == true`
+- [ ] `light_verdict_update.mode_c_rerun_recommended == true`
+- [ ] No DCF call. No scenario probability recomputation.
+- [ ] If prior Mode C snapshot is missing, `thesis_impact.baseline=null`
+      and `light_verdict_update.prior_rr_score=null` (graceful degrade).
 
 ---
 
