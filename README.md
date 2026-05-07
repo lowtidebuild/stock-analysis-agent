@@ -34,7 +34,7 @@
 
 ## What's new
 
-**v2.1 (May 2026)** — six shipped enhancements across the analysis stack:
+**v2.1 (May 7, 2026)** — six shipped enhancements across the analysis stack:
 
 - **Mode E (Earnings Preview/Review)** — new mode auto-detected in the D-7 ~ D+3 window around an earnings print. Preview covers consensus, beat/miss history, key questions, options-implied move, and pre-print position. Review covers actual vs consensus, guidance delta, key-questions answered, thesis impact, and post-print action.
 - **Valuation Bridge (Mode C)** — a new section reconciles four anchors (DCF, Comps, Analyst Target, Our Base) into a single weighted fair value with the reconciliation logic shown.
