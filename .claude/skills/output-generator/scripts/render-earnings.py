@@ -44,6 +44,7 @@ import sys
 
 sys.path.insert(0, str(REPO_ROOT))
 
+from tools.analysis_contract import build_default_report_path  # noqa: E402
 from tools.paths import data_path, runtime_path  # noqa: E402
 
 
@@ -1780,16 +1781,35 @@ def build_review_html(analysis: dict[str, Any]) -> str:
 
 
 def _default_report_path(analysis: dict[str, Any]) -> Path:
-    """Compute default `output/reports/{ticker}_E_{sub}_{lang}_{date}.html`."""
+    """Compute default `output/reports/{ticker}_E_{sub}_{lang}_{date}.html`.
+
+    Delegates to ``tools.analysis_contract.build_default_report_path`` so the
+    canonical filename pattern stays in one place. Falls back to a sensible
+    default sub_mode of ``preview`` when the analysis-result is missing the
+    field (legacy snapshots) — but this is rare in practice because Mode E
+    analyses always carry ``earnings_sub_mode``.
+    """
     ticker = (analysis.get("ticker") or "UNKNOWN").upper()
     sub_mode = (analysis.get("earnings_sub_mode") or "preview").lower()
-    lang = (analysis.get("output_language") or "ko").upper()
+    lang = (analysis.get("output_language") or "ko")
     date = analysis.get("analysis_date")
     if not date:
         from datetime import datetime, timezone
         date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    fname = f"{ticker}_E_{sub_mode}_{lang}_{date}.html"
-    return data_path("reports", fname)
+    relative_or_abs = build_default_report_path(
+        ticker=ticker,
+        output_mode="E",
+        output_language=lang,
+        analysis_date=date,
+        sub_mode=sub_mode,
+    )
+    if relative_or_abs is None:
+        # Should never happen for Mode E with valid sub_mode, but guard anyway.
+        return data_path("reports", f"{ticker}_E_{sub_mode}_{lang.upper()}_{date}.html")
+    candidate = Path(relative_or_abs)
+    if candidate.is_absolute():
+        return candidate
+    return REPO_ROOT / candidate
 
 
 def _atomic_write(target: Path, content: str) -> None:

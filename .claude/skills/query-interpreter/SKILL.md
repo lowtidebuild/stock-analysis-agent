@@ -86,14 +86,29 @@ Apply this decision table:
 | "비교" / "vs" / "compare" (multi-ticker) | B |
 | "심층" / "자세히" / "deep dive" / "detailed" / "full" | C |
 | "투자 메모" / "memo" / "investment memo" / "리포트" | D |
+| "실적" / "earnings" / "프리뷰" / "preview" / "review" / "어닝스" / "Q1" / "Q2" / "Q3" / "Q4" + 분석 의도 | E (Earnings Preview/Review) |
+| `--earnings-mode preview\|review` flag | E (forced sub_mode) |
+| `--mode E` flag | E (force earnings dispatch) |
+| Workflow 1 + earnings-window-detector returns `preview` or `review` (no explicit mode in user query) | E (auto-suggested, user can override) |
 | No explicit mode signal, single ticker | C (default) |
 | No explicit mode signal, multi-ticker | B (default) |
 | Portfolio review | C per stock (abbreviated) |
 | Watchlist scan | A per stock (abbreviated) |
 
+**Mode E sub-mode selection** (preview vs review):
+1. If user passes `--earnings-mode preview|review` → forced.
+2. Else if earnings-window-detector returned `window="preview"` → `sub_mode="preview"`.
+3. Else if `window="review"` → `sub_mode="review"`.
+4. Else if user explicitly typed "프리뷰/preview" → preview; "review/리뷰" → review.
+5. Else if `window="none"` and user typed "실적/earnings" only → confirm with user or downgrade to Mode C with informational note "현재 실적 윈도우(D-7~D+3)가 아닙니다. Mode C로 진행할까요?"
+
+**Mode E precedence rule**: when both an explicit Mode A/B/C/D signal and an earnings keyword are present in the same query, the **explicit mode wins**. Surface a one-line informational note: `"[{ticker}] 실적 윈도우 진행 중 — Mode E도 가능합니다. 진행: Mode {explicit}."`
+
 **Mode confirmation** (optional):
 - Mode A: `"[{ticker}] 퀵 브리핑 (Mode A) 진행합니다."`
 - Mode C/D with Enhanced: `"[{ticker}] 심층 분석 (Mode C/D) 진행합니다. API 데이터 + 웹 리서치를 결합합니다."`
+- Mode E Preview: `"[{ticker}] 실적 프리뷰 (Mode E · D-{N}) 진행합니다. 컨센서스 + 옵션 + 8Q 히스토리."`
+- Mode E Review: `"[{ticker}] 실적 리뷰 (Mode E · D+{N}) 진행합니다. 발표 결과 + light verdict update."`
 
 ### Step 1.5 — Output Language Detection
 
@@ -132,7 +147,10 @@ Output session state block:
 Ticker(s): {list}
 Market(s): {US/KR}
 Workflow: {1/2/3}
-Output Mode: {A/B/C/D}
+Output Mode: {A/B/C/D/E}
+Earnings Sub-Mode: {preview/review/—}     # only when Mode E
+Earnings Window: {preview/review/none}    # from earnings-window-detector (Workflow 1)
+Days until next ER: {N or —}
 Output Language: {en/ko}
 Company Type (pre-detected): {type or "unknown"}
 Peer tickers: {list or none}
@@ -141,6 +159,19 @@ Delta mode: {yes/no}
 → Proceeding to Step 2 (Market Router)
 ```
 
+**Mode E branch — Workflow 1 only**: when output_mode=E, the session state must also surface:
+
+- `earnings_sub_mode` ∈ {`preview`, `review`} — selected per Step 1.4 sub-mode rules
+- `earnings_window_classification_path` — the run-local `output/runs/{run_id}/earnings-window/{ticker}.json` path (Step 0.5 wrote it)
+- `next_earnings_date` (ISO date) for downstream analyst hero rendering
+- `next_earnings_confirmed` (bool) — if false, Mode E should not proceed; downgrade to Mode C with note
+
+When `output_mode=E` and `next_earnings_confirmed=false`, do NOT advance. Print: `"실적 발표일을 확정할 수 없습니다. Mode C로 전환할까요?"` and either confirm Mode C or wait.
+
+When `output_mode=E` and `earnings_sub_mode` is unset (e.g. user said "earnings" outside the window), apply Step 1.4 rule 5 (downgrade-with-confirm).
+
+For Mode A/B/C/D, leave the earnings-related fields as `—`.
+
 ---
 
 ## Completion Check
@@ -148,7 +179,8 @@ Delta mode: {yes/no}
 - [ ] Workflow determined (1/2/3)
 - [ ] Ticker(s) resolved to canonical format (uppercase US, 6-digit KR)
 - [ ] Market(s) identified (US/KR)
-- [ ] Output mode selected
+- [ ] Output mode selected (A/B/C/D/E)
+- [ ] If Mode E: earnings_sub_mode set + next_earnings_confirmed=true verified
 - [ ] Output language detected
 - [ ] Company type pre-detected (or marked unknown)
 - [ ] Session state block written
