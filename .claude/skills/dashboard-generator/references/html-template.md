@@ -521,6 +521,204 @@ Substitution rules:
   </div>
 </section>
 
+<!-- ============================================================ -->
+<!-- SECTION 10b: CATALYST TIMELINE (Phase E — Mode C)             -->
+<!-- ============================================================ -->
+<!--
+  Render this section ONLY when analysis-result.json contains a non-empty
+  `upcoming_catalysts` list (or, equivalently, when the orchestrator wrote
+  `output/runs/{run_id}/{ticker}/catalyst-timeline.json` with
+  `events.length > 0`).
+
+  Generation flow:
+    1. Orchestrator runs:
+         python .claude/skills/data-manager/scripts/catalyst-aggregator.py timeline \
+           --ticker {SUBJECT} \
+           --snapshot output/runs/{run_id}/{ticker}/analysis-result.json \
+           --run-dir  output/runs/{run_id}/{ticker} \
+           --include-peers \
+           --output   output/runs/{run_id}/{ticker}/catalyst-timeline.json
+    2. The resulting JSON has shape:
+         {
+           "subject_ticker": "GOOGL",
+           "peer_count": 0,
+           "categories": ["earnings", "regulatory", "product", "macro", "other"],
+           "events": [
+             {"start_date": "2026-07-29", "end_date": "2026-07-29",
+              "is_range": false, "category": "earnings", "ticker": "GOOGL",
+              "description": "Q2 2026 실적 발표", "significance": "high",
+              "is_subject": true, ...}, ...
+           ]
+         }
+    3. The populator substitutes `{CATALYST_TIMELINE}` with the markup
+       pattern below, repeated per event row.
+
+  Backward compat:
+    - Empty events array OR missing `upcoming_catalysts` → substitute the
+      empty string for `{CATALYST_TIMELINE}` (omit the section silently).
+    - Legacy `date`-only catalysts are normalized by the aggregator:
+      `start_date == end_date`, `category` defaulted to "other" or inferred
+      from event_type keywords. The renderer doesn't have to know about the
+      legacy schema.
+
+  Category color contract (5 buckets, Tailwind classes — keep in sync with
+  references/analysis-framework-dashboard.md "Catalyst Timeline" section):
+    - earnings   → bg-blue-50 text-blue-700      (실적)
+    - regulatory → bg-rose-50 text-rose-700      (규제)
+    - product    → bg-emerald-50 text-emerald-700 (제품)
+    - macro      → bg-amber-50 text-amber-700    (매크로)
+    - other      → bg-slate-50 text-slate-700    (기타)
+
+  Significance → marker size:
+    - high   → opacity-100, larger dot/bar
+    - medium → opacity-80,  default dot
+    - low    → opacity-60,  small/outlined dot
+
+  Subject vs peer:
+    - is_subject=true  → solid color marker, ring-2 ring-brand-400
+    - is_subject=false → muted (opacity-70), no ring; ticker badge prefix
+-->
+{CATALYST_TIMELINE}
+<!--
+Example markup (populate inside `<main>`, after Section 10 Portfolio
+Strategy). Use a horizontal-bar layout: one row per event, x-axis position
+computed as % offset from the analysis date over a 12-month window.
+
+<section id="section-catalyst-timeline">
+  <h2 class="text-xl font-bold text-gray-900 mb-4">
+    <i class="fa-solid fa-calendar-days mr-2 text-brand-400"></i>
+    예정 카탈리스트 · 12개월 타임라인
+  </h2>
+  <div class="card p-6">
+    <!-- Category legend -->
+    <div class="flex gap-2 flex-wrap mb-5 text-xs">
+      <span class="inline-block px-2 py-1 rounded font-semibold bg-blue-50 text-blue-700">실적 (earnings)</span>
+      <span class="inline-block px-2 py-1 rounded font-semibold bg-rose-50 text-rose-700">규제 (regulatory)</span>
+      <span class="inline-block px-2 py-1 rounded font-semibold bg-emerald-50 text-emerald-700">제품 (product)</span>
+      <span class="inline-block px-2 py-1 rounded font-semibold bg-amber-50 text-amber-700">매크로 (macro)</span>
+      <span class="inline-block px-2 py-1 rounded font-semibold bg-slate-50 text-slate-700">기타 (other)</span>
+      {PEER_LEGEND_OPTIONAL}
+      <!-- When peer_count > 0, also emit:
+        <span class="inline-block px-2 py-1 rounded font-semibold bg-white border border-gray-300 text-gray-600">
+          <i class="fa-solid fa-circle text-brand-400 text-[8px] mr-1"></i> 본 종목
+        </span>
+        <span class="inline-block px-2 py-1 rounded font-semibold bg-white border border-gray-300 text-gray-400">
+          <i class="fa-regular fa-circle text-gray-400 text-[8px] mr-1"></i> Peer
+        </span>
+      -->
+    </div>
+
+    <!-- Per-event horizontal bar layout -->
+    <div class="space-y-3">
+      {EVENT_ROWS_HTML}
+      <!--
+      Each event row pattern (subject example, earnings, high significance,
+      single-day):
+
+        <div class="grid grid-cols-12 gap-2 items-center text-xs">
+          <!- Left column (3/12): date + ticker badge ->
+          <div class="col-span-3 text-right pr-2">
+            <span class="font-semibold text-gray-700">{START_DATE}</span>
+            <span class="ml-1 inline-block px-1.5 py-0.5 rounded text-[9px]
+                         bg-brand-50 text-brand-700 font-mono ring-1 ring-brand-200">
+              {TICKER}
+            </span>
+          </div>
+          <!- Middle column (8/12): timeline bar ->
+          <div class="col-span-8 relative h-6 bg-gray-50 rounded">
+            <div class="absolute inset-y-0 flex items-center"
+                 style="left: {OFFSET_PCT}%; width: {WIDTH_PCT}%;"
+                 title="{DESCRIPTION} · {EXPECTED_IMPACT}">
+              <div class="h-3 w-full rounded-full
+                          bg-blue-500 opacity-100 ring-2 ring-blue-300"></div>
+            </div>
+          </div>
+          <!- Right column (1/12): significance/impact pill ->
+          <div class="col-span-1 text-[10px] text-gray-500 text-center">
+            {EXPECTED_IMPACT}
+          </div>
+        </div>
+
+      Range catalyst (start_date != end_date) — replace the bar with a
+      rectangle spanning [OFFSET_PCT, OFFSET_PCT + WIDTH_PCT_RANGE]:
+
+        <div class="absolute inset-y-1 rounded
+                    bg-rose-200 ring-1 ring-rose-300"
+             style="left: {OFFSET_PCT}%; width: {WIDTH_PCT_RANGE}%;"
+             title="{DESCRIPTION}">
+        </div>
+
+      Peer event row — same structure, but mute the marker:
+        bg color → switch to opacity-70
+        Replace `ring-2 ring-blue-300` with `border border-gray-300`
+        Ticker badge color → bg-gray-100 text-gray-600 ring-1 ring-gray-200
+      -->
+    </div>
+
+    <!-- Below-bar legend explaining offset axis (12-month window) -->
+    <div class="grid grid-cols-12 gap-2 mt-4 text-[10px] text-gray-400">
+      <div class="col-span-3"></div>
+      <div class="col-span-8 grid grid-cols-12 gap-0">
+        <div class="text-left">{MONTH_M0}</div>
+        <div class="text-center">{MONTH_M2}</div>
+        <div class="text-center">{MONTH_M4}</div>
+        <div class="text-center">{MONTH_M6}</div>
+        <div class="text-center">{MONTH_M8}</div>
+        <div class="text-center">{MONTH_M10}</div>
+        <div class="text-right">{MONTH_M12}</div>
+      </div>
+      <div class="col-span-1"></div>
+    </div>
+
+    <!-- Detail list below the visual timeline -->
+    <div class="mt-6 pt-5 border-t border-gray-200 space-y-2 text-sm">
+      {EVENT_DETAIL_LIST}
+      <!--
+      Each detail row pattern:
+        <div class="flex items-start gap-3 py-2">
+          <span class="inline-block w-2 h-2 rounded-full mt-2 flex-shrink-0
+                       bg-blue-500"></span>
+          <span class="font-mono text-xs text-gray-500 w-24 flex-shrink-0">
+            {START_DATE}{RANGE_SUFFIX}
+          </span>
+          <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold
+                       bg-blue-50 text-blue-700 flex-shrink-0">
+            {CATEGORY_LABEL_KR}
+          </span>
+          <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono
+                       bg-gray-100 text-gray-600 flex-shrink-0">
+            {TICKER}{SUBJECT_BADGE}
+          </span>
+          <span class="text-gray-700 flex-1">{DESCRIPTION}</span>
+          <span class="text-gray-500 text-xs flex-shrink-0">{EXPECTED_IMPACT}</span>
+        </div>
+      -->
+    </div>
+  </div>
+</section>
+
+Substitution rules:
+- `{START_DATE}` / `{END_DATE}`: from event.start_date / event.end_date (ISO YYYY-MM-DD)
+- `{TICKER}`: from event.ticker
+- `{DESCRIPTION}`: from event.description (HTML-escape)
+- `{EXPECTED_IMPACT}`: from event.expected_impact (omit when null)
+- `{CATEGORY_LABEL_KR}`: map category → Korean label (실적/규제/제품/매크로/기타)
+- `{OFFSET_PCT}`: (start_date - analysis_date).days / 365 * 100, clamped [0, 100]
+- `{WIDTH_PCT}`: small fixed width for single-day points (e.g., 2)
+- `{WIDTH_PCT_RANGE}`: (end_date - start_date).days / 365 * 100, min 4
+- `{RANGE_SUFFIX}`: "" when single day, " → {END_DATE}" when range
+- `{SUBJECT_BADGE}`: "" when peer, " (subject)" when is_subject=true (or omit)
+- `{MONTH_M0}` ... `{MONTH_M12}`: month labels at 0, 2, 4, 6, 8, 10, 12 month marks
+- Bar color CSS classes by category:
+    earnings   → bg-blue-500 / bg-blue-50 text-blue-700
+    regulatory → bg-rose-500 / bg-rose-50 text-rose-700
+    product    → bg-emerald-500 / bg-emerald-50 text-emerald-700
+    macro      → bg-amber-500 / bg-amber-50 text-amber-700
+    other      → bg-slate-400 / bg-slate-50 text-slate-700
+- `{PEER_LEGEND_OPTIONAL}`: emit the subject/peer legend pair only when
+  `peer_count > 0`; otherwise empty string.
+-->
+
 </main>
 
 <!-- ============================================================ -->
@@ -686,3 +884,12 @@ or a Mode C run where DCF + comps + analyst targets weren't all available),
 a "[Data unavailable]" stub. The bridge is a synthesis widget; its absence
 should be invisible rather than create a hole in the page. When the field is
 present, populate the markup pattern shown in the Section 5b comment block.
+
+**Exception — `{CATALYST_TIMELINE}`**: This placeholder represents the Mode C
+Catalyst Timeline (Section 10b, Phase E). When `analysis-result.json` has an
+empty (or absent) `upcoming_catalysts` list — equivalently, when the
+`catalyst-aggregator.py timeline` output has `events: []` — **replace
+`{CATALYST_TIMELINE}` with an empty string**. Do not render an empty
+timeline shell. When events exist, populate the markup pattern shown in the
+Section 10b comment block, using the JSON written to
+`output/runs/{run_id}/{ticker}/catalyst-timeline.json`.

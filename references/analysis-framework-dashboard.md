@@ -364,6 +364,99 @@ If historical price data not available (Standard Mode without price API): substi
 | Date | Event | Significance | Expected Impact |
 (Ordered by date, next 90 days)
 
+### Catalyst Timeline (Mode C — Phase E)
+
+**Trigger**: Render whenever `analysis-result.json.upcoming_catalysts` is a
+non-empty list. Replaces (or augments — see backward-compat below) the plain
+"Upcoming Catalysts" table with a Gantt-style 12-month timeline grouped by
+category. The timeline lives inside the existing **Section 10 — Portfolio
+Strategy & Execution** block, immediately after the "What Would Make Me
+Wrong" pre-mortem so the reader sees pillar status, then the falsifiable
+exit conditions, then the cluster of upcoming events that could trigger
+either side of the trade.
+
+**Schema** — `upcoming_catalysts[]` items must carry the following fields
+(legacy `date` single-field schema is still accepted; see backward-compat):
+
+```json
+{
+  "date": "2026-07-29",          // legacy field, retained for backward compat
+  "start_date": "2026-07-29",   // NEW (required for new format)
+  "end_date": "2026-07-29",     // NEW (required, single = same as start)
+  "event_type": "earnings",
+  "category": "earnings",        // NEW: enum {earnings, regulatory, product, macro, other}
+  "ticker": "GOOGL",              // NEW: subject or peer ticker (subject = default)
+  "description": "Q2 2026 실적 발표",
+  "significance": "high",        // existing: low/medium/high
+  "expected_impact": "±5-8%"
+}
+```
+
+**Categories** (5 buckets — Tailwind color codes are the contract):
+
+| Category | 한국어 라벨 | Tailwind badge classes |
+|----------|------------|------------------------|
+| `earnings` | 실적 | `bg-blue-50 text-blue-700` |
+| `regulatory` | 규제 | `bg-rose-50 text-rose-700` |
+| `product` | 제품 | `bg-emerald-50 text-emerald-700` |
+| `macro` | 매크로 | `bg-amber-50 text-amber-700` |
+| `other` | 기타 | `bg-slate-50 text-slate-700` |
+
+**Visual rules**:
+
+- 12-month horizontal axis starting at the analysis month. Catalysts beyond
+  the 12-month window collapse to a "12M+" bucket on the right edge.
+- Vertical groups follow the 5 categories (in the order above). Empty
+  groups still render their row label so the reader can see the absence.
+- Marker size by `significance`:
+  - `high` → filled bar/dot, full opacity
+  - `medium` → filled dot, 70% opacity
+  - `low` → outlined dot, narrow width
+- Range catalysts (`start_date != end_date`) render as a Tailwind bar
+  spanning the relevant cells; single-day catalysts render as a centered
+  dot in the appropriate cell.
+- Subject ticker dots are emphasized (border or shadow); peer ticker dots
+  are dimmed and labeled with the peer ticker on hover (`title=` attribute).
+
+**Peer merge (OD-4 — Phase D dependency)**:
+
+- When `output/runs/{run_id}/peers/*.json` files exist (Phase D peer
+  mini-pipeline), merge each peer's `next_earnings_date` (and any
+  `upcoming_catalysts[]` provided) into the timeline payload.
+- Peer catalysts always render below the subject in the same category row,
+  with `is_subject=false` so the renderer can apply muted styling.
+- Refuse any peer JSON lacking `_sanitization` (CLAUDE.md §12).
+
+**Backward compatibility**:
+
+- Snapshots written before Phase E only carry `date`, `event_type`,
+  `description`, `significance`. The aggregator's
+  `normalize_catalyst_for_timeline()` helper maps:
+  - `date` → `start_date == end_date`
+  - missing `category` → inferred from `description` + `event_type` keywords
+    (earnings/regulatory/product/macro), falling back to `"other"` when no
+    keyword matches
+  - missing `ticker` → subject ticker
+- Items whose `date` cannot be parsed as ISO `YYYY-MM-DD` (e.g. "TBD",
+  "2026 Q4") are silently dropped from the timeline (they remain in the
+  text catalyst list).
+- An empty `upcoming_catalysts` list → omit the timeline section silently.
+
+**Renderer contract**: see `dashboard-generator/references/html-template.md`
+"Catalyst Timeline" section for the `{CATALYST_TIMELINE}` placeholder
+markup. The orchestrator runs:
+
+```bash
+python .claude/skills/data-manager/scripts/catalyst-aggregator.py timeline \
+  --ticker {SUBJECT} \
+  --snapshot output/runs/{run_id}/{ticker}/analysis-result.json \
+  --run-dir  output/runs/{run_id}/{ticker} \
+  --include-peers \
+  --output   output/runs/{run_id}/{ticker}/catalyst-timeline.json
+```
+
+then populates `{CATALYST_TIMELINE}` from the resulting JSON.
+
 ### Section 11 — Disclaimer + Data Sources
 
 Standard disclaimer (see mode-d-template.md for full text)
