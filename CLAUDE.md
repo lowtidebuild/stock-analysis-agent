@@ -114,6 +114,15 @@ Read `.claude/skills/market-router/SKILL.md`
 - Write `output/runs/{run_id}/{ticker}/research-plan.json`
 - Verify output: run-local `research-plan.json` exists
 
+### Step 2.7 — Peer Mini-Fetch (Mode C / D only)
+Read `.claude/skills/financial-data-collector/peer-fetch-SKILL.md`
+- ONLY when `output_mode in {"C", "D"}` AND `peer_tickers[]` non-empty
+- Run `peer-fetch.py --tickers {peer list} --output-dir output/runs/{run_id}/peers/ --cache-dir output/data/peers-cache/`
+- 8-metric snapshot per peer: current_price, market_cap, pe_forward, ev_ebitda, revenue_growth_yoy, operating_margin, fcf_yield, beta
+- Cache: 24h TTL, shared across runs (cache hit ≈ 0s, miss ≈ 5–30s per peer)
+- Sanitization mandatory; one bad peer never aborts the others
+- Verify output: `output/runs/{run_id}/peers/{TICKER}.json` per peer (or `status="error"` record)
+
 ### Step 3 — Financial Data Collection (Enhanced Mode only)
 Read `.claude/skills/financial-data-collector/SKILL.md`
 - Execute 10-call API bundle
@@ -182,7 +191,9 @@ Read `.claude/skills/data-manager/SKILL.md` (Part A)
 
 ### Data Handoff File Paths (critical — verify each before proceeding)
 ```
-Step 2 writes:  output/runs/{run_id}/{ticker}/research-plan.json
+Step 2 writes:    output/runs/{run_id}/{ticker}/research-plan.json
+Step 2.7 writes:  output/runs/{run_id}/peers/{PEER_TICKER}.json   (Mode C/D only)
+                  output/data/peers-cache/{PEER_TICKER}.json      (24h shared cache)
 Step 3 writes:  output/runs/{run_id}/{ticker}/tier1-raw.json
 Step 4 writes:  output/runs/{run_id}/{ticker}/tier2-raw.json
 Step 5 writes:  output/runs/{run_id}/{ticker}/validated-data.json
@@ -435,9 +446,13 @@ Project Root
 │   ├── watchlist.json
 │   ├── portfolio.json
 │   ├── catalyst-calendar.json
+│   ├── data/peers-cache/
+│   │   └── {TICKER}.json              ← Phase D 24h peer cache (shared across runs)
 │   ├── runs/
 │   │   └── {run_id}/
 │   │       ├── run-manifest.json
+│   │       ├── peers/
+│   │       │   └── {PEER_TICKER}.json   ← Phase D Step 2.7 peer mini-fetch (Mode C/D)
 │   │       └── {ticker}/
 │   │           ├── research-plan.json     ← Step 2 output
 │   │           ├── tier1-raw.json         ← Step 3 output (US Enhanced only)
