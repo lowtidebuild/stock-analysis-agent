@@ -68,14 +68,32 @@ User query received
 │   Response: "가격 조회는 지원하지 않습니다. Yahoo Finance / Perplexity에서 확인하시거나,
 │              '{ticker} 분석해줘'로 심층 분석을 요청하세요."
 │
+├─ Earnings request (single ticker) → Workflow 1 with mode_override="E" (Mode E)
+│   Triggers (explicit):
+│     · 키워드: "실적", "earnings", "프리뷰", "preview", "review", "어닝스",
+│              "Q1"~"Q4" + 분석 의도
+│     · CLI flags: `--mode E`, `--earnings-mode preview|review`
+│   Triggers (implicit, Workflow 1 entry):
+│     · earnings-window-detector returns `window="preview"` or `window="review"`
+│       (Step 0.5) AND user did not explicitly request Mode A/B/C/D
+│   Sub-mode: preview (D-7~D-1) | review (D~D+3) — see query-interpreter Step 1.4.
+│
 └─ Single stock analysis → Workflow 1
     Default for all other analysis requests
 ```
+
+**Mode E precedence rules**:
+1. User explicit `--mode E` or `--earnings-mode {preview|review}` → Mode E forced (override window mismatch with a warning).
+2. Earnings keywords ("실적", "earnings", "프리뷰", "review") + window match → Mode E auto.
+3. Earnings keywords + window=`none` → confirm with user; default to Mode C with informational note.
+4. No earnings keywords + window != `none` → Mode E auto-suggested (informational), user can override to Mode A/B/C/D.
+5. Explicit Mode A/B/C/D + earnings keyword → explicit mode wins; surface `"실적 윈도우 진행 중 — Mode E도 가능합니다."`
 
 **Follow-up detection** (within same session):
 - "그럼 MSFT도" / "What about MSFT?" → add to current comparison (Workflow 2)
 - "조금 더 자세히" / "More detail" → upgrade output mode (A→C or A→D)
 - "이전 분석이랑 비교" / "Compare to last time" → delta mode within Workflow 1
+- "실적 어떻게 됐어?" / "Earnings result?" (post-print) → Mode E review (auto, if window matches)
 
 ---
 
@@ -98,6 +116,40 @@ Read `.claude/skills/staleness-checker/SKILL.md`
   prepend the banner above their first content section; empty stdout = no
   banner. The CLI/orchestrator flag `--no-delta` disables the call
   (`auto_delta = false`, no banner emitted).
+- **OD-F1 — Mode E override**: when `pipeline_state.mode_override == "E"` (set
+  by Step 0.5 below or by an explicit `--mode E` flag), force
+  `freshness_decision = "FRESH_COLLECTION"` regardless of the snapshot age.
+  Mode E should never reuse a stale snapshot.
+
+### Step 0.5 — Earnings Window Detection (NEW, Mode E gate)
+Read `.claude/skills/earnings-window-detector/SKILL.md`
+- Run
+  `python .claude/skills/earnings-window-detector/scripts/window-classifier.py
+   --ticker {ticker} --output-dir output/runs/{run_id}/earnings-window/
+   --today-date {YYYY-MM-DD} --timeout 30`
+- Outputs `output/runs/{run_id}/earnings-window/{ticker}.json` with
+  `{ window, days_until, next_earnings_date, next_earnings_confirmed,
+     fallback_used, lookup_source, _sanitization }`
+- **Mode dispatch decision** (combines window + Step 1 user intent):
+  - `window == "preview"` AND user did not request Mode A/B/C/D explicitly
+    → set `pipeline_state.mode_override = "E"`,
+       `pipeline_state.earnings_sub_mode = "preview"`
+  - `window == "review"` AND not explicit other mode
+    → `mode_override = "E"`, `earnings_sub_mode = "review"`
+  - `window == "none"` → no override (proceed as Mode C/A/B/D per Step 1)
+  - User passed `--mode E` AND `window == "none"` → fail loudly with
+    `"실적 발표일이 윈도우 밖입니다. --earnings-mode preview|review를
+     강제로 요청하셨다면 다시 확인해주세요."`
+  - `next_earnings_confirmed == false` → cannot run Mode E. Surface a
+    notice and downgrade to Mode C with `[Quality flag: ER date
+    unconfirmed]`.
+- **Failure handling**: detector failure (network, yfinance) → record
+  `fallback_used=true`, treat as `window=none`, never block the pipeline.
+- **Cache**: 1h TTL on the per-ticker JSON; recompute outside that window.
+  The OD-F1 `FRESH_COLLECTION` rule above governs the actual financial-data
+  collection — this cache only governs the window classification artifact.
+- Verify output: `output/runs/{run_id}/earnings-window/{ticker}.json`
+  exists AND contains a `_sanitization` block (Section 12 §3 rule).
 
 ### Step 1 — Query Interpretation
 Read `.claude/skills/query-interpreter/SKILL.md`
@@ -152,7 +204,7 @@ Read `.claude/skills/data-validator/SKILL.md`
 - Verify output: validated-data exists with overall_grade, evidence-pack exists with compact facts, and context-budget exists
 
 ### Steps 6 & 7 — Deep Analysis (Analyst Agent)
-**Dispatch Analyst Agent** for Mode A, C, and D:
+**Dispatch Analyst Agent** for Mode A, C, D, and E:
 - Read `.claude/agents/analyst/AGENT.md`
 - Load: run-local validated-data.json, evidence-pack.json, context-budget.json, research-plan.json, appropriate framework file
 - Do not pass raw tier artifacts by default; Analyst may open raw artifacts only for logged conflict/recheck/source-mismatch reasons
@@ -160,7 +212,29 @@ Read `.claude/skills/data-validator/SKILL.md`
 - Mode B: execute inline (no subagent)
 - Mode C/D: analyst produces full `output/runs/{run_id}/{ticker}/analysis-result.json`
 - Mode C/D: analyst runs DCF valuation (dcf-calculator.py) and integrates macro context
-- Verify output: run-local `analysis-result.json` exists AND rr_score is non-null
+- **Mode E (Earnings Preview/Review)**:
+  - Framework file: `references/analysis-framework-earnings.md`
+  - Extra inputs: `output/runs/{run_id}/earnings-window/{ticker}.json` (Step 0.5),
+    `output/runs/{run_id}/{ticker}/options-snapshot.json` (Preview only),
+    `output/runs/{run_id}/{ticker}/earnings-history.json` (Preview + Review),
+    and the prior Mode C snapshot (`output/data/{ticker}/latest.json` →
+    pointed snapshot `analysis-result.json`) for thesis-pillar comparison in Review.
+  - Preview branch (P1–P7): consensus snapshot, beat/miss history,
+    key_questions[], options_snapshot, pre_mortem, pre_print_position.
+    No DCF re-run, no R/R rescore.
+  - Review branch (R1–R6): print_snapshot (actual vs consensus),
+    guidance_delta, key_questions_answered, thesis_impact (long+short
+    pillars vs prior Mode C), light_verdict_update (forward EPS only,
+    targets carried forward with `outdated=true`), post_print_action.
+    Light recompute: do NOT re-run DCF; mark verdict `outdated=true`
+    and emit `mode_c_rerun_recommended=true` (per OD-F3).
+  - Output: `analysis-result.json` carrying
+    `output_mode="E"`, `earnings_sub_mode={preview|review}`,
+    `earnings_window`, `next_earnings_date`.
+- Verify output:
+  - Mode A/C/D: `analysis-result.json` exists AND `rr_score` is non-null
+  - Mode E: `analysis-result.json` exists AND `earnings_sub_mode` ∈
+    {`preview`,`review`} AND `next_earnings_date` non-null
 
 ### Step 8 — Output Generation
 - **Mode A**: Apply `.claude/skills/briefing-generator/SKILL.md` → HTML file + chat summary
@@ -168,16 +242,28 @@ Read `.claude/skills/data-validator/SKILL.md`
 - **Mode C**: Apply `.claude/skills/dashboard-generator/SKILL.md` → HTML file
   - **⚠️ CRITICAL — Mode C rendering path**: Generate user-facing HTML by manually reading `.claude/skills/dashboard-generator/references/html-template.md` (the 485-line full skeleton with Chart.js, DCF block, Analyst Coverage, Macro, Peer table) and populating every `{PLACEHOLDER}` with `analysis-result.json` data. Do **NOT** use `scripts/render-dashboard.py` for final output — it is a contract-validation MVP: it hardcodes an empty "Charts & Trend Data" section (line ~494 emits a static "arrays not present in this fixture" string), silently ignores `dcf_analysis` / `analyst_coverage` / `financial_detail_cards` / `pre_mortem` / `data_confidence_summary`, and uses a different field schema (`factors[].factor`, `catalysts[].description`, flat-string `what_would_make_me_wrong`) that mismatches the rich analyst output. Using the script for delivery produces a hollowed-out ~22KB dashboard instead of the full ~56KB+ one. The script is fine for eval/schema tests only. ADR: `docs/adr/0001-mode-c-rendering-strategy.ko.md`.
 - **Mode D**: Apply `.claude/skills/output-generator/SKILL.md` → DOCX file (via docx-generator.py)
-- Verify output: file written to `output/reports/` (Modes A/B/C/D)
+- **Mode E**: Apply `.claude/skills/output-generator/scripts/render-earnings.py`
+  - Run `python .claude/skills/output-generator/scripts/render-earnings.py
+    --input output/runs/{run_id}/{ticker}/analysis-result.json` to render the
+    correct sub-mode template. The renderer dispatches on
+    `analysis-result.json.earnings_sub_mode` ∈ {`preview`,`review`}.
+  - Output filename (canonical via `tools/analysis_contract.py`):
+    `output/reports/{ticker}_E_{sub_mode}_{lang}_{date}.html`.
+  - Templates (read-only, manual-population reference):
+    `.claude/skills/output-generator/references/mode-e-template-preview.md`
+    and `mode-e-template-review.md`.
+- Verify output: file written to `output/reports/` (Modes A/B/C/D/E)
 
 ### Step 9 — Quality Check
 Read `.claude/skills/quality-checker/SKILL.md`
 - 5-item checklist (consistency, price+date, disclaimer, source tags, blank-over-wrong)
 - Auto-fix minor issues (1 attempt)
 - Persistent failures → inline [Quality flag] added
-- **Critic Agent dispatched** for Mode C and Mode D (NOT for Mode A):
+- **Critic Agent dispatched** for Mode C, Mode D, and Mode E (NOT for Mode A):
   - Read `.claude/agents/critic/AGENT.md`
-  - Critic runs 7-item review
+  - Critic runs 7-item review (Mode E uses the Mode E variant — see critic AGENT.md)
+  - Mode E variant adapts items 1, 2, 6 to focus on `key_questions` (Generic/Mechanism)
+    and 6-section completeness per sub-mode
   - If FAIL: feedback sent to Analyst for patch (max 1 feedback loop)
   - After patch (or after 1 loop): deliver output with any remaining flags
 
@@ -191,17 +277,26 @@ Read `.claude/skills/data-manager/SKILL.md` (Part A)
 
 ### Data Handoff File Paths (critical — verify each before proceeding)
 ```
+Step 0.5 writes:  output/runs/{run_id}/earnings-window/{ticker}.json   (Mode E gate)
 Step 2 writes:    output/runs/{run_id}/{ticker}/research-plan.json
 Step 2.7 writes:  output/runs/{run_id}/peers/{PEER_TICKER}.json   (Mode C/D only)
                   output/data/peers-cache/{PEER_TICKER}.json      (24h shared cache)
 Step 3 writes:  output/runs/{run_id}/{ticker}/tier1-raw.json
 Step 4 writes:  output/runs/{run_id}/{ticker}/tier2-raw.json
+Step 4 also (Mode E only):
+                output/runs/{run_id}/{ticker}/options-snapshot.json    (Preview)
+                output/runs/{run_id}/{ticker}/earnings-history.json    (Preview + Review)
 Step 5 writes:  output/runs/{run_id}/{ticker}/validated-data.json
 Step 5 also:    output/runs/{run_id}/{ticker}/evidence-pack.json
 Step 5 also:    output/runs/{run_id}/{ticker}/context-budget.json
 Step 7 writes:  output/runs/{run_id}/{ticker}/analysis-result.json
-Step 7 also:  .claude/agents/analyst/scripts/dcf-calculator.py (called by analyst)
-Step 8 writes:  output/reports/{ticker}_{mode}_{lang}_{date}.{ext}
+Step 7 also:  .claude/agents/analyst/scripts/dcf-calculator.py (called by analyst, Mode C/D)
+Step 8 writes:
+  Mode A/B/C: output/reports/{ticker}_{mode}_{lang}_{date}.html
+  Mode B (multi): output/reports/{T1}_{T2}_{T3}_B_{lang}_{date}.html
+  Mode D:     output/reports/{ticker}_D_{lang}_{date}.docx
+  Mode E:     output/reports/{ticker}_E_{sub_mode}_{lang}_{date}.html
+              (sub_mode ∈ {preview, review}; canonical via tools/analysis_contract.py)
 Step 9 writes:  output/runs/{run_id}/{ticker}/quality-report.json
 Step 10 writes: output/data/{ticker}/snapshots/{snapshot_id}/analysis-result.json
                 output/data/{ticker}/latest.json
@@ -275,14 +370,29 @@ Write to `output/portfolio.json`.
 | Agent | Trigger | Inputs | Outputs | Max Dispatches |
 |-------|---------|--------|---------|---------------|
 | data-researcher | ≥3 tickers in Workflow 2 not in session cache | run-local research-plan.json | tier1-raw.json + tier2-raw.json per ticker | 1 per workflow run |
-| analyst | Mode A, C, or D (always); Mode B (inline, no dispatch) | run-local validated-data.json, run-local evidence-pack.json, run-local context-budget.json, run-local research-plan.json, framework file | run-local analysis-result.json | 2 (original + patch) |
-| critic | Mode C/D (always); Mode B with ≥3 tickers; Mode A (skip) | run-local analysis-result.json, run-local validated-data.json | run-local quality-report.json | 1 per output (re-check after patch = 1 more) |
+| analyst | Mode A, C, D, or E (always); Mode B (inline, no dispatch) | run-local validated-data.json, run-local evidence-pack.json, run-local context-budget.json, run-local research-plan.json, framework file. Mode E adds: earnings-window-detector output + options-snapshot.json (Preview) + earnings-history.json + prior Mode C snapshot (for Review thesis comparison) | run-local analysis-result.json (Mode E carries `earnings_sub_mode` + `next_earnings_date`) | 2 (original + patch) |
+| critic | Mode C/D/E (always); Mode B with ≥3 tickers; Mode A (skip) | run-local analysis-result.json, run-local validated-data.json (Mode E adds: earnings-window-detector output for window-aware completeness check) | run-local quality-report.json | 1 per output (re-check after patch = 1 more) |
 
 **Sub-agent file paths** (pass explicitly when dispatching):
 ```
 data-researcher receives: ["output/runs/{run_id}/{ticker}/research-plan.json", "{ticker list}"]
-analyst receives: ["output/runs/{run_id}/{ticker}/validated-data.json", "output/runs/{run_id}/{ticker}/evidence-pack.json", "output/runs/{run_id}/{ticker}/context-budget.json", "output/runs/{run_id}/{ticker}/research-plan.json", "{framework path}"]
-critic receives: ["output/runs/{run_id}/{ticker}/analysis-result.json", "output/runs/{run_id}/{ticker}/validated-data.json"]
+analyst (Mode A/C/D) receives:
+  ["output/runs/{run_id}/{ticker}/validated-data.json",
+   "output/runs/{run_id}/{ticker}/evidence-pack.json",
+   "output/runs/{run_id}/{ticker}/context-budget.json",
+   "output/runs/{run_id}/{ticker}/research-plan.json",
+   "{framework path}"]
+analyst (Mode E) receives the above PLUS:
+  ["output/runs/{run_id}/earnings-window/{ticker}.json",
+   "output/runs/{run_id}/{ticker}/options-snapshot.json",       # Preview only
+   "output/runs/{run_id}/{ticker}/earnings-history.json",
+   "output/data/{ticker}/snapshots/{prior_snapshot_id}/analysis-result.json",  # Review only
+   "references/analysis-framework-earnings.md"]
+critic (Mode C/D) receives:
+  ["output/runs/{run_id}/{ticker}/analysis-result.json",
+   "output/runs/{run_id}/{ticker}/validated-data.json"]
+critic (Mode E) receives the above PLUS:
+  ["output/runs/{run_id}/earnings-window/{ticker}.json"]
 ```
 
 ---
@@ -441,6 +551,7 @@ Project Root
 │   ├── analysis-framework-comparison.md  ← Mode B framework
 │   ├── analysis-framework-dashboard.md   ← Mode C framework
 │   ├── analysis-framework-memo.md     ← Mode D framework
+│   ├── analysis-framework-earnings.md ← Mode E framework (Preview + Review)
 │   └── investment-memo-prompt.md      ← L/S memo philosophy
 ├── output/
 │   ├── watchlist.json
@@ -451,6 +562,8 @@ Project Root
 │   ├── runs/
 │   │   └── {run_id}/
 │   │       ├── run-manifest.json
+│   │       ├── earnings-window/         ← Phase F Step 0.5 Mode E gate
+│   │       │   └── {TICKER}.json
 │   │       ├── peers/
 │   │       │   └── {PEER_TICKER}.json   ← Phase D Step 2.7 peer mini-fetch (Mode C/D)
 │   │       └── {ticker}/
@@ -458,6 +571,8 @@ Project Root
 │   │           ├── tier1-raw.json         ← Step 3 output (US Enhanced only)
 │   │           ├── dart-api-raw.json      ← Step 4 output (KR DART-Enhanced only)
 │   │           ├── tier2-raw.json         ← Step 4 output
+│   │           ├── options-snapshot.json  ← Step 4 (Mode E Preview only)
+│   │           ├── earnings-history.json  ← Step 4 (Mode E Preview + Review)
 │   │           ├── validated-data.json    ← Step 5 output
 │   │           ├── evidence-pack.json     ← Step 5 compact Analyst input
 │   │           ├── context-budget.json    ← Step 5 Analyst context measurement
@@ -480,6 +595,8 @@ Project Root
 │       ├── {ticker}_A_{lang}_{date}.html
 │       ├── {ticker}_C_{lang}_{date}.html
 │       ├── {ticker}_D_{lang}_{date}.docx
+│       ├── {ticker}_E_preview_{lang}_{date}.html  ← Mode E Preview
+│       ├── {ticker}_E_review_{lang}_{date}.html   ← Mode E Review
 │       └── {T1}_{T2}_{T3}_B_{lang}_{date}.html
 └── .claude/
     ├── skills/
@@ -487,17 +604,23 @@ Project Root
     │   ├── query-interpreter/SKILL.md
     │   ├── market-router/SKILL.md
     │   ├── financial-data-collector/SKILL.md
+    │   │   └── scripts/options-fetcher.py + earnings-history-fetcher.py  ← Mode E
+    │   ├── earnings-window-detector/SKILL.md  ← Mode E Step 0.5 dispatcher
+    │   │   └── scripts/window-classifier.py
     │   ├── web-researcher/SKILL.md
     │   ├── data-validator/SKILL.md
     │   ├── data-manager/SKILL.md
     │   ├── briefing-generator/SKILL.md
     │   ├── dashboard-generator/SKILL.md
     │   ├── output-generator/SKILL.md
+    │   │   ├── scripts/render-earnings.py             ← Mode E renderer
+    │   │   ├── references/mode-e-template-preview.md
+    │   │   └── references/mode-e-template-review.md
     │   └── quality-checker/SKILL.md
     └── agents/
         ├── data-researcher/AGENT.md
         ├── analyst/AGENT.md
-        │   └── scripts/dcf-calculator.py  ← DCF valuation calculator
+        │   └── scripts/dcf-calculator.py  ← DCF valuation calculator (Mode C/D)
         └── critic/AGENT.md
 ```
 
@@ -520,8 +643,14 @@ Tags indicate provenance — where the data was fetched from. Tags do NOT determ
 | `[Calc]` | 검증된 입력값으로부터 자체 계산 (P/E, EV/EBITDA 등) |
 | `[Est]` | 애널리스트 컨센서스, 목표가, 추정 실적 |
 | `[Macro]` | FRED (Federal Reserve Economic Data) 등 정부/중앙은행 경제 통계 |
+| `[Options]` | yfinance option_chain (Mode E Preview) — ATM straddle, IV percentile, implied move % |
+| `[History]` | yfinance earnings_history (Mode E Preview/Review) — last 8Q actual vs consensus, surprise %, 1d reaction % |
 
 Grade D metrics display as "—" (no tag needed).
+
+**Mode E specifics**:
+- `[Options]` is treated like `[Portal]` for grading (single-source aggregator), but Critic Mode E variant requires `[Options]` to be present on `implied_move_pct` and `atm_straddle_price` rows when those rows are non-blank.
+- `[History]` is treated like `[Portal]` for grading. The Mode E renderer must surface `[History]` on every row of `beat_miss_history[]` and on the `hit_rate` / `avg_surprise_pct` summary fields when present.
 
 ### Confidence Grades (품질 평가)
 
