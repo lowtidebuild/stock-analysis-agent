@@ -55,6 +55,12 @@ def safe_join(items: list[str], fallback: str = "[Data unavailable]") -> str:
     return "".join(filtered) if filtered else f'<div class="text-sm text-gray-500 italic">{escape(fallback)}</div>'
 
 
+# Module-level fallback HTML kept out of f-string expression part to satisfy
+# Python 3.11 (which forbids backslashes inside f-string expressions; relaxed
+# in 3.12+). CI runs 3.11 — keep this constant defined at module scope.
+_CATALYST_FALLBACK_ROW = '<tr><td class="p-3 text-gray-500 italic" colspan="3">[Data unavailable]</td></tr>'
+
+
 def currency_symbol(currency: str | None) -> str:
     mapping = {
         "USD": "$",
@@ -419,7 +425,7 @@ def render_portfolio_and_watchouts(sections: dict[str, Any], catalysts: list[Any
         '<h3 class="text-lg font-bold text-gray-900 mb-3">Upcoming Catalysts</h3>'
         '<div class="overflow-x-auto"><table class="w-full text-sm">'
         '<thead><tr class="bg-gray-50 text-gray-600 text-xs uppercase"><th class="text-left p-3">Date</th><th class="text-left p-3">Event</th><th class="text-left p-3">Significance</th></tr></thead>'
-        f'<tbody>{safe_join(catalyst_rows, fallback="<tr><td class=\"p-3 text-gray-500 italic\" colspan=\"3\">[Data unavailable]</td></tr>")}</tbody>'
+        f'<tbody>{safe_join(catalyst_rows, fallback=_CATALYST_FALLBACK_ROW)}</tbody>'
         '</table></div></div></div>'
     )
 
