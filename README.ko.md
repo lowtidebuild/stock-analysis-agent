@@ -19,10 +19,9 @@
 
 <a href="https://codepen.io/lowtidebuild/full/RNGKxVx"><img alt="Mode A" src="https://img.shields.io/badge/Mode_A-Quick_Briefing-0f172a?style=for-the-badge&logo=googlechrome&logoColor=white"></a>
 <a href="https://codepen.io/lowtidebuild/full/azmpmGJ"><img alt="Mode B" src="https://img.shields.io/badge/Mode_B-Peer_Comparison-1f2937?style=for-the-badge&logo=googlechrome&logoColor=white"></a>
-<a href="https://codepen.io/lowtidebuild/full/azmpbNx"><img alt="Mode C" src="https://img.shields.io/badge/Mode_C-Deep_Dive-0f766e?style=for-the-badge&logo=googlechrome&logoColor=white"></a>
+<a href="https://codepen.io/lowtidebuild/full/RNoWYWL"><img alt="Mode C" src="https://img.shields.io/badge/Mode_C-Deep_Dive-0f766e?style=for-the-badge&logo=googlechrome&logoColor=white"></a>
 <a href="https://docs.google.com/document/d/1md5xHBSE71kRkinSsn2sqPQlc91QaYxo/edit?usp=sharing&ouid=105178834220477378953&rtpof=true&sd=true"><img alt="Mode D" src="https://img.shields.io/badge/Mode_D-Investment_Memo-f97316?style=for-the-badge&logo=googledocs&logoColor=white"></a>
-<img alt="Mode E" src="https://img.shields.io/badge/Mode_E-Earnings_Preview%2FReview-7c3aed?style=for-the-badge&logo=googlechrome&logoColor=white">
-<sub><br/>Mode E 미리보기 준비 중 — 실적 발표 윈도우에 로컬에서 생성됩니다.</sub>
+<a href="https://codepen.io/lowtidebuild/full/VYmevoK"><img alt="Mode E" src="https://img.shields.io/badge/Mode_E-Earnings_Preview%2FReview-7c3aed?style=for-the-badge&logo=googlechrome&logoColor=white"></a>
 
 <br/><br/>
 
@@ -145,7 +144,7 @@
     <td valign="top">투자 논리, 밸류에이션, 리스크, 전략을 한 번에 보고 싶을 때</td>
     <td valign="top">HTML 대시보드<br/>KPI, 차트, 밸류에이션, 매크로, 시나리오</td>
     <td valign="top">평소 심층 리서치 대부분</td>
-    <td valign="top"><a href="https://codepen.io/lowtidebuild/full/azmpbNx">예시 열기</a></td>
+    <td valign="top"><a href="https://codepen.io/lowtidebuild/full/RNoWYWL">예시 열기</a></td>
   </tr>
   <tr>
     <td valign="top"><strong>D — Investment Memo</strong><br/>가장 정식 문서형</td>
@@ -159,7 +158,7 @@
     <td valign="top">실적 발표일 D-7 ~ D+3 윈도우에서 Mode C 전체 재실행 대신 집중된 프리뷰/리뷰가 필요할 때</td>
     <td valign="top">HTML 프리뷰 또는 리뷰<br/>컨센서스 + 핵심 질문<br/>옵션 내재 변동폭 (프리뷰)<br/>실제 vs 컨센서스 + 논지 영향 (리뷰)</td>
     <td valign="top">실적 트레이딩: 발표 전 사전 포지션, 발표 후 결과 판단</td>
-    <td valign="top">미리보기 준비 중 — 로컬에서 생성</td>
+    <td valign="top"><a href="https://codepen.io/lowtidebuild/full/VYmevoK">예시 열기</a></td>
   </tr>
 </table>
 
