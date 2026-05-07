@@ -104,6 +104,7 @@ Use only these `critic_review.items[].item` values:
 - `earnings_window_consistency` (Mode E-only — verifies analysis-result fields match detector)
 - `mode_e_completeness` (Mode E-only — verifies all 6 sub-mode sections present)
 - `light_verdict_outdated_flag` (Mode E Review only — verifies OD-F3 outdated banner)
+- `accessibility_layer` (Mode E v2 — verifies tldr/segment_breakdown/beginner_notes/glossary)
 
 Do not emit `scenario_consistency`, `math_consistency`, `completeness`,
 `source_tags`, `disclaimer`, `rendered_output`, or other mechanical item
@@ -237,12 +238,20 @@ standard 5-item narrative checklist above DOES NOT apply (Variant View,
 risk causal chains, scenarios, what-would-make-me-wrong assume Mode C/D
 shape). The Mode E variant below replaces it.
 
-**Backward compat (legacy snapshots)**: if a Mode E analysis-result
-predates this contract and lacks `earnings_sub_mode`, **skip the Mode E
-variant entirely** and return `critic_review.overall = "SKIP"` with a
-single item `{"item": "mode_e_completeness", "status": "SKIP", "notes":
-"Legacy snapshot: missing earnings_sub_mode — Mode E critic check
-skipped"}`. Do not block delivery.
+**Backward compat (legacy snapshots)**:
+- If a Mode E analysis-result predates this contract and lacks
+  `earnings_sub_mode`, **skip the Mode E variant entirely** and return
+  `critic_review.overall = "SKIP"` with a single item
+  `{"item": "mode_e_completeness", "status": "SKIP", "notes": "Legacy
+  snapshot: missing earnings_sub_mode — Mode E critic check skipped"}`.
+  Do not block delivery.
+- If a Mode E analysis-result has `earnings_sub_mode` but lacks the
+  v2 accessibility layer fields entirely (`tldr_review` / `tldr_preview`
+  not present at all), this is a **legacy v1 Mode E snapshot**. SKIP
+  E8 and emit
+  `{"item": "accessibility_layer", "status": "SKIP", "notes": "[Quality
+  flag: legacy v1 schema — accessibility layer absent]"}` instead of
+  failing. Do not block delivery. The other E1–E7 checks still apply.
 
 ### E1 — Generic Test (Key Questions Specificity)
 
@@ -347,6 +356,68 @@ as fresh is exactly the failure mode OD-F3 was written to prevent.
 Item name: `light_verdict_outdated_flag`.
 
 For Preview, **mark this item SKIP**.
+
+### E8 — Accessibility Layer (Mode E v2 contract)
+
+**When this applies**: any Mode E analysis-result that carries at least
+one of the v2 accessibility fields (`tldr_review`, `tldr_preview`,
+`segment_breakdown`, `beginner_notes`, `glossary`). Legacy v1 snapshots
+that carry NONE of these fields are SKIPped per the backward-compat
+rule above.
+
+**Tests** (run all that apply to the sub-mode):
+
+1. **TL;DR present**: Preview has `tldr_preview`; Review has
+   `tldr_review`. The block carries exactly 3 `bullets` and a `tone` ∈
+   {`positive`, `negative`, `mixed`}.
+   - Missing TL;DR entirely → MAJOR.
+   - Wrong bullet count (≠ 3) → MINOR.
+   - Missing or invalid `tone` → MINOR.
+
+2. **TL;DR character budget**: each bullet ≤ 80 characters
+   (post-whitespace-trim, including any inline source tag).
+   - Any bullet > 80 chars → MINOR per violation.
+
+3. **Glossary present and substantive**: `glossary` is a list with
+   ≥ 5 entries; each entry has both `term` and `def`; each `def` is
+   ≥ 25 characters (≥ 1 sentence of substantive definition).
+   - Missing glossary entirely → MAJOR.
+   - < 5 entries → MINOR.
+   - Stub definitions (< 25 chars or single-word translations) → MINOR
+     per violation.
+
+4. **Beginner notes ≥ 2 sections covered**:
+   - Review: `beginner_notes` carries at least `print_snapshot` AND
+     `guidance` (the two minimum keys). Each value is a Korean paragraph
+     with ≥ 3 sentences.
+   - Preview: `beginner_notes` carries at least `consensus_snapshot`
+     AND `options_snapshot`. (When `options_snapshot.status ==
+     "unavailable"` per OD-F2, `options_snapshot` beginner note may be
+     replaced by `key_questions`.) Each value is a Korean paragraph
+     with ≥ 3 sentences.
+   - Missing both required keys → MAJOR.
+   - Only 1 of 2 required keys present → MINOR.
+   - Thin paragraphs (< 3 sentences each) → MINOR per violation.
+
+5. **Segment breakdown** (Review only):
+   - `segment_breakdown.segments[]` has ≥ 3 rows; each row has
+     `name`, `yoy_growth_pct`, and `highlights`.
+   - < 3 rows AND no `[Quality flag: limited segment disclosure]`
+     annotation → MAJOR.
+   - < 3 rows WITH the limited-disclosure flag → MINOR (acceptable).
+   - For Preview, mark this item SKIP — segment_breakdown is optional.
+
+**Severity summary**:
+- Missing TL;DR or glossary entirely → MAJOR.
+- Bullet > 80 char rule violations → MINOR.
+- Thin beginner notes (< 3 sentences each) → MINOR.
+- Missing segment table for Review without disclosure flag → MAJOR.
+
+**Pass**: all sub-tests applicable to the sub-mode pass.
+**Fail**: any MAJOR triggers FAIL with severity MAJOR; any MINOR triggers
+FAIL with severity MINOR but delivery proceeds with `[Quality flag]`.
+
+Item name: `accessibility_layer`.
 
 ### Mode E variant — overall scoring rule
 
