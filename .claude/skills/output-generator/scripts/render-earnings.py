@@ -1041,6 +1041,148 @@ def _review_hero(analysis: dict[str, Any]) -> str:
 """
 
 
+def _tldr_top(analysis: dict[str, Any]) -> str:
+    """Render TL;DR (3-bullet summary) at top of <main> when analysis.tldr_review provided.
+
+    Schema:
+      tldr_review:
+        bullets: [str, str, str]  # 3 short bullets, plain Korean
+        tone: "positive" | "negative" | "mixed"
+    """
+    tldr = analysis.get("tldr_review")
+    if not isinstance(tldr, dict):
+        return ""
+    bullets = tldr.get("bullets") or []
+    if not bullets:
+        return ""
+    tone = (tldr.get("tone") or "mixed").lower()
+    border_color = {"positive": "border-emerald-500", "negative": "border-rose-500"}.get(tone, "border-amber-500")
+    bullet_html = "".join(
+        f'<li class="text-gray-700 leading-relaxed">{escape(b)}</li>' for b in bullets if isinstance(b, str)
+    )
+    return f"""
+<section class="card p-5 border-l-4 {border_color} bg-amber-50/30 mb-6" id="section-tldr">
+  <div class="flex items-start gap-3">
+    <span class="text-2xl">📌</span>
+    <div class="flex-1">
+      <h3 class="font-bold text-gray-900 mb-2">한 눈에 보기 (TL;DR)</h3>
+      <ul class="space-y-1.5 list-disc list-inside text-sm">{bullet_html}</ul>
+    </div>
+  </div>
+</section>
+"""
+
+
+def _beginner_note(text: str | None, *, label: str = "💡 일반 투자자 입장에서") -> str:
+    """Render a beginner-friendly callout box. Returns "" if text is None/empty."""
+    if not isinstance(text, str) or not text.strip():
+        return ""
+    return f"""
+<div class="mt-3 bg-sky-50 border-l-3 border-sky-400 p-3 rounded text-sm">
+  <p class="font-semibold text-sky-700 text-xs mb-1">{escape(label)}</p>
+  <p class="text-gray-700 leading-relaxed">{escape(text)}</p>
+</div>
+"""
+
+
+def _segment_breakdown_table(analysis: dict[str, Any]) -> str:
+    """Render a segment breakdown table from analysis.segment_breakdown.
+
+    Schema:
+      segment_breakdown:
+        segments: [{name, revenue_b, yoy_growth_pct, share_of_revenue_pct?,
+                    operating_margin_pct?, highlights}]
+        tag: "[Company]" etc.
+    """
+    sb = analysis.get("segment_breakdown")
+    if not isinstance(sb, dict):
+        return ""
+    segments = sb.get("segments") or []
+    if not segments:
+        return ""
+    tag = sb.get("tag") or "[Company]"
+    rows = []
+    for seg in segments:
+        if not isinstance(seg, dict):
+            continue
+        rev_b = seg.get("revenue_b")
+        yoy = seg.get("yoy_growth_pct")
+        share = seg.get("share_of_revenue_pct")
+        op_margin = seg.get("operating_margin_pct")
+        highlights = seg.get("highlights") or ""
+        rev_str = f"${format_number(rev_b, 2)}B" if isinstance(rev_b, (int, float)) and not isinstance(rev_b, bool) else "—"
+        yoy_color = "text-green-600" if isinstance(yoy, (int, float)) and yoy > 0 else "text-red-600"
+        yoy_str = f"<span class=\"{yoy_color} font-semibold\">+{yoy:.0f}%</span>" if isinstance(yoy, (int, float)) and not isinstance(yoy, bool) else "—"
+        share_str = f"{share:.1f}%" if isinstance(share, (int, float)) and not isinstance(share, bool) else "—"
+        om_str = f"{op_margin:.0f}%" if isinstance(op_margin, (int, float)) and not isinstance(op_margin, bool) else "—"
+        rows.append(
+            f"""<tr class="border-b">
+  <td class="p-3 font-semibold text-gray-900">{escape(seg.get('name') or '—')}</td>
+  <td class="text-right p-3">{rev_str}</td>
+  <td class="text-right p-3">{yoy_str}</td>
+  <td class="text-right p-3 text-gray-600">{share_str}</td>
+  <td class="text-right p-3 text-gray-600">{om_str}</td>
+  <td class="p-3 text-xs text-gray-600">{escape(highlights)}</td>
+</tr>"""
+        )
+    return f"""
+<div class="card overflow-x-auto mt-4">
+  <p class="px-4 pt-3 text-xs text-gray-500 font-semibold">사업부별 매출 분해 <span class="source-tag tag-company">{escape(tag)}</span></p>
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="bg-gray-50 text-gray-600 text-xs uppercase">
+        <th class="text-left p-3 font-semibold">사업부</th>
+        <th class="text-right p-3 font-semibold">매출</th>
+        <th class="text-right p-3 font-semibold">YoY</th>
+        <th class="text-right p-3 font-semibold">전사 비중</th>
+        <th class="text-right p-3 font-semibold">영업이익률</th>
+        <th class="text-left p-3 font-semibold">코멘트</th>
+      </tr>
+    </thead>
+    <tbody>
+      {''.join(rows)}
+    </tbody>
+  </table>
+</div>
+"""
+
+
+def _glossary_footer(analysis: dict[str, Any]) -> str:
+    """Render glossary section from analysis.glossary[].
+
+    Schema:
+      glossary: [{term: str, def: str}]
+    """
+    glossary = analysis.get("glossary")
+    if not isinstance(glossary, list) or not glossary:
+        return ""
+    items = []
+    for entry in glossary:
+        if not isinstance(entry, dict):
+            continue
+        term = entry.get("term")
+        defn = entry.get("def")
+        if not term or not defn:
+            continue
+        items.append(
+            f'<div><dt class="font-semibold text-gray-900">{escape(term)}</dt>'
+            f'<dd class="text-gray-600 text-sm leading-relaxed">{escape(defn)}</dd></div>'
+        )
+    if not items:
+        return ""
+    return f"""
+<section class="card p-6 mt-8" id="section-glossary">
+  <h2 class="text-lg font-bold text-gray-900 mb-3">
+    <i class="fa-solid fa-book-open mr-2 text-amber-600"></i>
+    용어 풀이
+  </h2>
+  <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
+    {''.join(items)}
+  </dl>
+</section>
+"""
+
+
 def _review_section_print_snapshot(analysis: dict[str, Any]) -> str:
     av = analysis.get("actual_vs_consensus") or {}
     eps = av.get("eps") or {}
@@ -1158,6 +1300,8 @@ def _review_section_print_snapshot(analysis: dict[str, Any]) -> str:
   <p class="text-xs text-gray-400 mt-3 italic">
     Surprise % = (actual − consensus) / |consensus| × 100. Beat 정의: top-line은 surprise &gt; 0, cost 항목은 surprise &lt; 0.
   </p>
+  {_segment_breakdown_table(analysis)}
+  {_beginner_note(analysis.get("beginner_notes", {}).get("print_snapshot"))}
 </section>
 """
 
@@ -1233,6 +1377,7 @@ def _review_section_guidance(analysis: dict[str, Any]) -> str:
     </p>
     <p class="text-sm text-gray-700">{company_change}</p>
   </div>
+  {_beginner_note(analysis.get("beginner_notes", {}).get("guidance"))}
 </section>
 """
 
@@ -1761,12 +1906,14 @@ def build_review_html(analysis: dict[str, Any]) -> str:
 """,
         _review_hero(analysis),
         '<main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">',
+        _tldr_top(analysis),
         _review_section_print_snapshot(analysis),
         _review_section_guidance(analysis),
         _review_section_questions_answered(analysis),
         _review_section_thesis_impact(analysis),
         _review_section_light_verdict(analysis),
         _review_section_post_print(analysis),
+        _glossary_footer(analysis),
         "</main>",
         _mode_c_rerun_banner(analysis),
         _review_footer(analysis, data_sources),
