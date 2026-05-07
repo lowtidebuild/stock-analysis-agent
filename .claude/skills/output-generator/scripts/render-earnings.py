@@ -137,6 +137,21 @@ def collect_source_tags(*tag_lists: Any) -> list[str]:
     return seen
 
 
+def _safe_json_for_script(obj: Any) -> str:
+    """Serialize JSON for embedding inside a <script> tag.
+
+    Replaces ``</`` with ``<\\/`` so that an attacker-controlled string
+    such as ``"Q1 </script><script>alert(1)</script>"`` cannot prematurely
+    close the surrounding <script> tag (or a ``type="application/json"``
+    island, which the HTML parser also closes on ``</script>``).
+
+    Per CLAUDE.md §12, all fetched strings are untrusted; this helper
+    sanitizes them at the renderer boundary before they cross into the
+    HTML document.
+    """
+    return json.dumps(obj, ensure_ascii=False).replace("</", "<\\/")
+
+
 def days_until_label(days_until: Any, korean: bool) -> str:
     if not isinstance(days_until, (int, float)) or isinstance(days_until, bool):
         return ""
@@ -430,8 +445,8 @@ def _preview_section_history(analysis: dict[str, Any]) -> str:
         else:
             chart_data.append(0.0)
 
-    chart_labels_js = json.dumps(chart_labels, ensure_ascii=False)
-    chart_data_js = json.dumps(chart_data)
+    chart_labels_js = _safe_json_for_script(chart_labels)
+    chart_data_js = _safe_json_for_script(chart_data)
 
     return f"""
 <section id="section-history">
@@ -805,8 +820,8 @@ def _preview_chart_script(analysis: dict[str, Any]) -> str:
             continue
         v = q.get("surprise_pct")
         values.append(float(v) if isinstance(v, (int, float)) else 0.0)
-    labels_js = json.dumps(labels, ensure_ascii=False)
-    data_js = json.dumps(values)
+    labels_js = _safe_json_for_script(labels)
+    data_js = _safe_json_for_script(values)
     return f"""
 <script>
 (function() {{
@@ -1694,6 +1709,17 @@ def build_review_html(analysis: dict[str, Any]) -> str:
     for seg in (av.get("segments") or []):
         if isinstance(seg, dict):
             tag_candidates.append(seg.get("tag"))
+    # Sweep tags from key_questions_answered (Section 3) and thesis_impact
+    # pillars (Section 4) so the Review footer Sources line is symmetric
+    # with the Preview side (which sweeps segment_consensus[*].tag).
+    for q in (analysis.get("key_questions_answered") or []):
+        if isinstance(q, dict):
+            tag_candidates.append(q.get("tag"))
+    thesis = analysis.get("thesis_impact") or {}
+    for pillar_key in ("long_pillars", "short_pillars"):
+        for pillar in (thesis.get(pillar_key) or []):
+            if isinstance(pillar, dict):
+                tag_candidates.append(pillar.get("tag"))
     data_sources = collect_source_tags(*tag_candidates)
 
     parts = [

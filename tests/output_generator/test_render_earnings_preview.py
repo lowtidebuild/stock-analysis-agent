@@ -297,6 +297,55 @@ class RenderEarningsPreviewTests(unittest.TestCase):
         # Confirmed warning banner shown when not confirmed
         self.assertIn("미확정", html)
 
+    def test_script_injection_in_quarter_label_is_neutralized(self) -> None:
+        """B1 regression — a `quarter` value containing `</script>` must not
+        prematurely close the embedded <script> blocks (chart data island
+        + Chart.js init). Per CLAUDE.md §12, fetched fields are untrusted.
+
+        Baseline (no attack) has 4 opens / 4 closes:
+          - 2 CDN <script src=...></script> in <head>
+          - 1 <script id="beat-miss-chart-data" type="application/json">…</script>
+          - 1 <script>(function(){ Chart… })()</script> chart-init at the end
+
+        With the attacker payload sanitized, the count of *closing* `</script>`
+        tags must remain at 4. If the helper is removed, the JSON-embedded
+        `</script>` from the attacker's payload will appear unescaped twice
+        (chart data island + chart init), pushing the close count to 6 and
+        prematurely terminating the surrounding <script> blocks.
+        """
+        # Baseline: count closes in clean output.
+        baseline_html = self.render.build_preview_html(make_preview_analysis())
+        baseline_closes = baseline_html.count("</script>")
+
+        # Inject a malicious quarter label as the first quarter.
+        analysis = make_preview_analysis()
+        attack = 'Q1 </script><script>alert("xss")</script>'
+        analysis["beat_miss_history"]["quarters"][0]["quarter"] = attack
+        html = self.render.build_preview_html(analysis)
+
+        # 1) The escaped sentinel `<\/script>` must appear (proof the helper
+        #    ran on JSON serialization for <script> blocks).
+        self.assertIn("<\\/script>", html,
+                      "escaped <\\/script> sentinel missing — helper not applied")
+
+        # 2) The number of *closing* `</script>` tags is unchanged from the
+        #    baseline. A successful injection would add at least one extra
+        #    `</script>` per embed site (2 sites: chart data island + chart
+        #    init).
+        attack_closes = html.count("</script>")
+        self.assertEqual(
+            attack_closes, baseline_closes,
+            f"attacker payload added {attack_closes - baseline_closes} extra "
+            f"</script> tags — script injection still possible",
+        )
+
+        # 3) The escaped attacker payload still appears as visible text in
+        #    the rendered table cell (HTML-escaped via `escape()`), so the
+        #    user can see the malformed quarter value rather than executing
+        #    it. (`html.escape` produces `&lt;/script&gt;`.)
+        self.assertIn("&lt;/script&gt;", html,
+                      "attacker payload should appear HTML-escaped in table cell")
+
     def test_dispatch_renders_preview_path(self) -> None:
         """Dispatch sanity — render_earnings routes preview correctly."""
         analysis = make_preview_analysis()
