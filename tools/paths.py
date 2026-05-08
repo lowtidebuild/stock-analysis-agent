@@ -57,6 +57,15 @@ def data_path(*parts: str) -> pathlib.Path:
     return data_dir().joinpath(*parts)
 
 
+def backtest_path(*parts: str) -> pathlib.Path:
+    """Build a path under the backtest output directory.
+
+    Equivalent to ``data_path("backtest", *parts)``. Honors
+    ``$STOCK_ANALYSIS_DATA_DIR``.
+    """
+    return data_path("backtest", *parts)
+
+
 def runtime_path(path: str | pathlib.Path) -> pathlib.Path:
     """Resolve a runtime or repo-relative path.
 
@@ -76,6 +85,7 @@ def runtime_path(path: str | pathlib.Path) -> pathlib.Path:
 
 __all__ = [
     "REPO_ROOT",
+    "backtest_path",
     "data_dir",
     "data_path",
     "private_docs_dir",
