@@ -391,6 +391,17 @@ class BatchRunner:
             raise ValueError(
                 f"max_workers must be >= 1; got {max_workers}"
             )
+        # Reject non-int / bool / NaN / Inf — the trip site uses ``==`` so
+        # a float threshold (e.g. 2.5 or NaN) would silently disable the
+        # safety net by never matching the integer counter.
+        if (
+            not isinstance(consecutive_failure_threshold, int)
+            or isinstance(consecutive_failure_threshold, bool)
+        ):
+            raise BatchRunnerError(
+                f"consecutive_failure_threshold must be an int; got "
+                f"{type(consecutive_failure_threshold).__name__}"
+            )
         if consecutive_failure_threshold < 1:
             raise BatchRunnerError(
                 f"consecutive_failure_threshold must be >= 1; "

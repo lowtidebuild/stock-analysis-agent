@@ -224,6 +224,26 @@ def test_threshold_must_be_positive() -> None:
         )
 
 
+def test_threshold_must_be_int_not_float_or_nan() -> None:
+    """The trip site uses == against an int counter, so a float
+    threshold (NaN, Inf, 2.5) would silently disable the safety net.
+    Must reject non-int types at __init__."""
+    import math
+
+    manifest = _make_manifest(
+        tickers=(TickerEntry(ticker="AAPL", market="US"),),
+    )
+    for bad_threshold in (2.5, math.nan, math.inf, "3", True, None):
+        with pytest.raises(BatchRunnerError, match="must be an int"):
+            BatchRunner(
+                manifest=manifest,
+                yfinance_adapter=_FailingYFinanceAdapter(),
+                fred_adapter=_StubFredAdapter(),
+                dart_adapter=_StubDartAdapter(),
+                consecutive_failure_threshold=bad_threshold,  # type: ignore[arg-type]
+            )
+
+
 # ---------------------------------------------------------------------------
 # Abort behavior
 # ---------------------------------------------------------------------------
