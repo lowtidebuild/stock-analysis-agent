@@ -197,3 +197,30 @@ def test_frozen_dataclass(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     with pytest.raises((FrozenInstanceError, AttributeError)):
         ctx.ticker = "MSFT"  # type: ignore[misc]
+
+
+def test_naive_started_at_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
+    _reload_paths(monkeypatch, None)
+    from tools.backtest.pipeline_context import BacktestContext
+
+    naive = _dt.datetime(2026, 5, 8, 12, 0, 0)
+    assert naive.tzinfo is None
+    with pytest.raises(ValueError, match="timezone-aware"):
+        BacktestContext(
+            cohort_id="2025Q1",
+            ticker="AAPL",
+            as_of=_dt.date(2025, 3, 31),
+            started_at=naive,
+        )
+
+
+def test_datetime_passed_as_as_of_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
+    _reload_paths(monkeypatch, None)
+    from tools.backtest.pipeline_context import BacktestContext
+
+    with pytest.raises(TypeError, match="datetime.date"):
+        BacktestContext(
+            cohort_id="2025Q1",
+            ticker="AAPL",
+            as_of=_dt.datetime(2025, 3, 31, 14, 30, tzinfo=_dt.UTC),  # type: ignore[arg-type]
+        )

@@ -72,6 +72,19 @@ class BacktestContext:
     started_at: _dt.datetime = field(default_factory=_utcnow)
     freeze_strategy: str = _DEFAULT_FREEZE_STRATEGY
 
+    def __post_init__(self) -> None:
+        if type(self.as_of) is not _dt.date:
+            raise TypeError(
+                "as_of must be datetime.date (not datetime); got "
+                f"{type(self.as_of).__name__}"
+            )
+        if self.started_at.tzinfo is None:
+            raise ValueError(
+                "started_at must be timezone-aware (UTC). Naive datetimes "
+                "would silently shift by the local offset during "
+                "run_id generation."
+            )
+
     def run_id(self) -> str:
         """Return a deterministic run id for this context.
 
