@@ -292,3 +292,53 @@ def test_cache_script_real_yfinance(tmp_path: pathlib.Path) -> None:
         d = _dt.date.fromisoformat(row["date"])
         assert _dt.date(2024, 1, 2) <= d <= _dt.date(2024, 1, 15)
         assert isinstance(row["close"], float)
+
+
+# ---------------------------------------------------------------------------
+# Regression tests for code-quality NIT fixes
+# ---------------------------------------------------------------------------
+
+
+def test_load_rejects_duplicate_benchmark_date_pair(tmp_path: pathlib.Path) -> None:
+    """Two rows with the same (benchmark, date) must raise — silent
+    last-write-wins violates the project's blank-over-wrong principle.
+    A hand-edited fixture or a cache from a different builder could
+    carry duplicates and the loader must surface them."""
+    cache_path = tmp_path / "dup.jsonl"
+    cache_path.write_text(
+        "\n".join(
+            [
+                json.dumps({"benchmark": "SPY", "date": "2025-03-03", "close": 100.0}),
+                json.dumps({"benchmark": "QQQ", "date": "2025-03-03", "close": 200.0}),
+                json.dumps({"benchmark": "KOSPI", "date": "2025-03-03", "close": 2500.0}),
+                # Duplicate of the SPY row above with a different close.
+                json.dumps({"benchmark": "SPY", "date": "2025-03-03", "close": 999.0}),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(BenchmarkCacheError, match="duplicate"):
+        load_benchmark_cache(cache_path)
+
+
+def test_get_benchmark_close_default_lookahead_covers_kr_chuseok() -> None:
+    """Default max_lookahead_days must be wide enough to cross KR
+    multi-day closures. Mirrors BACKTEST_PRICE_LOOKBACK_DAYS=10 in
+    the yfinance collector — Chuseok can stack 8+ calendar days."""
+    # Synthetic cache where KOSPI has a 9-day gap (Sep 30 -> Oct 9),
+    # close to Chuseok 2017's actual schedule.
+    cache: dict[str, dict[_dt.date, float]] = {
+        "SPY": {_dt.date(2017, 9, 29): 100.0, _dt.date(2017, 10, 9): 105.0},
+        "QQQ": {_dt.date(2017, 9, 29): 200.0, _dt.date(2017, 10, 9): 210.0},
+        "KOSPI": {_dt.date(2017, 9, 29): 2400.0, _dt.date(2017, 10, 9): 2450.0},
+    }
+    # 5-day lookback (the prior default) would have failed: Sep 30 ->
+    # forward search Sep 30 .. Oct 5 finds nothing. 10-day default
+    # walks Sep 30 .. Oct 10 and finds Oct 9.
+    close = get_benchmark_close(cache, "KOSPI", _dt.date(2017, 9, 30))
+    assert close == 2450.0, (
+        "Default max_lookahead_days must cover ~9-day KR holiday stacks "
+        "(Chuseok). The Task 2.1 collector uses BACKTEST_PRICE_LOOKBACK_"
+        "DAYS=10 — keep this in sync."
+    )

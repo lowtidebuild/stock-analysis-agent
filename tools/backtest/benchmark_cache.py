@@ -44,7 +44,11 @@ from typing import Literal
 
 _REQUIRED_BENCHMARKS: tuple[str, ...] = ("SPY", "QQQ", "KOSPI")
 _REQUIRED_FIELDS: tuple[str, ...] = ("date", "benchmark", "close")
-_DEFAULT_MAX_LOOKAHEAD_DAYS = 5
+# Mirrors BACKTEST_PRICE_LOOKBACK_DAYS in
+# .claude/skills/financial-data-collector/scripts/yfinance-collector.py.
+# 10 days covers KR Chuseok (up to ~8 calendar days) and Lunar New Year
+# clusters (~5 days + adjacent weekend). 5 days was insufficient.
+_DEFAULT_MAX_LOOKAHEAD_DAYS = 10
 
 
 class BenchmarkCacheError(RuntimeError):
@@ -144,7 +148,17 @@ def load_benchmark_cache(
                     f"close={close_raw!r}: {exc}"
                 ) from exc
 
-            cache.setdefault(benchmark, {})[parsed_date] = close
+            inner = cache.setdefault(benchmark, {})
+            if parsed_date in inner:
+                # Fail-fast on duplicate (benchmark, date) pairs. Silent
+                # last-write-wins would violate the project's blank-over-
+                # wrong principle (CLAUDE.md §1).
+                raise BenchmarkCacheError(
+                    f"line {lineno} of {resolved} duplicates "
+                    f"(benchmark={benchmark!r}, date={parsed_date.isoformat()}); "
+                    f"prior close={inner[parsed_date]} new close={close}"
+                )
+            inner[parsed_date] = close
 
     missing = [name for name in _REQUIRED_BENCHMARKS if name not in cache]
     if missing:
