@@ -700,5 +700,160 @@ def test_runner_cli_rejects_as_of_mismatch(tmp_path: pathlib.Path) -> None:
     assert result.returncode == 2, result.stdout + result.stderr
 
 
+# ---------------------------------------------------------------------------
+# Regression tests for code-quality NIT fixes
+# ---------------------------------------------------------------------------
+
+
+def test_malformed_state_json_raises_batch_runner_error(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A truncated / hand-edited state.json should surface as a clean
+    BatchRunnerError, not an uncaught traceback (JSONDecodeError /
+    KeyError leaking out of from_json)."""
+    monkeypatch.setenv("STOCK_ANALYSIS_DATA_DIR", str(tmp_path))
+
+    manifest = CohortManifest(
+        cohort_id="malformed",
+        as_of=_dt.date(2025, 3, 31),
+        tickers=(TickerEntry(ticker="AAPL", market="US"),),
+    )
+
+    cohort_root = tmp_path / "backtest" / "cohorts" / "malformed"
+    cohort_root.mkdir(parents=True, exist_ok=True)
+    (cohort_root / "state.json").write_text("{not valid json", encoding="utf-8")
+
+    runner = BatchRunner(
+        manifest=manifest,
+        yfinance_adapter=_StubYFinanceAdapter(),
+        fred_adapter=_StubFredAdapter(),
+        dart_adapter=_StubDartAdapter(),
+    )
+    with pytest.raises(BatchRunnerError, match="malformed"):
+        runner.run()
+
+
+def test_total_bytes_does_not_double_count_on_retry(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """When a FAILED ticker is retried and succeeds, total_bytes_written
+    must reflect the new value alone, not old + new."""
+    monkeypatch.setenv("STOCK_ANALYSIS_DATA_DIR", str(tmp_path))
+
+    manifest = CohortManifest(
+        cohort_id="retry-bytes",
+        as_of=_dt.date(2025, 3, 31),
+        tickers=(TickerEntry(ticker="AAPL", market="US"),),
+    )
+
+    cohort_root = tmp_path / "backtest" / "cohorts" / "retry-bytes"
+    cohort_root.mkdir(parents=True, exist_ok=True)
+    state_path = cohort_root / "state.json"
+
+    # Seed state.json with a FAILED record claiming 100 bytes already
+    # accumulated into the cohort total.
+    seed_state = CohortState(
+        cohort_id="retry-bytes",
+        as_of=_dt.date(2025, 3, 31),
+        started_at=_dt.datetime(2025, 3, 31, 0, 0, 0, tzinfo=_dt.UTC),
+        last_updated_at=_dt.datetime(2025, 3, 31, 0, 0, 0, tzinfo=_dt.UTC),
+        runs={
+            "AAPL": TickerRunRecord(
+                ticker="AAPL",
+                status=TickerRunStatus.FAILED,
+                bytes_written=100,
+                error="prior transient error",
+            ),
+        },
+        total_bytes_written=100,
+    )
+    seed_state.save(state_path)
+
+    runner = BatchRunner(
+        manifest=manifest,
+        yfinance_adapter=_StubYFinanceAdapter(),
+        fred_adapter=_StubFredAdapter(),
+        dart_adapter=_StubDartAdapter(),
+    )
+    state = runner.run()
+
+    assert state.runs["AAPL"].status == TickerRunStatus.DONE
+    new_aapl_bytes = state.runs["AAPL"].bytes_written
+    assert new_aapl_bytes > 0
+    # FRED is fetched once per cohort and counted separately.
+    fred_bytes = (cohort_root / "fred-raw.json").stat().st_size
+    expected_total = new_aapl_bytes + fred_bytes
+    assert state.total_bytes_written == expected_total, (
+        f"total_bytes drifted: got {state.total_bytes_written}, "
+        f"expected {expected_total} (=new_aapl {new_aapl_bytes} "
+        f"+ fred {fred_bytes}); double-counting bug"
+    )
+
+
+def test_running_marked_inside_worker_not_in_dispatch_loop(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """With max_workers=1 and 3 tickers, the queued tickers should
+    appear PENDING (not RUNNING) until the worker picks them up.
+
+    We verify by asserting that during the slow first ticker, the other
+    two are PENDING in state.json — not pre-marked RUNNING by the
+    dispatch loop."""
+    monkeypatch.setenv("STOCK_ANALYSIS_DATA_DIR", str(tmp_path))
+
+    manifest = CohortManifest(
+        cohort_id="queue-vs-running",
+        as_of=_dt.date(2025, 3, 31),
+        tickers=(
+            TickerEntry(ticker="AAPL", market="US"),
+            TickerEntry(ticker="MSFT", market="US"),
+            TickerEntry(ticker="GOOGL", market="US"),
+        ),
+    )
+
+    cohort_root = tmp_path / "backtest" / "cohorts" / "queue-vs-running"
+    state_path = cohort_root / "state.json"
+
+    # Stub adapter pauses on AAPL so we can inspect mid-run state.
+    inspect_event = threading.Event()
+    release_event = threading.Event()
+
+    class _PausingAdapter(_StubYFinanceAdapter):
+        def fetch(self, *, ticker, market, as_of, output_path, bundle="standard"):
+            if ticker == "AAPL":
+                inspect_event.set()
+                release_event.wait(timeout=5)
+            return super().fetch(
+                ticker=ticker, market=market, as_of=as_of,
+                output_path=output_path, bundle=bundle,
+            )
+
+    runner = BatchRunner(
+        manifest=manifest,
+        max_workers=1,
+        yfinance_adapter=_PausingAdapter(),
+        fred_adapter=_StubFredAdapter(),
+        dart_adapter=_StubDartAdapter(),
+    )
+
+    runner_thread = threading.Thread(target=runner.run, daemon=True)
+    runner_thread.start()
+
+    assert inspect_event.wait(timeout=5), "first worker never started"
+    # Now AAPL is RUNNING inside the worker. Inspect state.json: AAPL
+    # should be RUNNING; MSFT/GOOGL should still be PENDING (queued).
+    mid_run_state = CohortState.from_json(state_path.read_text(encoding="utf-8"))
+    assert mid_run_state.runs["AAPL"].status == TickerRunStatus.RUNNING
+    assert mid_run_state.runs["MSFT"].status == TickerRunStatus.PENDING, (
+        "MSFT should still be PENDING while AAPL is mid-fetch; "
+        "got status={mid_run_state.runs['MSFT'].status}"
+    )
+    assert mid_run_state.runs["GOOGL"].status == TickerRunStatus.PENDING
+
+    release_event.set()
+    runner_thread.join(timeout=10)
+    assert not runner_thread.is_alive(), "runner thread did not finish"
+
+
 if __name__ == "__main__":
     unittest.main()
