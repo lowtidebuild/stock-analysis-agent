@@ -53,6 +53,7 @@ from __future__ import annotations
 
 import datetime as _dt
 import json
+import math as _math
 import pathlib
 import re
 from dataclasses import dataclass
@@ -122,6 +123,10 @@ class TickerEntry:
         if self.market not in _VALID_MARKETS:
             raise CohortManifestError(
                 f"market must be one of {sorted(_VALID_MARKETS)}; got {self.market!r}"
+            )
+        if not isinstance(self.notes, str):
+            raise CohortManifestError(
+                f"notes must be a string; got {type(self.notes).__name__}"
             )
 
 
@@ -217,17 +222,31 @@ class CohortManifest:
                 f"mode must be one of {sorted(_VALID_MODES)}; got {self.mode!r}"
             )
 
-        # run_count
-        if self.run_count not in _VALID_RUN_COUNTS:
+        # run_count (reject bool early — bool is a subclass of int and would
+        # otherwise sneak through the membership check via True == 1)
+        if isinstance(self.run_count, bool) or self.run_count not in _VALID_RUN_COUNTS:
             raise CohortManifestError(
                 f"run_count must be one of {sorted(_VALID_RUN_COUNTS)}; "
                 f"got {self.run_count!r}"
             )
 
-        # cost_cap_usd
-        if not isinstance(self.cost_cap_usd, (int, float)) or self.cost_cap_usd <= 0:
+        # cost_cap_usd (reject bool, NaN, Inf — all of which would silently
+        # disable or corrupt the runner's budget guard)
+        if (
+            isinstance(self.cost_cap_usd, bool)
+            or not isinstance(self.cost_cap_usd, (int, float))
+            or not _math.isfinite(self.cost_cap_usd)
+            or self.cost_cap_usd <= 0
+        ):
             raise CohortManifestError(
-                f"cost_cap_usd must be > 0; got {self.cost_cap_usd!r}"
+                f"cost_cap_usd must be a finite positive number; got "
+                f"{self.cost_cap_usd!r}"
+            )
+
+        # notes
+        if not isinstance(self.notes, str):
+            raise CohortManifestError(
+                f"notes must be a string; got {type(self.notes).__name__}"
             )
 
 
@@ -279,6 +298,21 @@ def _parse_as_of(raw: Any) -> _dt.date:
     return parsed
 
 
+_VALID_TICKER_KEYS = frozenset({"ticker", "market", "notes"})
+_VALID_MANIFEST_KEYS = frozenset(
+    {
+        "cohort_id",
+        "as_of",
+        "tickers",
+        "benchmark",
+        "mode",
+        "run_count",
+        "cost_cap_usd",
+        "notes",
+    }
+)
+
+
 def _parse_tickers(raw: Any) -> tuple[TickerEntry, ...]:
     if not isinstance(raw, list):
         raise CohortManifestError(
@@ -289,6 +323,14 @@ def _parse_tickers(raw: Any) -> tuple[TickerEntry, ...]:
         if not isinstance(item, dict):
             raise CohortManifestError(
                 f"tickers[{idx}] must be a JSON object; got {type(item).__name__}"
+            )
+        unknown = set(item.keys()) - _VALID_TICKER_KEYS
+        if unknown:
+            # Strict reject so misspellings (e.g. "tikcer" / "marekt") fail
+            # loud instead of silently substituting defaults.
+            raise CohortManifestError(
+                f"tickers[{idx}] has unknown keys {sorted(unknown)}; "
+                f"expected subset of {sorted(_VALID_TICKER_KEYS)}"
             )
         ticker = item.get("ticker")
         market = item.get("market")
@@ -340,6 +382,16 @@ def load_cohort(path: pathlib.Path) -> CohortManifest:
     if not isinstance(payload, dict):
         raise CohortManifestError(
             f"cohort manifest root must be a JSON object; got {type(payload).__name__}"
+        )
+
+    unknown = set(payload.keys()) - _VALID_MANIFEST_KEYS
+    if unknown:
+        # Strict reject: a typo'd "benchamrk" would otherwise silently fall
+        # back to the default for benchmark, masking user intent.
+        raise CohortManifestError(
+            f"cohort manifest {path} has unknown top-level keys "
+            f"{sorted(unknown)}; expected subset of "
+            f"{sorted(_VALID_MANIFEST_KEYS)}"
         )
 
     required = ("cohort_id", "as_of", "tickers")

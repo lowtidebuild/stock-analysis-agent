@@ -350,3 +350,81 @@ def test_frozen_ticker_entry() -> None:
     entry = TickerEntry(ticker="AAPL", market="US")
     with pytest.raises((FrozenInstanceError, AttributeError)):
         entry.ticker = "MSFT"  # type: ignore[misc]
+
+
+# ---------------------------------------------------------------------------
+# Regression tests for code-quality NIT fixes
+# ---------------------------------------------------------------------------
+
+
+def test_cost_cap_usd_rejects_bool() -> None:
+    """bool is a subclass of int. cost_cap_usd=True would silently parse
+    as a $1 budget — must be rejected."""
+    kwargs = _valid_manifest_kwargs()
+    kwargs["cost_cap_usd"] = True
+    with pytest.raises(CohortManifestError, match="cost_cap_usd"):
+        CohortManifest(**kwargs)
+
+
+def test_cost_cap_usd_rejects_nan_and_inf() -> None:
+    """NaN and Inf both pass `<= 0` checks because NaN comparisons return
+    False and Inf is positive. Must be rejected to prevent the runner's
+    budget guard from silently disabling."""
+    import math
+
+    kwargs = _valid_manifest_kwargs()
+    kwargs["cost_cap_usd"] = math.nan
+    with pytest.raises(CohortManifestError, match="finite"):
+        CohortManifest(**kwargs)
+
+    kwargs["cost_cap_usd"] = math.inf
+    with pytest.raises(CohortManifestError, match="finite"):
+        CohortManifest(**kwargs)
+
+
+def test_run_count_rejects_bool() -> None:
+    """True == 1 and True in {1, 3} is True — must reject bool explicitly
+    so a typo'd run_count=true doesn't sneak through as 1."""
+    kwargs = _valid_manifest_kwargs()
+    kwargs["run_count"] = True
+    with pytest.raises(CohortManifestError, match="run_count"):
+        CohortManifest(**kwargs)
+
+
+def test_manifest_notes_must_be_string() -> None:
+    kwargs = _valid_manifest_kwargs()
+    kwargs["notes"] = 42
+    with pytest.raises(CohortManifestError, match="notes"):
+        CohortManifest(**kwargs)
+
+
+def test_ticker_entry_notes_must_be_string() -> None:
+    with pytest.raises(CohortManifestError, match="notes"):
+        TickerEntry(ticker="AAPL", market="US", notes=42)  # type: ignore[arg-type]
+
+
+def test_load_cohort_rejects_unknown_top_level_keys(tmp_path: pathlib.Path) -> None:
+    """A typo'd `benchamrk` would otherwise fall back silently to the
+    default benchmark — strict reject prevents that whole bug class."""
+    payload = {
+        "cohort_id": "smoke",
+        "as_of": "2025-03-31",
+        "tickers": [{"ticker": "AAPL", "market": "US"}],
+        "benchamrk": "QQQ",  # intentional typo
+    }
+    p = tmp_path / "typo.json"
+    p.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(CohortManifestError, match="unknown top-level"):
+        load_cohort(p)
+
+
+def test_load_cohort_rejects_unknown_ticker_keys(tmp_path: pathlib.Path) -> None:
+    payload = {
+        "cohort_id": "smoke",
+        "as_of": "2025-03-31",
+        "tickers": [{"ticker": "AAPL", "market": "US", "tikcer": "typo"}],
+    }
+    p = tmp_path / "typo.json"
+    p.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(CohortManifestError, match="unknown keys"):
+        load_cohort(p)
