@@ -25,11 +25,13 @@ Currently exported
 ------------------
 
 - :class:`YFinanceHistorical` — wraps yfinance-collector.py with
-  ``--as-of`` enabled (Task 2.1, this file).
+  ``--as-of`` enabled (Task 2.1).
+- :class:`FredHistorical` — wraps fred-collector.py with ``--as-of``
+  enabled, forwarding to FRED's native ``observation_end`` param
+  (Task 2.2).
 
 Future tasks (Chunk 2 follow-ups, NOT this file):
 
-- ``FREDHistorical`` (Task 2.2) for FRED macro snapshots
 - ``SECHistorical`` (Task 2.3) for SEC filings as-of
 - ``DARTHistorical`` (Task 2.4) for KR filings as-of
 
@@ -58,8 +60,20 @@ _DEFAULT_SCRIPT_PATH = (
     / "scripts"
     / "yfinance-collector.py"
 )
+_DEFAULT_FRED_SCRIPT_PATH = (
+    REPO_ROOT
+    / ".claude"
+    / "skills"
+    / "web-researcher"
+    / "scripts"
+    / "fred-collector.py"
+)
 _DEFAULT_TIMEOUT_SECONDS = 60
 _DEFAULT_BUNDLE = "standard"
+# Sentinel ticker recorded on HistoricalFetchError when the failing
+# fetch is series-based (FRED) rather than ticker-based. Keeps the
+# exception attribute uniform across adapters.
+_FRED_SENTINEL_TICKER = "<fred>"
 
 
 class HistoricalFetchError(RuntimeError):
@@ -187,4 +201,117 @@ class YFinanceHistorical:
         return json.loads(resolved_output.read_text(encoding="utf-8"))
 
 
-__all__ = ["HistoricalFetchError", "YFinanceHistorical"]
+class FredHistorical:
+    """Subprocess-driven adapter for fred-collector.py with --as-of.
+
+    FRED is series-based (DGS10, CPIAUCSL, …) rather than ticker-based,
+    so the ``fetch`` signature is intentionally different from
+    :class:`YFinanceHistorical` — there is no ``ticker`` argument. The
+    ``include_kr`` flag toggles the Korean overlay (USD/KRW etc.) by
+    passing ``--market KR`` to the underlying script.
+
+    The exception contract still uses :class:`HistoricalFetchError` so
+    callers that uniformly read ``exc.ticker`` keep working — for FRED
+    the attribute is set to the sentinel ``"<fred>"``.
+
+    Parameters
+    ----------
+    script_path:
+        Optional override for the path to ``fred-collector.py``.
+        Defaults to the repo's bundled script. Useful for tests.
+    timeout_seconds:
+        Wall-clock timeout for the subprocess.
+    api_key:
+        Optional explicit FRED API key. When ``None`` (default), the
+        underlying script reads ``FRED_API_KEY`` from the environment
+        (or ``<repo>/.env``).
+    """
+
+    def __init__(
+        self,
+        *,
+        script_path: pathlib.Path | None = None,
+        timeout_seconds: int = _DEFAULT_TIMEOUT_SECONDS,
+        api_key: str | None = None,
+    ) -> None:
+        self.script_path: pathlib.Path = (
+            script_path if script_path is not None else _DEFAULT_FRED_SCRIPT_PATH
+        )
+        self.timeout_seconds: int = timeout_seconds
+        self.api_key: str | None = api_key
+
+    def fetch(
+        self,
+        *,
+        as_of: _dt.date,
+        output_path: pathlib.Path,
+        include_kr: bool = False,
+    ) -> dict[str, Any]:
+        """Fetch the FRED macro snapshot as of ``as_of``.
+
+        The subprocess is invoked with ``--as-of`` so the script
+        forwards FRED's native ``observation_end`` to every series
+        request. The 24h cache in fred-collector.py is bypassed in
+        as-of mode (current-state cache would otherwise leak future
+        data into the backtest).
+
+        Parameters
+        ----------
+        as_of:
+            Historical anchor (no future leakage). The collector script
+            rejects future dates with exit code 2.
+        output_path:
+            Where the script should write its JSON output. Parent dirs
+            are created by the script.
+        include_kr:
+            When ``True``, pass ``--market KR`` so the Korean overlay
+            (USD/KRW etc.) is included in the snapshot.
+
+        Returns
+        -------
+        dict
+            Parsed contents of the JSON file the script wrote.
+
+        Raises
+        ------
+        HistoricalFetchError
+            If the subprocess exits non-zero. The stderr text is
+            preserved on the exception alongside ``returncode`` and
+            ``as_of``. The ``ticker`` attribute is set to the sentinel
+            ``"<fred>"`` because FRED fetches are series-based.
+        """
+        resolved_output = pathlib.Path(output_path).expanduser().resolve()
+
+        cmd: list[str] = [
+            sys.executable,
+            str(self.script_path),
+            "--output", str(resolved_output),
+            "--as-of", as_of.isoformat(),
+        ]
+        if include_kr:
+            cmd.extend(["--market", "KR"])
+        if self.api_key:
+            cmd.extend(["--api-key", self.api_key])
+
+        completed = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=self.timeout_seconds,
+        )
+
+        if completed.returncode != 0:
+            raise HistoricalFetchError(
+                f"fred-collector.py exited with code "
+                f"{completed.returncode} for as_of={as_of.isoformat()}: "
+                f"{completed.stderr.strip()}",
+                returncode=completed.returncode,
+                stderr=completed.stderr,
+                ticker=_FRED_SENTINEL_TICKER,
+                as_of=as_of,
+            )
+
+        return json.loads(resolved_output.read_text(encoding="utf-8"))
+
+
+__all__ = ["FredHistorical", "HistoricalFetchError", "YFinanceHistorical"]
