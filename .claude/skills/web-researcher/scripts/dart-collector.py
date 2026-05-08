@@ -6,6 +6,7 @@ Fetches structured financial data for Korean stocks from DART (금융감독원 �
 Usage:
   python dart-collector.py --stock-code 005930 --output output/runs/20260424T000000Z_005930/005930/dart-api-raw.json
   python dart-collector.py --stock-code 005930 --output output/runs/20260424T000000Z_005930/005930/dart-api-raw.json --api-key YOUR_KEY
+  python dart-collector.py --stock-code 005930 --output ... --as-of 2024-06-30
 
 API Key priority:
   1. --api-key argument
@@ -15,7 +16,10 @@ API Key priority:
 DART OpenAPI docs: https://opendart.fss.or.kr/guide/main.do
 """
 
+from __future__ import annotations
+
 import argparse
+import datetime as _dt
 import io
 import json
 import os
@@ -26,6 +30,27 @@ import xml.etree.ElementTree as ET
 import zipfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+
+def _parse_iso_date(value: str) -> _dt.date:
+    """Parse a strict ``YYYY-MM-DD`` date for ``--as-of``.
+
+    Mirrors ``tools/backtest_runner.py::_parse_iso_date`` and the matching
+    helper in ``yfinance-collector.py`` / ``fred-collector.py``. Raises
+    ``argparse.ArgumentTypeError`` on any deviation (wrong separator,
+    wrong field widths, invalid calendar date) so argparse converts the
+    failure into a clean exit code 2. The pattern is duplicated rather
+    than imported because hyphenated script filenames are not valid
+    Python module names — keeping the helper local keeps each collector
+    self-contained.
+    """
+    try:
+        parsed = datetime.strptime(value, "%Y-%m-%d").date()
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            f"--as-of must be YYYY-MM-DD (got {value!r}): {exc}"
+        ) from exc
+    return parsed
 
 # Repo-root import for the trust-boundary sanitizer (CLAUDE.md §12).
 _REPO_ROOT = Path(__file__).resolve().parents[4]
@@ -226,15 +251,26 @@ def parse_financial_rows(rows):
     return result, raw
 
 
-def get_recent_disclosures(api_key, corp_code, days=90):
-    """Get recent disclosures (공시목록) for the past N days."""
-    end_dt = datetime.today()
-    start_dt = end_dt - timedelta(days=days)
+def get_recent_disclosures(api_key, corp_code, days=90, end_dt=None):
+    """Get recent disclosures (공시목록) for the past N days.
+
+    ``end_dt`` (optional ``datetime.date``) caps the disclosure window via
+    DART's native ``end_de`` parameter — i.e. true historical state for
+    backtest mode, never disclosures filed after that date. When unset,
+    the window ends today (existing production behavior).
+    """
+    if end_dt is None:
+        end_anchor = datetime.today()
+    elif isinstance(end_dt, _dt.date):
+        end_anchor = datetime(end_dt.year, end_dt.month, end_dt.day)
+    else:
+        end_anchor = end_dt
+    start_dt = end_anchor - timedelta(days=days)
     data = dart_request("list.json", {
         "crtfc_key": api_key,
         "corp_code": corp_code,
         "bgn_de": start_dt.strftime("%Y%m%d"),
-        "end_de": end_dt.strftime("%Y%m%d"),
+        "end_de": end_anchor.strftime("%Y%m%d"),
         "page_count": "15",
     })
     if data.get("status") in ("000", "013"):
@@ -316,12 +352,65 @@ def estimate_ttm(periods):
     return {}, "No income statement period available for TTM calculation.", "unavailable"
 
 
+def _attempt_typical_filing_deadline(year: int, reprt_code: str) -> _dt.date:
+    """Conservative latest filing deadline for a (year, reprt_code) report.
+
+    DART filers must submit periodic reports within statutory deadlines
+    measured from the period end:
+
+    - Annual (11011): period end Dec 31 → filed within 90 days → ~Mar 31
+    - Q1 (11013): period end Mar 31 → filed within 45 days → ~May 15
+    - H1 (11012): period end Jun 30 → filed within 45 days → ~Aug 14
+    - Q3 (11014): period end Sep 30 → filed within 45 days → ~Nov 14
+
+    We take the **latest** statutory deadline (not the earliest typical
+    date) so that an attempt is allowed only when *every* filer of that
+    period has had time to submit. Erring on the side of skipping a
+    period is better than leaking a not-yet-filed report into a
+    historical snapshot.
+    """
+    if reprt_code == "11011":
+        return _dt.date(year + 1, 3, 31)
+    if reprt_code == "11013":
+        return _dt.date(year, 5, 15)
+    if reprt_code == "11012":
+        return _dt.date(year, 8, 14)
+    if reprt_code == "11014":
+        return _dt.date(year, 11, 14)
+    # Unknown code: assume worst case — anchor to year end + 90 days.
+    return _dt.date(year + 1, 3, 31)
+
+
 def main():
     parser = argparse.ArgumentParser(description="DART OpenAPI financial data collector")
     parser.add_argument("--stock-code", required=True, help="6-digit KRX stock code (e.g. 005930)")
     parser.add_argument("--output", required=True, help="Output JSON file path")
     parser.add_argument("--api-key", default="", help="DART API key (overrides env var)")
+    parser.add_argument(
+        "--as-of",
+        dest="as_of",
+        type=_parse_iso_date,
+        default=None,
+        help=(
+            "Historical as-of date (YYYY-MM-DD) for backtest mode. When "
+            "set: disclosures are capped via DART's native end_de param "
+            "and only periodic reports whose statutory filing deadline "
+            "is on or before --as-of are considered. Skipping a period "
+            "is preferred over leaking a not-yet-filed report. The "
+            "snapshot carries top-level _backtest_meta and "
+            "_backtest_caveats blocks mirroring yfinance/fred collectors."
+        ),
+    )
     args = parser.parse_args()
+
+    if args.as_of is not None and args.as_of > _dt.date.today():
+        parser.error(
+            f"--as-of {args.as_of.isoformat()} is in the future "
+            f"(today is {_dt.date.today().isoformat()})."
+        )
+
+    backtest_mode = args.as_of is not None
+    backtest_caveats: list[str] = []
 
     api_key = args.api_key or os.environ.get("DART_API_KEY", "")
     if not api_key:
@@ -337,7 +426,11 @@ def main():
         sys.exit(1)
 
     corp_code = corp_info["corp_code"]
-    current_year = datetime.today().year
+    if backtest_mode:
+        anchor_year = args.as_of.year
+    else:
+        anchor_year = datetime.today().year
+    current_year = anchor_year
 
     # Step 2: Collect financial statements across multiple periods
     periods = {}
@@ -351,6 +444,21 @@ def main():
         (current_year - 1, "11014", "Q3_prior"),
         (current_year - 2, "11011", "Annual_prior2"),
     ]
+
+    if backtest_mode:
+        # Defensive filter: only consider attempts whose statutory filing
+        # deadline is on or before --as-of. Reports whose deadline is
+        # later than --as-of may not have been filed yet — including them
+        # would leak future data into the backtest snapshot.
+        filtered_attempts = [
+            (year, reprt_code, label)
+            for (year, reprt_code, label) in attempts
+            if _attempt_typical_filing_deadline(year, reprt_code) <= args.as_of
+        ]
+        if len(filtered_attempts) < len(attempts):
+            backtest_caveats.append("dart_attempts_filtered_by_filing_deadline")
+        attempts = filtered_attempts
+        backtest_caveats.append("dart_as_of_mode_applied")
 
     # Keep collecting the prior same-period report when available so true
     # TTM can be reconstructed instead of using current YTD as a proxy.
@@ -384,7 +492,12 @@ def main():
                 balance_sheet[field] = data["value"]
 
     # Step 5: Get recent disclosures
-    disclosures = get_recent_disclosures(api_key, corp_code, days=90)
+    disclosures = get_recent_disclosures(
+        api_key,
+        corp_code,
+        days=90,
+        end_dt=args.as_of if backtest_mode else None,
+    )
 
     # Build structured output
     output = {
@@ -425,6 +538,25 @@ def main():
         },
         "recent_disclosures": disclosures,
     }
+
+    if backtest_mode:
+        # Mirror the contract established by yfinance-collector.py and
+        # fred-collector.py: top-level _backtest_caveats list +
+        # _backtest_meta block so downstream consumers (validators,
+        # leakage detector) can detect historical snapshots without
+        # opening every nested object.
+        seen: set[str] = set()
+        deduped: list[str] = []
+        for c in backtest_caveats:
+            if c not in seen:
+                deduped.append(c)
+                seen.add(c)
+        output["_backtest_caveats"] = deduped
+        output["_backtest_meta"] = {
+            "as_of": args.as_of.isoformat(),
+            "freeze_strategy": "hybrid",
+            "caveats": deduped,
+        }
 
     # Trust-boundary sanitization (CLAUDE.md §12) — required before any
     # downstream agent reads this artifact. DART account names and
