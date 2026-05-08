@@ -26,8 +26,29 @@ import sys
 import time
 import urllib.request
 import urllib.parse
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
+
+
+def _parse_iso_date(value: str) -> date:
+    """Parse a strict ``YYYY-MM-DD`` date for ``--as-of``.
+
+    Mirrors ``tools/backtest_runner.py::_parse_iso_date`` and the matching
+    helper in ``yfinance-collector.py``. Raises
+    ``argparse.ArgumentTypeError`` on any deviation (wrong separator,
+    wrong field widths, invalid calendar date) so argparse converts the
+    failure into a clean exit code 2. The pattern is duplicated rather
+    than imported because hyphenated script filenames are not valid
+    Python module names — keeping the helper local keeps each collector
+    self-contained.
+    """
+    try:
+        parsed = datetime.strptime(value, "%Y-%m-%d").date()
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            f"--as-of must be YYYY-MM-DD (got {value!r}): {exc}"
+        ) from exc
+    return parsed
 
 _REPO_ROOT = Path(__file__).resolve().parents[4]
 if str(_REPO_ROOT) not in sys.path:
@@ -93,8 +114,15 @@ SECTOR_FIELD_MAP = {
 }
 
 
-def fred_request(series_id, api_key, limit=5):
-    """Fetch latest observations for a FRED series. Returns list of observations or None."""
+def fred_request(series_id, api_key, limit=5, observation_end=None):
+    """Fetch latest observations for a FRED series. Returns list of observations or None.
+
+    When ``observation_end`` (a ``datetime.date``) is provided, FRED's
+    native ``observation_end`` query parameter caps the returned series
+    to observations on or before that date — i.e. true historical macro
+    state, not a post-filter hack. This is what makes ``--as-of`` mode
+    in ``main()`` produce authentic backtest snapshots.
+    """
     params = {
         "series_id": series_id,
         "api_key": api_key,
@@ -102,6 +130,8 @@ def fred_request(series_id, api_key, limit=5):
         "sort_order": "desc",
         "limit": str(limit),
     }
+    if observation_end is not None:
+        params["observation_end"] = observation_end.isoformat()
     url = FRED_BASE + "?" + urllib.parse.urlencode(params)
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "StockAnalysisAgent/1.0"})
@@ -344,8 +374,13 @@ def check_cache(output_path, force=False):
         return None, "invalid_cache"
 
 
-def collect_all_series(api_key, include_kr=False):
-    """Fetch all FRED series. Returns (series_data, errors)."""
+def collect_all_series(api_key, include_kr=False, observation_end=None):
+    """Fetch all FRED series. Returns (series_data, errors).
+
+    ``observation_end`` (optional ``datetime.date``) is forwarded to every
+    ``fred_request`` call so backtest mode caps each series to the
+    historical anchor.
+    """
     series_data = {}
     errors = []
 
@@ -356,7 +391,9 @@ def collect_all_series(api_key, include_kr=False):
 
         # Fetch more observations for YoY transform series
         limit = 15 if config.get("transform") == "yoy" else 5
-        observations = fred_request(series_id, api_key, limit=limit)
+        observations = fred_request(
+            series_id, api_key, limit=limit, observation_end=observation_end
+        )
 
         if observations is None:
             errors.append(f"Failed to fetch {series_id} ({config['name']})")
@@ -386,8 +423,15 @@ def collect_all_series(api_key, include_kr=False):
     return series_data, errors
 
 
-def build_snapshot(series_data, errors, include_kr=False):
-    """Structure the collected data into the snapshot format."""
+def build_snapshot(series_data, errors, include_kr=False, as_of=None, backtest_caveats=None):
+    """Structure the collected data into the snapshot format.
+
+    When ``as_of`` (a ``datetime.date``) is provided, the snapshot also
+    carries top-level ``_backtest_caveats`` and ``_backtest_meta`` blocks
+    that mirror the contract established by ``yfinance-collector.py``
+    (Task 2.1). Passing ``backtest_caveats`` lets the caller pre-seed
+    notes (e.g. ``cache_bypassed_in_as_of_mode``).
+    """
     common = {}
     sector = {"technology": {}, "financial": {}, "energy": {}, "consumer": {}, "industrial": {}}
     kr_overlay = {}
@@ -427,6 +471,23 @@ def build_snapshot(series_data, errors, include_kr=False):
         "kr_overlay": kr_overlay if include_kr else {},
         "errors": errors,
     }
+    if as_of is not None:
+        caveats = list(backtest_caveats) if backtest_caveats else []
+        if "macro_observation_end_applied" not in caveats:
+            caveats.append("macro_observation_end_applied")
+        # Preserve insertion order while removing duplicates.
+        seen = set()
+        deduped = []
+        for c in caveats:
+            if c not in seen:
+                deduped.append(c)
+                seen.add(c)
+        snapshot["_backtest_caveats"] = deduped
+        snapshot["_backtest_meta"] = {
+            "as_of": as_of.isoformat(),
+            "freeze_strategy": "hybrid",
+            "caveats": deduped,
+        }
     return attach_macro_context(snapshot)
 
 
@@ -448,13 +509,44 @@ def main():
     parser.add_argument("--market", default="US", choices=["US", "KR"], help="Market (US or KR — KR adds KRW/USD)")
     parser.add_argument("--force", action="store_true", help="Ignore cache, force API refresh")
     parser.add_argument("--api-key", default="", help="FRED API key (overrides env var)")
+    parser.add_argument(
+        "--as-of",
+        dest="as_of",
+        type=_parse_iso_date,
+        default=None,
+        help=(
+            "Historical as-of date (YYYY-MM-DD) for backtest mode. When "
+            "set: every FRED call passes observation_end={as-of} so the "
+            "snapshot reflects authentic macro state on that date. The "
+            "24h cache is bypassed in this mode (a current-state cache "
+            "would otherwise leak future data into a backtest). The "
+            "snapshot carries top-level _backtest_meta and "
+            "_backtest_caveats blocks mirroring yfinance-collector.py."
+        ),
+    )
     args = parser.parse_args()
+
+    if args.as_of is not None and args.as_of > date.today():
+        parser.error(
+            f"--as-of {args.as_of.isoformat()} is in the future "
+            f"(today is {date.today().isoformat()})."
+        )
 
     api_key = args.api_key or os.environ.get("FRED_API_KEY", "")
     include_kr = args.market == "KR"
+    backtest_mode = args.as_of is not None
+    backtest_caveats: list[str] = []
 
-    # Check cache first
-    cached_data, cache_status = check_cache(args.output, force=args.force)
+    # Check cache first.
+    # Backtest mode bypasses the cache: the cache is keyed by output path
+    # and would otherwise serve a current-state snapshot for a historical
+    # `--as-of` request — silently leaking future data. We force a fresh
+    # FRED fetch with observation_end applied and record the bypass.
+    if backtest_mode:
+        cached_data, cache_status = None, "as_of_bypass"
+        backtest_caveats.append("cache_bypassed_in_as_of_mode")
+    else:
+        cached_data, cache_status = check_cache(args.output, force=args.force)
 
     if cache_status == "cache_valid":
         if not isinstance(cached_data.get("macro_context"), dict):
@@ -496,7 +588,11 @@ def main():
             sys.exit(1)
 
     # Fetch from FRED API
-    series_data, errors = collect_all_series(api_key, include_kr=include_kr)
+    series_data, errors = collect_all_series(
+        api_key,
+        include_kr=include_kr,
+        observation_end=args.as_of if backtest_mode else None,
+    )
 
     if not any(v is not None for v in series_data.values()):
         # Total failure — return stale cache if available
@@ -530,7 +626,13 @@ def main():
 
     # Build and write snapshot
     snapshot = attach_sanitization_metadata(
-        build_snapshot(series_data, errors, include_kr=include_kr)
+        build_snapshot(
+            series_data,
+            errors,
+            include_kr=include_kr,
+            as_of=args.as_of if backtest_mode else None,
+            backtest_caveats=backtest_caveats if backtest_mode else None,
+        )
     )
     write_snapshot(args.output, snapshot)
 
