@@ -46,8 +46,9 @@ DEFAULT_HISTORY_INTERVAL = "1d"
 
 # Backtest mode (--as-of) constants. When the historical window is fetched
 # we look back this many calendar days from `as_of` so weekend/holiday gaps
-# still surface a tradeable close.
-BACKTEST_PRICE_LOOKBACK_DAYS = 5
+# still surface a tradeable close. 10d covers KR multi-day closures
+# (Chuseok 2017 = 8 days, Lunar New Year ~5 days + adjacent weekend).
+BACKTEST_PRICE_LOOKBACK_DAYS = 10
 # How far back to fetch the year-of-history window in --as-of mode. Mirrors
 # DEFAULT_HISTORY_PERIOD ("1y") but we resolve it as an explicit start/end
 # pair so yfinance does not implicitly anchor the range to "today".
