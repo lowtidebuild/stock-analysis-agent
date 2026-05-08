@@ -52,10 +52,13 @@ class BacktestRunnerCliTests(unittest.TestCase):
         result = _run_cli("--dry-run")
         self.assertEqual(result.returncode, 2, msg=result.stdout + result.stderr)
 
-    def test_no_dry_run_returns_stub_error(self):
-        result = _run_cli("--cohort", "smoke")
-        self.assertEqual(result.returncode, 1, msg=result.stdout + result.stderr)
-        self.assertIn("not yet implemented", result.stderr.lower())
+    def test_unknown_cohort_returns_exit_2(self):
+        # Task 3.2: the CLI now resolves the manifest and rejects
+        # unknown cohort ids with exit code 2 (manifest load failure).
+        # The Chunk-3-stub "not yet implemented" path was removed when
+        # the runner was wired to BatchRunner.
+        result = _run_cli("--cohort", "this_cohort_does_not_exist")
+        self.assertEqual(result.returncode, 2, msg=result.stdout + result.stderr)
 
 
 if __name__ == "__main__":
