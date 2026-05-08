@@ -282,10 +282,11 @@ def test_compute_forward_search_handles_weekend_as_of() -> None:
     )
     outcome = computer.compute(ticker="AAPL", market="US", as_of=saturday)
     assert outcome["ticker_close_at_as_of"] == 100.0
-    # actual_date for the as-of should reflect Monday.
-    # We probe via the per-horizon actual_date which is anchored from the
-    # ticker series; the as-of fallback is recorded on the outcome.
+    # `as_of` round-trips the input.
     assert outcome["as_of"] == saturday.isoformat()
+    # `actual_as_of_date` records the trading day that actually supplied
+    # the close — this is the load-bearing forward-search assertion.
+    assert outcome["actual_as_of_date"] == monday.isoformat()
 
 
 def test_compute_records_data_unavailable_when_horizon_missing() -> None:

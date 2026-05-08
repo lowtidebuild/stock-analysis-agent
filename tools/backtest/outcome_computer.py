@@ -436,7 +436,18 @@ class OutcomeComputer:
         start: _dt.date,
         end: _dt.date,
     ) -> dict[_dt.date, float]:
-        """Fetch ticker prices, handling KR ``.KS``/``.KQ`` fallback."""
+        """Fetch ticker prices, handling KR ``.KS``/``.KQ`` fallback.
+
+        Notes
+        -----
+        Known limitation: the ``.KQ`` fallback only fires when ``.KS``
+        returns no data at all. If yfinance's ``.KS`` lookup happens to
+        match a *different* listing for the same 6-digit code (rare but
+        possible for delisted/transferred symbols), the fallback never
+        triggers and outcome math runs on the wrong company. There is
+        no clean fix without a symbology service — operators should
+        spot-check KR cohort outcomes against KRX listing history.
+        """
         primary, fallback = _to_yfinance_symbol(ticker, market)
         prices = self.price_fetcher(primary, start, end)
         if not prices and fallback is not None:
@@ -466,30 +477,21 @@ class OutcomeComputer:
     ) -> tuple[_dt.date, float] | None:
         """Forward-search the benchmark cache, returning ``(date, close)``.
 
-        Wraps :func:`get_benchmark_close` so we also know which date
-        actually supplied the close (for ``actual_date`` in the
-        horizon dict).
+        Walks the cache directly so we can record which date hit (for
+        ``actual_date`` in the horizon dict). Returns ``None`` when no
+        close is found within ``self.max_lookahead_days``.
+
+        We deliberately do NOT cross-check :func:`get_benchmark_close`
+        here: both paths walk the same dict with the same lookahead, so
+        a sentinel call only adds redundancy without catching anything
+        real, and its raise-on-unknown-benchmark contract clashed with
+        this method's promise to return ``None``.
         """
-        # Walk manually so we can record which date hit; benchmark_cache's
-        # public API only returns the close.
         series = self.benchmark_cache.get(benchmark, {})
         for offset in range(self.max_lookahead_days + 1):
             candidate = target + _dt.timedelta(days=offset)
             if candidate in series:
                 return candidate, series[candidate]
-        # Defensive consistency check: ensure get_benchmark_close agrees.
-        # Both paths walk the same range with the same lookahead, so a
-        # mismatch would point at a contract bug.
-        sentinel = get_benchmark_close(
-            self.benchmark_cache,
-            benchmark,
-            target,
-            max_lookahead_days=self.max_lookahead_days,
-        )
-        assert sentinel is None, (
-            "benchmark forward-search inconsistency: "
-            f"benchmark={benchmark!r} target={target.isoformat()}"
-        )
         return None
 
     def _compute_horizon(
