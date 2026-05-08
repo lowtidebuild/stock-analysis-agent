@@ -1,0 +1,8 @@
+# Backtest harness — track manifests, ignore bulky historical data.
+#
+# - cohorts/  : cohort manifest JSON files (committed — schema definitions).
+# - data/     : parquet caches of historical prices/financials downloaded
+#               by Chunk 4 fixture builders. Bulky and reproducible — do
+#               NOT commit.
+
+data/

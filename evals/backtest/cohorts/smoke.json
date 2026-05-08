@@ -1,0 +1,16 @@
+{
+  "as_of": "2025-03-31",
+  "benchmark": "SPY",
+  "cohort_id": "smoke",
+  "cost_cap_usd": 5.0,
+  "mode": "C",
+  "notes": "Single-ticker smoke cohort for Chunk 6 end-to-end testing.",
+  "run_count": 1,
+  "tickers": [
+    {
+      "market": "US",
+      "notes": "S&P 500 mega-cap",
+      "ticker": "AAPL"
+    }
+  ]
+}
