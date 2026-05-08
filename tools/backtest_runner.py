@@ -33,7 +33,9 @@ import argparse
 import datetime as _dt
 import json
 import sys
-from typing import Optional, Sequence
+from collections.abc import Sequence
+
+_STUB_NOT_IMPLEMENTED = "Cohort runner not yet implemented (Chunk 3)."
 
 
 def _parse_iso_date(value: str) -> _dt.date:
@@ -83,7 +85,7 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Optional[Sequence[str]] = None) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
 
@@ -105,7 +107,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(json.dumps(payload))
         return 0
 
-    print("Cohort runner not yet implemented (Chunk 3).", file=sys.stderr)
+    print(_STUB_NOT_IMPLEMENTED, file=sys.stderr)
     return 1
 
 
