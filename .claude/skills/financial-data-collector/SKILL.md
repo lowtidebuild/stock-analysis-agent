@@ -256,6 +256,21 @@ If all API calls fail:
 
 ---
 
+## Backtest Mode (as-of)
+
+When the pipeline runs under a backtest as-of date (`tools.backtest.pipeline_context.BacktestContext` is active), the MCP responses still arrive in their normal shape — the Financial Datasets MCP cannot be parameterized with `--as-of`. Instead the cohort runner post-filters every raw response through `tools.backtest.sec_historical` before handing it to the validator:
+
+- `filter_sec_filings(payload, as_of)` drops filings with `filing_date > as_of`.
+- `filter_income_statements` / `filter_balance_sheets` / `filter_cash_flow_statements` drop statements with `period_end_date > as_of`.
+- `select_latest_pre_as_of(records, as_of)` picks the single most-recent qualifying record (used by the analyst when a "current quarter" snapshot is needed).
+- `annotate_backtest_meta(payload, as_of, source="sec")` attaches a `_backtest_meta` block and adds `sec_post_filter_applied` to `_backtest_caveats`.
+
+The caveat `sec_post_filter_applied` (or `dart_post_filter_applied` for KR) appears in `_backtest_caveats` on every backtest-mode artifact, and the analyst / Mode E flow can rely on it to detect that a temporal filter ran. Mode E backtests in particular post-filter `get_sec_filings` to keep only filings with `filing_date <= as_of` — otherwise an earnings preview would leak the actual earnings filing.
+
+This module is pure-function only and does not perform network or MCP calls; it transforms already-fetched payloads.
+
+---
+
 ## Completion Check
 
 - [ ] Ticker validated via `get_current_stock_price`
