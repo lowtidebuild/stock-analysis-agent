@@ -29,11 +29,16 @@ Currently exported
 - :class:`FredHistorical` — wraps fred-collector.py with ``--as-of``
   enabled, forwarding to FRED's native ``observation_end`` param
   (Task 2.2).
+- :class:`DartHistorical` — wraps dart-collector.py with ``--as-of``
+  enabled, capping disclosures via DART's native ``end_de`` and
+  filtering periodic-report attempts by statutory filing deadline
+  (Task 2.4).
 
 Future tasks (Chunk 2 follow-ups, NOT this file):
 
-- ``SECHistorical`` (Task 2.3) for SEC filings as-of
-- ``DARTHistorical`` (Task 2.4) for KR filings as-of
+- ``SECHistorical`` (Task 2.3) for SEC filings as-of (lives in
+  ``sec_historical.py`` rather than here because SEC is via MCP, not a
+  subprocess script)
 
 TODO(integration-test): a live-network sanity check against AAPL with
 ``as_of=2025-01-15`` belongs in ``tests/financial_data_collector/
@@ -67,6 +72,14 @@ _DEFAULT_FRED_SCRIPT_PATH = (
     / "web-researcher"
     / "scripts"
     / "fred-collector.py"
+)
+_DEFAULT_DART_SCRIPT_PATH = (
+    REPO_ROOT
+    / ".claude"
+    / "skills"
+    / "web-researcher"
+    / "scripts"
+    / "dart-collector.py"
 )
 _DEFAULT_TIMEOUT_SECONDS = 60
 _DEFAULT_BUNDLE = "standard"
@@ -314,4 +327,121 @@ class FredHistorical:
         return json.loads(resolved_output.read_text(encoding="utf-8"))
 
 
-__all__ = ["FredHistorical", "HistoricalFetchError", "YFinanceHistorical"]
+class DartHistorical:
+    """Subprocess-driven adapter for dart-collector.py with --as-of.
+
+    DART (금융감독원 전자공시) is the Korean regulatory disclosure system,
+    keyed by 6-digit KRX stock code rather than US-style ticker symbol.
+    The ``fetch`` signature uses ``ticker`` for surface uniformity with
+    :class:`YFinanceHistorical`; for KR equities the value is the
+    6-digit code (e.g. ``"005930"`` for Samsung Electronics).
+
+    Backtest semantics handled by the underlying script:
+
+    - ``end_de`` is set to ``--as-of`` so the disclosures list never
+      surfaces filings dated after the historical anchor.
+    - The periodic-report ``attempts`` list is filtered to only include
+      reports whose **statutory filing deadline** is on or before
+      ``--as-of``. We err on the side of skipping a period rather than
+      including a not-yet-filed report and leaking future data.
+
+    Parameters
+    ----------
+    script_path:
+        Optional override for the path to ``dart-collector.py``.
+        Defaults to the repo's bundled script. Useful for tests.
+    timeout_seconds:
+        Wall-clock timeout for the subprocess. DART's corpCode.xml
+        lookup can be slow on first call (multi-MB ZIP download) so the
+        default leaves room for that.
+    api_key:
+        Optional explicit DART API key. When ``None`` (default), the
+        underlying script reads ``DART_API_KEY`` from the environment
+        (or ``<repo>/.env``).
+    """
+
+    def __init__(
+        self,
+        *,
+        script_path: pathlib.Path | None = None,
+        timeout_seconds: int = _DEFAULT_TIMEOUT_SECONDS,
+        api_key: str | None = None,
+    ) -> None:
+        self.script_path: pathlib.Path = (
+            script_path if script_path is not None else _DEFAULT_DART_SCRIPT_PATH
+        )
+        self.timeout_seconds: int = timeout_seconds
+        self.api_key: str | None = api_key
+
+    def fetch(
+        self,
+        *,
+        ticker: str,
+        as_of: _dt.date,
+        output_path: pathlib.Path,
+    ) -> dict[str, Any]:
+        """Fetch DART data as of ``as_of`` and return the parsed JSON.
+
+        Parameters
+        ----------
+        ticker:
+            6-digit KRX stock code (e.g. ``"005930"``). Forwarded to
+            ``--stock-code`` on the underlying script.
+        as_of:
+            Historical anchor (no future leakage). The collector script
+            rejects future dates with exit code 2.
+        output_path:
+            Where the script should write its JSON output. Parent dirs
+            are created by the script.
+
+        Returns
+        -------
+        dict
+            Parsed contents of the JSON file the script wrote.
+
+        Raises
+        ------
+        HistoricalFetchError
+            If the subprocess exits non-zero. The stderr text is
+            preserved on the exception alongside ``returncode``,
+            ``ticker``, and ``as_of``.
+        """
+        resolved_output = pathlib.Path(output_path).expanduser().resolve()
+
+        cmd: list[str] = [
+            sys.executable,
+            str(self.script_path),
+            "--stock-code", ticker,
+            "--output", str(resolved_output),
+            "--as-of", as_of.isoformat(),
+        ]
+        if self.api_key:
+            cmd.extend(["--api-key", self.api_key])
+
+        completed = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=self.timeout_seconds,
+        )
+
+        if completed.returncode != 0:
+            raise HistoricalFetchError(
+                f"dart-collector.py exited with code "
+                f"{completed.returncode} for ticker={ticker} "
+                f"as_of={as_of.isoformat()}: {completed.stderr.strip()}",
+                returncode=completed.returncode,
+                stderr=completed.stderr,
+                ticker=ticker,
+                as_of=as_of,
+            )
+
+        return json.loads(resolved_output.read_text(encoding="utf-8"))
+
+
+__all__ = [
+    "DartHistorical",
+    "FredHistorical",
+    "HistoricalFetchError",
+    "YFinanceHistorical",
+]
