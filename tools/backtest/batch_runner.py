@@ -33,8 +33,15 @@ Hard scope limits (Phase 1 / Task 3.2)
   the analyst pipeline through MCP, and any post-filtering for as-of
   correctness happens via ``tools.backtest.sec_historical`` against
   the MCP response — not as a subprocess fetch from this runner.
-- The runner does **not** implement consecutive-failure abort logic;
-  that lands in Task 3.3.
+- The runner aborts the cohort once
+  ``consecutive_failure_threshold`` (default 3) tickers complete with
+  FAILED status in a row. The rationale: a streak of failures usually
+  reflects a network outage or rate-limit, and continuing to spend
+  per-ticker work on a systemic problem wastes both clock time and
+  fetch budget. Abort raises :class:`BatchRunnerError` after the
+  in-flight workers drain. Per-ticker errors that are interleaved with
+  successes are still isolated as in Task 3.2 — see
+  :meth:`BatchRunner._run_ticker`.
 - Cost tracking is currently **bytes-of-fetched-JSON only**. A real
   Claude-token cost cap is added in Chunk 6 when the analyst runs.
   See the TODO inside :meth:`BatchRunner.run` for the bridge.
@@ -360,6 +367,13 @@ class BatchRunner:
     leakage_strict:
         Pass-through to :class:`LeakageDetector`. ``True`` (default) so
         the first finding flips the run to ``FAILED``.
+    consecutive_failure_threshold:
+        Number of consecutive FAILED tickers that triggers a cohort
+        abort. The counter resets on any non-FAILED result (DONE or
+        SKIPPED), so intermittent failures interleaved with successes
+        never trip the abort. Must be ``>= 1``; non-positive values
+        raise :class:`BatchRunnerError` from ``__init__``. Defaults to
+        ``3``.
     """
 
     def __init__(
@@ -371,10 +385,16 @@ class BatchRunner:
         fred_adapter: FredHistorical | None = None,
         dart_adapter: DartHistorical | None = None,
         leakage_strict: bool = True,
+        consecutive_failure_threshold: int = 3,
     ) -> None:
         if max_workers < 1:
             raise ValueError(
                 f"max_workers must be >= 1; got {max_workers}"
+            )
+        if consecutive_failure_threshold < 1:
+            raise BatchRunnerError(
+                f"consecutive_failure_threshold must be >= 1; "
+                f"got {consecutive_failure_threshold}"
             )
         self.manifest: CohortManifest = manifest
         self.max_workers: int = max_workers
@@ -388,9 +408,13 @@ class BatchRunner:
             dart_adapter if dart_adapter is not None else DartHistorical()
         )
         self.leakage_strict: bool = leakage_strict
+        self.consecutive_failure_threshold: int = consecutive_failure_threshold
 
         # Guard concurrent state.json writes from worker threads.
         self._state_lock = threading.Lock()
+        # Set when consecutive failures hit the abort threshold; workers
+        # check this at entry to short-circuit any not-yet-started fetch.
+        self._abort_event = threading.Event()
 
     # ------------------------------------------------------------------
     # Public entrypoint
@@ -408,6 +432,24 @@ class BatchRunner:
           a FAILED ticker terminal must remove it from the manifest
           or edit ``state.json`` (no `--retry-failed` flag yet — that's
           a Chunk 6 follow-up).
+
+        Consecutive-failure abort (Task 3.3):
+
+        - As ticker results arrive in ``as_completed`` order, the runner
+          maintains a consecutive-failure counter. A FAILED result
+          increments it; any other terminal status (DONE / SKIPPED)
+          resets it to ``0``.
+        - Once the counter reaches
+          ``self.consecutive_failure_threshold``, ``self._abort_event``
+          is set. Any in-flight worker that has not yet started its
+          adapter call short-circuits and returns SKIPPED. Already-
+          running workers complete normally so ``state.json`` stays
+          consistent. Once the executor block exits, the runner raises
+          :class:`BatchRunnerError` with the threshold and the list of
+          tickers that failed in the trip-streak.
+        - On abort the cohort note ``"aborted after N consecutive
+          failures"`` is appended to ``state.notes`` so observers can
+          distinguish a real abort from a clean termination.
 
         TODO(chunk-6): The current cost guard is ``total_bytes_written``
         only — meaningful as a fetch-volume sanity check, not as a
@@ -437,6 +479,13 @@ class BatchRunner:
 
         if not pending_entries:
             return state
+
+        # Reset abort state for a fresh ``run()`` invocation. Resuming a
+        # cohort by calling ``run()`` again should not be poisoned by an
+        # abort signal raised on a prior call.
+        self._abort_event.clear()
+        consecutive_failures: int = 0
+        failure_streak_tickers: list[str] = []
 
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             future_to_ticker = {}
@@ -493,7 +542,47 @@ class BatchRunner:
                     record.error = job_result.error
                     record.leakage_findings = list(job_result.leakage_findings)
                     state.last_updated_at = _utcnow()
+
+                    # Update consecutive-failure counter. SKIPPED can
+                    # arise from the abort short-circuit itself, so we
+                    # treat it (like DONE) as a counter reset rather
+                    # than letting it pile additional FAILED weight onto
+                    # the streak. Once the abort event is set, no new
+                    # FAILED results should arrive — but if they do
+                    # (e.g. a worker that was already mid-fetch), they
+                    # are still recorded normally without re-triggering
+                    # the abort path below.
+                    if (
+                        job_result.status is TickerRunStatus.FAILED
+                        and not self._abort_event.is_set()
+                    ):
+                        consecutive_failures += 1
+                        failure_streak_tickers.append(ticker)
+                    elif job_result.status is not TickerRunStatus.FAILED:
+                        consecutive_failures = 0
+                        failure_streak_tickers = []
+
+                    just_hit_threshold = (
+                        consecutive_failures
+                        == self.consecutive_failure_threshold
+                        and not self._abort_event.is_set()
+                    )
+                    if just_hit_threshold:
+                        self._abort_event.set()
+                        state.notes.append(
+                            f"aborted after {self.consecutive_failure_threshold} "
+                            f"consecutive failures: "
+                            f"{', '.join(failure_streak_tickers)}"
+                        )
+
                     state.save(state_path)
+
+        if self._abort_event.is_set():
+            raise BatchRunnerError(
+                f"cohort {self.manifest.cohort_id!r} aborted after "
+                f"{self.consecutive_failure_threshold} consecutive ticker "
+                f"failures: {', '.join(failure_streak_tickers)}"
+            )
 
         return state
 
@@ -548,6 +637,24 @@ class BatchRunner:
         state: CohortState,
         state_path: pathlib.Path,
     ) -> _TickerJobResult:
+        # Short-circuit if the cohort has already been aborted. This
+        # check runs before we mark RUNNING / touch the meta artifact /
+        # invoke the adapter, so an aborted cohort wastes only the
+        # thread-pool dispatch overhead per remaining ticker — never a
+        # network call.
+        if self._abort_event.is_set():
+            now = _utcnow()
+            return _TickerJobResult(
+                ticker=ticker,
+                status=TickerRunStatus.SKIPPED,
+                started_at=now,
+                finished_at=now,
+                duration_seconds=0.0,
+                bytes_written=0,
+                error="skipped: cohort aborted after consecutive failures",
+                leakage_findings=[],
+            )
+
         # Mark RUNNING and persist as the first thing the worker does.
         # Doing this here (instead of in the dispatch loop) means a
         # ticker queued behind the concurrency cap stays PENDING in
