@@ -240,21 +240,28 @@ class CohortState:
 
     @classmethod
     def from_json(cls, text: str) -> "CohortState":
-        payload = json.loads(text)
-        runs_payload = payload.get("runs", {}) or {}
-        runs = {
-            ticker: TickerRunRecord.from_dict(record)
-            for ticker, record in runs_payload.items()
-        }
-        return cls(
-            cohort_id=payload["cohort_id"],
-            as_of=_dt.date.fromisoformat(payload["as_of"]),
-            started_at=_parse_dt(payload["started_at"]) or _utcnow(),
-            last_updated_at=_parse_dt(payload["last_updated_at"]) or _utcnow(),
-            runs=runs,
-            total_bytes_written=int(payload.get("total_bytes_written", 0)),
-            notes=list(payload.get("notes") or []),
-        )
+        try:
+            payload = json.loads(text)
+            runs_payload = payload.get("runs", {}) or {}
+            runs = {
+                ticker: TickerRunRecord.from_dict(record)
+                for ticker, record in runs_payload.items()
+            }
+            return cls(
+                cohort_id=payload["cohort_id"],
+                as_of=_dt.date.fromisoformat(payload["as_of"]),
+                started_at=_parse_dt(payload["started_at"]) or _utcnow(),
+                last_updated_at=_parse_dt(payload["last_updated_at"]) or _utcnow(),
+                runs=runs,
+                total_bytes_written=int(payload.get("total_bytes_written", 0)),
+                notes=list(payload.get("notes") or []),
+            )
+        except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+            # Refuse to silently lose progress on malformed state — the
+            # operator should see a clean error, not a Python traceback.
+            raise BatchRunnerError(
+                f"state.json is malformed: {exc.__class__.__name__}: {exc}"
+            ) from exc
 
     # ------------------------------------------------------------------
     # Persistence
@@ -392,6 +399,16 @@ class BatchRunner:
     def run(self) -> CohortState:
         """Execute the cohort end-to-end and return the final state.
 
+        Resume policy:
+
+        - DONE / SKIPPED tickers are skipped on resume.
+        - PENDING / RUNNING / FAILED tickers are re-run. RUNNING handles
+          the "crashed mid-run" case; FAILED retries any prior failure
+          (e.g. transient network error). Operators who want to keep
+          a FAILED ticker terminal must remove it from the manifest
+          or edit ``state.json`` (no `--retry-failed` flag yet — that's
+          a Chunk 6 follow-up).
+
         TODO(chunk-6): The current cost guard is ``total_bytes_written``
         only — meaningful as a fetch-volume sanity check, not as a
         Claude-token cost cap. The token-based cap lands when the
@@ -424,13 +441,6 @@ class BatchRunner:
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             future_to_ticker = {}
             for entry in pending_entries:
-                # Mark RUNNING and persist before dispatch so a crash
-                # leaves a clear breadcrumb.
-                with self._state_lock:
-                    state.runs[entry.ticker].status = TickerRunStatus.RUNNING
-                    state.last_updated_at = _utcnow()
-                    state.save(state_path)
-
                 ctx = BacktestContext(
                     cohort_id=self.manifest.cohort_id,
                     ticker=entry.ticker,
@@ -441,6 +451,8 @@ class BatchRunner:
                     entry.ticker,
                     entry.market,
                     ctx,
+                    state,
+                    state_path,
                 )
                 future_to_ticker[future] = entry.ticker
 
@@ -466,6 +478,13 @@ class BatchRunner:
 
                 with self._state_lock:
                     record = state.runs[ticker]
+                    # Subtract any previously-counted bytes for this
+                    # ticker before adding the new value so retries
+                    # (FAILED -> DONE) don't double-count toward the
+                    # cohort total.
+                    state.total_bytes_written += (
+                        job_result.bytes_written - record.bytes_written
+                    )
                     record.status = job_result.status
                     record.started_at = job_result.started_at
                     record.finished_at = job_result.finished_at
@@ -473,7 +492,6 @@ class BatchRunner:
                     record.bytes_written = job_result.bytes_written
                     record.error = job_result.error
                     record.leakage_findings = list(job_result.leakage_findings)
-                    state.total_bytes_written += job_result.bytes_written
                     state.last_updated_at = _utcnow()
                     state.save(state_path)
 
@@ -527,7 +545,18 @@ class BatchRunner:
         ticker: str,
         market: str,
         ctx: BacktestContext,
+        state: CohortState,
+        state_path: pathlib.Path,
     ) -> _TickerJobResult:
+        # Mark RUNNING and persist as the first thing the worker does.
+        # Doing this here (instead of in the dispatch loop) means a
+        # ticker queued behind the concurrency cap stays PENDING in
+        # state.json, which is more accurate for observers and resume.
+        with self._state_lock:
+            state.runs[ticker].status = TickerRunStatus.RUNNING
+            state.last_updated_at = _utcnow()
+            state.save(state_path)
+
         started_at = _utcnow()
         start_clock = time.monotonic()
         bytes_written = 0
