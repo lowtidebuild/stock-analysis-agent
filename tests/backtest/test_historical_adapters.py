@@ -149,6 +149,44 @@ def test_fetch_raises_on_nonzero_exit(
             output_path=output_file,
         )
     assert "Current price unavailable" in str(excinfo.value)
+    err = excinfo.value
+    assert err.returncode == 2
+    assert err.stderr == "Current price unavailable for AAPL"
+    assert err.ticker == "AAPL"
+    assert err.as_of == _dt.date(2025, 3, 31)
+
+
+def test_fetch_resolves_relative_output_path(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path
+) -> None:
+    """Adapter resolves output_path before invoking subprocess so the
+    script and adapter agree on the file location regardless of cwd."""
+    captured: dict[str, Any] = {}
+
+    def fake_run(cmd: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        captured["cmd"] = cmd
+        out = pathlib.Path(cmd[cmd.index("--output") + 1])
+        captured["output_arg"] = out
+        out.write_text(json.dumps({"ticker": "AAPL"}), encoding="utf-8")
+        return subprocess.CompletedProcess(
+            args=cmd, returncode=0, stdout="{}", stderr=""
+        )
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    monkeypatch.chdir(tmp_path)
+
+    relative_output = pathlib.Path("subdir/raw.json")
+    relative_output.parent.mkdir(parents=True, exist_ok=True)
+
+    adapter = YFinanceHistorical()
+    adapter.fetch(
+        ticker="AAPL",
+        market="US",
+        as_of=_dt.date(2025, 3, 31),
+        output_path=relative_output,
+    )
+    assert captured["output_arg"].is_absolute()
+    assert captured["output_arg"].resolve() == (tmp_path / relative_output).resolve()
 
 
 def test_fetch_default_bundle_is_standard(

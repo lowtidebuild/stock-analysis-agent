@@ -65,10 +65,26 @@ _DEFAULT_BUNDLE = "standard"
 class HistoricalFetchError(RuntimeError):
     """Raised when an as-of historical fetch fails.
 
-    The exception message preserves the underlying script's stderr so
-    callers (and the cohort runner) can surface diagnostics without
-    re-running the subprocess.
+    Carries the subprocess returncode, full stderr, and the (ticker,
+    as_of) coordinates so callers can programmatically distinguish
+    failure modes (e.g. exit 2 + "future" in stderr vs exit 1 + missing
+    price) without regex-matching the message.
     """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        returncode: int,
+        stderr: str,
+        ticker: str,
+        as_of: _dt.date,
+    ) -> None:
+        super().__init__(message)
+        self.returncode: int = returncode
+        self.stderr: str = stderr
+        self.ticker: str = ticker
+        self.as_of: _dt.date = as_of
 
 
 class YFinanceHistorical:
@@ -138,12 +154,14 @@ class YFinanceHistorical:
             yfinance error, missing price, sanitization issue). The
             stderr text is preserved in the exception message.
         """
+        resolved_output = pathlib.Path(output_path).expanduser().resolve()
+
         cmd: list[str] = [
             sys.executable,
             str(self.script_path),
             "--ticker", ticker,
             "--market", market,
-            "--output", str(output_path),
+            "--output", str(resolved_output),
             "--bundle", bundle,
             "--as-of", as_of.isoformat(),
         ]
@@ -159,10 +177,14 @@ class YFinanceHistorical:
             raise HistoricalFetchError(
                 f"yfinance-collector.py exited with code "
                 f"{completed.returncode} for ticker={ticker} "
-                f"as_of={as_of.isoformat()}: {completed.stderr.strip()}"
+                f"as_of={as_of.isoformat()}: {completed.stderr.strip()}",
+                returncode=completed.returncode,
+                stderr=completed.stderr,
+                ticker=ticker,
+                as_of=as_of,
             )
 
-        return json.loads(output_path.read_text(encoding="utf-8"))
+        return json.loads(resolved_output.read_text(encoding="utf-8"))
 
 
 __all__ = ["HistoricalFetchError", "YFinanceHistorical"]
