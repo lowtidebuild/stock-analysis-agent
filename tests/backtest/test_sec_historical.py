@@ -327,3 +327,46 @@ def test_historical_filter_error_includes_record() -> None:
     )
     assert "not-a-date" in str(err) or "could not parse date" in str(err)
     assert err.record == bad_record
+
+
+# ---------------------------------------------------------------------------
+# Mutation-safety regressions for the deep-copy contract
+# ---------------------------------------------------------------------------
+
+
+def test_skipped_records_are_independent_of_input() -> None:
+    """Mutating a record inside _skipped_records must not touch the
+    caller's payload. Filters that share references on the skip path
+    silently leak mutations through the cohort runner."""
+    original = {
+        "filings": [
+            {"filing_date": None, "type": "10-K", "nested": {"value": 1}},
+        ],
+    }
+    snapshot = copy.deepcopy(original)
+    result = filter_sec_filings(original, AS_OF)
+    assert "_skipped_records" in result
+    skipped_record = result["_skipped_records"][0]["record"]
+    skipped_record["nested"]["value"] = 999
+    skipped_record["mutated"] = True
+    assert original == snapshot, (
+        "filter_sec_filings leaked a mutation through _skipped_records"
+    )
+
+
+def test_select_latest_pre_as_of_returns_independent_copy() -> None:
+    """Mutating the returned dict must not touch the caller's input
+    list. Otherwise the selector's return contract diverges from the
+    filter_* helpers (which already deep-copy)."""
+    records = [
+        {"period_end_date": "2024-01-15", "nested": {"value": 1}},
+        {"period_end_date": "2024-03-31", "nested": {"value": 2}},
+    ]
+    snapshot = copy.deepcopy(records)
+    selected = select_latest_pre_as_of(records, AS_OF)
+    assert selected is not None
+    selected["nested"]["value"] = 999
+    selected["new_key"] = "added"
+    assert records == snapshot, (
+        "select_latest_pre_as_of returned a shared reference"
+    )
