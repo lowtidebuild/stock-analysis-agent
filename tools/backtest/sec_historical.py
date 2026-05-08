@@ -165,7 +165,8 @@ def select_latest_pre_as_of(
     Returns
     -------
     dict | None
-        The single most-recent qualifying record, or ``None`` when
+        The single most-recent qualifying record (deep-copied so callers
+        cannot accidentally mutate the input list), or ``None`` when
         every record is dated after ``as_of`` (or the list is empty).
         Records with malformed dates are silently skipped — the caller
         is expected to have already run them through one of the
@@ -188,7 +189,7 @@ def select_latest_pre_as_of(
             best = record
             best_date = parsed
 
-    return best
+    return copy.deepcopy(best) if best is not None else None
 
 
 def annotate_backtest_meta(
@@ -285,7 +286,7 @@ def _filter_list(
             skipped.append(
                 {
                     "reason": "record is not a dict",
-                    "record": record,
+                    "record": copy.deepcopy(record),
                 }
             )
             continue
@@ -294,7 +295,7 @@ def _filter_list(
             skipped.append(
                 {
                     "reason": f"record missing {date_field!r} field",
-                    "record": record,
+                    "record": copy.deepcopy(record),
                 }
             )
             continue
@@ -308,7 +309,7 @@ def _filter_list(
                         f"could not parse {date_field}={raw_value!r} as "
                         f"ISO date"
                     ),
-                    "record": record,
+                    "record": copy.deepcopy(record),
                 }
             )
             continue
