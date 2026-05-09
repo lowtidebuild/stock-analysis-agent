@@ -457,3 +457,59 @@ def test_decile_sort_result_is_frozen() -> None:
                             top_minus_bottom_spread=None)
     with pytest.raises((AttributeError, Exception)):
         res.n_buckets = 99  # type: ignore[misc]
+
+
+# ---------------------------------------------------------------------------
+# Regression tests for code-quality NIT fixes
+# ---------------------------------------------------------------------------
+
+
+def test_compute_decile_sort_all_identical_scores() -> None:
+    """Modern pandas (3.0+) does NOT raise on all-identical-score qcut;
+    it returns an all-NaN coded series. The aggregator must detect this
+    and fall back to a single bucket so downstream int() coercion does
+    not crash mid-notebook."""
+    df = pd.DataFrame(
+        {"rr_score": [3.0] * 20, "excess_12m": [s * 0.01 for s in range(20)]}
+    )
+    res = compute_decile_sort(df, n_buckets=10)
+    assert res.n_buckets == 1
+    assert res.top_minus_bottom_spread is None
+    assert res.buckets[0]["n"] == 20
+    assert res.buckets[0]["mean_score"] == 3.0
+
+
+def test_compute_ic_rejects_string_score_column() -> None:
+    """A string score column would otherwise silently produce a
+    perfect-correlation lexicographic rank match. pd.to_numeric coerces
+    non-numeric values to NaN so the rank is computed only on numeric
+    rows; string-only inputs collapse to n=0."""
+    df = pd.DataFrame(
+        {"rr_score": ["a", "b", "c", "d", "e"], "excess_3m": [0.1, 0.2, 0.3, 0.4, 0.5]}
+    )
+    res = compute_ic(df)
+    # String column coerces to all-NaN, dropna leaves n=0, rho=None.
+    assert res.spearman_rho is None
+    assert res.n == 0
+
+
+def test_compute_ic_silences_numpy_runtime_warnings() -> None:
+    """Zero-variance score columns trigger a numpy 'invalid value
+    encountered in divide' RuntimeWarning before .corr() returns NaN.
+    The wrapper warnings.catch_warnings should suppress that noise so
+    notebooks/CLI don't show cosmetic warnings on every degenerate
+    cohort."""
+    import warnings as _warnings
+
+    df = pd.DataFrame(
+        {"rr_score": [5.0] * 10, "excess_3m": list(range(10))}
+    )
+    with _warnings.catch_warnings(record=True) as caught:
+        _warnings.simplefilter("always")
+        res = compute_ic(df)
+    runtime_warnings = [w for w in caught if issubclass(w.category, RuntimeWarning)]
+    assert runtime_warnings == [], (
+        f"Expected no RuntimeWarning leakage, got: "
+        f"{[str(w.message) for w in runtime_warnings]}"
+    )
+    assert res.spearman_rho is None  # zero-variance → undefined
