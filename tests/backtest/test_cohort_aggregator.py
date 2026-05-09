@@ -619,3 +619,51 @@ def test_aggregate_cohort_propagates_malformed_outcome(
     (d / "_outcome.json").write_text("{bad json", encoding="utf-8")
     with pytest.raises(CohortAggregatorError):
         aggregate_cohort(cohort_id="cohort_bad", cohort_root=cohort_root)
+
+
+# ---------------------------------------------------------------------------
+# Regression test for the silent-status-drop fix
+# ---------------------------------------------------------------------------
+
+
+def test_build_row_forwards_unknown_status_to_outcome_status() -> None:
+    """If outcome_computer (or a future variant) emits a _status value
+    other than 'data_unavailable' (e.g. 'partial', 'benchmark_anchor_
+    missing'), the aggregator must surface it in outcome_status so the
+    eval layer can react. Silently swallowing unknown statuses would
+    let downstream regressions through unnoticed."""
+    outcome = {
+        "benchmark": "SPY",
+        "horizons": {
+            "1m": {
+                "ticker_return": 0.02,
+                "excess_return": 0.01,
+                "_status": "partial",
+            },
+            "3m": {"ticker_return": 0.05, "excess_return": 0.03},
+            "6m": {"_status": "data_unavailable"},
+            "12m": {"_status": "benchmark_anchor_missing"},
+        },
+    }
+    row = build_row(
+        ticker="AAPL",
+        cohort_id="x",
+        as_of=_dt.date(2025, 3, 31),
+        market="US",
+        outcome=outcome,
+        analysis=None,
+    )
+    # Unknown statuses surfaced.
+    assert row.outcome_status["1m"] == "partial"
+    assert row.outcome_status["12m"] == "benchmark_anchor_missing"
+    # data_unavailable still recorded and short-circuits values.
+    assert row.outcome_status["6m"] == "data_unavailable"
+    assert row.return_6m is None
+    assert row.excess_6m is None
+    # Non-data_unavailable statuses do NOT block return values — the
+    # eval layer can decide whether to include "partial" rows.
+    assert row.return_1m == 0.02
+    assert row.excess_1m == 0.01
+    # Horizon with no _status: clean, not in outcome_status.
+    assert "3m" not in row.outcome_status
+    assert row.return_3m == 0.05

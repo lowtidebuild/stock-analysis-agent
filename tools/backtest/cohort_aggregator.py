@@ -379,9 +379,15 @@ def build_row(
                 h = horizons.get(label)
                 if not isinstance(h, dict):
                     continue
+                # Forward ANY non-empty _status to the eval layer. We only
+                # know the "data_unavailable" semantics today, but if the
+                # outcome computer ever emits a new status (e.g. "partial",
+                # "benchmark_anchor_missing"), silently swallowing it would
+                # let downstream regressions through unnoticed.
                 status = h.get("_status")
+                if isinstance(status, str) and status:
+                    outcome_status[label] = status
                 if status == _DATA_UNAVAILABLE:
-                    outcome_status[label] = _DATA_UNAVAILABLE
                     # ticker_return / excess_return remain None
                     continue
                 horizon_returns[label] = _coerce_float(h.get("ticker_return"))
