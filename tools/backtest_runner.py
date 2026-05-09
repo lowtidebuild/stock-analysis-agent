@@ -119,6 +119,26 @@ _FIXTURE_BENCH_CACHE = (
 # ---------------------------------------------------------------------------
 
 
+def _positive_int(value: str) -> int:
+    """Parse a positive integer for argparse.
+
+    Bounces invalid input at the boundary so callers see a clean
+    argparse error (exit 2) instead of a Python traceback bubbling out
+    of ``BatchRunner.__init__``.
+    """
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            f"must be a positive integer (got {value!r})"
+        ) from exc
+    if parsed < 1:
+        raise argparse.ArgumentTypeError(
+            f"must be >= 1 (got {parsed})"
+        )
+    return parsed
+
+
 def _parse_iso_date(value: str) -> _dt.date:
     """Parse a strict ``YYYY-MM-DD`` date string.
 
@@ -159,7 +179,7 @@ def _add_collect_args(parser: argparse.ArgumentParser) -> None:
     )
     parser.add_argument(
         "--max-workers",
-        type=int,
+        type=_positive_int,
         default=5,
         help="Maximum concurrent ticker fetches (default: 5).",
     )
@@ -274,23 +294,33 @@ def _build_parser() -> argparse.ArgumentParser:
 # ---------------------------------------------------------------------------
 
 
-def _load_manifest_or_exit(cohort_id: str) -> CohortManifest | None:
+def _load_manifest_or_exit(
+    cohort_id: str,
+    *,
+    severity: str = "ERROR",
+) -> CohortManifest | None:
     """Resolve and load a cohort manifest.
 
     Returns the manifest on success, or ``None`` if it could not be
-    resolved/loaded — the caller decides whether that is fatal. Errors
-    are printed to stderr.
+    resolved/loaded — the caller decides whether that is fatal.
+
+    ``severity`` controls the stderr prefix: ``"ERROR"`` (caller treats
+    missing manifest as fatal — used by ``collect``) vs ``"WARN"``
+    (caller treats it as best-effort — used by ``outcomes`` /
+    ``aggregate``, where the manifest only refines an otherwise-derived
+    cohort layout). Avoids the prior misleading "ERROR ... cohort=smoke
+    rows=N exit 0" message at 11pm.
     """
     try:
         manifest_path = cohort_manifest_path(cohort_id)
     except CohortManifestError as exc:
-        print(f"ERROR: {exc}", file=sys.stderr)
+        print(f"{severity}: {exc}", file=sys.stderr)
         return None
 
     try:
         return load_cohort(manifest_path)
     except CohortManifestError as exc:
-        print(f"ERROR: {exc}", file=sys.stderr)
+        print(f"{severity}: {exc}", file=sys.stderr)
         return None
 
 
@@ -417,7 +447,7 @@ def _run_outcomes(args: argparse.Namespace) -> int:
 
     # Manifest is best-effort — used to map ticker → market when meta
     # files are missing the field.
-    manifest = _load_manifest_or_exit(args.cohort)
+    manifest = _load_manifest_or_exit(args.cohort, severity="WARN")
     manifest_market: dict[str, str] = {}
     if manifest is not None:
         for entry in manifest.tickers:
@@ -464,14 +494,27 @@ def _run_outcomes(args: argparse.Namespace) -> int:
             failed += 1
             continue
 
-        market = (
-            manifest_market.get(ticker)
-            or (meta.get("market") if isinstance(meta.get("market"), str) else None)
-            or "US"
-        )
+            # Market resolution. We must NOT silently default to "US" — a KR
+        # ticker would then get SPY as the benchmark and produce a wrong
+        # excess_return (the project's "blank > wrong number" principle).
+        # `BacktestContext.write_meta()` does not currently persist
+        # market, so the manifest is the only authoritative source.
+        manifest_value = manifest_market.get(ticker)
+        meta_value = meta.get("market") if isinstance(meta.get("market"), str) else None
+        market = manifest_value or meta_value
+        if market is None:
+            print(
+                f"FAIL: {ticker} ({as_of.isoformat()}): cannot resolve market — "
+                f"manifest missing or ticker not listed AND _backtest-meta.json "
+                f"has no `market` field. Add the ticker to the manifest or "
+                f"pass --benchmark-cache that includes the right index.",
+                file=sys.stderr,
+            )
+            failed += 1
+            continue
         if market not in ("US", "KR"):
             print(
-                f"WARN: {ticker_dir} has unsupported market={market!r} — skipping",
+                f"FAIL: {ticker} ({as_of.isoformat()}): unsupported market={market!r}",
                 file=sys.stderr,
             )
             failed += 1
@@ -519,7 +562,7 @@ def _run_aggregate(args: argparse.Namespace) -> int:
     # Manifest is best-effort: it provides the source of truth for
     # (ticker, market, as_of), but aggregate also tolerates orphan run
     # dirs anchored only on _backtest-meta.json or _outcome.json.
-    manifest = _load_manifest_or_exit(args.cohort)
+    manifest = _load_manifest_or_exit(args.cohort, severity="WARN")
     out_path = aggregate_and_write(cohort_id=args.cohort, manifest=manifest)
 
     if out_path.exists():
@@ -540,14 +583,19 @@ def _run_aggregate(args: argparse.Namespace) -> int:
 def _run_all(args: argparse.Namespace) -> int:
     """Run collect → outcomes → aggregate sequentially.
 
-    Aborts the chain if any step exits non-zero. ``collect`` honours
-    ``--dry-run`` (in which case it is a no-op and we still continue
-    through ``outcomes``/``aggregate`` against the existing tree, which
-    is what the test exercises).
+    Aborts the chain if any step exits non-zero. ``--dry-run`` is
+    honored as the conventional "no externally-observable side effects"
+    contract: collect prints its dry-run JSON and the chain stops there
+    (no real yfinance fetches, no results.jsonl write).
     """
     rc = _run_collect(args)
     if rc != 0:
         return rc
+    if args.dry_run:
+        # Dry-run contract: stop after collect's JSON preview. Running
+        # outcomes (which calls yfinance) and aggregate (which writes
+        # results.jsonl) under --dry-run would surprise operators.
+        return 0
 
     rc = _run_outcomes(args)
     if rc != 0:

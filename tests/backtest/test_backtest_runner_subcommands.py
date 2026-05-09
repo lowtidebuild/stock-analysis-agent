@@ -476,5 +476,128 @@ def test_aggregate_handles_empty_cohort(tmp_path: pathlib.Path) -> None:
     assert out_path.read_text() == ""
 
 
+# ---------------------------------------------------------------------------
+# Regression tests for code-quality NIT fixes
+# ---------------------------------------------------------------------------
+
+
+def test_collect_rejects_negative_max_workers_with_argparse_error(
+    tmp_path: pathlib.Path,
+) -> None:
+    """Argparse should bounce --max-workers -3 at the boundary so the
+    operator sees a clean exit-2 message instead of a Python traceback
+    bubbling out of BatchRunner.__init__."""
+    result = _run_cli(
+        "collect", "--cohort", "smoke", "--max-workers", "-3",
+        env={"STOCK_ANALYSIS_DATA_DIR": str(tmp_path)},
+    )
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert "Traceback" not in result.stderr
+    assert ">= 1" in result.stderr or "positive" in result.stderr.lower()
+
+
+def test_collect_rejects_zero_max_workers(tmp_path: pathlib.Path) -> None:
+    result = _run_cli(
+        "collect", "--cohort", "smoke", "--max-workers", "0",
+        env={"STOCK_ANALYSIS_DATA_DIR": str(tmp_path)},
+    )
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_outcomes_uses_warn_prefix_for_missing_manifest(
+    tmp_path: pathlib.Path,
+) -> None:
+    """outcomes treats the manifest as best-effort. Misleading 'ERROR:'
+    prefix at 11pm wastes operator time investigating a non-issue —
+    use 'WARN:' for non-fatal manifest problems."""
+    # Seed a cohort tree but don't add the cohort to evals/backtest/cohorts.
+    cohort_root = tmp_path / "backtest" / "cohorts" / "no_manifest_cohort"
+    cohort_root.mkdir(parents=True, exist_ok=True)
+    (cohort_root / "runs").mkdir()
+    result = _run_cli(
+        "outcomes", "--cohort", "no_manifest_cohort", "--allow-fixture",
+        env={"STOCK_ANALYSIS_DATA_DIR": str(tmp_path)},
+    )
+    # Best-effort: empty runs/ → exit 0, but the warning appears.
+    assert "WARN:" in result.stderr or result.returncode == 0
+    assert "ERROR:" not in result.stderr
+
+
+def test_outcomes_fails_loud_on_unknown_market(tmp_path: pathlib.Path) -> None:
+    """When the manifest is missing AND _backtest-meta.json has no
+    market field, outcomes must NOT silently default to 'US' — that
+    would corrupt KR ticker analysis. Mark the ticker as failed and
+    print a clear FAIL: message."""
+    cohort_root = tmp_path / "backtest" / "cohorts" / "no_market_cohort"
+    runs_dir = cohort_root / "runs"
+    aapl_dir = runs_dir / "AAPL"
+    aapl_dir.mkdir(parents=True)
+    # Meta without market field — what BacktestContext.write_meta()
+    # produces today.
+    meta = {
+        "cohort_id": "no_market_cohort",
+        "ticker": "AAPL",
+        "as_of": "2025-03-31",
+        "started_at": "2025-04-01T00:00:00+00:00",
+        "freeze_strategy": "hybrid",
+        "run_id": "AAPL_2025-03-31",
+    }
+    (aapl_dir / "_backtest-meta.json").write_text(
+        json.dumps(meta), encoding="utf-8"
+    )
+
+    result = _run_cli(
+        "outcomes", "--cohort", "no_market_cohort", "--allow-fixture",
+        env={"STOCK_ANALYSIS_DATA_DIR": str(tmp_path)},
+    )
+    # Should not silently default to "US" and produce an outcome file.
+    assert not (aapl_dir / "_outcome.json").exists()
+    assert "cannot resolve market" in result.stderr or "FAIL: AAPL" in result.stderr
+    # 1 ticker failed → exit 1.
+    assert result.returncode == 1, result.stdout + result.stderr
+
+
+def test_all_with_dry_run_short_circuits_after_collect(
+    tmp_path: pathlib.Path,
+) -> None:
+    """`all --dry-run` should NOT proceed to outcomes (which would call
+    yfinance) or aggregate (which would write results.jsonl). The
+    conventional --dry-run contract is 'no externally observable side
+    effects'."""
+    # Seed a cohort tree so outcomes/aggregate WOULD have something
+    # to do — ensures the short-circuit is what's stopping them, not
+    # an empty cohort.
+    cohort_root = tmp_path / "backtest" / "cohorts" / "smoke"
+    runs_dir = cohort_root / "runs"
+    aapl_dir = runs_dir / "AAPL"
+    aapl_dir.mkdir(parents=True)
+    meta = {
+        "cohort_id": "smoke",
+        "ticker": "AAPL",
+        "as_of": "2025-03-31",
+        "started_at": "2025-04-01T00:00:00+00:00",
+        "freeze_strategy": "hybrid",
+        "run_id": "AAPL_2025-03-31",
+        "market": "US",
+    }
+    (aapl_dir / "_backtest-meta.json").write_text(
+        json.dumps(meta), encoding="utf-8"
+    )
+
+    result = _run_cli(
+        "all", "--cohort", "smoke", "--dry-run", "--allow-fixture",
+        env={"STOCK_ANALYSIS_DATA_DIR": str(tmp_path)},
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    # Collect's dry-run JSON is the only output — no outcomes/aggregate
+    # summary lines should appear.
+    assert "dry_run" in result.stdout
+    assert "rows=" not in result.stdout  # aggregate did not run
+    # Definitive: no _outcome.json or results.jsonl was written.
+    assert not (aapl_dir / "_outcome.json").exists()
+    assert not (cohort_root / "results.jsonl").exists()
+
+
 if __name__ == "__main__":
     unittest.main()
