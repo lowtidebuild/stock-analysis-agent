@@ -59,6 +59,7 @@ from __future__ import annotations
 
 import datetime as _dt  # noqa: F401  -- intentional: matches sibling modules' import baseline
 import math
+import warnings
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
@@ -306,7 +307,14 @@ def compute_ic(
     """
     _require_columns(df, score_col, return_col)
 
-    sub = df[[score_col, return_col]].dropna()
+    # Coerce to numeric so a string-typed score column (e.g. caller meant
+    # rr_score but accidentally passed verdict) does NOT silently
+    # produce a perfect lexicographic-rank correlation. Non-numeric
+    # values become NaN and get dropped along with real NaN rows.
+    sub = df[[score_col, return_col]].copy()
+    for col in (score_col, return_col):
+        sub[col] = pd.to_numeric(sub[col], errors="coerce")
+    sub = sub.dropna()
     n = len(sub)
 
     if n < 3:
@@ -318,10 +326,15 @@ def compute_ic(
             p_value=None,
         )
 
-    rho = sub[score_col].rank().corr(sub[return_col].rank())
+    # Suppress the numpy "invalid value encountered in divide"
+    # RuntimeWarning that fires when a rank column has zero variance.
+    # We detect the resulting NaN ourselves below.
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        rho = sub[score_col].rank().corr(sub[return_col].rank())
     # `.corr` returns NaN if a column has zero variance after ranking
     # (e.g. all rows have identical score). Treat that as "undefined".
-    if rho is None or (isinstance(rho, float) and math.isnan(rho)):
+    if pd.isna(rho):
         return ICResult(
             score_col=score_col,
             return_col=return_col,
@@ -518,7 +531,12 @@ def compute_decile_sort(
     """
     _require_columns(df, score_col, return_col)
 
-    sub = df[[score_col, return_col]].dropna()
+    # Coerce to numeric (mirror compute_ic) so accidental string
+    # columns don't sneak through ranking.
+    sub = df[[score_col, return_col]].copy()
+    for col in (score_col, return_col):
+        sub[col] = pd.to_numeric(sub[col], errors="coerce")
+    sub = sub.dropna()
     n = len(sub)
     n_dropped_nan = int(len(df) - n)
 
@@ -544,6 +562,13 @@ def compute_decile_sort(
         # qcut can still raise when *all* edges collapse (e.g. a single
         # unique value across all rows). Fall back to a single bucket.
         bucket_codes = pd.Series([0] * n, index=sub.index)
+    else:
+        # Modern pandas (3.0+) does NOT raise on all-identical scores
+        # — it returns an all-NaN coded series. Detect and fall back
+        # to a single bucket so downstream int() coercion doesn't
+        # crash.
+        if bucket_codes.isna().all():
+            bucket_codes = pd.Series([0] * n, index=sub.index)
 
     sub = sub.assign(_bucket=bucket_codes)
     actual_n_buckets = int(sub["_bucket"].nunique())
