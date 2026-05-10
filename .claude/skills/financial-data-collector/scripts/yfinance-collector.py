@@ -25,7 +25,7 @@ import math
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from importlib import metadata
 from pathlib import Path
 from typing import Any
@@ -43,6 +43,33 @@ except ImportError:
 
 DEFAULT_HISTORY_PERIOD = "1y"
 DEFAULT_HISTORY_INTERVAL = "1d"
+
+# Backtest mode (--as-of) constants. When the historical window is fetched
+# we look back this many calendar days from `as_of` so weekend/holiday gaps
+# still surface a tradeable close. 10d covers KR multi-day closures
+# (Chuseok 2017 = 8 days, Lunar New Year ~5 days + adjacent weekend).
+BACKTEST_PRICE_LOOKBACK_DAYS = 10
+# How far back to fetch the year-of-history window in --as-of mode. Mirrors
+# DEFAULT_HISTORY_PERIOD ("1y") but we resolve it as an explicit start/end
+# pair so yfinance does not implicitly anchor the range to "today".
+BACKTEST_HISTORY_LOOKBACK_DAYS = 365
+
+
+def _parse_iso_date(value: str) -> date:
+    """Parse a strict ``YYYY-MM-DD`` date for ``--as-of``.
+
+    Mirrors ``tools/backtest_runner.py::_parse_iso_date``. Raises
+    ``argparse.ArgumentTypeError`` on any deviation (wrong separator,
+    wrong field widths, invalid calendar date) so argparse can convert
+    the failure into a clean exit code 2.
+    """
+    try:
+        parsed = datetime.strptime(value, "%Y-%m-%d").date()
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            f"--as-of must be YYYY-MM-DD (got {value!r}): {exc}"
+        ) from exc
+    return parsed
 
 INCOME_STMT_ALIASES = {
     "revenue": ["Total Revenue", "Revenue"],
@@ -494,7 +521,109 @@ def resolve_current_price(
     }
 
 
-def compute_ttm(income_rows: list[dict[str, Any]], cashflow_rows: list[dict[str, Any]]) -> dict[str, Any]:
+def _parse_row_date(value: Any) -> date | None:
+    """Best-effort ISO date parse from a normalized row field."""
+    if value is None:
+        return None
+    if isinstance(value, date) and not isinstance(value, datetime):
+        return value
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, str):
+        text = value[:10]
+        try:
+            return datetime.strptime(text, "%Y-%m-%d").date()
+        except ValueError:
+            return None
+    return None
+
+
+def _filter_rows_on_or_before(
+    rows: list[dict[str, Any]],
+    date_field: str,
+    cutoff: date,
+) -> list[dict[str, Any]]:
+    """Return only rows whose ``date_field`` is on or before ``cutoff``.
+
+    Rows with an unparseable date are dropped (defensive: in backtest
+    mode we'd rather skip a row than silently leak future data).
+    """
+    filtered: list[dict[str, Any]] = []
+    for row in rows:
+        row_date = _parse_row_date(row.get(date_field))
+        if row_date is not None and row_date <= cutoff:
+            filtered.append(row)
+    return filtered
+
+
+def collect_quote_data_historical(
+    symbol: str,
+    timeout: int,
+    as_of: date,
+    calls_succeeded: list[str],
+    calls_failed: list[str],
+) -> tuple[Any, dict[str, Any], list[dict[str, Any]]]:
+    """Fetch a small window of price history ending at ``as_of``.
+
+    Yahoo's ``Ticker.history(start=..., end=...)`` is end-exclusive, so
+    we pass ``as_of + 1d`` to capture the as-of row itself. The
+    ``BACKTEST_PRICE_LOOKBACK_DAYS`` lookback handles weekends and
+    holidays — we want the most recent weekday close at or before the
+    as-of date.
+
+    Note: ``Ticker.info`` is fetched as-is. Yahoo does NOT expose
+    historical info snapshots, so the caller MUST surface a caveat
+    that ``info`` reflects current state. See ``_backtest_caveats``
+    in :func:`main`.
+    """
+    ticker_obj = yf.Ticker(symbol)
+    info = call_with_retry(
+        "info", timeout, lambda: ticker_obj.info, calls_succeeded, calls_failed
+    )
+    info = info if isinstance(info, dict) else {}
+
+    start_date = as_of - timedelta(days=BACKTEST_PRICE_LOOKBACK_DAYS)
+    end_date = as_of + timedelta(days=1)
+    history_frame = call_with_retry(
+        "history",
+        timeout,
+        lambda: ticker_obj.history(
+            start=start_date.isoformat(),
+            end=end_date.isoformat(),
+            interval=DEFAULT_HISTORY_INTERVAL,
+            auto_adjust=False,
+        ),
+        calls_succeeded,
+        calls_failed,
+    )
+    history_rows = normalize_history(history_frame)
+    # Defensive: filter to <= as_of in case yfinance returns an off-by-one row.
+    history_rows = _filter_rows_on_or_before(history_rows, "date", as_of)
+    return ticker_obj, info, history_rows
+
+
+def compute_ttm(
+    income_rows: list[dict[str, Any]],
+    cashflow_rows: list[dict[str, Any]],
+    as_of: date | None = None,
+) -> dict[str, Any]:
+    """Sum the trailing four quarters of revenue/income/EPS/FCF.
+
+    Parameters
+    ----------
+    income_rows, cashflow_rows
+        Normalized statement rows. Each carries a ``period_end`` ISO date
+        string from :func:`normalize_statement`.
+    as_of
+        Optional historical anchor. When provided, only rows whose
+        ``period_end`` is on or before ``as_of`` are considered — this
+        prevents leakage of future quarters into a backtest TTM.
+        ``None`` (default) preserves the existing behavior.
+    """
+    if as_of is not None:
+        income_rows = _filter_rows_on_or_before(income_rows, "period_end", as_of)
+        cashflow_rows = _filter_rows_on_or_before(cashflow_rows, "period_end", as_of)
+
     income_quarters = income_rows[:4]
     cashflow_quarters = cashflow_rows[:4]
 
@@ -604,11 +733,34 @@ def main() -> int:
     parser.add_argument("--output", required=True, help="Output JSON file path")
     parser.add_argument("--bundle", default="standard", choices=["minimum", "standard"], help="Collection bundle")
     parser.add_argument("--timeout", type=int, default=15, help="Per-call timeout in seconds")
+    parser.add_argument(
+        "--as-of",
+        dest="as_of",
+        type=_parse_iso_date,
+        default=None,
+        help=(
+            "Historical as-of date (YYYY-MM-DD) for backtest mode. When "
+            "set: price + history are fetched as of this date, statements "
+            "are filtered to period_end <= as_of, analyst targets are "
+            "skipped (forward-looking), and Ticker.info fields are passed "
+            "through with a 'current state' caveat. Yahoo Finance does "
+            "not support historical .info snapshots."
+        ),
+    )
     args = parser.parse_args()
+
+    if args.as_of is not None and args.as_of > date.today():
+        parser.error(
+            f"--as-of {args.as_of.isoformat()} is in the future "
+            f"(today is {date.today().isoformat()})."
+        )
 
     if yf is None:
         print("yfinance is not installed. Install yfinance>=0.2.40 first.", file=sys.stderr)
         return 2
+
+    backtest_mode = args.as_of is not None
+    backtest_caveats: list[str] = []
 
     output_path = Path(args.output).expanduser()
     if not output_path.is_absolute():
@@ -632,7 +784,16 @@ def main() -> int:
 
     try:
         for candidate in choose_candidates(args.ticker, args.market):
-            ticker_obj, info, history_rows = collect_quote_data(candidate, args.timeout, calls_succeeded, calls_failed)
+            if backtest_mode:
+                ticker_obj, info, history_rows = collect_quote_data_historical(
+                    candidate,
+                    args.timeout,
+                    args.as_of,
+                    calls_succeeded,
+                    calls_failed,
+                )
+            else:
+                ticker_obj, info, history_rows = collect_quote_data(candidate, args.timeout, calls_succeeded, calls_failed)
 
             price_payload = resolve_current_price(
                 info=info,
@@ -701,19 +862,44 @@ def main() -> int:
             raise FatalCollectionError(f"Could not resolve current price for {args.ticker}")
 
         full_history_rows = initial_history_rows
-        history_frame = call_with_retry(
-            "history_full",
-            args.timeout,
-            lambda: resolved_ticker_obj.history(
-                period=DEFAULT_HISTORY_PERIOD,
-                interval=DEFAULT_HISTORY_INTERVAL,
-                auto_adjust=False,
-            ),
-            calls_succeeded,
-            calls_failed,
-        )
+        if backtest_mode:
+            backtest_history_start = (
+                args.as_of - timedelta(days=BACKTEST_HISTORY_LOOKBACK_DAYS)
+            )
+            backtest_history_end = args.as_of + timedelta(days=1)
+            history_frame = call_with_retry(
+                "history_full",
+                args.timeout,
+                lambda: resolved_ticker_obj.history(
+                    start=backtest_history_start.isoformat(),
+                    end=backtest_history_end.isoformat(),
+                    interval=DEFAULT_HISTORY_INTERVAL,
+                    auto_adjust=False,
+                ),
+                calls_succeeded,
+                calls_failed,
+            )
+        else:
+            history_frame = call_with_retry(
+                "history_full",
+                args.timeout,
+                lambda: resolved_ticker_obj.history(
+                    period=DEFAULT_HISTORY_PERIOD,
+                    interval=DEFAULT_HISTORY_INTERVAL,
+                    auto_adjust=False,
+                ),
+                calls_succeeded,
+                calls_failed,
+            )
         if history_frame is not None and not getattr(history_frame, "empty", True):
             full_history_rows = normalize_history(history_frame)
+            if backtest_mode:
+                # Final defensive filter: drop any row whose date crosses
+                # the as-of cutoff (yfinance is end-exclusive, but a third
+                # party could feed in adjusted rows that span the boundary).
+                full_history_rows = _filter_rows_on_or_before(
+                    full_history_rows, "date", args.as_of
+                )
 
         income_rows: list[dict[str, Any]] = []
         balance_rows: list[dict[str, Any]] = []
@@ -743,35 +929,75 @@ def main() -> int:
                 calls_succeeded,
                 calls_failed,
             )
-            analyst_targets_raw = call_with_retry(
-                "analyst_targets",
-                args.timeout,
-                lambda: resolved_ticker_obj.analyst_price_targets,
-                calls_succeeded,
-                calls_failed,
-            )
-            recommendations_raw = call_with_retry(
-                "recommendations",
-                args.timeout,
-                lambda: resolved_ticker_obj.recommendations,
-                calls_succeeded,
-                calls_failed,
-            )
+            if backtest_mode:
+                # Analyst targets are forward-looking by definition;
+                # yfinance does not expose a historical snapshot. Skip in
+                # backtest mode and surface a caveat.
+                analyst_targets_raw = None
+                recommendations_raw = None
+            else:
+                analyst_targets_raw = call_with_retry(
+                    "analyst_targets",
+                    args.timeout,
+                    lambda: resolved_ticker_obj.analyst_price_targets,
+                    calls_succeeded,
+                    calls_failed,
+                )
+                recommendations_raw = call_with_retry(
+                    "recommendations",
+                    args.timeout,
+                    lambda: resolved_ticker_obj.recommendations,
+                    calls_succeeded,
+                    calls_failed,
+                )
 
             income_rows = normalize_statement(income_frame, INCOME_STMT_ALIASES, "quarterly", warnings)
             balance_rows = normalize_statement(balance_frame, BALANCE_SHEET_ALIASES, "quarterly", warnings)
             cashflow_rows = normalize_statement(cashflow_frame, CASHFLOW_ALIASES, "quarterly", warnings)
+            if backtest_mode:
+                income_rows = _filter_rows_on_or_before(
+                    income_rows, "period_end", args.as_of
+                )
+                balance_rows = _filter_rows_on_or_before(
+                    balance_rows, "period_end", args.as_of
+                )
+                cashflow_rows = _filter_rows_on_or_before(
+                    cashflow_rows, "period_end", args.as_of
+                )
+
+        if backtest_mode:
+            # In as-of mode, override the price timestamp with the as-of
+            # date so downstream consumers can't be confused by the wall
+            # clock. The history rows themselves carry their own dates.
+            current_price_timestamp = (
+                f"{args.as_of.isoformat()}T00:00:00Z"
+            )
+        else:
+            current_price_timestamp = timestamp
 
         current_price = resolve_current_price(
             info=resolved_info,
             history_rows=full_history_rows,
             market=args.market,
-            timestamp=timestamp,
+            timestamp=current_price_timestamp,
             calls_failed=calls_failed,
             warnings=warnings,
         )
         if current_price.get("price") is None:
             raise FatalCollectionError(f"Current price unavailable for {resolved_symbol}")
+
+        if backtest_mode:
+            backtest_caveats.append("info_fields_use_current_state")
+            warnings.append("shares_outstanding/info_uses_current_state")
+            backtest_caveats.append("analyst_targets_skipped_as_of_mode")
+            analyst_targets_payload: Any = None
+        else:
+            analyst_targets_payload = build_analyst_targets(
+                resolved_info,
+                analyst_targets_raw,
+                recommendations_raw,
+                calls_failed,
+            )
 
         payload = {
             "ticker": args.ticker,
@@ -793,13 +1019,12 @@ def main() -> int:
                 "interval": DEFAULT_HISTORY_INTERVAL,
                 "rows": full_history_rows,
             },
-            "analyst_targets": build_analyst_targets(
-                resolved_info,
-                analyst_targets_raw,
-                recommendations_raw,
-                calls_failed,
+            "analyst_targets": analyst_targets_payload,
+            "derived_ttm": compute_ttm(
+                income_rows,
+                cashflow_rows,
+                as_of=args.as_of if backtest_mode else None,
             ),
-            "derived_ttm": compute_ttm(income_rows, cashflow_rows),
             "data_quality": build_data_quality(
                 current_price=current_price,
                 income_rows=income_rows,
@@ -808,6 +1033,14 @@ def main() -> int:
                 warnings=warnings,
             ),
         }
+
+        if backtest_mode:
+            payload["_backtest_caveats"] = dedupe_preserve_order(backtest_caveats)
+            payload["_backtest_meta"] = {
+                "as_of": args.as_of.isoformat(),
+                "freeze_strategy": "hybrid",
+                "caveats": dedupe_preserve_order(backtest_caveats),
+            }
 
         payload["calls_failed"] = dedupe_preserve_order(calls_failed)
         payload["data_quality"]["warnings"] = dedupe_preserve_order(payload["data_quality"]["warnings"])

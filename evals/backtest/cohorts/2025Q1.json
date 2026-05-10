@@ -1,0 +1,161 @@
+{
+  "as_of": "2025-03-31",
+  "benchmark": "MIXED",
+  "cohort_id": "2025Q1",
+  "cost_cap_usd": 50.0,
+  "mode": "C",
+  "notes": "30-name S&P 500 sample (15 mega-cap + 15 large-cap, sector-diverse) anchored to 2025-03-31. Phase 1 cohort for the backtest harness.",
+  "run_count": 1,
+  "tickers": [
+    {
+      "market": "US",
+      "notes": "Apple \u2014 S&P 500 mega-cap",
+      "ticker": "AAPL"
+    },
+    {
+      "market": "US",
+      "notes": "Microsoft \u2014 S&P 500 mega-cap",
+      "ticker": "MSFT"
+    },
+    {
+      "market": "US",
+      "notes": "Alphabet Class A \u2014 S&P 500 mega-cap",
+      "ticker": "GOOGL"
+    },
+    {
+      "market": "US",
+      "notes": "Amazon \u2014 S&P 500 mega-cap",
+      "ticker": "AMZN"
+    },
+    {
+      "market": "US",
+      "notes": "Meta Platforms \u2014 S&P 500 mega-cap",
+      "ticker": "META"
+    },
+    {
+      "market": "US",
+      "notes": "NVIDIA \u2014 S&P 500 mega-cap",
+      "ticker": "NVDA"
+    },
+    {
+      "market": "US",
+      "notes": "TSMC ADR \u2014 semiconductor mega-cap",
+      "ticker": "TSM"
+    },
+    {
+      "market": "US",
+      "notes": "JPMorgan Chase \u2014 S&P 500 mega-cap",
+      "ticker": "JPM"
+    },
+    {
+      "market": "US",
+      "notes": "Visa \u2014 S&P 500 mega-cap",
+      "ticker": "V"
+    },
+    {
+      "market": "US",
+      "notes": "Johnson & Johnson \u2014 S&P 500 mega-cap",
+      "ticker": "JNJ"
+    },
+    {
+      "market": "US",
+      "notes": "Walmart \u2014 S&P 500 mega-cap",
+      "ticker": "WMT"
+    },
+    {
+      "market": "US",
+      "notes": "Procter & Gamble \u2014 S&P 500 mega-cap",
+      "ticker": "PG"
+    },
+    {
+      "market": "US",
+      "notes": "Exxon Mobil \u2014 S&P 500 mega-cap",
+      "ticker": "XOM"
+    },
+    {
+      "market": "US",
+      "notes": "Berkshire Hathaway Class B \u2014 S&P 500 mega-cap",
+      "ticker": "BRK-B"
+    },
+    {
+      "market": "US",
+      "notes": "UnitedHealth Group \u2014 S&P 500 mega-cap",
+      "ticker": "UNH"
+    },
+    {
+      "market": "US",
+      "notes": "Advanced Micro Devices \u2014 S&P 500 large-cap",
+      "ticker": "AMD"
+    },
+    {
+      "market": "US",
+      "notes": "Intel \u2014 S&P 500 large-cap",
+      "ticker": "INTC"
+    },
+    {
+      "market": "US",
+      "notes": "Netflix \u2014 S&P 500 large-cap",
+      "ticker": "NFLX"
+    },
+    {
+      "market": "US",
+      "notes": "Oracle \u2014 S&P 500 large-cap",
+      "ticker": "ORCL"
+    },
+    {
+      "market": "US",
+      "notes": "Salesforce \u2014 S&P 500 large-cap",
+      "ticker": "CRM"
+    },
+    {
+      "market": "US",
+      "notes": "Adobe \u2014 S&P 500 large-cap",
+      "ticker": "ADBE"
+    },
+    {
+      "market": "US",
+      "notes": "Costco \u2014 S&P 500 large-cap",
+      "ticker": "COST"
+    },
+    {
+      "market": "US",
+      "notes": "Home Depot \u2014 S&P 500 large-cap",
+      "ticker": "HD"
+    },
+    {
+      "market": "US",
+      "notes": "Bank of America \u2014 S&P 500 large-cap",
+      "ticker": "BAC"
+    },
+    {
+      "market": "US",
+      "notes": "Abbott Laboratories \u2014 S&P 500 large-cap",
+      "ticker": "ABT"
+    },
+    {
+      "market": "US",
+      "notes": "Coca-Cola \u2014 S&P 500 large-cap",
+      "ticker": "KO"
+    },
+    {
+      "market": "US",
+      "notes": "PepsiCo \u2014 S&P 500 large-cap",
+      "ticker": "PEP"
+    },
+    {
+      "market": "US",
+      "notes": "Chevron \u2014 S&P 500 large-cap",
+      "ticker": "CVX"
+    },
+    {
+      "market": "US",
+      "notes": "AT&T \u2014 S&P 500 large-cap",
+      "ticker": "T"
+    },
+    {
+      "market": "US",
+      "notes": "Verizon \u2014 S&P 500 large-cap",
+      "ticker": "VZ"
+    }
+  ]
+}
