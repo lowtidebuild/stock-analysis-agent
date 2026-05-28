@@ -98,6 +98,11 @@ from tools.backtest.outcome_computer import (  # noqa: E402
     OutcomeComputer,
     OutcomeComputerError,
 )
+from tools.backtest.ticker_price_cache import (  # noqa: E402
+    TickerPriceCache,
+    TickerPriceCacheError,
+    load_ticker_price_cache,
+)
 from tools.paths import backtest_path  # noqa: E402
 
 
@@ -111,6 +116,9 @@ _DEFAULT_BENCH_CACHE = (
 )
 _FIXTURE_BENCH_CACHE = (
     _REPO_ROOT / "evals" / "backtest" / "data" / "benchmark-prices-fixture.jsonl"
+)
+_DEFAULT_TICKER_PRICE_CACHE_DIR = (
+    _REPO_ROOT / "evals" / "backtest" / "data" / "ticker-prices"
 )
 
 
@@ -212,6 +220,26 @@ def _add_outcomes_args(parser: argparse.ArgumentParser) -> None:
         dest="prefer_qqq",
         action="store_true",
         help="Use QQQ instead of SPY as the US benchmark.",
+    )
+    parser.add_argument(
+        "--ticker-price-cache",
+        dest="ticker_price_cache",
+        type=pathlib.Path,
+        default=None,
+        help=(
+            "Optional JSONL cache for ticker forward prices. When supplied, "
+            "cache hits avoid yfinance and misses are fetched then written."
+        ),
+    )
+    parser.add_argument(
+        "--refresh-ticker-price-cache",
+        dest="refresh_ticker_price_cache",
+        action="store_true",
+        help=(
+            "Bypass existing ticker price cache entries and rewrite them. "
+            "Without --ticker-price-cache, uses evals/backtest/data/"
+            "ticker-prices/{cohort}.jsonl."
+        ),
     )
     skip_group = parser.add_mutually_exclusive_group()
     skip_group.add_argument(
@@ -410,6 +438,29 @@ def _resolve_benchmark_cache_path(
     return None
 
 
+def _resolve_ticker_price_cache_path(
+    *,
+    cohort_id: str,
+    requested: pathlib.Path | None,
+    refresh: bool,
+) -> pathlib.Path | None:
+    if requested is not None:
+        return requested
+    if refresh:
+        return _DEFAULT_TICKER_PRICE_CACHE_DIR / f"{cohort_id}.jsonl"
+    return None
+
+
+def _load_ticker_price_cache_or_exit(path: pathlib.Path | None) -> TickerPriceCache | None:
+    if path is None:
+        return None
+    try:
+        return load_ticker_price_cache(path)
+    except TickerPriceCacheError as exc:
+        print(f"ERROR: failed to load ticker price cache: {exc}", file=sys.stderr)
+        return None
+
+
 def _read_meta(meta_path: pathlib.Path) -> dict | None:
     if not meta_path.is_file():
         return None
@@ -445,6 +496,15 @@ def _run_outcomes(args: argparse.Namespace) -> int:
         print(f"ERROR: failed to load benchmark cache: {exc}", file=sys.stderr)
         return 2
 
+    ticker_cache_path = _resolve_ticker_price_cache_path(
+        cohort_id=args.cohort,
+        requested=args.ticker_price_cache,
+        refresh=args.refresh_ticker_price_cache,
+    )
+    ticker_cache = _load_ticker_price_cache_or_exit(ticker_cache_path)
+    if ticker_cache_path is not None and ticker_cache is None:
+        return 2
+
     # Manifest is best-effort — used to map ticker → market when meta
     # files are missing the field.
     manifest = _load_manifest_or_exit(args.cohort, severity="WARN")
@@ -462,7 +522,11 @@ def _run_outcomes(args: argparse.Namespace) -> int:
         )
         return 0
 
-    computer = OutcomeComputer(benchmark_cache=cache)
+    computer = OutcomeComputer(
+        benchmark_cache=cache,
+        ticker_price_cache=ticker_cache,
+        refresh_ticker_price_cache=args.refresh_ticker_price_cache,
+    )
 
     done = failed = skipped = 0
     for ticker_dir in sorted(p for p in runs_dir.iterdir() if p.is_dir()):
@@ -546,8 +610,18 @@ def _run_outcomes(args: argparse.Namespace) -> int:
         computer.write_outcome(ticker_run_dir=ticker_dir, outcome=outcome)
         done += 1
 
+    ticker_cache_stats = (
+        ticker_cache.stats_dict()
+        if ticker_cache is not None
+        else {"hits": 0, "misses": 0, "writes": 0, "refreshes": 0, "mismatches": 0}
+    )
     print(
-        f"cohort={args.cohort} done={done} failed={failed} skipped={skipped}"
+        f"cohort={args.cohort} done={done} failed={failed} skipped={skipped} "
+        f"ticker_cache_hits={ticker_cache_stats['hits']} "
+        f"ticker_cache_misses={ticker_cache_stats['misses']} "
+        f"ticker_cache_writes={ticker_cache_stats['writes']} "
+        f"ticker_cache_refreshes={ticker_cache_stats['refreshes']} "
+        f"ticker_cache_mismatches={ticker_cache_stats['mismatches']}"
     )
     return 1 if failed > 0 else 0
 

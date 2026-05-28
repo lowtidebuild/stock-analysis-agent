@@ -31,6 +31,8 @@ CLI = ROOT / "tools" / "backtest_runner.py"
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from tools.backtest.ticker_price_cache import TickerPriceCache  # noqa: E402
+
 
 # ---------------------------------------------------------------------------
 # CLI driver
@@ -172,6 +174,23 @@ def _make_benchmark_cache(path: pathlib.Path) -> None:
     with path.open("w", encoding="utf-8") as fh:
         for r in rows:
             fh.write(json.dumps(r, sort_keys=True) + "\n")
+
+
+def _make_ticker_price_cache(
+    path: pathlib.Path,
+    *,
+    ticker: str = "AAPL",
+    market: str = "US",
+    as_of: _dt.date = _dt.date(2025, 3, 31),
+) -> None:
+    start = as_of - _dt.timedelta(days=5)
+    end = as_of + _dt.timedelta(days=380)
+    prices = {
+        start + _dt.timedelta(days=offset): 100.0 + offset
+        for offset in range((end - start).days + 1)
+    }
+    cache = TickerPriceCache(path)
+    cache.put(ticker=ticker, market=market, start=start, end=end, prices=prices)
 
 
 # ===========================================================================
@@ -428,6 +447,38 @@ def test_outcomes_uses_fixture_with_allow_fixture_flag(
     # Exit 2 would mean the fixture fallback failed.
     assert result.returncode in (0, 1), result.stdout + result.stderr
     assert "cohort=smoke" in result.stdout
+
+
+def test_outcomes_uses_ticker_price_cache_without_network(
+    tmp_path: pathlib.Path,
+) -> None:
+    cohort_root = _seed_cohort_tree(
+        tmp_path,
+        cohort_id="cache_cli",
+        tickers=("AAPL",),
+        write_outcome=False,
+    )
+    bench_path = tmp_path / "bench.jsonl"
+    _make_benchmark_cache(bench_path)
+    ticker_cache_path = tmp_path / "ticker-prices.jsonl"
+    _make_ticker_price_cache(ticker_cache_path)
+
+    result = _run_cli(
+        "outcomes",
+        "--cohort", "cache_cli",
+        "--benchmark-cache", str(bench_path),
+        "--ticker-price-cache", str(ticker_cache_path),
+        env={"STOCK_ANALYSIS_DATA_DIR": str(tmp_path)},
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "done=1" in result.stdout
+    assert "failed=0" in result.stdout
+    assert "ticker_cache_hits=1" in result.stdout
+    assert "ticker_cache_misses=0" in result.stdout
+    outcome_path = cohort_root / "runs" / "AAPL" / "_outcome.json"
+    outcome = json.loads(outcome_path.read_text(encoding="utf-8"))
+    assert outcome["_backtest_meta"]["ticker_price_cache"]["status"] == "hit"
 
 
 # ===========================================================================

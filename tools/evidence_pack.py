@@ -10,10 +10,12 @@ from tools.analysis_contract import normalize_metric_entry
 from tools.paths import runtime_path
 
 RAW_ARTIFACT_FILENAMES = (
+    "financial-datasets-raw.json",
     "tier1-raw.json",
     "tier2-raw.json",
     "dart-api-raw.json",
     "yfinance-raw.json",
+    "fred-raw.json",
     "fred-snapshot.json",
 )
 

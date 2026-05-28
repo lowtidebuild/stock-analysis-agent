@@ -35,6 +35,10 @@ from tools.backtest.outcome_computer import (  # noqa: E402
     OutcomeComputerError,
     add_months,
 )
+from tools.backtest.ticker_price_cache import (  # noqa: E402
+    TickerPriceCache,
+    load_ticker_price_cache,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -351,6 +355,119 @@ def test_compute_outcome_meta_block() -> None:
     assert meta["fetch_window_start"] == (as_of - _dt.timedelta(days=5)).isoformat()
     assert meta["fetch_window_end"] == (as_of + _dt.timedelta(days=380)).isoformat()
     assert meta["max_lookahead_days"] == 10
+
+
+def test_compute_uses_ticker_price_cache_hit_without_fetcher(tmp_path: pathlib.Path) -> None:
+    cache = _us_benchmark_cache_for_2025()
+    as_of = _dt.date(2025, 3, 31)
+    fetch_start = as_of - _dt.timedelta(days=5)
+    fetch_end = as_of + _dt.timedelta(days=380)
+    ticker_series = {
+        fetch_start + _dt.timedelta(days=i): 100.0 + i
+        for i in range((fetch_end - fetch_start).days + 1)
+    }
+    cache_path = tmp_path / "ticker-prices.jsonl"
+    writer = TickerPriceCache(cache_path)
+    writer.put(
+        ticker="AAPL",
+        market="US",
+        start=fetch_start,
+        end=fetch_end,
+        prices=ticker_series,
+    )
+    price_cache = load_ticker_price_cache(cache_path)
+
+    def fail_fetcher(
+        ticker: str,
+        start_date: _dt.date,
+        end_date: _dt.date,
+    ) -> dict[_dt.date, float]:
+        raise AssertionError(f"fetcher should not be called for cache hit: {ticker}")
+
+    computer = OutcomeComputer(
+        benchmark_cache=cache,
+        price_fetcher=fail_fetcher,
+        ticker_price_cache=price_cache,
+    )
+    outcome = computer.compute(ticker="AAPL", market="US", as_of=as_of)
+    meta = outcome["_backtest_meta"]
+    assert meta["ticker_price_cache"]["status"] == "hit"
+    assert meta["ticker_price_cache_stats"]["hits"] == 1
+    assert outcome["ticker_close_at_as_of"] == ticker_series[as_of]
+
+
+def test_compute_ticker_price_cache_miss_fetches_and_writes(tmp_path: pathlib.Path) -> None:
+    cache = _us_benchmark_cache_for_2025()
+    as_of = _dt.date(2025, 3, 31)
+    fetch_start = as_of - _dt.timedelta(days=5)
+    fetch_end = as_of + _dt.timedelta(days=380)
+    ticker_series = {
+        fetch_start + _dt.timedelta(days=i): 200.0 + i
+        for i in range((fetch_end - fetch_start).days + 1)
+    }
+    calls = {"count": 0}
+
+    def fetcher(
+        ticker: str,
+        start_date: _dt.date,
+        end_date: _dt.date,
+    ) -> dict[_dt.date, float]:
+        assert ticker == "AAPL"
+        assert start_date == fetch_start
+        assert end_date == fetch_end
+        calls["count"] += 1
+        return ticker_series
+
+    cache_path = tmp_path / "ticker-prices.jsonl"
+    price_cache = load_ticker_price_cache(cache_path)
+    computer = OutcomeComputer(
+        benchmark_cache=cache,
+        price_fetcher=fetcher,
+        ticker_price_cache=price_cache,
+    )
+    outcome = computer.compute(ticker="AAPL", market="US", as_of=as_of)
+
+    assert calls["count"] == 1
+    assert cache_path.exists()
+    meta = outcome["_backtest_meta"]
+    assert meta["ticker_price_cache"]["status"] == "write"
+    assert meta["ticker_price_cache_stats"]["misses"] == 1
+    assert meta["ticker_price_cache_stats"]["writes"] == 1
+    reloaded = load_ticker_price_cache(cache_path)
+    cached = reloaded.get(ticker="AAPL", market="US", start=fetch_start, end=fetch_end)
+    assert cached == ticker_series
+
+
+def test_compute_ticker_price_cache_window_mismatch_is_loud(tmp_path: pathlib.Path) -> None:
+    cache = _us_benchmark_cache_for_2025()
+    as_of = _dt.date(2025, 3, 31)
+    fetch_start = as_of - _dt.timedelta(days=5)
+    fetch_end = as_of + _dt.timedelta(days=380)
+    cache_path = tmp_path / "ticker-prices.jsonl"
+    writer = TickerPriceCache(cache_path)
+    writer.put(
+        ticker="AAPL",
+        market="US",
+        start=fetch_start,
+        end=fetch_end - _dt.timedelta(days=30),
+        prices={as_of: 100.0},
+    )
+    price_cache = load_ticker_price_cache(cache_path)
+
+    def fail_fetcher(
+        ticker: str,
+        start_date: _dt.date,
+        end_date: _dt.date,
+    ) -> dict[_dt.date, float]:
+        raise AssertionError("window mismatch should fail before fetch fallback")
+
+    computer = OutcomeComputer(
+        benchmark_cache=cache,
+        price_fetcher=fail_fetcher,
+        ticker_price_cache=price_cache,
+    )
+    with pytest.raises(OutcomeComputerError, match="window mismatch"):
+        computer.compute(ticker="AAPL", market="US", as_of=as_of)
 
 
 def test_compute_horizon_dates_anchored_to_as_of() -> None:

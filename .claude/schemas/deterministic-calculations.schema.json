@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Deterministic Calculations",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "artifact_type",
+    "ticker",
+    "market",
+    "mode",
+    "language",
+    "generated_at",
+    "run_context",
+    "status",
+    "ratio_recomputation",
+    "scenario_analysis",
+    "dcf_analysis",
+    "valuation_bridge",
+    "analyst_handoff"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": ["abc-parity-deterministic-calculations-v1"]
+    },
+    "artifact_type": {
+      "type": "string",
+      "enum": ["deterministic-calculations"]
+    },
+    "ticker": { "type": "string" },
+    "market": { "type": "string", "enum": ["US", "KR"] },
+    "mode": { "type": "string", "enum": ["A", "B", "C"] },
+    "language": { "type": "string", "enum": ["ko", "en"] },
+    "generated_at": { "type": "string" },
+    "run_context": {
+      "type": "object",
+      "required": ["run_id", "artifact_root", "ticker"],
+      "properties": {
+        "run_id": { "type": "string" },
+        "artifact_root": { "type": "string" },
+        "ticker": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "status": { "type": "string", "enum": ["available", "partial", "unavailable"] },
+    "blockers": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "ratio_recomputation": {
+      "type": "object",
+      "required": ["status", "computed_metrics"],
+      "properties": {
+        "status": { "type": "string", "enum": ["available", "unavailable"] },
+        "computed_metrics": { "type": "object" }
+      },
+      "additionalProperties": true
+    },
+    "scenario_analysis": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "type": "string", "enum": ["available", "unavailable"] },
+        "scenarios": { "type": ["object", "null"] },
+        "rr_score": { "type": ["number", "null"] }
+      },
+      "additionalProperties": true
+    },
+    "dcf_analysis": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "type": "string", "enum": ["available", "unavailable"] },
+        "result": { "type": ["object", "null"] },
+        "reverse_dcf": { "type": ["object", "null"] }
+      },
+      "additionalProperties": true
+    },
+    "reverse_dcf": { "type": ["object", "null"] },
+    "valuation_bridge": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "type": "string", "enum": ["available", "unavailable"] },
+        "anchors": { "type": ["array", "null"] },
+        "weighted_fair_value": { "type": ["number", "null"] }
+      },
+      "additionalProperties": true
+    },
+    "macro_deltas": { "type": "object" },
+    "analyst_handoff": {
+      "type": "object",
+      "required": [
+        "use_scenarios_exactly",
+        "use_rr_score_exactly",
+        "use_dcf_outputs_exactly",
+        "raw_artifacts_default_load"
+      ],
+      "properties": {
+        "use_scenarios_exactly": { "type": "boolean" },
+        "use_rr_score_exactly": { "type": "boolean" },
+        "use_dcf_outputs_exactly": { "type": "boolean" },
+        "raw_artifacts_default_load": { "type": "string", "enum": ["deny"] }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

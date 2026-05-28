@@ -218,6 +218,29 @@
             }
           },
           "additionalProperties": true
+        },
+        "precision_risks": {
+          "type": ["array", "null"],
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["risk", "mechanism", "financial_impact"],
+            "properties": {
+              "risk": {
+                "type": "string",
+                "minLength": 1
+              },
+              "mechanism": {
+                "type": "string",
+                "minLength": 1
+              },
+              "financial_impact": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": true
+          }
         }
       },
       "additionalProperties": true

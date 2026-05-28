@@ -29,6 +29,7 @@ def main() -> None:
         "validated-data",
         "evidence-pack",
         "context-budget",
+        "deterministic-calculations",
         "analysis-result",
         "quality-report",
         "tier1-raw",

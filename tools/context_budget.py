@@ -12,13 +12,16 @@ from tools.paths import REPO_ROOT, runtime_path
 ANALYST_INCLUDED_FILENAMES = (
     ("validated-data.json", "validated_metrics"),
     ("evidence-pack.json", "compact_evidence"),
+    ("deterministic-calculations.json", "deterministic_calculations"),
     ("research-plan.json", "routing_plan"),
 )
 RAW_ARTIFACT_FILENAMES = (
+    "financial-datasets-raw.json",
     "tier1-raw.json",
     "tier2-raw.json",
     "dart-api-raw.json",
     "yfinance-raw.json",
+    "fred-raw.json",
     "fred-snapshot.json",
 )
 TOKEN_ESTIMATOR = "chars_div_4_ceil"

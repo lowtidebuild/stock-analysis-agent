@@ -92,6 +92,10 @@ from tools.backtest.benchmark_cache import (
     get_benchmark_close,
     select_benchmark,
 )
+from tools.backtest.ticker_price_cache import (
+    TickerPriceCache,
+    TickerPriceCacheError,
+)
 
 
 _DEFAULT_HORIZONS: tuple[tuple[str, int], ...] = (
@@ -275,6 +279,13 @@ class OutcomeComputer:
     price_fetcher:
         Callable ``(ticker, start_date, end_date) -> {date: close}``. The
         default uses yfinance; tests inject a deterministic mock.
+    ticker_price_cache:
+        Optional JSONL-backed cache for per-ticker forward price windows.
+        When present, exact window hits skip ``price_fetcher``; misses fall
+        back to ``price_fetcher`` and write the fetched series.
+    refresh_ticker_price_cache:
+        When ``True``, bypass existing ticker cache entries and overwrite
+        them with freshly fetched prices.
     max_lookahead_days:
         Forward-search window for non-trading days, applied to both
         the ticker series and the benchmark cache. Defaults to 10 to
@@ -291,6 +302,8 @@ class OutcomeComputer:
         price_fetcher: (
             Callable[[str, _dt.date, _dt.date], dict[_dt.date, float]] | None
         ) = None,
+        ticker_price_cache: TickerPriceCache | None = None,
+        refresh_ticker_price_cache: bool = False,
         max_lookahead_days: int = _DEFAULT_MAX_LOOKAHEAD_DAYS,
         horizons: tuple[tuple[str, int], ...] = _DEFAULT_HORIZONS,
     ) -> None:
@@ -303,6 +316,9 @@ class OutcomeComputer:
 
         self.benchmark_cache = benchmark_cache
         self.price_fetcher = price_fetcher or _yfinance_forward_prices
+        self.ticker_price_cache = ticker_price_cache
+        self.refresh_ticker_price_cache = refresh_ticker_price_cache
+        self._last_ticker_price_cache_event: dict[str, Any] | None = None
         self.max_lookahead_days = max_lookahead_days
         self.horizons = horizons
 
@@ -371,6 +387,16 @@ class OutcomeComputer:
                 benchmark_close_at_as_of=benchmark_close_at_as_of,
             )
 
+        meta: dict[str, Any] = {
+            "computed_at": _dt.datetime.now(_dt.timezone.utc).isoformat(),
+            "fetch_window_start": fetch_start.isoformat(),
+            "fetch_window_end": fetch_end.isoformat(),
+            "max_lookahead_days": self.max_lookahead_days,
+        }
+        if self.ticker_price_cache is not None:
+            meta["ticker_price_cache"] = self._last_ticker_price_cache_event
+            meta["ticker_price_cache_stats"] = self.ticker_price_cache.stats_dict()
+
         return {
             "ticker": ticker,
             "market": market,
@@ -379,12 +405,7 @@ class OutcomeComputer:
             "ticker_close_at_as_of": ticker_close_at_as_of,
             "actual_as_of_date": actual_as_of_date.isoformat(),
             "horizons": horizons_out,
-            "_backtest_meta": {
-                "computed_at": _dt.datetime.now(_dt.timezone.utc).isoformat(),
-                "fetch_window_start": fetch_start.isoformat(),
-                "fetch_window_end": fetch_end.isoformat(),
-                "max_lookahead_days": self.max_lookahead_days,
-            },
+            "_backtest_meta": meta,
         }
 
     def write_outcome(
@@ -449,9 +470,47 @@ class OutcomeComputer:
         spot-check KR cohort outcomes against KRX listing history.
         """
         primary, fallback = _to_yfinance_symbol(ticker, market)
+        self._last_ticker_price_cache_event = None
+        if self.ticker_price_cache is not None:
+            if self.refresh_ticker_price_cache:
+                self.ticker_price_cache.record_refresh(
+                    ticker=ticker,
+                    market=market,
+                    start=start,
+                    end=end,
+                )
+            else:
+                try:
+                    cached = self.ticker_price_cache.get(
+                        ticker=ticker,
+                        market=market,
+                        start=start,
+                        end=end,
+                    )
+                except TickerPriceCacheError as exc:
+                    raise OutcomeComputerError(str(exc)) from exc
+                if cached is not None:
+                    event = self.ticker_price_cache.last_event
+                    self._last_ticker_price_cache_event = (
+                        event.to_dict() if event is not None else None
+                    )
+                    return cached
+
         prices = self.price_fetcher(primary, start, end)
         if not prices and fallback is not None:
             prices = self.price_fetcher(fallback, start, end)
+        if self.ticker_price_cache is not None:
+            self.ticker_price_cache.put(
+                ticker=ticker,
+                market=market,
+                start=start,
+                end=end,
+                prices=prices,
+            )
+            event = self.ticker_price_cache.last_event
+            self._last_ticker_price_cache_event = (
+                event.to_dict() if event is not None else None
+            )
         return prices
 
     def _forward_search(

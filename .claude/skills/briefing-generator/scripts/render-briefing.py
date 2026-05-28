@@ -123,6 +123,33 @@ def fallback_action_signal(verdict: str | None, rr_score: Any) -> str:
     return "Stay selective until the next catalyst clarifies the setup."
 
 
+def render_top_risk(top_risk: Any) -> str:
+    if isinstance(top_risk, dict):
+        risk = top_risk.get("risk") or top_risk.get("title") or "Top risk"
+        mechanism = top_risk.get("mechanism") or top_risk.get("narrative") or ""
+        return f"{risk} — {mechanism}" if mechanism else str(risk)
+    return str(top_risk or "Top risk detail unavailable.")
+
+
+def render_next_catalyst(next_catalyst: Any) -> str:
+    if not isinstance(next_catalyst, dict):
+        return "No dated catalyst captured in this run."
+    event = (
+        next_catalyst.get("description")
+        or next_catalyst.get("event")
+        or next_catalyst.get("title")
+        or "Next catalyst"
+    )
+    narrative = next_catalyst.get("narrative")
+    date = next_catalyst.get("date")
+    parts = [str(event)]
+    if date:
+        parts.append(str(date))
+    if narrative:
+        parts.append(str(narrative))
+    return " · ".join(parts)
+
+
 def render_kpis(key_metrics: dict[str, Any], currency: str | None) -> str:
     if not isinstance(key_metrics, dict) or not key_metrics:
         return '<div class="text-sm text-gray-500 italic">KPI data unavailable.</div>'
@@ -285,13 +312,12 @@ def build_briefing_html(data: dict[str, Any]) -> str:
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
           <div class="rounded-2xl border border-white/10 bg-white/5 p-5">
             <p class="text-xs uppercase tracking-[0.3em] text-rose-200/80">Top Risk</p>
-            <p class="mt-3 text-sm leading-6">{escape(top_risk)}</p>
+            <p class="mt-3 text-sm leading-6">{escape(render_top_risk(top_risk))}</p>
           </div>
           <div class="rounded-2xl border border-white/10 bg-white/5 p-5">
             <p class="text-xs uppercase tracking-[0.3em] text-emerald-200/80">Next Catalyst & Action</p>
             <p class="mt-3 text-sm leading-6">
-              {escape(next_catalyst_payload.get("description") or "No dated catalyst captured in this run.")}
-              {' · ' + escape(next_catalyst_payload.get("date")) if next_catalyst_payload.get("date") else ''}
+              {escape(render_next_catalyst(next_catalyst_payload))}
             </p>
             <p class="mt-3 text-sm text-blue-100">{escape(action_signal)}</p>
           </div>

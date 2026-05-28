@@ -68,6 +68,7 @@ FINANCIAL_SAMPLE_PRIORITY = (
 )
 SOURCE_TAG_PATTERN = re.compile(r"\[(?:Filing|Portal|KR-Portal|Calc|Est|Macro|User)\]")
 NUMBER_PATTERN = re.compile(r"(?<![A-Za-z0-9_])(?:[$₩€£]?\s*)?\d+(?:,\d{3})*(?:\.\d+)?\s*(?:%|x|bp|B|M|T|조|억|만)?")
+REPO_ROOT = Path(__file__).resolve().parents[1]
 MODE_REQUIRED_RENDERED_TERMS = {
     "C": (
         ("DCF valuation", ("dcf",)),
@@ -495,6 +496,134 @@ def build_rendered_output_item(
     if warnings:
         item["warnings"] = warnings
     return item
+
+
+def build_peer_mini_fetch_item(
+    analysis: dict[str, Any],
+    *,
+    report_path: str | Path | None = None,
+) -> dict[str, Any]:
+    output_mode = str(analysis.get("output_mode") or "").upper()
+    if output_mode != "C":
+        return {
+            "status": "SKIP",
+            "detail": "Peer mini-fetch quality policy applies only to Mode C.",
+        }
+
+    summary = _load_peer_fetch_summary(analysis, report_path=report_path)
+    requested = _string_list(summary.get("tickers_requested"))
+    collected = _string_list(summary.get("tickers_collected"))
+    failed = _string_list(summary.get("tickers_failed"))
+    reason = str(summary.get("reason") or "").strip()
+    source_status = str(summary.get("status") or ("missing" if not summary else "unknown"))
+    peers = _analysis_peer_rows(analysis)
+    real_peer_count = sum(1 for peer in peers if not _is_peer_unavailable_row(peer))
+    has_unavailable_disclosure = any(_is_peer_unavailable_row(peer) for peer in peers)
+
+    if real_peer_count:
+        return {
+            "status": "PASS",
+            "detail": f"Mode C peer comparison includes {real_peer_count} usable peer row(s).",
+            "peer_rows": real_peer_count,
+            "tickers_requested": requested,
+            "tickers_collected": collected,
+        }
+
+    if not requested:
+        return {
+            "status": "SKIP",
+            "detail": f"Peer mini-fetch was not requested for this Mode C run ({reason or source_status}).",
+            "source_status": source_status,
+            "reason": reason or None,
+        }
+
+    if not collected and len(failed) >= len(requested) and has_unavailable_disclosure:
+        return {
+            "status": "PASS_WITH_FLAGS",
+            "severity": "MINOR",
+            "delivery_impact": "non_blocking_flag",
+            "blocker_action": "none",
+            "warnings": [
+                "All requested peer mini-fetch tickers failed; peer-relative valuation is excluded by disclosure."
+            ],
+            "detail": "Peer mini-fetch all-fail is deliverable only because the report explicitly renders peer_data_unavailable.",
+            "tickers_requested": requested,
+            "tickers_failed": failed,
+        }
+
+    if not collected:
+        return {
+            "status": "FAIL",
+            "severity": "BLOCKER",
+            "delivery_impact": "delivery_blocking_flag",
+            "blocker_action": "patchable",
+            "errors": [
+                "Peer mini-fetch produced no usable rows and the report did not disclose peer_data_unavailable."
+            ],
+            "tickers_requested": requested,
+            "tickers_failed": failed,
+        }
+
+    return {
+        "status": "FAIL",
+        "severity": "BLOCKER",
+        "delivery_impact": "delivery_blocking_flag",
+        "blocker_action": "patchable",
+        "errors": [
+            "Peer mini-fetch reported collected tickers, but analysis.sections.peer_comparison has no usable peer rows."
+        ],
+        "tickers_requested": requested,
+        "tickers_collected": collected,
+    }
+
+
+def _load_peer_fetch_summary(
+    analysis: dict[str, Any],
+    *,
+    report_path: str | Path | None,
+) -> dict[str, Any]:
+    candidates: list[Path] = []
+    if report_path is not None:
+        candidates.append(Path(report_path).parent / "peer-fetch-summary.json")
+
+    run_context = analysis.get("run_context") if isinstance(analysis.get("run_context"), dict) else {}
+    artifact_root = run_context.get("artifact_root")
+    if artifact_root:
+        root = Path(str(artifact_root))
+        candidates.append(root / "peer-fetch-summary.json")
+        if not root.is_absolute():
+            candidates.append(REPO_ROOT / root / "peer-fetch-summary.json")
+
+    for path in candidates:
+        try:
+            if path.exists():
+                parsed = json.loads(path.read_text(encoding="utf-8"))
+                return parsed if isinstance(parsed, dict) else {}
+        except (OSError, json.JSONDecodeError):
+            continue
+    return {}
+
+
+def _analysis_peer_rows(analysis: dict[str, Any]) -> list[dict[str, Any]]:
+    sections = analysis.get("sections") if isinstance(analysis.get("sections"), dict) else {}
+    peers = sections.get("peer_comparison")
+    if not isinstance(peers, list):
+        return []
+    return [peer for peer in peers if isinstance(peer, dict)]
+
+
+def _is_peer_unavailable_row(peer: dict[str, Any]) -> bool:
+    haystack = " ".join(
+        str(peer.get(key) or "")
+        for key in ("ticker", "summary", "value", "source")
+    ).lower()
+    return "peer_data_unavailable" in haystack or "peer data is unavailable" in haystack
+
+
+def _string_list(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(item).upper() for item in value if str(item).strip()]
 
 
 def _analysis_metric_value(analysis: dict[str, Any], metric_name: str) -> float | None:
@@ -1308,6 +1437,11 @@ def build_quality_report(
         "raw_artifact_access": build_raw_artifact_access_item(evidence_pack, analysis),
         "valuation_bridge_consistency": build_valuation_bridge_consistency_item(analysis),
     }
+    if str(analysis.get("output_mode") or "").upper() == "C":
+        generated_items["peer_mini_fetch"] = build_peer_mini_fetch_item(
+            analysis,
+            report_path=report_path,
+        )
     if report_path is not None:
         generated_items["rendered_output"] = build_rendered_output_item(report_path, analysis, validated)
     merged_items = annotate_delivery_impacts(merge_items(existing_report.get("items"), generated_items))

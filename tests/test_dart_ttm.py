@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import importlib.util
+import io
+import json
 import pathlib
 import unittest
+import zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DART_COLLECTOR = ROOT / ".claude" / "skills" / "web-researcher" / "scripts" / "dart-collector.py"
@@ -21,6 +24,67 @@ def _load_dart_collector():
 
 def _is_field(value):
     return {"statement_type": "IS", "value": value}
+
+
+class _FakeResponse:
+    def __init__(self, payload: bytes):
+        self.payload = payload
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_args):
+        return False
+
+    def read(self):
+        return self.payload
+
+
+def _corp_code_zip() -> bytes:
+    xml = """<?xml version="1.0" encoding="UTF-8"?>
+<result>
+  <list>
+    <corp_code>00126380</corp_code>
+    <corp_name>삼성전자</corp_name>
+    <stock_code>005930</stock_code>
+  </list>
+  <list>
+    <corp_code>00164779</corp_code>
+    <corp_name>SK하이닉스</corp_name>
+    <stock_code>000660</stock_code>
+  </list>
+</result>
+"""
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr("CORPCODE.xml", xml)
+    return buffer.getvalue()
+
+
+def test_corp_code_master_cache_reuses_download(monkeypatch, tmp_path):
+    collector = _load_dart_collector()
+    cache_path = tmp_path / "corp-code-map.json"
+    monkeypatch.setenv("SAA_DART_CORP_CODE_CACHE_PATH", str(cache_path))
+    monkeypatch.setenv("SAA_DART_CORP_CODE_CACHE_TTL_SECONDS", "86400")
+    calls = []
+
+    def fake_urlopen(_req, timeout):
+        calls.append(timeout)
+        return _FakeResponse(_corp_code_zip())
+
+    monkeypatch.setattr(collector.urllib.request, "urlopen", fake_urlopen)
+
+    assert collector.lookup_corp_code("test-key", "005930") == ("00126380", "삼성전자")
+    assert collector.lookup_corp_code("test-key", "000660") == ("00164779", "SK하이닉스")
+    assert calls == [30]
+
+    cache_payload = json.loads(cache_path.read_text(encoding="utf-8"))
+    assert cache_payload["schema_version"] == "dart-corp-code-map-v1"
+    assert cache_payload["ttl_seconds"] == 86400
+    assert cache_payload["entry_count"] == 2
+    assert cache_payload["entries"]["005930"]["corp_code"] == "00126380"
+    assert cache_payload["source_timestamp"]
+    assert cache_payload["expires_at"]
 
 
 class DartTtmTests(unittest.TestCase):

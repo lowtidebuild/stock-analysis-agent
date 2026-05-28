@@ -70,6 +70,9 @@ except ImportError:
 from tools.prompt_injection_filter import SANITIZER_VERSION, sanitize_record  # noqa: E402
 
 DART_BASE = "https://opendart.fss.or.kr/api"
+DART_CORP_CODE_CACHE_SCHEMA_VERSION = "dart-corp-code-map-v1"
+DART_CORP_CODE_CACHE_DEFAULT_TTL_SECONDS = 24 * 60 * 60
+DART_CORP_CODE_CACHE_DEFAULT_PATH = _REPO_ROOT / "output" / "data" / "dart" / "corp-code-map.json"
 
 # DART report codes
 REPORT_CODES = [
@@ -127,21 +130,163 @@ def dart_request(endpoint, params):
         return {"status": "error", "message": str(e)}
 
 
+def _env_bool(name, default):
+    raw = os.environ.get(name, "").strip().lower()
+    if not raw:
+        return default
+    if raw in {"0", "false", "no", "off"}:
+        return False
+    if raw in {"1", "true", "yes", "on"}:
+        return True
+    return default
+
+
+def _env_int(name, default):
+    raw = os.environ.get(name, "").strip()
+    try:
+        return max(int(raw), 0) if raw else default
+    except ValueError:
+        return default
+
+
+def _utc_now_dt():
+    return datetime.now(timezone.utc)
+
+
+def _format_utc(value):
+    return value.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _parse_utc_timestamp(value):
+    if not isinstance(value, str):
+        return None
+    try:
+        if value.endswith("Z"):
+            return datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+        parsed = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=timezone.utc)
+
+
+def _dart_corp_code_cache_enabled():
+    return _env_bool("SAA_DART_CORP_CODE_CACHE", True)
+
+
+def _dart_corp_code_cache_ttl_seconds():
+    return _env_int(
+        "SAA_DART_CORP_CODE_CACHE_TTL_SECONDS",
+        DART_CORP_CODE_CACHE_DEFAULT_TTL_SECONDS,
+    )
+
+
+def _dart_corp_code_cache_path():
+    raw = os.environ.get("SAA_DART_CORP_CODE_CACHE_PATH", "").strip()
+    path = Path(raw).expanduser() if raw else DART_CORP_CODE_CACHE_DEFAULT_PATH
+    return path if path.is_absolute() else _REPO_ROOT / path
+
+
+def _read_json(path):
+    try:
+        parsed = json.loads(path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def _write_json(path, payload):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _load_corp_code_cache(allow_stale=False):
+    if not _dart_corp_code_cache_enabled():
+        return None
+    ttl_seconds = _dart_corp_code_cache_ttl_seconds()
+    if ttl_seconds <= 0:
+        return None
+    cache = _read_json(_dart_corp_code_cache_path())
+    if cache.get("schema_version") != DART_CORP_CODE_CACHE_SCHEMA_VERSION:
+        return None
+    cached_at = _parse_utc_timestamp(cache.get("cached_at"))
+    if cached_at is None:
+        return None
+    age_seconds = (_utc_now_dt() - cached_at).total_seconds()
+    if not allow_stale and age_seconds > ttl_seconds:
+        return None
+    entries = cache.get("entries")
+    return entries if isinstance(entries, dict) else None
+
+
+def _write_corp_code_cache(entries):
+    if not _dart_corp_code_cache_enabled():
+        return
+    ttl_seconds = _dart_corp_code_cache_ttl_seconds()
+    if ttl_seconds <= 0 or not entries:
+        return
+    cached_at = _utc_now_dt()
+    payload = {
+        "schema_version": DART_CORP_CODE_CACHE_SCHEMA_VERSION,
+        "source": "DART corpCode.xml",
+        "source_timestamp": _format_utc(cached_at),
+        "cached_at": _format_utc(cached_at),
+        "ttl_seconds": ttl_seconds,
+        "expires_at": _format_utc(cached_at + timedelta(seconds=ttl_seconds)),
+        "entry_count": len(entries),
+        "entries": entries,
+    }
+    _write_json(_dart_corp_code_cache_path(), payload)
+
+
+def _parse_corp_code_xml(xml_data):
+    root = ET.fromstring(xml_data)
+    entries = {}
+    for item in root.findall(".//list"):
+        stock_code = (item.findtext("stock_code") or "").strip()
+        corp_code = (item.findtext("corp_code") or "").strip()
+        if not stock_code or not corp_code:
+            continue
+        entries[stock_code] = {
+            "corp_code": corp_code,
+            "corp_name": (item.findtext("corp_name") or "").strip(),
+        }
+    return entries
+
+
+def _download_corp_code_entries(api_key):
+    url = f"{DART_BASE}/corpCode.xml?crtfc_key={api_key}"
+    req = urllib.request.Request(url, headers={"User-Agent": "StockAnalysisAgent/1.0"})
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        z = zipfile.ZipFile(io.BytesIO(resp.read()))
+        xml_data = z.read(z.namelist()[0])
+    return _parse_corp_code_xml(xml_data)
+
+
+def _corp_code_lookup(entries, stock_code):
+    record = entries.get(stock_code) if isinstance(entries, dict) else None
+    if not isinstance(record, dict):
+        return None, None
+    return record.get("corp_code"), record.get("corp_name")
+
+
 def lookup_corp_code(api_key, stock_code):
     """Look up corp_code from stock_code via DART's corpCode.xml master list."""
-    url = f"{DART_BASE}/corpCode.xml?crtfc_key={api_key}"
+    stock_code = (stock_code or "").strip()
+    if not stock_code:
+        return None, None
+
+    cached_entries = _load_corp_code_cache()
+    if cached_entries is not None:
+        return _corp_code_lookup(cached_entries, stock_code)
+
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "StockAnalysisAgent/1.0"})
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            z = zipfile.ZipFile(io.BytesIO(resp.read()))
-            xml_data = z.read(z.namelist()[0])
-        root = ET.fromstring(xml_data)
-        for item in root.findall(".//list"):
-            sc = (item.findtext("stock_code") or "").strip()
-            if sc == stock_code:
-                return item.findtext("corp_code", "").strip(), (item.findtext("corp_name") or "").strip()
+        entries = _download_corp_code_entries(api_key)
+        _write_corp_code_cache(entries)
+        return _corp_code_lookup(entries, stock_code)
     except Exception:
-        pass
+        stale_entries = _load_corp_code_cache(allow_stale=True)
+        if stale_entries is not None:
+            return _corp_code_lookup(stale_entries, stock_code)
     return None, None
 
 
