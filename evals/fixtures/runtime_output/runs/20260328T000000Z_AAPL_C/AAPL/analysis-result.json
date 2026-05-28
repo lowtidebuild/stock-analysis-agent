@@ -114,6 +114,7 @@
       {
         "risk": "China revenue pressure",
         "mechanism": "A 5-pt volume miss in Greater China lowers hardware absorption and trims Services cross-sell.",
+        "financial_impact": "A 5-pt Greater China volume miss could create roughly $6B equivalent gross profit risk and reduce Services attach revenue.",
         "ebitda_impact": "$6B equivalent gross profit risk",
         "probability": "Medium",
         "mitigation": "Track channel inventory and regional pricing actions."
@@ -121,6 +122,7 @@
       {
         "risk": "App Store regulation",
         "mechanism": "Commission pressure narrows high-margin Services contribution and compresses blended gross margin.",
+        "financial_impact": "Commission pressure could reduce high-margin Services profit by roughly $3-4B annualized.",
         "ebitda_impact": "$3-4B annualized",
         "probability": "Medium",
         "mitigation": "Watch policy scope and alternative billing adoption."
@@ -128,6 +130,7 @@
       {
         "risk": "AI monetization lag",
         "mechanism": "If AI features stay free without raising hardware ASPs or bundle ARPU, valuation upside from ecosystem monetization fades.",
+        "financial_impact": "Delayed paid AI packaging could compress Apple's valuation multiple before earnings catch up.",
         "ebitda_impact": "multiple compression before earnings catch-up",
         "probability": "Medium",
         "mitigation": "Monitor paid feature packaging and retention."
