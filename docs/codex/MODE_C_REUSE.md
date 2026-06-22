@@ -81,6 +81,7 @@ Reads:
 - `output/runs/{run_id}/{ticker}/financial-datasets-raw.json`
 - `output/runs/{run_id}/{ticker}/dart-api-raw.json`
 - `output/runs/{run_id}/{ticker}/yfinance-raw.json`
+- `output/runs/{run_id}/{ticker}/tier2-raw.json` when present
 - `output/runs/{run_id}/macro/fred-raw.json`
 
 Writes:
@@ -90,13 +91,13 @@ Writes:
 - `context-budget.json`
 - `validation-summary.json`
 
-Important gap:
+Tier2 handling:
 
-`build_validation_handoff` does not currently read
-`output/runs/{run_id}/{ticker}/tier2-raw.json`. The Codex web layer should
-write that artifact, but validation needs a small wiring change before it can
-consume qualitative web fields. Keep raw tier2 content out of analyst prompts;
-validated facts should flow through `validated-data.json` and `evidence-pack.json`.
+`build_validation_handoff` now reads a run-local sanitized
+`output/runs/{run_id}/{ticker}/tier2-raw.json` when present. Validation consumes
+only `extracted_metric_candidates` and `metric_conflicts`; raw search snippets
+remain outside analyst prompts by default. Validated facts still flow through
+`validated-data.json` and `evidence-pack.json`.
 
 ### Calculations
 
@@ -251,7 +252,7 @@ The new entrypoint should:
 2. Normalize ticker and market using the same rules as `run_abc_parity.py`.
 3. Ensure `output/runs/{run_id}` and `output/reports` exist.
 4. Collect or reuse macro and ticker structured sources.
-5. Call the future portable web search layer to write
+5. Call the portable web search layer to write
    `output/runs/{run_id}/{ticker}/tier2-raw.json`.
 6. Run validation, calculations, analyst, render, and critic in order.
 7. Require `quality-report.json.delivery_gate.ready_for_delivery == true`.
@@ -262,14 +263,11 @@ The new entrypoint should:
 {"report_path":"output/runs/<run_id>/<ticker>/mode-c-dashboard.html","run_id":"<run_id>"}
 ```
 
-## Next-Session Notes
+## Implementation Notes
 
-- Session 2 should create `tools/web_search.py` and `tools/web_fetch.py`, with
-  `tools/web_search.py` able to write a schema-valid sanitized
-  `tier2-raw.json`.
-- Session 3 should decide whether the minimal validation wiring for
-  `tier2-raw.json` belongs inside `scripts/parity/validation.py` or remains a
-  no-op until richer qualitative fields are mapped into validated metrics.
+- `tools/web_search.py` and `tools/web_fetch.py` provide the portable web layer.
+- `scripts/parity/validation.py` maps sanitized tier2 metric candidates into
+  missing validated metrics at Grade C or below and preserves tier2 conflicts
+  in the validation/evidence handoff.
 - Offline Mode C tests should use `ANALYST_BACKEND=fixture`, not an OpenAI
   monkeypatch.
-

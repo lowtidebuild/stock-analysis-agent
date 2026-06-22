@@ -153,6 +153,95 @@ def test_run_abc_parity_validate_only_with_mock_yfinance_promotes_fallback() -> 
     assert validate_artifact_file(evidence_path, "evidence-pack", base_dir=REPO_ROOT)["valid"]
 
 
+def test_validation_consumes_sanitized_tier2_metric_candidates() -> None:
+    run_id = "pytest_abc_parity_validate_tier2_candidates_AAPL_C"
+    collect = run_parity(
+        "--ticker",
+        "AAPL",
+        "--mode",
+        "C",
+        "--lang",
+        "en",
+        "--market",
+        "US",
+        "--run-id",
+        run_id,
+        "--collect-only",
+        "--skip-network",
+    )
+    assert collect.returncode == 0, collect.stderr
+    ticker_root = REPO_ROOT / "output" / "runs" / run_id / "AAPL"
+    (ticker_root / "tier2-raw.json").write_text(
+        json.dumps(
+            {
+                "ticker": "AAPL",
+                "collection_timestamp": "2026-05-21T00:00:00Z",
+                "market": "US",
+                "status": "ok",
+                "provider": "fixture",
+                "raw_search_results": [
+                    {
+                        "query_id": "q_target_1",
+                        "query": "AAPL analyst target",
+                        "rank": 1,
+                        "title": "Analyst target fixture",
+                        "url": "https://example.com/aapl-target",
+                        "published_date": None,
+                        "retrieved_at": "2026-05-21T00:00:00Z",
+                        "snippet": "Consensus target fixture.",
+                        "source_domain": "example.com",
+                    }
+                ],
+                "extracted_metric_candidates": [
+                    {
+                        "candidate_id": "c_target_1",
+                        "metric": "analyst_target_mean",
+                        "raw_value": "$225",
+                        "normalized_value": 225.0,
+                        "unit": "USD",
+                        "currency": "USD",
+                        "as_of_date": "2026-05-21",
+                        "source_url": "https://example.com/aapl-target",
+                        "source_query_id": "q_target_1",
+                        "source_result_rank": 1,
+                        "source_domain": "example.com",
+                        "extraction_method": "search_snippet",
+                        "confidence_candidate": "C",
+                        "notes": "Fixture candidate",
+                    }
+                ],
+                "metric_conflicts": [],
+                "_sanitization": {"status": "pass", "findings": [], "redactions": 0},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    build_validation_handoff(
+        language="en",
+        market="US",
+        mode="C",
+        run_id=run_id,
+        ticker="AAPL",
+    )
+
+    validated_path = ticker_root / "validated-data.json"
+    evidence_path = ticker_root / "evidence-pack.json"
+    validated = json.loads(validated_path.read_text(encoding="utf-8"))
+    evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+    target = validated["validated_metrics"]["analyst_target_mean"]
+
+    assert target["value"] == 225.0
+    assert target["grade"] == "C"
+    assert target["source_type"] == "estimate"
+    assert target["candidate_trace"]["selected_candidate_id"] == "c_target_1"
+    assert validated["source_registry"]["tier2"]["status"] == "ok"
+    assert any(ref.endswith("/tier2-raw.json") for ref in evidence["raw_artifact_refs"])
+    assert any(fact["metric"] == "analyst_target_mean" for fact in evidence["facts"])
+    assert validate_artifact_file(validated_path, "validated-data", base_dir=REPO_ROOT)["valid"]
+    assert validate_artifact_file(evidence_path, "evidence-pack", base_dir=REPO_ROOT)["valid"]
+
+
 def test_dart_raw_without_status_is_primary_for_kr_validation() -> None:
     run_id = "pytest_abc_parity_validate_mock_dart_005930_C"
     collect = run_parity(

@@ -146,8 +146,9 @@ If the gate is not ready, treat the report as failed even if HTML was rendered.
   Use stop flags such as `--collect-only` for parity steps, or use
   `scripts/run_mode_c.py` for production Mode C.
 - Eval harness fails on a glob: pass one `--manifest` path at a time.
-- `tier2-raw.json` is present but no qualitative facts reach the analyst:
-  validation currently does not consume tier2 fields directly. Keep raw tier2
-  out of prompts unless investigating a logged mismatch.
+- `tier2-raw.json` is present but expected facts are missing: check that values
+  are under `extracted_metric_candidates` with `normalized_value`,
+  `confidence_candidate`, and source metadata. Raw search snippets are kept out
+  of analyst prompts unless investigating a logged mismatch.
 - Quality gate fails after rendering: debug `quality-report.json`,
   `mode-c-render-report.json`, and `analysis-result.rejected.json` if present.

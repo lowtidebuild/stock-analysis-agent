@@ -39,6 +39,18 @@ CORE_METRICS = (
 )
 
 GRADE_ORDER = {"A": 4, "B": 3, "C": 2, "D": 1}
+NON_MONETARY_TIER2_METRICS = {
+    "pe_ratio",
+    "pe_forward",
+    "ev_ebitda",
+    "pb_ratio",
+    "revenue_growth_yoy",
+    "operating_margin",
+    "net_margin",
+    "fcf_yield",
+    "net_debt_ebitda",
+    "beta",
+}
 
 
 @dataclass(frozen=True)
@@ -84,6 +96,7 @@ def build_validation_handoff(
         "financial_datasets": ticker_dir / "financial-datasets-raw.json",
         "dart": ticker_dir / "dart-api-raw.json",
         "yfinance": ticker_dir / "yfinance-raw.json",
+        "tier2": ticker_dir / "tier2-raw.json",
         "fred": macro_path,
     }
     raw_payloads = {
@@ -121,6 +134,8 @@ def build_validation_handoff(
         "evidence_pack": validate_artifact_data("evidence-pack", evidence_pack),
         "context_budget": validate_artifact_data("context-budget", context_budget),
     }
+    if raw_paths["tier2"].exists():
+        validation_errors["tier2_raw"] = validate_artifact_data("tier2-raw", raw_payloads["tier2"])
     blocking_errors = [
         f"{artifact}: {error}"
         for artifact, errors in validation_errors.items()
@@ -177,6 +192,7 @@ def build_validated_data(
     financial = raw_payloads.get("financial_datasets") or {}
     dart = raw_payloads.get("dart") or {}
     yfinance = raw_payloads.get("yfinance") or {}
+    tier2 = raw_payloads.get("tier2") or {}
     fred = raw_payloads.get("fred") or {}
     source_profile = choose_source_profile(market=market, financial=financial, dart=dart, yfinance=yfinance)
     profile_meta = source_profile_meta(source_profile)
@@ -184,7 +200,7 @@ def build_validated_data(
     company_name = infer_company_name(ticker=ticker, yfinance=yfinance, dart=dart, financial=financial)
 
     metrics: dict[str, dict[str, Any]] = {}
-    metric_conflicts: list[dict[str, Any]] = []
+    metric_conflicts: list[dict[str, Any]] = metric_conflicts_from_tier2(tier2)
     if source_profile == "financial_datasets":
         metrics.update(metrics_from_financial_datasets(financial, ticker=ticker, currency=currency))
     elif source_profile == "sec_or_dart_primary":
@@ -196,6 +212,12 @@ def build_validated_data(
             fallback=metrics_from_yfinance(yfinance, market=market, currency=currency),
         )
     )
+    metrics.update(
+        merge_missing_metrics(
+            current=metrics,
+            fallback=metrics_from_tier2(tier2, market=market, currency=currency),
+        )
+    )
     metrics = fill_core_metric_exclusions(metrics)
     grade_summary = summarize_grades(metrics)
     exclusions = build_exclusions(metrics)
@@ -205,7 +227,7 @@ def build_validated_data(
         source_profile=source_profile,
     )
     validation_timestamp = utc_now()
-    macro_context = build_macro_context(fred)
+    macro_context = build_macro_context(fred, tier2=tier2)
     source_registry = build_source_registry(raw_payloads)
     staleness = build_staleness(metrics, validation_timestamp)
     validation_payload = {
@@ -288,7 +310,7 @@ def source_profile_meta(source_profile: str) -> dict[str, str]:
     return {
         "effective_mode": "standard",
         "source_tier": "search_snippet",
-        "confidence_cap": "D",
+        "confidence_cap": "C",
     }
 
 
@@ -481,6 +503,168 @@ def metrics_from_financial_datasets(
     }
 
 
+def metrics_from_tier2(
+    tier2: dict[str, Any],
+    *,
+    currency: str,
+    market: str,
+) -> dict[str, dict[str, Any]]:
+    candidates = tier2.get("extracted_metric_candidates")
+    if not isinstance(candidates, list):
+        return {}
+
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            continue
+        metric_name = str(candidate.get("metric") or "").strip()
+        if not metric_name:
+            continue
+        grouped.setdefault(metric_name, []).append(candidate)
+
+    metrics: dict[str, dict[str, Any]] = {}
+    for metric_name, metric_candidates in grouped.items():
+        selected = sorted(metric_candidates, key=tier2_candidate_sort_key)[0]
+        entry = metric_from_tier2_candidate(
+            metric_name,
+            selected,
+            currency=currency,
+            market=market,
+        )
+        if entry is not None:
+            metrics[metric_name] = entry
+    return metrics
+
+
+def tier2_candidate_sort_key(candidate: dict[str, Any]) -> tuple[int, int, str]:
+    grade_rank = {"A": 0, "B": 1, "C": 2, "D": 3}
+    grade = str(candidate.get("confidence_candidate") or "D").upper()
+    rank = as_number(candidate.get("source_result_rank"))
+    return (
+        grade_rank.get(grade, 3),
+        int(rank) if rank is not None and rank >= 1 else 999,
+        str(candidate.get("candidate_id") or ""),
+    )
+
+
+def metric_from_tier2_candidate(
+    metric_name: str,
+    candidate: dict[str, Any],
+    *,
+    currency: str,
+    market: str,
+) -> dict[str, Any] | None:
+    value = as_number(candidate.get("normalized_value"))
+    if value is None:
+        return None
+
+    candidate_grade = str(candidate.get("confidence_candidate") or "D").upper()
+    if candidate_grade not in {"A", "B", "C"}:
+        return None
+    grade = "C" if GRADE_ORDER[candidate_grade] > GRADE_ORDER["C"] else candidate_grade
+    source_type = tier2_source_type(metric_name, candidate, market=market)
+    candidate_currency = candidate.get("currency")
+    unit = candidate.get("unit")
+    if not candidate_currency and isinstance(unit, str) and unit.upper() in {"USD", "KRW"}:
+        candidate_currency = unit.upper()
+        unit = None
+    source = candidate.get("source_url") or candidate.get("source_domain") or "tier2 web research candidate"
+    metric_currency = tier2_metric_currency(
+        metric_name,
+        candidate_currency=candidate_currency,
+        fallback_currency=currency,
+    )
+    entry = metric(
+        value,
+        currency=metric_currency,
+        grade=grade,
+        source=f"tier2 web candidate: {source}",
+        source_type=source_type,
+        tag=tier2_display_tag(source_type, market=market),
+        unit=str(unit) if unit not in (None, "") else None,
+        as_of_date=date_part(candidate.get("as_of_date")),
+    )
+    if entry.get("grade") == "D":
+        return None
+    source_query_id = candidate.get("source_query_id")
+    entry["candidate_trace"] = {
+        "selected_candidate_id": candidate.get("candidate_id"),
+        "source_query_ids": [source_query_id] if source_query_id else [],
+        "selection_reason": "selected from sanitized tier2 extracted_metric_candidates",
+    }
+    if candidate.get("notes"):
+        entry["notes"] = str(candidate["notes"])
+    if date_part(candidate.get("period_end")):
+        entry["period_end"] = date_part(candidate.get("period_end"))
+    return entry
+
+
+def tier2_metric_currency(
+    metric_name: str,
+    *,
+    candidate_currency: Any,
+    fallback_currency: str,
+) -> str | None:
+    if candidate_currency:
+        return str(candidate_currency)
+    if metric_name in NON_MONETARY_TIER2_METRICS:
+        return None
+    monetary_markers = ("price", "target", "market_cap", "revenue", "fcf", "debt", "cash", "income", "capex")
+    if any(marker in metric_name.lower() for marker in monetary_markers):
+        return fallback_currency
+    return None
+
+
+def tier2_source_type(metric_name: str, candidate: dict[str, Any], *, market: str) -> str:
+    method = str(candidate.get("extraction_method") or "").strip()
+    lowered_metric = metric_name.lower()
+    if lowered_metric.startswith("analyst_") or "target" in lowered_metric:
+        return "estimate"
+    if method == "filing_table":
+        return "filing"
+    if method == "calculated":
+        return "calculated"
+    if method == "api_structured":
+        return "portal_kr" if market == "KR" else "portal_global"
+    return "portal_kr" if market == "KR" else "portal_global"
+
+
+def tier2_display_tag(source_type: str, *, market: str) -> str:
+    if source_type == "estimate":
+        return "[Est]"
+    if source_type == "filing":
+        return "[Filing]"
+    if source_type == "calculated":
+        return "[Calc]"
+    return "[KR-Portal]" if market == "KR" else "[Portal]"
+
+
+def metric_conflicts_from_tier2(tier2: dict[str, Any]) -> list[dict[str, Any]]:
+    conflicts = tier2.get("metric_conflicts")
+    if not isinstance(conflicts, list):
+        return []
+    result: list[dict[str, Any]] = []
+    for item in conflicts:
+        if not isinstance(item, dict):
+            continue
+        candidates = item.get("candidates") if isinstance(item.get("candidates"), list) else []
+        selected_index = as_number(item.get("selected_candidate_index"))
+        selected_candidate = None
+        if selected_index is not None and 0 <= int(selected_index) < len(candidates):
+            selected_candidate = candidates[int(selected_index)]
+        selected_id = selected_candidate.get("candidate_id") if isinstance(selected_candidate, dict) else None
+        result.append(
+            {
+                "metric": item.get("metric"),
+                "summary": item.get("resolution") or item.get("notes"),
+                "candidate_count": len(candidates),
+                "selected_candidate_id": selected_id,
+                "source": "tier2-raw.json",
+            }
+        )
+    return result
+
+
 def metric(
     value: Any,
     *,
@@ -597,7 +781,16 @@ def determine_overall_grade(
     return candidate if GRADE_ORDER[candidate] <= GRADE_ORDER[confidence_cap] else confidence_cap
 
 
-def build_macro_context(fred: dict[str, Any]) -> dict[str, Any]:
+def build_macro_context(fred: dict[str, Any], *, tier2: dict[str, Any] | None = None) -> dict[str, Any]:
+    tier2_macro = tier2.get("macro_context") if isinstance(tier2, dict) else None
+    tier2_structured = tier2_macro.get("structured") if isinstance(tier2_macro, dict) else None
+    if isinstance(tier2_structured, dict):
+        result = {"structured": tier2_structured}
+        qualitative = tier2_macro.get("qualitative")
+        if isinstance(qualitative, dict):
+            result["qualitative"] = qualitative
+        return result
+
     macro_context = fred.get("macro_context") if isinstance(fred.get("macro_context"), dict) else None
     structured = macro_context.get("structured") if isinstance(macro_context, dict) else None
     if isinstance(structured, dict):
