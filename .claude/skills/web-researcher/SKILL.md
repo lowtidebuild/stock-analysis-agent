@@ -34,6 +34,7 @@ Extract:
 2. `mcp__brave__search` (fallback)
 3. `WebSearch` tool (Claude built-in, last resort)
 4. `WebFetch` for direct URL access
+5. Portable CLI (harness-agnostic / Codex): `python -m tools.web_search --ticker TICKER --market US --query "..." --provider tavily` and `python -m tools.web_fetch --url ...`. Use only when no harness search/fetch tool is available. `tools.web_search` output is already tier2-schema shaped and sanitized.
 
 Execute searches in the order defined in `research-plan.json`. For each search:
 - Use the exact query string from the plan (do not paraphrase)
@@ -435,5 +436,6 @@ For peer comparison, run a parallel (or sequential) web research for each ticker
 - [ ] Gap-fill targeted searches run for missing metrics
 - [ ] Macro context search executed (Mode C/D) or skipped (Mode A/B or macro_search_required=false)
 - [ ] `output/runs/{run_id}/{ticker}/tier2-raw.json` written (includes `macro_context` field if applicable)
+- [ ] If the portable CLI fallback was used, `tools.web_search` output validates as tier2-schema and already includes `_sanitization`
 - [ ] All news items dated and attributed
 - [ ] Step 4.10 — `tools/sanitize_artifact.py --in-place` run on `tier2-raw.json` (and `dart-api-raw.json` / `yfinance-raw.json` if present), `_sanitization` block present in each
