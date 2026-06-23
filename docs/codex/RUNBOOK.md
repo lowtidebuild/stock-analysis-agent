@@ -23,6 +23,29 @@ harness.
 - For portable web search, set `TAVILY_API_KEY` or `BRAVE_API_KEY`, or pass
   `--web-provider none` for an unavailable/skipped tier2 artifact.
 
+## Security Audit
+
+Run the local security audit before committing or publishing analysis outputs:
+
+```bash
+python3 tools/security_audit.py --staged
+```
+
+The audit checks staged files for high-confidence secret values, concrete
+secret-like assignments, public env-style secret names, generated/cache paths
+that must not be committed, fixture/smoke markers in published report paths,
+and insecure external scripts in HTML. It never reads `.env*` files.
+
+To inspect a specific report or folder before sharing:
+
+```bash
+python3 tools/security_audit.py --paths output/reports/VRT_C_ko_2026-06-22.html
+```
+
+External HTTPS scripts in HTML are reported as warnings so operators can confirm
+they are intentional. HTTP scripts, fixture markers in `output/reports/`, and
+secret-like values are blocking errors.
+
 ## Mode A Codex-Native Briefing
 
 Use the unified entrypoint for native Mode A delivery:

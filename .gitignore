@@ -51,3 +51,6 @@ Desktop.ini
 .claude/projects/
 .claude/worktrees/
 .claude/settings*.json
+
+# ── Local analysis indexes / agent caches ───────────────────────────────────
+.understand-anything/
