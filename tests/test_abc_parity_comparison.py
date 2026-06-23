@@ -28,6 +28,8 @@ def run_parity(*args: str, env: dict[str, str] | None = None) -> subprocess.Comp
 def write_peer_yfinance(
     ticker_root: Path,
     *,
+    currency: str = "USD",
+    market: str = "US",
     ticker: str,
     price: float,
     market_cap_b: float,
@@ -46,7 +48,9 @@ def write_peer_yfinance(
     path = ticker_root / "yfinance-raw.json"
     data = json.loads(path.read_text(encoding="utf-8"))
     data["ticker"] = ticker
+    data["market"] = market
     data["current_price"]["price"] = price
+    data["current_price"]["currency"] = currency
     data["info"]["market_cap"] = market_cap_b * 1_000_000_000
     data["info"]["shares_outstanding"] = data["info"]["market_cap"] / price
     data["info"]["pe_trailing"] = pe

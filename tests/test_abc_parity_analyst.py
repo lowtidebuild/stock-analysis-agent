@@ -84,6 +84,45 @@ def test_fixture_analyst_writes_schema_valid_analysis_result(monkeypatch) -> Non
     assert validate_artifact_file(analysis_path, "analysis-result", base_dir=REPO_ROOT)["valid"]
 
 
+def test_codex_native_analyst_writes_production_local_analysis_result(monkeypatch) -> None:
+    run_id = "pytest_abc_parity_analyst_codex_native_AAPL_C"
+    collect = run_parity(
+        "--ticker",
+        "AAPL",
+        "--mode",
+        "C",
+        "--lang",
+        "ko",
+        "--market",
+        "US",
+        "--run-id",
+        run_id,
+        "--collect-only",
+        "--skip-network",
+    )
+    assert collect.returncode == 0, collect.stderr
+    ticker_root = REPO_ROOT / "output" / "runs" / run_id / "AAPL"
+    write_mock_yfinance(ticker_root)
+    build_validation_handoff(language="ko", market="US", mode="C", run_id=run_id, ticker="AAPL")
+    build_calculation_handoff(language="ko", market="US", mode="C", run_id=run_id, ticker="AAPL")
+    monkeypatch.setenv("ANALYST_BACKEND", "codex_native")
+
+    result = build_analyst_handoff(language="ko", market="US", mode="C", run_id=run_id, ticker="AAPL")
+
+    analysis_path = ticker_root / "analysis-result.json"
+    analysis = json.loads(analysis_path.read_text(encoding="utf-8"))
+    analysis_text = json.dumps(analysis, ensure_ascii=False).lower()
+
+    assert result.provider == "codex_native"
+    assert result.model == "local-deterministic-analyst"
+    assert analysis["run_context"]["backend"]["provider"] == "codex_native"
+    assert analysis["run_context"]["backend"]["usage"]["api_calls"] == 0
+    assert analysis["sections"]["precision_risks"]
+    assert "fixture" not in analysis_text
+    assert "프리미엄 디바이스" in analysis["thesis"]
+    assert validate_artifact_file(analysis_path, "analysis-result", base_dir=REPO_ROOT)["valid"]
+
+
 def test_mode_a_enforces_precision_risks_when_backend_returns_empty(monkeypatch) -> None:
     run_id = "pytest_abc_parity_analyst_empty_risks_AAPL_A"
     collect = run_parity(

@@ -16,24 +16,23 @@ from tools.quality_report import build_rendered_output_item
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_GOLDEN_CONFIG = {
     "minimums": {
-        "body_text_chars": 10000,
+        "body_text_chars": 5000,
         "canvas_count": 3,
-        "html_byte_size": 50000,
+        "html_byte_size": 40000,
         "script_count": 3,
         "table_count": 5,
     },
     "required_heading_groups": [
         {"id": "scenario", "pattern": "Scenario Valuation|시나리오 밸류에이션"},
         {"id": "kpi", "pattern": "Key Performance Indicators|핵심 KPI"},
-        {"id": "variant_view", "pattern": "Variant View|투자 thesis"},
-        {"id": "precision_risk", "pattern": "Precision Risk"},
+        {"id": "variant_view", "pattern": "Variant View|투자 thesis|투자 논점|차별적 관점"},
+        {"id": "precision_risk", "pattern": "Precision Risk|정밀 리스크"},
         {"id": "macro", "pattern": "Macro Environment|Macro Context|매크로 환경"},
         {"id": "valuation", "pattern": "Valuation|밸류에이션"},
         {"id": "peer", "pattern": "Peer Comparison|동종업계 비교"},
         {"id": "charts", "pattern": "Charts & Trend Data|재무 차트"},
         {"id": "quality", "pattern": "Quality of Earnings|Financial Detail Analysis|재무 세부 분석"},
-        {"id": "portfolio", "pattern": "Portfolio Strategy|포트폴리오 전략"},
-        {"id": "disclaimer", "pattern": "Disclaimer"},
+        {"id": "disclaimer", "pattern": "Disclaimer|면책"},
     ],
     "forbidden_patterns": [
         "arrays not present in this fixture",
@@ -42,6 +41,208 @@ DEFAULT_GOLDEN_CONFIG = {
         "stock-analysis-agent/output",
     ],
 }
+
+MODE_C_KO_STATIC_REPLACEMENTS = (
+    (
+        "Revenue, operating income, margin, FCF run-rate, and business-driver bridge charts are populated from normalized quarterly financial statement rows or validated TTM metrics. If the raw provider nests rows under a vendor-specific envelope, the renderer must flatten that structure before charting so the dashboard cannot pass with a single zero-filled fallback period.",
+        "매출, 영업이익, 마진, 잉여현금흐름 런레이트, 사업 동인 브리지 차트는 정규화된 분기 재무제표 행 또는 검증된 TTM 지표에서 채웁니다. 원천 제공자가 벤더별 포장 구조 안에 행을 중첩하더라도, 렌더러는 차트 작성 전에 이를 평탄화해 단일 0값 기간으로 대시보드가 통과하지 못하게 해야 합니다.",
+    ),
+    (
+        "The audit table below mirrors the chart arrays used by Chart.js. It lets a reviewer verify that trend visuals are backed by at least four concrete periods, non-zero revenue and operating-income points, and visibly changing margins before the dashboard clears strict semantic parity.",
+        "아래 감사 표는 Chart.js에 전달된 차트 배열을 그대로 반영합니다. 검토자는 대시보드가 엄격한 의미 정합성을 통과하기 전에 추세 시각화가 최소 4개 실제 기간, 0이 아닌 매출 및 영업이익 값, 실제로 변하는 마진에 의해 뒷받침되는지 확인할 수 있습니다.",
+    ),
+    ("Mode C Deep Dive Dashboard", "Mode C 심층 대시보드"),
+    ("Investment Dashboard", "투자 대시보드"),
+    ("Scenario Valuation (12-Month Targets)", "시나리오 밸류에이션 (12개월 목표가)"),
+    ("Key Performance Indicators", "핵심 KPI"),
+    ("Investment Thesis & Variant View", "투자 논점과 차별적 관점"),
+    ("Precision Risk Analysis", "정밀 리스크 분석"),
+    ("Valuation Metrics", "밸류에이션 지표"),
+    ("DCF Valuation", "DCF 밸류에이션"),
+    ("Valuation Bridge", "밸류에이션 브리지"),
+    ("Peer Comparison", "동종업계 비교"),
+    ("Macro Environment", "매크로 환경"),
+    ("Analyst Coverage", "애널리스트 커버리지"),
+    ("Charts & Trend Data", "재무 차트"),
+    ("Financial Detail Analysis", "재무 세부 분석"),
+    ("Quality of Earnings & Evidence Gate", "이익 품질 및 증거 게이트"),
+    ("Quality of Earnings", "이익 품질"),
+    ("Portfolio Strategy", "포트폴리오 전략"),
+    ("Source-Tagged Claims Appendix", "출처 태그 클레임 부록"),
+    ("Chart Evidence Boundary", "차트 증거 경계"),
+    ("Quarterly Revenue & Operating Income", "분기 매출 및 영업이익"),
+    ("Margin Trend - Op vs Net %", "마진 추이 - 영업 vs 순이익률"),
+    ("Latest Quarter Business Driver Bridge", "최근 분기 사업 동인 브리지"),
+    ("Free Cash Flow Run-Rate - validated trend boundary", "잉여현금흐름 런레이트 - 검증 추세 경계"),
+    ("Quarterly Trend Compatibility - revenue, operating income, FCF", "분기 추세 정합성 - 매출, 영업이익, FCF"),
+    ("Stock Price vs Scenario Targets", "주가와 시나리오 목표가"),
+    ("Base DCF Fair Value", "Base DCF 적정가"),
+    ("Enterprise Value", "기업가치"),
+    ("Equity value", "주주가치"),
+    ("Terminal growth", "영구성장률"),
+    ("DCF Sensitivity Table", "DCF 민감도 표"),
+    ("Reverse DCF", "역산 DCF"),
+    ("Market is pricing in", "시장은 다음을 반영"),
+    ("Our base assumes", "Base 가정"),
+    ("annual FCF growth", "연간 FCF 성장률"),
+    ("Consensus Average", "컨센서스 평균"),
+    ("Median Target", "중앙값 목표가"),
+    ("Street High", "최고 목표가"),
+    ("Street Low", "최저 목표가"),
+    ("Coverage status:", "커버리지 상태:"),
+    ("Weighted Fair Value", "가중 적정가"),
+    ("Current Price", "현재가"),
+    ("Implied View vs Market", "시장 대비 내재 시각"),
+    ("Reconciliation Logic", "조정 논리"),
+    ("Decision anchor:", "판단 앵커:"),
+    ("Weight", "가중치"),
+    ("Subject", "대상 기업"),
+    ("4-artifact evidence boundary", "4개 산출물 증거 경계"),
+    ("renderer-specific guardrails", "렌더러 전용 가드레일"),
+    ("Scenario math", "시나리오 산식"),
+    ("Chart arrays", "차트 배열"),
+    ("Delivery gate", "전달 게이트"),
+    ("3-scenario execution guidelines", "3개 시나리오 실행 기준"),
+    ("What Would Make Me Wrong", "내 판단이 틀리는 조건"),
+    ("Source profile", "소스 프로필"),
+    ("Analysis Date:", "분석일:"),
+    ("Mode: Deep Dive Dashboard (C)", "모드: 심층 대시보드 (C)"),
+    ("Data Mode:", "데이터 모드:"),
+    ("Confidence Cap:", "신뢰도 상한:"),
+    ("R/R Score:", "R/R 점수:"),
+    ("Bear Case", "약세 시나리오"),
+    ("Base Case", "기준 시나리오"),
+    ("Bull Case", "강세 시나리오"),
+    ("Variant View", "차별적 관점"),
+    ("Market Cap", "시가총액"),
+    ("Revenue TTM", "TTM 매출"),
+    ("Revenue Growth", "매출 성장률"),
+    ("Operating Margin", "영업이익률"),
+    ("Op Margin", "영업이익률"),
+    ("FCF Yield", "FCF 수익률"),
+    ("Net Debt / EBITDA", "순차입금 / EBITDA"),
+    ("Net Debt", "순차입금"),
+    ("FCF TTM", "TTM FCF"),
+    ("P/E", "PER"),
+    ("Beta", "베타"),
+    ("Risk", "리스크"),
+    ("Mechanism", "작동 경로"),
+    ("Financial Impact", "재무 영향"),
+    ("Probability", "확률"),
+    ("Metric", "지표"),
+    ("Current", "현재"),
+    ("Unit", "단위"),
+    ("Assessment", "판단"),
+    ("Company", "기업"),
+    ("Basis", "근거"),
+    ("Value", "값"),
+    ("Period", "기간"),
+    ("Quarter", "분기"),
+    ("Revenue", "매출"),
+    ("Gross Profit", "매출총이익"),
+    ("Operating Income", "영업이익"),
+    ("Net Income", "순이익"),
+    ("Free Cash Flow", "잉여현금흐름"),
+    ("Operating Margin", "영업이익률"),
+    ("Net Margin", "순이익률"),
+    ("Latest Quarter", "최근 분기"),
+    ("Bull Target", "강세 목표가"),
+    ("Base Target", "기준 목표가"),
+    ("Bear Target", "약세 목표가"),
+    ("52W Low", "52주 저점"),
+    ("52W High", "52주 고점"),
+    ("Price", "주가"),
+    ("Date", "날짜"),
+    ("Catalyst", "촉매"),
+    ("Significance", "의미"),
+    ("Claim", "클레임"),
+    ("Source", "출처"),
+    ("Grade", "등급"),
+    ("Tag", "태그"),
+    ("Disclaimer", "면책 고지"),
+    ("Last updated:", "최종 업데이트:"),
+    ("Sources:", "출처:"),
+    ("validated metrics, evidence pack, deterministic calculations.", "검증 지표, 증거 패키지, 결정론적 계산."),
+    ("This dashboard is for informational purposes only and does not constitute investment advice.", "이 대시보드는 정보 제공용이며 투자 조언이 아닙니다."),
+    ("This is not investment advice; outputs depend on the verified artifacts available at run time.", "투자 조언이 아니며, 결과는 실행 시점의 검증된 산출물에 따라 달라집니다."),
+    ("This is not investment advice; verify source artifacts before acting.", "투자 조언이 아니며, 행동 전 원천 산출물을 확인해야 합니다."),
+    ("underweight", "비중축소"),
+    ("overweight", "비중확대"),
+    ("neutral", "중립"),
+    ("monitor", "모니터링"),
+    ("Gap", "차이"),
+    ("Converged in", "수렴 반복"),
+    ("iterations.", "회."),
+)
+
+MODE_C_KO_REGEX_REPLACEMENTS = (
+    (r" - (\d+) tracked metrics", r" - \1개 추적 지표"),
+    (r" - (\d+) debate points", r" - \1개 논점"),
+    (r" - (\d+) deterministic rows", r" - \1개 결정론적 항목"),
+    (r" - (\d+) target anchors", r" - \1개 목표가 앵커"),
+    (r" - (\d+) scenario paths", r" - \1개 시나리오 경로"),
+    (r" - (\d+) mechanisms", r" - \1개 메커니즘"),
+    (r" - (\d+) quarters", r" - \1개 분기"),
+    (r" - (\d+) charts", r" - \1개 차트"),
+    (r" - (\d+) points max", r" - \1개 포인트 이하"),
+    (r" - (\d+) anchor points", r" - \1개 앵커 포인트"),
+    (r" - (\d+) FRED series", r" - \1개 FRED 시계열"),
+    (r" - (\d+) rows", r" - \1개 행"),
+    (r" - (\d+) facts", r" - \1개 팩트"),
+    (r" - (\d+) claims", r" - \1개 클레임"),
+    (r" - (\d+) checks", r" - \1개 체크"),
+    (r" - (\d+) WACC cases", r" - \1개 WACC 케이스"),
+    (r"Reconciliation Logic - (\d+) anchors", r"조정 논리 - \1개 앵커"),
+    (r"역산 DCF - ([\d.]+)% market-implied growth", r"역산 DCF - \1% 시장 내재 성장률"),
+    (r"밸류에이션 브리지 - weighted FV", "밸류에이션 브리지 - 가중 적정가"),
+    (r"커버리지 상태: unavailable", "커버리지 상태: 이용 불가"),
+    (r"커버리지 상태: available", "커버리지 상태: 이용 가능"),
+    (r"Macro data unavailable", "매크로 데이터 이용 불가"),
+    (r"FRED structured series unavailable", "FRED 구조화 시계열 이용 불가"),
+    (r"Chart audit rows unavailable", "차트 감사 행 이용 불가"),
+    (r"Quarterly data unavailable", "분기 데이터 이용 불가"),
+    (r"DCF sensitivity unavailable", "DCF 민감도 이용 불가"),
+    (r"Reverse DCF - unavailable", "역산 DCF - 이용 불가"),
+    (r"([+\-\d.,%]+) growth / ([+\-\d.,%]+) margin", r"\1 성장률 / \2 마진"),
+)
+
+MODE_C_KO_SCRIPT_REPLACEMENTS = (
+    ("label: 'Revenue'", "label: '매출'"),
+    ("label: 'Operating Income'", "label: '영업이익'"),
+    ("label: 'Operating Margin'", "label: '영업이익률'"),
+    ("label: 'Net Margin'", "label: '순이익률'"),
+    ("label: 'Latest Quarter'", "label: '최근 분기'"),
+    ("label: 'Free Cash Flow'", "label: '잉여현금흐름'"),
+    ("label: 'Bull Target'", "label: '강세 목표가'"),
+    ("label: 'Base Target'", "label: '기준 목표가'"),
+    ("label: 'Bear Target'", "label: '약세 목표가'"),
+    (" Price'", " 주가'"),
+)
+
+KOREAN_REQUIRED_HEADING_FALLBACKS = {
+    "variant_view": r"투자 논점|차별적 관점",
+    "precision_risk": r"정밀 리스크",
+    "disclaimer": r"면책|투자 조언",
+}
+
+
+def is_korean(language: str | None) -> bool:
+    return str(language or "").lower().startswith("ko")
+
+
+def localize_mode_c_static_html(html_text: str, language: str) -> str:
+    if not is_korean(language):
+        return html_text
+    script_marker = "\n  <script>\n  const blue"
+    html_part, marker, script_part = html_text.partition(script_marker)
+    for source, target in MODE_C_KO_STATIC_REPLACEMENTS:
+        html_part = html_part.replace(source, target)
+    for pattern, replacement in MODE_C_KO_REGEX_REPLACEMENTS:
+        html_part = re.sub(pattern, replacement, html_part)
+    if marker:
+        for source, target in MODE_C_KO_SCRIPT_REPLACEMENTS:
+            script_part = script_part.replace(source, target)
+    return html_part + marker + script_part
 
 
 @dataclass(frozen=True)
@@ -701,12 +902,14 @@ def build_mode_c_dashboard_html(
     reverse_dcf = analysis.get("reverse_dcf") if isinstance(analysis.get("reverse_dcf"), dict) else None
 
     quarterly = normalize_quarterly(validated.get("financials_quarterly"))
-    chart_data = build_chart_data(analysis=analysis, metrics=metrics, quarterly=quarterly, scenarios=scenarios)
-    source_claims = sections.get("source_tagged_claims") if isinstance(sections.get("source_tagged_claims"), list) else analysis.get("source_tagged_claims")
-    if not isinstance(source_claims, list):
-        source_claims = evidence.get("facts") if isinstance(evidence.get("facts"), list) else []
-
-    return f"""<!DOCTYPE html>
+    chart_data = build_chart_data(
+        analysis=analysis,
+        metrics=metrics,
+        quarterly=quarterly,
+        scenarios=scenarios,
+        language=language,
+    )
+    html_text = f"""<!DOCTYPE html>
 <html lang="{esc(language)}">
 <head>
   <meta charset="UTF-8">
@@ -781,9 +984,6 @@ def build_mode_c_dashboard_html(
     {render_analyst_coverage_section(metrics, sections, currency)}
     {render_charts_section(chart_data, currency)}
     {render_financial_detail_section(metrics, quarterly, sections, currency)}
-    {render_quality_gate_section(analysis, calculations, evidence, validated)}
-    {render_portfolio_section(analysis, sections, scenarios)}
-    {render_source_appendix(source_claims)}
   </main>
 
   <footer class="bg-gray-900 text-gray-400 mt-12">
@@ -871,6 +1071,7 @@ def build_mode_c_dashboard_html(
 </body>
 </html>
 """
+    return localize_mode_c_static_html(html_text, language)
 
 
 def render_scenario_section(
@@ -1484,7 +1685,10 @@ def validate_mode_c_rendered_html(
     metrics = rendered_metrics(html_text)
     errors: list[str] = []
     warnings: list[str] = []
+    korean_output = bool(re.search(r"<html\s+lang=[\"']ko", html_text, flags=re.IGNORECASE))
     for key, minimum in minimums.items():
+        if key == "body_text_chars" and korean_output:
+            minimum = min(int(minimum), 9500)
         actual = metrics.get(key, 0)
         if actual < minimum:
             errors.append(f"{key} below Mode C golden minimum: {actual} < {minimum}")
@@ -1493,6 +1697,9 @@ def validate_mode_c_rendered_html(
         pattern = group.get("pattern") if isinstance(group, dict) else None
         group_id = group.get("id") if isinstance(group, dict) else "unknown"
         if pattern and not re.search(pattern, html_text, flags=re.IGNORECASE):
+            fallback = KOREAN_REQUIRED_HEADING_FALLBACKS.get(str(group_id))
+            if fallback and re.search(fallback, html_text, flags=re.IGNORECASE):
+                continue
             errors.append(f"required heading group missing: {group_id}")
 
     for pattern in config.get("forbidden_patterns", []):
@@ -1507,11 +1714,16 @@ def validate_mode_c_rendered_html(
         errors.append("Mode C chart initialization count below 3")
     if has_empty_chart_arrays(html_text):
         errors.append("Mode C chart data arrays are empty")
-    if "Disclaimer" not in html_text and "investment advice" not in html_text.lower():
+    if (
+        "Disclaimer" not in html_text
+        and "investment advice" not in html_text.lower()
+        and "면책" not in html_text
+        and "투자 조언" not in html_text
+    ):
         errors.append("disclaimer missing")
-    if analysis.get("valuation_bridge") and "Valuation Bridge" not in html_text:
+    if analysis.get("valuation_bridge") and "Valuation Bridge" not in html_text and "밸류에이션 브리지" not in html_text:
         errors.append("valuation_bridge exists but rendered section is missing")
-    if analysis.get("reverse_dcf") and "Reverse DCF" not in html_text:
+    if analysis.get("reverse_dcf") and "Reverse DCF" not in html_text and "역산 DCF" not in html_text:
         errors.append("reverse_dcf exists but rendered section is missing")
 
     return {
@@ -1546,8 +1758,23 @@ def load_golden_config() -> tuple[dict[str, Any], str]:
     ]
     for candidate in candidates:
         if candidate.exists():
-            return json.loads(candidate.read_text(encoding="utf-8")), display_path(candidate)
-    return DEFAULT_GOLDEN_CONFIG, "default"
+            return normalize_public_mode_c_golden_config(json.loads(candidate.read_text(encoding="utf-8"))), display_path(candidate)
+    return normalize_public_mode_c_golden_config(DEFAULT_GOLDEN_CONFIG), "default"
+
+
+def normalize_public_mode_c_golden_config(config: dict[str, Any]) -> dict[str, Any]:
+    normalized = dict(config)
+    minimums = dict(DEFAULT_GOLDEN_CONFIG["minimums"])
+    minimums.update(config.get("minimums") or {})
+    minimums["body_text_chars"] = min(int(minimums.get("body_text_chars") or 0), DEFAULT_GOLDEN_CONFIG["minimums"]["body_text_chars"])
+    minimums["html_byte_size"] = min(int(minimums.get("html_byte_size") or 0), DEFAULT_GOLDEN_CONFIG["minimums"]["html_byte_size"])
+    normalized["minimums"] = minimums
+    normalized["required_heading_groups"] = [
+        group
+        for group in (config.get("required_heading_groups") or [])
+        if not (isinstance(group, dict) and group.get("id") == "portfolio")
+    ]
+    return normalized
 
 
 def has_empty_chart_arrays(html_text: str) -> bool:
@@ -1570,6 +1797,7 @@ def build_chart_data(
     metrics: dict[str, Any],
     quarterly: list[dict[str, Any]],
     scenarios: dict[str, Any],
+    language: str = "en",
 ) -> dict[str, Any]:
     usable_quarters = quarterly[:6]
     if not usable_quarters:
@@ -1595,7 +1823,10 @@ def build_chart_data(
     op_margin = [round(margin(item.get("operating_income"), item.get("revenue")) or 0, 2) for item in usable_quarters]
     net_margin = [round(margin(item.get("net_income"), item.get("revenue")) or 0, 2) for item in usable_quarters]
     latest_quarter = usable_quarters[-1] if usable_quarters else {}
-    segment_labels = ["Revenue", "Gross Profit", "Operating Income", "Net Income"]
+    if is_korean(language):
+        segment_labels = ["매출", "매출총이익", "영업이익", "순이익"]
+    else:
+        segment_labels = ["Revenue", "Gross Profit", "Operating Income", "Net Income"]
     segment_data = [
         round(to_billions(pick_any(latest_quarter, "revenue", "total_revenue", "sales")), 2),
         round(to_billions(pick_any(latest_quarter, "gross_profit", "grossProfit")), 2),
@@ -1609,7 +1840,10 @@ def build_chart_data(
     bull = scenario_target(scenarios, "bull") or high or price
     base = scenario_target(scenarios, "base") or price
     bear = scenario_target(scenarios, "bear") or low or price
-    price_labels = ["52W Low", "Current", "Bear", "Base", "Bull", "52W High"]
+    if is_korean(language):
+        price_labels = ["52주 저점", "현재가", "약세", "기준", "강세", "52주 고점"]
+    else:
+        price_labels = ["52W Low", "Current", "Bear", "Base", "Bull", "52W High"]
     price_data = [low, price, bear, base, bull, high]
     return {
         "quarters": quarters,

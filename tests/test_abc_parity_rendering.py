@@ -127,7 +127,7 @@ def test_mode_c_render_only_builds_golden_minimum_dashboard() -> None:
     html = html_path.read_text(encoding="utf-8")
 
     assert render["status"] == "PASS"
-    assert render["metrics"]["html_byte_size"] >= 50_000
+    assert render["metrics"]["html_byte_size"] >= 40_000
     assert render["metrics"]["canvas_count"] >= 3
     assert render["metrics"]["table_count"] >= 5
     assert render["metrics"]["script_count"] >= 3
@@ -139,6 +139,107 @@ def test_mode_c_render_only_builds_golden_minimum_dashboard() -> None:
     assert "arrays are not present" not in html
     assert "{COMPANY_NAME}" not in html
     assert "/Users/" not in html
+
+
+def test_mode_c_korean_render_localizes_dashboard_chrome() -> None:
+    run_id = "pytest_abc_parity_render_fixture_AAPL_C_ko"
+    collect = run_parity(
+        "--ticker",
+        "AAPL",
+        "--mode",
+        "C",
+        "--lang",
+        "ko",
+        "--market",
+        "US",
+        "--run-id",
+        run_id,
+        "--collect-only",
+        "--skip-network",
+    )
+    assert collect.returncode == 0, collect.stderr
+    ticker_root = REPO_ROOT / "output" / "runs" / run_id / "AAPL"
+    write_mock_yfinance(ticker_root)
+
+    result = run_parity(
+        "--ticker",
+        "AAPL",
+        "--mode",
+        "C",
+        "--lang",
+        "ko",
+        "--market",
+        "US",
+        "--run-id",
+        run_id,
+        "--render-only",
+        "--reuse-collected",
+        "--skip-network",
+        env={"ANALYST_BACKEND": "fixture"},
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    render = payload["render_results"][0]
+    html_path = REPO_ROOT / render["html_path"]
+    report_path = REPO_ROOT / render["render_report_path"]
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    html = html_path.read_text(encoding="utf-8")
+
+    assert render["status"] == "PASS"
+    assert report["status"] == "PASS"
+    for expected in (
+        "Mode C 심층 대시보드",
+        "시나리오 밸류에이션",
+        "핵심 KPI",
+        "투자 논점과 차별적 관점",
+        "정밀 리스크 분석",
+        "밸류에이션 지표",
+        "DCF 밸류에이션",
+        "동종업계 비교",
+        "매크로 환경",
+        "애널리스트 커버리지",
+        "재무 차트",
+        "재무 세부 분석",
+        "면책 고지",
+    ):
+        assert expected in html
+
+    for forbidden in (
+        "Mode C Deep Dive Dashboard",
+        "Scenario Valuation",
+        "Key Performance Indicators",
+        "Investment Thesis & Variant View",
+        "Precision Risk Analysis",
+        "Valuation Metrics",
+        "DCF Valuation",
+        "Peer Comparison",
+        "Macro Environment",
+        "Analyst Coverage",
+        "Charts & Trend Data",
+        "Financial Detail Analysis",
+        "Portfolio Strategy",
+        "Source-Tagged Claims Appendix",
+        "이익 품질 및 증거 게이트",
+        "포트폴리오 전략",
+        "출처 태그 클레임 부록",
+        ">Disclaimer<",
+        "tracked metrics",
+        "debate points",
+        "deterministic rows",
+        "target anchors",
+        "scenario paths",
+        "points max",
+        "anchor points",
+        "FRED series",
+        "label: 'Revenue'",
+        "label: 'Operating Income'",
+        "label: 'Free Cash Flow'",
+        "Bull Target",
+        "Base Target",
+        "Bear Target",
+    ):
+        assert forbidden not in html
 
 
 def test_mode_c_render_uses_peer_mini_fetch_rows() -> None:

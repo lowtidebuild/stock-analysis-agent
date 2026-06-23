@@ -37,7 +37,7 @@ python3 -m pytest tests/ -q
 Result:
 
 ```text
-629 passed, 3 skipped, 294 subtests passed
+635 passed, 3 skipped, 294 subtests passed
 ```
 
 Mode C entrypoint smoke:
@@ -50,10 +50,31 @@ ANALYST_BACKEND=fixture python3 scripts/run_mode_c.py \
   --market US \
   --run-id pytest_run_mode_c_entrypoint_AAPL_C \
   --skip-network \
-  --reuse-collected
+  --reuse-collected \
+  --allow-fixture-delivery
 ```
 
-Result: `delivery_gate=PASS`.
+Result: `delivery_gate=PASS` with `fixture_delivery_guard` recorded as a
+non-blocking smoke flag. The same entrypoint test file also verifies that the
+fixture path is blocked without `--allow-fixture-delivery`, and that the Korean
+Mode C entrypoint publishes a localized dashboard with translated chart labels.
+
+Focused Codex parity guardrail checks:
+
+```bash
+python3 -m pytest \
+  tests/test_abc_parity_rendering.py \
+  tests/test_rendered_output_validation.py \
+  tests/test_abc_parity_analyst.py \
+  tests/test_quality_report_numeric_sanity.py \
+  tests/test_validation_sanity.py \
+  tests/test_quality_report_scenario_consistency.py \
+  tests/test_delivery_severity.py \
+  tests/test_run_mode_c_entrypoint.py \
+  -q
+```
+
+Result: `49 passed`.
 
 Eval harness, manifest by manifest:
 
@@ -130,7 +151,8 @@ ANALYST_BACKEND=fixture python3 scripts/run_mode_c.py \
   --run-id codex_parity_000660_20260622_close \
   --reuse-collected \
   --skip-network \
-  --web-provider none
+  --web-provider none \
+  --allow-fixture-delivery
 ```
 
 Result:
@@ -140,7 +162,8 @@ Result:
   "report_path": "output/reports/000660_C_ko_2026-06-22.html",
   "run_id": "codex_parity_000660_20260622_close",
   "quality_report_path": "output/runs/codex_parity_000660_20260622_close/000660/quality-report.json",
-  "delivery_gate": "PASS"
+  "delivery_gate": "PASS",
+  "run_profile": "smoke"
 }
 ```
 
@@ -172,8 +195,49 @@ Key fields:
 | `quality_report.overall_result` | `PASS_WITH_FLAGS` |
 | `delivery_gate.result` | `PASS` |
 | `delivery_gate.ready_for_delivery` | `true` |
+| `run_context.run_profile` | `smoke` |
+| `quality_report.items.fixture_delivery_guard.status` | `PASS_WITH_FLAGS` |
+| `quality_report.items.numeric_sanity.status` | `PASS` |
+| `mode_c_render_report.validation.status` | `PASS` |
 
-The published HTML is about 61 KB.
+The regenerated smoke HTML is about 63 KB. It is useful for renderer and
+delivery-gate regression checks, but it is not a production-quality analyst
+report because it still uses the fixture backend and no qualitative web
+provider.
+
+## Quality Parity Benchmark
+
+This SK하이닉스 report remains a quality-parity benchmark, not a deliverable
+production report. The current smoke rerun has better Korean renderer chrome and
+chart labels than the original failing sample, but it is still structurally
+useful rather than analyst-complete because it uses fixture analysis and no live
+Tier2 research provider.
+
+| Area | Original gap | Current smoke state |
+| --- | --- | --- |
+| Visual | Basic Tailwind card/grid dashboard, below Claude Code report polish | Still functional rather than premium |
+| Korean localization | English headings, chart labels, table labels, footer, and fallback prose | Major chrome, count suffixes, chart labels, and footer are localized |
+| Analyst content | Fixture analyst text with repeated generic thesis language | Still fixture-driven and smoke-only |
+| Research completeness | Tier2 unavailable, analyst target cards blank, peer row placeholder | Still no live qualitative provider; coverage remains unavailable |
+| Data presentation | KR market peer row displayed market cap with `$` and mixed English labels | KRW formatting and common Korean labels improved; source appendix claims remain raw evidence text |
+| Gate strictness | Old structural delivery gate passed despite quality gaps | Fixture delivery is blocked unless explicitly allowed; allowed runs carry a non-blocking smoke flag |
+
+Session 1 of the quality-parity work adds a production/smoke profile guard:
+
+- `scripts/run_mode_c.py` now records `run_profile` in
+  `analysis-result.run_context`.
+- Fixture backends default to `run_profile=smoke`.
+- `tools/quality_report.py` adds `fixture_delivery_guard` for Mode C.
+- Fixture/smoke runs are delivery-blocked unless
+  `--allow-fixture-delivery` is explicitly supplied.
+
+Expected behavior after Session 1:
+
+| Run type | Expected delivery behavior |
+| --- | --- |
+| Live analyst backend, production profile | Can pass if all other gates pass |
+| Fixture backend without `--allow-fixture-delivery` | `delivery_gate.result=BLOCKED` |
+| Fixture backend with `--allow-fixture-delivery` | `delivery_gate.result=PASS`, with `fixture_delivery_guard` as a non-blocking smoke flag |
 
 ## Nearby Claude Snapshot Comparison
 

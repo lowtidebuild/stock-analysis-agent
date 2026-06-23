@@ -27,6 +27,8 @@ PEER_PLACEHOLDER_TERMS = (
     "will be expanded",
     "placeholder",
 )
+FIXTURE_BACKEND_NAMES = {"fixture", "deterministic_fixture", "local_fixture"}
+CODEX_NATIVE_BACKEND_NAMES = {"codex_native", "codex", "local_codex"}
 
 
 @dataclass(frozen=True)
@@ -128,8 +130,8 @@ def build_analyst_handoff(
     write_json(analyst_input_path, input_pack)
 
     backend_name = os.environ.get("ANALYST_BACKEND", "").strip()
-    schema = load_analysis_schema()
-    if backend_name in {"fixture", "deterministic_fixture", "local_fixture"}:
+    backend_key = backend_name.lower()
+    if backend_key in FIXTURE_BACKEND_NAMES:
         analyst_json = build_fixture_analysis(
             calculations=calculations,
             evidence=evidence,
@@ -139,7 +141,22 @@ def build_analyst_handoff(
             validated=validated,
         )
         backend_meta = {"provider": "fixture", "model": "deterministic-fixture", "usage": {}}
+    elif backend_key in CODEX_NATIVE_BACKEND_NAMES:
+        analyst_json = build_codex_native_analysis(
+            calculations=calculations,
+            evidence=evidence,
+            language=language,
+            mode=mode,
+            peer_records=peer_records,
+            validated=validated,
+        )
+        backend_meta = {
+            "provider": "codex_native",
+            "model": "local-deterministic-analyst",
+            "usage": {"api_calls": 0},
+        }
     else:
+        schema = load_analysis_schema()
         backend = get_backend(backend_name or None, logical_tier="analyst_main")
         backend_result = backend.complete(
             system=system,
@@ -634,21 +651,49 @@ def build_fixture_analysis(
     if not fact_text:
         fact_text = "verified evidence remains thin; deterministic calculations define the usable boundaries"
     if language == "ko":
-        thesis = f"{company}({ticker})는 검증된 숫자와 deterministic scenario 기준으로 판단해야 하며, 핵심 논점은 성장 지속성, FCF 전환, 밸류에이션 부담의 균형이다."
+        thesis = f"{company}({ticker})는 검증된 숫자와 결정론적 시나리오 기준으로 판단해야 하며, 핵심 논점은 성장 지속성, FCF 전환, 밸류에이션 부담의 균형이다."
         risk_prefix = "검증된 지표가 약화되면"
         catalyst_prefix = "다음 확인 지점은"
+        variant_view_q1 = f"{thesis} 첫 번째 차별적 질문은 현재 성장률이 현금 전환 악화 없이 복리로 이어질 수 있는지다."
+        variant_view_q2 = f"{company}는 밸류에이션 지지가 단순한 멀티플 확장이 아니라 지속 가능한 이익 체력에서 나오는지 입증해야 한다."
+        variant_view_q3 = "하방 논점은 출처가 검증된 FCF와 마진 증거가 투자심리 리셋을 흡수할 수 있는지다."
+        precision_risks = [
+            {
+                "risk": f"{risk_prefix} 성장 프리미엄이 낮아질 수 있다.",
+                "mechanism": "성장 기대가 실망으로 바뀌면 선행 추정치가 내려가고, 밸류에이션 멀티플이 압축되며, 약세 시나리오 목표가 쪽으로 재평가될 수 있다.",
+                "financial_impact": "매출 성장률과 FCF 전환율이 낮아지면 기준 시나리오 적정가가 하락한다.",
+            },
+            {
+                "risk": f"{risk_prefix} FCF 품질이 보고 이익을 따라가지 못할 수 있다.",
+                "mechanism": "재투자 부담이나 운전자본 부담이 커지면 FCF 수익률이 낮아지고 DCF 지지력이 약해진다.",
+                "financial_impact": "DCF 적정가와 밸류에이션 브리지의 가중 적정가가 낮아진다.",
+            },
+            {
+                "risk": f"{risk_prefix} 컨센서스 목표가가 뒤처질 수 있다.",
+                "mechanism": "추정치 변경은 후행 재무제표보다 애널리스트 목표가 앵커를 더 빠르게 움직일 수 있다.",
+                "financial_impact": "시나리오 기준값과 애널리스트 목표가 앵커를 다시 설정해야 한다.",
+            },
+        ]
+        qoe_narrative = "이익 품질은 검증된 지표로만 판단하며, Grade D 필드는 추정으로 채우지 않고 제외한다."
+        portfolio_strategy = "포지션 크기는 일반적인 매수/매도 문구보다 결정론적 R/R 점수, 밸류에이션 브리지의 할인 또는 프리미엄, 다음 증거 확인 지점을 기준으로 정해야 한다."
+        wrong_checks = [
+            "새 증거 반영 후 시나리오 확률과 기준 시나리오가 서로 맞지 않는다.",
+            "FCF 전환율이 검증 데이터 추세에서 크게 벗어난다.",
+            "새 공시나 회사 발표가 현재 출처 태그 지표와 충돌한다.",
+        ]
+        disclaimer = "투자 조언이 아니며, 결과는 실행 시점의 검증된 산출물에 따라 달라집니다."
+        rr_score_interpretation = "결정론적 시나리오가 R/R 점수를 정의하고, 애널리스트 문장은 증거와의 정합성을 설명한다."
+        catalyst_event = f"{catalyst_prefix} 출처 태그가 붙은 최신 재무 증거다."
+        catalyst_significance = "새 검증 데이터로 밸류에이션과 시나리오 앵커를 갱신한다."
+        catalyst_narrative = "애널리스트 논지가 바뀌기 전에 새 검증 지표가 결정론적 계산을 먼저 갱신해야 한다."
     else:
         thesis = f"{company} ({ticker}) should be judged on verified metrics and deterministic scenarios; the core debate is growth durability, FCF conversion, and valuation risk."
         risk_prefix = "If verified metrics weaken"
         catalyst_prefix = "The next checkpoint is"
-
-    sections: dict[str, Any] = {
-        "one_line_thesis": thesis,
-        "action_signal": fixture_action_signal(language),
-        "variant_view_q1": f"{thesis} The first variant question is whether current growth can compound without degrading cash conversion.",
-        "variant_view_q2": f"{company} must prove that valuation support is driven by durable earnings power rather than multiple expansion alone.",
-        "variant_view_q3": f"The downside debate is whether source-verified FCF and margin evidence can absorb a sentiment reset.",
-        "precision_risks": [
+        variant_view_q1 = f"{thesis} The first variant question is whether current growth can compound without degrading cash conversion."
+        variant_view_q2 = f"{company} must prove that valuation support is driven by durable earnings power rather than multiple expansion alone."
+        variant_view_q3 = "The downside debate is whether source-verified FCF and margin evidence can absorb a sentiment reset."
+        precision_risks = [
             {
                 "risk": f"{risk_prefix} growth could be repriced lower.",
                 "mechanism": "Growth disappointment reduces forward estimates, compresses valuation multiples, and pushes the bear scenario toward its deterministic target.",
@@ -664,7 +709,27 @@ def build_fixture_analysis(
                 "mechanism": "Estimate revisions can move analyst target anchors faster than trailing financials.",
                 "financial_impact": "Scenario base and analyst-target valuation anchors would need to reset.",
             },
-        ],
+        ]
+        qoe_narrative = "Quality of earnings is judged from validated metrics only; Grade D fields are excluded rather than filled with guesses."
+        portfolio_strategy = "Position sizing should follow the deterministic R/R score, valuation bridge discount or premium, and upcoming evidence checkpoints rather than a generic buy/sell label."
+        wrong_checks = [
+            "Scenario probabilities stop summing to the deterministic base case after new evidence.",
+            "FCF conversion diverges materially from the validated-data trend.",
+            "A new filing or company release contradicts the current source-tagged metrics.",
+        ]
+        disclaimer = "This is not investment advice; outputs depend on the verified artifacts available at run time."
+        rr_score_interpretation = "Deterministic scenarios define the R/R score; analyst text explains the evidence fit."
+        catalyst_event = f"{catalyst_prefix} updated source-tagged financial evidence."
+        catalyst_significance = "Refresh valuation and scenario anchors with new verified data."
+        catalyst_narrative = "New validated metrics should update the deterministic calculations before the analyst thesis changes."
+
+    sections: dict[str, Any] = {
+        "one_line_thesis": thesis,
+        "action_signal": fixture_action_signal(language),
+        "variant_view_q1": variant_view_q1,
+        "variant_view_q2": variant_view_q2,
+        "variant_view_q3": variant_view_q3,
+        "precision_risks": precision_risks,
         "valuation_metrics": list((calculations.get("ratio_recomputation") or {}).get("computed_metrics", {}).values()),
         "dcf_analysis": dcf_section(calculations),
         "macro_context": macro_section(validated),
@@ -672,17 +737,13 @@ def build_fixture_analysis(
         or peer_unavailable_disclosure(),
         "analyst_coverage": analyst_coverage(validated),
         "qoe_summary": {
-            "narrative": "Quality of earnings is judged from validated metrics only; Grade D fields are excluded rather than filled with guesses.",
+            "narrative": qoe_narrative,
             "fact_basis": fact_text,
         },
-        "portfolio_strategy": "Position sizing should follow the deterministic R/R score, valuation bridge discount or premium, and upcoming evidence checkpoints rather than a generic buy/sell label.",
-        "what_would_make_me_wrong": [
-            "Scenario probabilities stop summing to the deterministic base case after new evidence.",
-            "FCF conversion diverges materially from the validated-data trend.",
-            "A new filing or company release contradicts the current source-tagged metrics.",
-        ],
+        "portfolio_strategy": portfolio_strategy,
+        "what_would_make_me_wrong": wrong_checks,
         "source_tagged_claims": source_tagged_claims(evidence),
-        "disclaimer": "This is not investment advice; outputs depend on the verified artifacts available at run time.",
+        "disclaimer": disclaimer,
     }
     if mode == "A":
         sections["briefing_summary"] = thesis
@@ -690,20 +751,426 @@ def build_fixture_analysis(
         sections["relative_view"] = "Mode B comparison ranking is deferred to the comparison pass; this per-ticker analyst result supplies comparable inputs."
     return {
         "verdict": "neutral",
-        "rr_score_interpretation": "Deterministic scenarios define the R/R score; analyst text explains the evidence fit.",
+        "rr_score_interpretation": rr_score_interpretation,
         "thesis": thesis,
         "variant_view": [sections["variant_view_q1"], sections["variant_view_q2"], sections["variant_view_q3"]],
         "top_risks": sections["precision_risks"],
         "upcoming_catalysts": [
             {
                 "date": validated.get("analysis_date"),
-                "event": f"{catalyst_prefix} updated source-tagged financial evidence.",
-                "significance": "Refresh valuation and scenario anchors with new verified data.",
-                "narrative": "New validated metrics should update the deterministic calculations before the analyst thesis changes.",
+                "event": catalyst_event,
+                "significance": catalyst_significance,
+                "narrative": catalyst_narrative,
             }
         ],
         "sections": sections,
     }
+
+
+def build_codex_native_analysis(
+    *,
+    calculations: dict[str, Any],
+    evidence: dict[str, Any],
+    language: str,
+    mode: str,
+    peer_records: list[dict[str, Any]] | None = None,
+    validated: dict[str, Any],
+) -> dict[str, Any]:
+    """Build an analyst-result draft from local verified artifacts only.
+
+    This is the Codex-native path for runs where the operator wants the full
+    Mode C pipeline without an external analyst LLM call.
+    """
+
+    metrics = validated.get("validated_metrics") if isinstance(validated.get("validated_metrics"), dict) else {}
+    company = str(validated.get("company_name") or validated.get("ticker") or "the company")
+    ticker = str(validated.get("ticker") or company)
+    currency = str(validated.get("currency") or "USD")
+    scenarios = (calculations.get("scenario_analysis") or {}).get("scenarios")
+    scenarios = scenarios if isinstance(scenarios, dict) else {}
+    scenario_analysis = calculations.get("scenario_analysis") if isinstance(calculations.get("scenario_analysis"), dict) else {}
+    rr_score = scenario_analysis.get("rr_score")
+    verdict = verdict_from_rr(rr_score)
+    price = metric_value(metrics, "price_at_analysis")
+    base_target = scenario_target(scenarios, "base")
+    bull_target = scenario_target(scenarios, "bull")
+    bear_target = scenario_target(scenarios, "bear")
+    dcf_result = (calculations.get("dcf_analysis") or {}).get("result")
+    dcf_result = dcf_result if isinstance(dcf_result, dict) else {}
+    dcf_value = dcf_result.get("fair_value_per_share")
+    reverse = calculations.get("reverse_dcf") if isinstance(calculations.get("reverse_dcf"), dict) else {}
+    bridge = calculations.get("valuation_bridge") if isinstance(calculations.get("valuation_bridge"), dict) else {}
+    weighted_fair_value = bridge.get("weighted_fair_value")
+    implied_growth = reverse.get("implied_fcf_growth")
+    analyst_growth = reverse.get("analyst_growth_assumption")
+    gap_bp = reverse.get("growth_gap_bp")
+    profile = company_domain_profile(company=company, ticker=ticker, language=language)
+
+    revenue_text = metric_display(metrics, "revenue_ttm", currency=currency)
+    growth_text = metric_display(metrics, "revenue_growth_yoy", currency=currency)
+    margin_text = metric_display(metrics, "operating_margin", currency=currency)
+    fcf_yield_text = metric_display(metrics, "fcf_yield", currency=currency)
+    ev_ebitda_text = metric_display(metrics, "ev_ebitda", currency=currency)
+    forward_pe_text = metric_display(metrics, "pe_forward", currency=currency) or metric_display(metrics, "pe_ratio", currency=currency)
+    beta_text = metric_display(metrics, "beta", currency=currency)
+    price_text = money_text(price, currency)
+    base_text = money_text(base_target, currency)
+    bull_text = money_text(bull_target, currency)
+    bear_text = money_text(bear_target, currency)
+    dcf_text = money_text(dcf_value, currency)
+    bridge_text = money_text(weighted_fair_value, currency)
+    implied_growth_text = percent_text(implied_growth, probability=True)
+    analyst_growth_text = percent_text(analyst_growth, probability=True)
+
+    if language == "ko":
+        thesis = (
+            f"{company}({ticker})는 {profile} 노출이 핵심인 기업으로, 검증 지표상 TTM 매출 {revenue_text}, "
+            f"YoY 매출 성장률 {growth_text}, 영업이익률 {margin_text}를 기록했다. "
+            f"12개월 시나리오 기준 현재가 {price_text} 대비 기준 목표가 {base_text}와 강세 목표가 {bull_text}가 "
+            f"남아 있어 R/R {format_plain_number(rr_score)}는 {korean_verdict(verdict)} 구조다. "
+            f"다만 DCF 적정가 {dcf_text}와 가중 적정가 {bridge_text}가 현재가와 얼마나 벌어지는지가 "
+            "투자 판단의 핵심이며, 성장의 방향성보다 그 성장에 이미 지불한 멀티플이 FCF로 정당화되는지가 더 중요하다."
+        )
+        variant_q1 = (
+            f"성장 지속성: {ticker}의 {growth_text} 매출 성장은 {profile} 투자 사이클을 반영한다. "
+            f"기준 목표가 {base_text}가 유지되려면 신규 수요와 매출 전환이 동시에 확인되어야 하며, "
+            f"둔화가 보이면 약세 목표가 {bear_text}가 먼저 리스크 기준점이 된다."
+        )
+        variant_q2 = (
+            f"현금흐름 전환: FCF 수익률은 {fcf_yield_text}이고 DCF 적정가는 {dcf_text}다. "
+            f"역산 DCF는 시장이 {implied_growth_text} FCF 성장을 요구한다고 읽히며, "
+            f"base 가정 {analyst_growth_text}와의 차이가 안전마진을 좌우한다."
+        )
+        variant_q3 = (
+            f"밸류에이션: EV/EBITDA {ev_ebitda_text}, forward PER {forward_pe_text}, beta {beta_text}는 "
+            f"주가가 성장 기대와 할인율에 민감하다는 뜻이다. 시나리오 R/R은 {format_plain_number(rr_score)}지만, "
+            "장기 DCF 앵커와 12개월 목표가 앵커가 서로 다른 메시지를 내는지 계속 분리해 봐야 한다."
+        )
+        action_signal = (
+            f"{korean_verdict(verdict)}로 보되, 노출 조정은 현재가 {price_text}, 기준 목표가 {base_text}, "
+            f"가중 적정가 {bridge_text}, FCF 수익률 {fcf_yield_text}를 함께 확인한 뒤 단계적으로 판단한다."
+        )
+        qoe_narrative = (
+            f"이익 품질은 성장률 {growth_text}, 영업이익률 {margin_text}, FCF 수익률 {fcf_yield_text}의 조합으로 본다. "
+            "매출과 마진이 좋아도 현금흐름 전환이 뒤처지면 DCF 지지력은 약해진다."
+        )
+        portfolio_strategy = (
+            f"신규 진입은 기준 목표가 {base_text}까지의 여력과 가중 적정가 {bridge_text} 대비 프리미엄을 나눠 보고, "
+            "기존 보유는 다음 실적에서 매출 성장과 FCF 전환이 동시에 유지되는지 확인하면서 조절한다."
+        )
+        wrong_checks = [
+            f"다음 검증 데이터에서 매출 성장률과 FCF 수익률이 동시에 개선되어 {implied_growth_text} 내재 성장 요구가 현실적인 범위로 내려온다.",
+            f"DCF 적정가 {dcf_text}와 가중 적정가 {bridge_text}가 현재가 {price_text}에 가까워질 만큼 할인율 또는 FCF 추정이 개선된다.",
+            f"동종 peer 멀티플이 {ticker} 쪽으로 재평가되어 EV/EBITDA {ev_ebitda_text} 프리미엄이 구조적으로 정당화된다.",
+        ]
+        rr_score_interpretation = (
+            f"R/R {format_plain_number(rr_score)}는 결정론적 약세 {bear_text}, 기준 {base_text}, 강세 {bull_text} "
+            "시나리오에서 계산되며, Codex-native 분석은 이 산출물을 재계산하지 않고 설명만 붙인다."
+        )
+        disclaimer = "투자 조언이 아니며, 모든 판단은 실행 시점의 검증 산출물과 이후 회사 공시 및 시장 데이터 업데이트에 따라 달라질 수 있다."
+    else:
+        thesis = (
+            f"{company} ({ticker}) is a {profile} story with verified TTM revenue of {revenue_text}, "
+            f"YoY revenue growth of {growth_text}, and operating margin of {margin_text}. "
+            f"On the 12-month scenario frame, current price {price_text} compares with base target {base_text} "
+            f"and bull target {bull_text}, leaving deterministic R/R of {format_plain_number(rr_score)}. "
+            f"The key debate is whether FCF can compound enough to justify the multiple already embedded in price, "
+            f"given DCF fair value {dcf_text} and weighted fair value {bridge_text}."
+        )
+        variant_q1 = (
+            f"Growth durability: {ticker}'s {growth_text} revenue growth reflects the {profile} cycle. "
+            f"Base target {base_text} requires demand and conversion to keep confirming; if growth rolls over, "
+            f"bear target {bear_text} becomes the risk reference."
+        )
+        variant_q2 = (
+            f"Cash conversion: FCF yield is {fcf_yield_text} and DCF fair value is {dcf_text}. "
+            f"Reverse DCF reads market-implied FCF growth near {implied_growth_text} versus the base assumption of {analyst_growth_text}, "
+            "so the margin of safety depends on converting growth into cash."
+        )
+        variant_q3 = (
+            f"Valuation: EV/EBITDA {ev_ebitda_text}, forward P/E {forward_pe_text}, and beta {beta_text} show sensitivity "
+            f"to both growth expectations and discount rates. Scenario R/R is {format_plain_number(rr_score)}, "
+            "but the long-term DCF anchor and 12-month target anchor should be kept separate."
+        )
+        action_signal = (
+            f"Treat the signal as {verdict}; change exposure only after reconciling current price {price_text}, "
+            f"base target {base_text}, weighted fair value {bridge_text}, and FCF yield {fcf_yield_text}."
+        )
+        qoe_narrative = (
+            f"Quality of earnings is judged from growth {growth_text}, operating margin {margin_text}, and FCF yield {fcf_yield_text}. "
+            "Revenue and margin strength matter less if cash conversion fails to support the DCF anchor."
+        )
+        portfolio_strategy = (
+            f"For new exposure, compare upside to base target {base_text} with the premium or discount to weighted fair value {bridge_text}. "
+            "For existing exposure, scale around the next evidence update on revenue growth and FCF conversion."
+        )
+        wrong_checks = [
+            f"Revenue growth and FCF yield both improve enough for the {implied_growth_text} implied growth requirement to look realistic.",
+            f"DCF fair value {dcf_text} and weighted fair value {bridge_text} move materially closer to current price {price_text}.",
+            f"Peer multiples re-rate toward {ticker}, structurally supporting the EV/EBITDA {ev_ebitda_text} premium.",
+        ]
+        rr_score_interpretation = (
+            f"R/R {format_plain_number(rr_score)} is calculated from deterministic bear {bear_text}, base {base_text}, "
+            f"and bull {bull_text} scenarios; the Codex-native pass explains those artifacts without recalculating them."
+        )
+        disclaimer = "This is not investment advice; judgments depend on the verified run artifacts and later company or market updates."
+
+    precision_risks = codex_precision_risks(
+        analyst_growth_text=analyst_growth_text,
+        base_target=base_text,
+        bear_target=bear_text,
+        bridge_text=bridge_text,
+        company=company,
+        dcf_text=dcf_text,
+        ev_ebitda_text=ev_ebitda_text,
+        fcf_yield_text=fcf_yield_text,
+        growth_text=growth_text,
+        implied_growth_text=implied_growth_text,
+        language=language,
+        margin_text=margin_text,
+        peer_records=peer_records,
+        price_text=price_text,
+        rr_score=rr_score,
+        ticker=ticker,
+    )
+    sections: dict[str, Any] = {
+        "one_line_thesis": thesis,
+        "action_signal": action_signal,
+        "variant_view_q1": variant_q1,
+        "variant_view_q2": variant_q2,
+        "variant_view_q3": variant_q3,
+        "precision_risks": precision_risks,
+        "valuation_metrics": list((calculations.get("ratio_recomputation") or {}).get("computed_metrics", {}).values())
+        or [{"metric": "unavailable"}],
+        "dcf_analysis": dcf_section(calculations),
+        "macro_context": macro_section(validated),
+        "peer_comparison": peer_comparison_from_records(peer_records, language=language)
+        or peer_unavailable_disclosure(),
+        "analyst_coverage": analyst_coverage(validated),
+        "qoe_summary": {
+            "narrative": qoe_narrative,
+            "fact_basis": first_fact_basis(evidence),
+            "grade_boundary": validated.get("overall_grade"),
+        },
+        "portfolio_strategy": portfolio_strategy,
+        "what_would_make_me_wrong": wrong_checks,
+        "source_tagged_claims": source_tagged_claims(evidence),
+        "disclaimer": disclaimer,
+    }
+    if mode == "A":
+        sections["briefing_summary"] = thesis
+    if mode == "B":
+        sections["relative_view"] = (
+            "Mode B comparison ranking is deferred to the comparison pass; this local Codex result supplies comparable inputs."
+        )
+    return {
+        "verdict": verdict,
+        "rr_score_interpretation": rr_score_interpretation,
+        "thesis": thesis,
+        "variant_view": [variant_q1, variant_q2, variant_q3],
+        "top_risks": precision_risks,
+        "upcoming_catalysts": codex_catalysts(
+            analysis_date=validated.get("analysis_date"),
+            language=language,
+            ticker=ticker,
+        ),
+        "sections": sections,
+        "disclaimer": disclaimer,
+        "codex_native_notes": {
+            "external_analyst_api_calls": 0,
+            "growth_gap_bp": gap_bp,
+        },
+    }
+
+
+def codex_precision_risks(
+    *,
+    analyst_growth_text: str,
+    base_target: str,
+    bear_target: str,
+    bridge_text: str,
+    company: str,
+    dcf_text: str,
+    ev_ebitda_text: str,
+    fcf_yield_text: str,
+    growth_text: str,
+    implied_growth_text: str,
+    language: str,
+    margin_text: str,
+    peer_records: list[dict[str, Any]] | None,
+    price_text: str,
+    rr_score: Any,
+    ticker: str,
+) -> list[dict[str, Any]]:
+    has_peers = bool(peer_records)
+    if language == "ko":
+        risks = [
+            {
+                "risk": f"{company}({ticker})의 성장 프리미엄이 신규 수요 둔화로 압축될 수 있다.",
+                "mechanism": f"매출 성장률 {growth_text}가 둔화되면 기준 목표가 {base_target}의 전제가 약해지고, 투자자는 약세 목표가 {bear_target} 쪽 확률을 높인다.",
+                "financial_impact": f"R/R {format_plain_number(rr_score)}가 낮아지고, 현재가 {price_text} 대비 하방 기준이 더 중요해진다.",
+            },
+            {
+                "risk": "높은 성장 기대가 실제 FCF 전환보다 앞서갈 수 있다.",
+                "mechanism": f"FCF 수익률 {fcf_yield_text}와 영업이익률 {margin_text}가 함께 개선되지 않으면 DCF {dcf_text}와 가중 적정가 {bridge_text}가 주가를 지지하기 어렵다.",
+                "financial_impact": f"시장이 요구하는 {implied_growth_text} FCF 성장과 base 가정 {analyst_growth_text}의 차이가 멀티플 정상화 하방으로 작동한다.",
+            },
+            {
+                "risk": "할인율 또는 밸류에이션 멀티플 변화에 민감하다.",
+                "mechanism": f"EV/EBITDA {ev_ebitda_text} 수준에서는 금리, 리스크 프리미엄, 성장률 가정이 조금만 바뀌어도 장기 현금흐름 현재가치가 크게 변한다.",
+                "financial_impact": f"DCF {dcf_text}와 현재가 {price_text} 사이의 괴리가 커지면 가중 적정가 {bridge_text}가 더 엄격한 리스크 기준이 된다.",
+            },
+        ]
+        if has_peers:
+            risks.append(
+                {
+                    "risk": "동종업계 대비 프리미엄이 과도하다고 판단될 수 있다.",
+                    "mechanism": "peer mini-fetch가 낮은 상대 멀티플을 보여주면 투자자는 성장 프리미엄의 지속성을 더 빠르게 재검증한다.",
+                    "financial_impact": f"상대가치 프리미엄 축소는 기준 목표가 {base_target}보다 가중 적정가 {bridge_text}를 먼저 보게 만든다.",
+                }
+            )
+        return risks
+    risks = [
+        {
+            "risk": f"{company} ({ticker}) growth premium could compress if new demand slows.",
+            "mechanism": f"If revenue growth {growth_text} decelerates, the premise behind base target {base_target} weakens and investors assign more weight to bear target {bear_target}.",
+            "financial_impact": f"R/R {format_plain_number(rr_score)} would fall and downside versus current price {price_text} becomes the tighter risk reference.",
+        },
+        {
+            "risk": "Growth expectations could outrun actual FCF conversion.",
+            "mechanism": f"If FCF yield {fcf_yield_text} and operating margin {margin_text} fail to improve together, DCF {dcf_text} and weighted fair value {bridge_text} provide less support.",
+            "financial_impact": f"The gap between market-implied {implied_growth_text} FCF growth and base assumption {analyst_growth_text} becomes multiple-normalization downside.",
+        },
+        {
+            "risk": "The stock is sensitive to discount-rate and valuation multiple changes.",
+            "mechanism": f"At EV/EBITDA {ev_ebitda_text}, small changes in rates, risk premium, or growth assumptions can materially change long-term cash-flow present value.",
+            "financial_impact": f"If the gap between DCF {dcf_text} and current price {price_text} widens, weighted fair value {bridge_text} becomes the stricter risk anchor.",
+        },
+    ]
+    if has_peers:
+        risks.append(
+            {
+                "risk": "The relative valuation premium may be challenged versus peers.",
+                "mechanism": "If the peer mini-fetch shows lower relative multiples, investors will re-test whether the growth premium is durable.",
+                "financial_impact": f"Premium compression would move the debate from base target {base_target} toward weighted fair value {bridge_text}.",
+            }
+        )
+    return risks
+
+
+def codex_catalysts(*, analysis_date: Any, language: str, ticker: str) -> list[dict[str, Any]]:
+    if language == "ko":
+        return [
+            {
+                "date": analysis_date,
+                "event": "다음 실적과 신규 수요/수주 업데이트",
+                "significance": "매출 성장과 FCF 전환이 동시에 유지되는지 확인한다.",
+                "narrative": "검증 데이터가 바뀌면 시나리오 목표가, R/R, DCF 앵커를 먼저 갱신한다.",
+            },
+            {
+                "date": "date_unknown",
+                "event": f"{ticker} peer 멀티플 및 컨센서스 목표가 재점검",
+                "significance": "성장 프리미엄과 애널리스트 목표가 앵커가 현재 가격을 지지하는지 확인한다.",
+                "narrative": "날짜가 확인되지 않은 이벤트는 정량 산출물에 직접 반영하지 않는다.",
+            },
+        ]
+    return [
+        {
+            "date": analysis_date,
+            "event": "Next earnings and demand/order update",
+            "significance": "Check whether revenue growth and FCF conversion persist together.",
+            "narrative": "When verified data changes, refresh scenario targets, R/R, and DCF anchors first.",
+        },
+        {
+            "date": "date_unknown",
+            "event": f"{ticker} peer multiple and consensus target reset",
+            "significance": "Check whether the growth premium and analyst target anchor still support price.",
+            "narrative": "Undated events are not directly reflected in deterministic calculations.",
+        },
+    ]
+
+
+def company_domain_profile(*, company: str, ticker: str, language: str) -> str:
+    haystack = f"{company} {ticker}".lower()
+    if "vertiv" in haystack or ticker.upper() == "VRT":
+        return "데이터센터 전력·냉각 인프라" if language == "ko" else "data-center power and cooling infrastructure"
+    if "sk하이닉스" in haystack or "hynix" in haystack or ticker == "000660":
+        return "AI 메모리/HBM과 반도체 사이클" if language == "ko" else "AI memory, HBM, and the semiconductor cycle"
+    if "palantir" in haystack or ticker.upper() == "PLTR":
+        return "AI 소프트웨어와 데이터 플랫폼" if language == "ko" else "AI software and data platforms"
+    if "apple" in haystack or ticker.upper() == "AAPL":
+        return "프리미엄 디바이스와 서비스 생태계" if language == "ko" else "premium devices and services ecosystem"
+    return "검증된 성장, 마진, 현금흐름" if language == "ko" else "verified growth, margin, and cash-flow"
+
+
+def scenario_target(scenarios: dict[str, Any], case: str) -> float | None:
+    row = scenarios.get(case)
+    if not isinstance(row, dict):
+        return None
+    return as_number(row.get("target") or row.get("target_price"))
+
+
+def money_text(value: Any, currency: str) -> str:
+    number = as_number(value)
+    if number is None:
+        return "-"
+    if currency.upper() == "KRW":
+        return f"KRW {number:,.0f}"
+    symbol = "$" if currency.upper() == "USD" else f"{currency} "
+    return f"{symbol}{number:,.2f}"
+
+
+def metric_display(metrics: dict[str, Any], key: str, *, currency: str) -> str:
+    entry = metrics.get(key)
+    if not isinstance(entry, dict):
+        return "-"
+    value = as_number(entry.get("value"))
+    if value is None:
+        return "-"
+    unit = str(entry.get("unit") or "").lower()
+    if unit in {"percent", "%"} or key.endswith("_margin") or key.endswith("_yield") or key.endswith("_growth_yoy"):
+        return percent_text(value)
+    if unit in {"x", "turns"} or key in {"ev_ebitda", "pe_forward", "pe_ratio", "pb_ratio"}:
+        return f"{value:,.1f}x"
+    if "billion" in unit or unit in {"billions", "b"}:
+        return f"{currency_symbol_text(currency)}{value:,.1f}B"
+    if "million" in unit or unit in {"millions", "m"}:
+        return f"{value:,.1f}M"
+    if key in {"price_at_analysis", "fifty_two_week_high", "fifty_two_week_low"}:
+        return money_text(value, currency)
+    return format_plain_number(value)
+
+
+def currency_symbol_text(currency: str) -> str:
+    if currency.upper() == "USD":
+        return "$"
+    if currency.upper() == "KRW":
+        return "KRW "
+    return f"{currency} "
+
+
+def percent_text(value: Any, *, probability: bool = False) -> str:
+    number = as_number(value)
+    if number is None:
+        return "-"
+    display = number * 100 if probability and abs(number) <= 1 else number
+    sign = "+" if display > 0 and not probability else ""
+    return f"{sign}{display:,.1f}%"
+
+
+def format_plain_number(value: Any) -> str:
+    number = as_number(value)
+    if number is None:
+        return "-"
+    return f"{number:,.2f}".rstrip("0").rstrip(".")
+
+
+def korean_verdict(verdict: str) -> str:
+    return {
+        "overweight": "비중확대",
+        "neutral": "중립",
+        "underweight": "비중축소",
+    }.get(verdict, verdict)
 
 
 def enforce_deterministic_contract(

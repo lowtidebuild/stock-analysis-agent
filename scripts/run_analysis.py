@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Headless Local Runner MVP entrypoint.
+"""Legacy Mode A headless runner with a native all-mode bridge.
 
-This script is intentionally narrow: it wires Mode A end-to-end for the web
-worker contract and rejects Mode C until the production renderer is ready.
+Without ``--native``, this script keeps the original Mode A web-runner contract
+available for compatibility. New Codex-native Mode A/B/C delivery should use
+``scripts/run_mode.py`` directly, or pass ``--native`` here to delegate to it.
 
 Asset survey for future maintainers:
 - data collection: .claude/skills/financial-data-collector/scripts/yfinance-collector.py
@@ -34,6 +35,13 @@ class PipelineError(RuntimeError):
     pass
 
 
+LEGACY_WEB_RUNNER_WARNING = (
+    "WARNING: scripts/run_analysis.py without --native is deprecated and remains "
+    "only for legacy Mode A web-runner compatibility. Use scripts/run_mode.py or "
+    "scripts/run_analysis.py --native for Codex-native delivery."
+)
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     ticker = args.ticker.strip().upper()
@@ -42,14 +50,18 @@ def main(argv: list[str] | None = None) -> int:
     market = normalize_market(args.market, ticker)
     run_id = args.run_id.strip()
 
+    if args.native:
+        return run_native_mode(args)
+
     if mode == "C":
         raise PipelineError(
             "Mode C headless renderer is not production-ready yet. "
-            "Use Mode A for Local Runner MVP smoke tests."
+            "Use scripts/run_mode.py, scripts/run_mode_c.py, or pass --native."
         )
     if mode != "A":
-        raise PipelineError("Local Runner MVP currently supports Mode A only.")
+        raise PipelineError("Local Runner MVP currently supports Mode A only. Pass --native for all-mode native delivery.")
 
+    emit_legacy_web_runner_warning()
     paths = build_paths(run_id, ticker)
     for path in [paths["ticker_root"], paths["reports_dir"]]:
         path.mkdir(parents=True, exist_ok=True)
@@ -91,13 +103,91 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run one headless stock analysis")
+    parser = argparse.ArgumentParser(
+        description="Run one stock analysis through the legacy Mode A runner or the native all-mode CLI.",
+        epilog=(
+            "Without --native this script only runs the deprecated legacy Mode A "
+            "web-runner. Prefer scripts/run_mode.py for new Codex-native delivery."
+        ),
+    )
     parser.add_argument("--ticker", required=True)
-    parser.add_argument("--mode", required=True, choices=["A", "C", "a", "c"])
+    parser.add_argument("--tickers", default="")
+    parser.add_argument("--mode", required=True, choices=["A", "B", "C", "a", "b", "c"])
     parser.add_argument("--lang", required=True, choices=["ko", "en"])
     parser.add_argument("--market", required=True, choices=["US", "KR", "mixed", "auto"])
     parser.add_argument("--run-id", required=True)
+    parser.add_argument(
+        "--native",
+        action="store_true",
+        help="Delegate to scripts/run_mode.py for Codex-native Mode A/B/C delivery.",
+    )
+    parser.add_argument("--skip-network", action="store_true")
+    parser.add_argument("--reuse-collected", action="store_true")
+    parser.add_argument("--peer-tickers", default="")
+    parser.add_argument("--timeout", type=int, default=20)
+    parser.add_argument(
+        "--run-profile",
+        choices=["production", "smoke", "fixture"],
+        default=None,
+        help="Native delivery profile. Defaults to smoke for fixture backends and production otherwise.",
+    )
+    parser.add_argument(
+        "--allow-fixture-delivery",
+        action="store_true",
+        help="Allow fixture/smoke native runs to pass delivery for deterministic tests.",
+    )
+    parser.add_argument(
+        "--web-provider",
+        choices=["tavily", "brave", "none"],
+        default=None,
+        help="Override WEB_SEARCH_PROVIDER for native Mode C tier2 qualitative search.",
+    )
+    parser.add_argument(
+        "--analyst-backend",
+        default=None,
+        help="Override native ANALYST_BACKEND, for example codex_native or fixture.",
+    )
     return parser.parse_args(argv)
+
+
+def emit_legacy_web_runner_warning() -> None:
+    print(LEGACY_WEB_RUNNER_WARNING, file=sys.stderr)
+
+
+def run_native_mode(args: argparse.Namespace) -> int:
+    from scripts.run_mode import main as run_mode_main
+
+    forwarded = [
+        "--ticker",
+        args.ticker,
+        "--mode",
+        args.mode,
+        "--lang",
+        args.lang,
+        "--market",
+        args.market,
+        "--run-id",
+        args.run_id,
+    ]
+    if args.tickers:
+        forwarded.extend(["--tickers", args.tickers])
+    if args.skip_network:
+        forwarded.append("--skip-network")
+    if args.reuse_collected:
+        forwarded.append("--reuse-collected")
+    if args.peer_tickers:
+        forwarded.extend(["--peer-tickers", args.peer_tickers])
+    if args.timeout:
+        forwarded.extend(["--timeout", str(args.timeout)])
+    if args.run_profile:
+        forwarded.extend(["--run-profile", args.run_profile])
+    if args.allow_fixture_delivery:
+        forwarded.append("--allow-fixture-delivery")
+    if args.web_provider:
+        forwarded.extend(["--web-provider", args.web_provider])
+    if args.analyst_backend:
+        forwarded.extend(["--analyst-backend", args.analyst_backend])
+    return run_mode_main(forwarded)
 
 
 def normalize_market(value: str, ticker: str) -> str:

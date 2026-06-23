@@ -46,6 +46,7 @@ CRITIC_ITEM_SEVERITY = {
 }
 CORE_GENERATED_ITEMS = (
     "contract_validation",
+    "numeric_sanity",
     "scenario_consistency",
     "semantic_consistency",
     "verdict_policy",
@@ -58,6 +59,7 @@ BASELINE_GENERATED_ITEMS = (
     "price_and_date",
     "blank_over_wrong",
 )
+FIXTURE_BACKEND_PROVIDERS = {"fixture", "deterministic_fixture", "local_fixture"}
 FINANCIAL_SAMPLE_PRIORITY = (
     "price_at_analysis",
     "market_cap",
@@ -72,7 +74,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 MODE_REQUIRED_RENDERED_TERMS = {
     "C": (
         ("DCF valuation", ("dcf",)),
-        ("analyst coverage", ("analyst coverage", "analyst target", "analyst rating")),
+        ("analyst coverage", ("analyst coverage", "analyst target", "analyst rating", "애널리스트 커버리지", "목표가")),
         ("chart data", ("new chart", "chart.js", "pricelabels", "pricedata")),
     ),
     "D": (
@@ -389,6 +391,8 @@ def _validate_unavailable_macro_rendering(
         "fred unavailable",
         "data unavailable",
         "unavailable",
+        "매크로 데이터 이용 불가",
+        "이용 불가",
         "사용 불가",
         "수집 실패",
         "데이터 없음",
@@ -992,6 +996,131 @@ def build_valuation_bridge_consistency_item(analysis: dict[str, Any]) -> dict[st
     return item
 
 
+def _validated_sanity_flags(validated: dict[str, Any]) -> list[dict[str, Any]]:
+    containers: list[Any] = []
+    validation_meta = validated.get("_validation") if isinstance(validated.get("_validation"), dict) else {}
+    containers.append(validation_meta.get("sanity_flags"))
+    containers.append(validated.get("sanity_flags"))
+
+    flags: list[dict[str, Any]] = []
+    seen: set[tuple[str, str, str]] = set()
+    for container in containers:
+        if not isinstance(container, list):
+            continue
+        for raw_flag in container:
+            if not isinstance(raw_flag, dict):
+                continue
+            rule = str(raw_flag.get("rule") or "unknown")
+            severity = str(raw_flag.get("severity") or "MINOR").upper()
+            detail = str(raw_flag.get("detail") or raw_flag.get("message") or "")
+            key = (rule, severity, detail)
+            if key in seen:
+                continue
+            seen.add(key)
+            flags.append(
+                {
+                    "rule": rule,
+                    "severity": severity if severity in DELIVERY_SEVERITIES else "MINOR",
+                    "detail": detail,
+                }
+            )
+    return flags
+
+
+def build_numeric_sanity_item(validated: dict[str, Any]) -> dict[str, Any]:
+    flags = _validated_sanity_flags(validated or {})
+    if not flags:
+        return {
+            "status": "PASS",
+            "flag_count": 0,
+            "severity": "NONE",
+            "delivery_impact": "none",
+            "blocker_action": "none",
+        }
+
+    major_flags = [flag for flag in flags if flag.get("severity") in {"MAJOR", "BLOCKER"}]
+    if major_flags:
+        return {
+            "status": "FAIL",
+            "flag_count": len(flags),
+            "major_flag_count": len(major_flags),
+            "flags": flags,
+            "errors": [
+                "Validated-data sanity flags include MAJOR/BLOCKER numeric anomalies; refresh or repair source metrics before delivery."
+            ],
+            "severity": "BLOCKER",
+            "delivery_impact": "delivery_blocking_flag",
+            "blocker_action": "terminal",
+        }
+
+    return {
+        "status": "PASS_WITH_FLAGS",
+        "flag_count": len(flags),
+        "flags": flags,
+        "warnings": [
+            "Validated-data sanity flags are present; review numeric outliers before relying on the report."
+        ],
+        "severity": "MINOR",
+        "delivery_impact": "non_blocking_flag",
+        "blocker_action": "none",
+    }
+
+
+def build_fixture_delivery_guard_item(analysis: dict[str, Any]) -> dict[str, Any]:
+    run_context = analysis.get("run_context") if isinstance(analysis.get("run_context"), dict) else {}
+    run_profile = str(run_context.get("run_profile") or "").strip().lower()
+    if not run_profile:
+        return {
+            "status": "SKIP",
+            "reason": "run_profile not declared; legacy/parity quality report",
+            "severity": "NONE",
+            "delivery_impact": "none",
+            "blocker_action": "none",
+        }
+
+    backend = run_context.get("backend") if isinstance(run_context.get("backend"), dict) else {}
+    provider = str(backend.get("provider") or "").strip().lower()
+    fixture_backend = provider in FIXTURE_BACKEND_PROVIDERS or run_context.get("fixture_backend") is True
+    non_production_profile = run_profile in {"smoke", "fixture"}
+    allow_fixture_delivery = run_context.get("allow_fixture_delivery") is True
+
+    payload = {
+        "run_profile": run_profile,
+        "backend_provider": provider or None,
+        "fixture_backend": fixture_backend,
+        "allow_fixture_delivery": allow_fixture_delivery,
+    }
+    if not fixture_backend and not non_production_profile:
+        return {
+            "status": "PASS",
+            **payload,
+            "severity": "NONE",
+            "delivery_impact": "none",
+            "blocker_action": "none",
+        }
+    if allow_fixture_delivery:
+        return {
+            "status": "PASS_WITH_FLAGS",
+            **payload,
+            "warnings": [
+                "Fixture/smoke profile was explicitly allowed; use only for deterministic tests or smoke runs."
+            ],
+            "severity": "MINOR",
+            "delivery_impact": "non_blocking_flag",
+            "blocker_action": "none",
+        }
+    return {
+        "status": "FAIL",
+        **payload,
+        "errors": [
+            "Fixture/smoke output is not production-deliverable without --allow-fixture-delivery."
+        ],
+        "severity": "BLOCKER",
+        "delivery_impact": "delivery_blocking_flag",
+        "blocker_action": "terminal",
+    }
+
+
 def infer_delivery_impact(item_name: str, item_payload: dict[str, Any]) -> str:
     severity = infer_delivery_severity(item_name, item_payload)
     if severity == "NONE":
@@ -1430,6 +1559,7 @@ def build_quality_report(
             evidence_pack,
             context_budget,
         ),
+        "numeric_sanity": build_numeric_sanity_item(validated),
         "scenario_consistency": build_scenario_consistency_item(analysis),
         "semantic_consistency": build_semantic_consistency_item(analysis),
         "verdict_policy": build_verdict_policy_item(analysis),
@@ -1437,7 +1567,10 @@ def build_quality_report(
         "raw_artifact_access": build_raw_artifact_access_item(evidence_pack, analysis),
         "valuation_bridge_consistency": build_valuation_bridge_consistency_item(analysis),
     }
-    if str(analysis.get("output_mode") or "").upper() == "C":
+    output_mode = str(analysis.get("output_mode") or "").upper()
+    if output_mode in {"A", "B", "C"}:
+        generated_items["fixture_delivery_guard"] = build_fixture_delivery_guard_item(analysis)
+    if output_mode == "C":
         generated_items["peer_mini_fetch"] = build_peer_mini_fetch_item(
             analysis,
             report_path=report_path,
