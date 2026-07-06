@@ -17,9 +17,13 @@ import subprocess
 import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from tools.backend_providers import DETERMINISTIC_BACKEND_PROVIDERS, FIXTURE_BACKEND_PROVIDERS  # noqa: E402
 
 SEVERITIES = {"ERROR", "WARN"}
 TEXT_SUFFIXES = {
@@ -93,13 +97,18 @@ SENSITIVE_ASSIGNMENT_RE = re.compile(
 )
 NEXT_PUBLIC_SECRET_RE = re.compile(r"\bNEXT_PUBLIC_[A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|PRIVATE_KEY)[A-Z0-9_]*\b")
 SCRIPT_SRC_RE = re.compile(r"<script\b[^>]*\bsrc=[\"']([^\"']+)[\"']", re.I)
+FIXTURE_PROVIDER_MARKERS = tuple(
+    marker
+    for provider in sorted(FIXTURE_BACKEND_PROVIDERS)
+    for key in ("provider", "backend_provider")
+    for marker in (f'"{key}": "{provider}"', f'"{key}":"{provider}"')
+)
 FIXTURE_MARKERS = (
-    '"provider": "fixture"',
-    '"provider":"fixture"',
-    '"backend_provider": "fixture"',
-    '"backend_provider":"fixture"',
+    *FIXTURE_PROVIDER_MARKERS,
     '"run_profile": "smoke"',
     '"run_profile":"smoke"',
+    '"run_profile": "fixture"',
+    '"run_profile":"fixture"',
     "ANALYST_BACKEND=fixture",
     "allow-fixture-delivery",
 )
@@ -264,6 +273,150 @@ def is_delivery_report_path(path: Path) -> bool:
     return False
 
 
+def output_root_for_report(path: Path) -> Path | None:
+    resolved = path.resolve()
+    for parent in (resolved.parent, *resolved.parents):
+        if parent.name == "reports" and parent.parent.name == "output":
+            return parent.parent
+    return None
+
+
+def parse_report_identity(path: Path) -> dict[str, Any] | None:
+    parts = path.stem.split("_")
+    if len(parts) < 4:
+        return None
+    mode_index: int | None = None
+    for index in range(len(parts) - 3, -1, -1):
+        if parts[index].upper() in {"A", "B", "C", "D", "E"}:
+            mode_index = index
+            break
+    if mode_index is None or mode_index == 0:
+        return None
+    tickers = tuple(part.upper() for part in parts[:mode_index] if part)
+    if not tickers:
+        return None
+    return {
+        "tickers": tickers,
+        "mode": parts[mode_index].upper(),
+        "analysis_date": parts[-1],
+    }
+
+
+def iter_report_analysis_paths(path: Path) -> list[Path]:
+    output_root = output_root_for_report(path)
+    identity = parse_report_identity(path)
+    if output_root is None or identity is None:
+        return []
+    tickers = set(identity["tickers"])
+    paths: list[Path] = []
+    seen: set[Path] = set()
+
+    runs_root = output_root / "runs"
+    if runs_root.exists():
+        for candidate in sorted(runs_root.glob("*/*/analysis-result.json")):
+            if candidate.parent.name.upper() not in tickers:
+                continue
+            resolved = candidate.resolve()
+            if resolved not in seen:
+                paths.append(candidate)
+                seen.add(resolved)
+
+    data_root = output_root / "data"
+    for ticker in sorted(tickers):
+        snapshot_root = data_root / ticker / "snapshots"
+        if snapshot_root.exists():
+            for candidate in sorted(snapshot_root.glob("*/analysis-result.json"), reverse=True):
+                resolved = candidate.resolve()
+                if resolved not in seen:
+                    paths.append(candidate)
+                    seen.add(resolved)
+        ticker_root = data_root / ticker
+        if ticker_root.exists():
+            for candidate in sorted(ticker_root.glob(f"{ticker}_*_snapshot.json"), reverse=True):
+                resolved = candidate.resolve()
+                if resolved not in seen:
+                    paths.append(candidate)
+                    seen.add(resolved)
+    return paths
+
+
+def read_json_object(path: Path) -> dict[str, Any] | None:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8", errors="replace"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def matching_report_analysis_documents(path: Path) -> list[tuple[Path, dict[str, Any]]]:
+    identity = parse_report_identity(path)
+    if identity is None:
+        return []
+    report_date = str(identity.get("analysis_date") or "")
+    documents: list[tuple[Path, dict[str, Any]]] = []
+    for candidate in iter_report_analysis_paths(path):
+        data = read_json_object(candidate)
+        if data is None:
+            continue
+        candidate_date = str(data.get("analysis_date") or "")
+        if report_date and candidate_date and candidate_date != report_date:
+            continue
+        documents.append((candidate, data))
+    return documents
+
+
+def report_provenance_findings(path: Path) -> list[Finding]:
+    if not is_delivery_report_path(path):
+        return []
+    documents = matching_report_analysis_documents(path)
+    if not documents:
+        return [
+            Finding(
+                "WARN",
+                "fixture_provenance_unverifiable",
+                rel_path(path),
+                None,
+                "Published report path has no matching analysis-result artifact for fixture/deterministic provenance verification.",
+            )
+        ]
+
+    findings: list[Finding] = []
+    for analysis_path, analysis in documents:
+        run_context = analysis.get("run_context") if isinstance(analysis.get("run_context"), dict) else {}
+        backend = run_context.get("backend") if isinstance(run_context.get("backend"), dict) else {}
+        provider = str(backend.get("provider") or "").strip().lower()
+        run_profile = str(run_context.get("run_profile") or "").strip().lower()
+        fixture_backend = provider in FIXTURE_BACKEND_PROVIDERS or run_context.get("fixture_backend") is True
+        deterministic_backend = (
+            provider in DETERMINISTIC_BACKEND_PROVIDERS
+            or run_context.get("deterministic_backend") is True
+            or run_profile == "deterministic"
+        )
+        non_production_profile = run_profile in {"smoke", "fixture"}
+        allow_deterministic_delivery = run_context.get("allow_deterministic_delivery") is True
+
+        if fixture_backend or non_production_profile:
+            reason = "fixture/smoke"
+        elif deterministic_backend and not allow_deterministic_delivery:
+            reason = "deterministic_without_opt_in"
+        else:
+            continue
+
+        findings.append(
+            Finding(
+                "ERROR",
+                "fixture_delivery_provenance",
+                rel_path(path),
+                None,
+                (
+                    f"Published report maps to {rel_path(analysis_path)} with provider "
+                    f"{provider or 'unknown'} and run_profile {run_profile or 'unknown'} ({reason})."
+                ),
+            )
+        )
+    return findings
+
+
 def scan_delivery_markers(path: Path, text: str) -> list[Finding]:
     if not is_delivery_report_path(path):
         return []
@@ -279,6 +432,7 @@ def scan_delivery_markers(path: Path, text: str) -> list[Finding]:
                 "Published report path contains fixture/smoke delivery marker.",
             )
         )
+    findings.extend(report_provenance_findings(path))
     return findings
 
 

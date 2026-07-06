@@ -13,6 +13,33 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 CLI = ROOT / "tools" / "security_audit.py"
 
 
+def _write_analysis_result(
+    path: pathlib.Path,
+    *,
+    provider: str,
+    run_profile: str,
+    analysis_date: str = "2026-07-06",
+    allow_deterministic_delivery: bool = False,
+    allow_fixture_delivery: bool = False,
+) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(
+            {
+                "ticker": path.parent.name,
+                "analysis_date": analysis_date,
+                "run_context": {
+                    "backend": {"provider": provider},
+                    "run_profile": run_profile,
+                    "allow_deterministic_delivery": allow_deterministic_delivery,
+                    "allow_fixture_delivery": allow_fixture_delivery,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
 def _run_cli(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, str(CLI), *args],
@@ -156,6 +183,69 @@ class SecurityAuditTests(unittest.TestCase):
 
         self.assertTrue(any(item.rule == "fixture_delivery_marker" for item in findings))
         self.assertTrue(any(item.severity == "ERROR" for item in findings))
+
+    def test_fixture_report_provenance_detects_run_artifact_without_html_marker(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            report = root / "output" / "reports" / "AAPL_C_EN_2026-07-06.html"
+            report.parent.mkdir(parents=True)
+            report.write_text("<html><body>Production-looking report body</body></html>", encoding="utf-8")
+            _write_analysis_result(
+                root / "output" / "runs" / "run-fixture" / "AAPL" / "analysis-result.json",
+                provider="deterministic_fixture",
+                run_profile="smoke",
+            )
+
+            findings = audit_paths([report])
+
+        by_rule = {item.rule: item for item in findings}
+        self.assertEqual(by_rule["fixture_delivery_provenance"].severity, "ERROR")
+
+    def test_live_report_provenance_from_run_artifact_is_allowed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            report = root / "output" / "reports" / "AAPL_C_EN_2026-07-06.html"
+            report.parent.mkdir(parents=True)
+            report.write_text("<html><body>Production report body</body></html>", encoding="utf-8")
+            _write_analysis_result(
+                root / "output" / "runs" / "run-live" / "AAPL" / "analysis-result.json",
+                provider="live",
+                run_profile="production",
+            )
+
+            findings = audit_paths([report])
+
+        self.assertNotIn("fixture_delivery_provenance", {item.rule for item in findings})
+        self.assertNotIn("fixture_provenance_unverifiable", {item.rule for item in findings})
+
+    def test_report_provenance_missing_artifact_warns(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            report = pathlib.Path(tmp) / "output" / "reports" / "AAPL_C_EN_2026-07-06.html"
+            report.parent.mkdir(parents=True)
+            report.write_text("<html><body>Report body without embedded backend JSON</body></html>", encoding="utf-8")
+
+            findings = audit_paths([report])
+
+        by_rule = {item.rule: item for item in findings}
+        self.assertEqual(by_rule["fixture_provenance_unverifiable"].severity, "WARN")
+
+    def test_deterministic_report_provenance_requires_explicit_opt_in(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            report = root / "output" / "reports" / "AAPL_C_EN_2026-07-06.html"
+            report.parent.mkdir(parents=True)
+            report.write_text("<html><body>Deterministic report body</body></html>", encoding="utf-8")
+            _write_analysis_result(
+                root / "output" / "runs" / "run-deterministic" / "AAPL" / "analysis-result.json",
+                provider="codex_native",
+                run_profile="deterministic",
+                allow_deterministic_delivery=False,
+            )
+
+            findings = audit_paths([report])
+
+        by_rule = {item.rule: item for item in findings}
+        self.assertEqual(by_rule["fixture_delivery_provenance"].severity, "ERROR")
 
     def test_http_script_in_html_is_blocking_and_https_script_is_warning(self):
         with tempfile.TemporaryDirectory() as tmp:
