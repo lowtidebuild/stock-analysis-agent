@@ -9,7 +9,9 @@ from pathlib import Path
 from scripts.parity.rendering import (
     build_mode_a_briefing_html,
     build_chart_data,
+    DEFAULT_GOLDEN_CONFIG,
     normalize_quarterly,
+    normalize_public_mode_c_golden_config,
     render_reverse_dcf,
     validate_mode_a_rendered_html,
     validate_mode_c_rendered_html,
@@ -79,6 +81,26 @@ def write_peer_records(ticker_root: Path) -> None:
             json.dumps(record, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
+
+
+def test_golden_config_normalization_never_weakens() -> None:
+    strict = normalize_public_mode_c_golden_config(
+        {"minimums": {"body_text_chars": 12000, "html_byte_size": 60000}}
+    )
+    assert strict["minimums"]["body_text_chars"] == 12000
+    assert strict["minimums"]["html_byte_size"] == 60000
+
+    zeroed = normalize_public_mode_c_golden_config({"minimums": {"body_text_chars": 0}})
+    assert zeroed["minimums"]["body_text_chars"] == DEFAULT_GOLDEN_CONFIG["minimums"]["body_text_chars"]
+
+    fallback = normalize_public_mode_c_golden_config({})
+    assert fallback["required_heading_groups"] == DEFAULT_GOLDEN_CONFIG["required_heading_groups"]
+    assert any(group.get("id") == "portfolio" for group in fallback["required_heading_groups"])
+
+    keep = normalize_public_mode_c_golden_config(
+        {"required_heading_groups": [{"id": "portfolio", "pattern": "Portfolio Strategy|포트폴리오 전략"}]}
+    )
+    assert any(group.get("id") == "portfolio" for group in keep["required_heading_groups"])
 
 
 def test_mode_c_render_only_builds_golden_minimum_dashboard() -> None:

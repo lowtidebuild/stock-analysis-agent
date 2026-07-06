@@ -16,9 +16,9 @@ from tools.quality_report import build_rendered_output_item
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_GOLDEN_CONFIG = {
     "minimums": {
-        "body_text_chars": 5000,
+        "body_text_chars": 10000,
         "canvas_count": 3,
-        "html_byte_size": 40000,
+        "html_byte_size": 50000,
         "script_count": 3,
         "table_count": 5,
     },
@@ -32,6 +32,7 @@ DEFAULT_GOLDEN_CONFIG = {
         {"id": "peer", "pattern": "Peer Comparison|동종업계 비교"},
         {"id": "charts", "pattern": "Charts & Trend Data|재무 차트"},
         {"id": "quality", "pattern": "Quality of Earnings|Financial Detail Analysis|재무 세부 분석"},
+        {"id": "portfolio", "pattern": "Portfolio Strategy|포트폴리오 전략"},
         {"id": "disclaimer", "pattern": "Disclaimer|면책"},
     ],
     "forbidden_patterns": [
@@ -1776,14 +1777,14 @@ def normalize_public_mode_c_golden_config(config: dict[str, Any]) -> dict[str, A
     normalized = dict(config)
     minimums = dict(DEFAULT_GOLDEN_CONFIG["minimums"])
     minimums.update(config.get("minimums") or {})
-    minimums["body_text_chars"] = min(int(minimums.get("body_text_chars") or 0), DEFAULT_GOLDEN_CONFIG["minimums"]["body_text_chars"])
-    minimums["html_byte_size"] = min(int(minimums.get("html_byte_size") or 0), DEFAULT_GOLDEN_CONFIG["minimums"]["html_byte_size"])
+    for key in ("body_text_chars", "html_byte_size"):
+        configured = int(minimums.get(key) or 0)
+        minimums[key] = max(configured, DEFAULT_GOLDEN_CONFIG["minimums"][key])
     normalized["minimums"] = minimums
-    normalized["required_heading_groups"] = [
-        group
-        for group in (config.get("required_heading_groups") or [])
-        if not (isinstance(group, dict) and group.get("id") == "portfolio")
-    ]
+    groups = config.get("required_heading_groups")
+    normalized["required_heading_groups"] = (
+        list(groups) if groups else list(DEFAULT_GOLDEN_CONFIG["required_heading_groups"])
+    )
     return normalized
 
 
