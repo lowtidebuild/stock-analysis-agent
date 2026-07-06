@@ -900,6 +900,13 @@ def build_mode_c_dashboard_html(
     dcf = analysis.get("dcf_analysis") if isinstance(analysis.get("dcf_analysis"), dict) else {}
     bridge = analysis.get("valuation_bridge") if isinstance(analysis.get("valuation_bridge"), dict) else None
     reverse_dcf = analysis.get("reverse_dcf") if isinstance(analysis.get("reverse_dcf"), dict) else None
+    source_claims = (
+        sections.get("source_tagged_claims")
+        if isinstance(sections.get("source_tagged_claims"), list)
+        else analysis.get("source_tagged_claims")
+    )
+    if not isinstance(source_claims, list):
+        source_claims = evidence.get("facts") if isinstance(evidence.get("facts"), list) else []
 
     quarterly = normalize_quarterly(validated.get("financials_quarterly"))
     chart_data = build_chart_data(
@@ -984,6 +991,9 @@ def build_mode_c_dashboard_html(
     {render_analyst_coverage_section(metrics, sections, currency)}
     {render_charts_section(chart_data, currency)}
     {render_financial_detail_section(metrics, quarterly, sections, currency)}
+    {render_quality_gate_section(analysis, calculations, evidence, validated)}
+    {render_portfolio_section(analysis, sections, scenarios)}
+    {render_source_appendix(source_claims)}
   </main>
 
   <footer class="bg-gray-900 text-gray-400 mt-12">

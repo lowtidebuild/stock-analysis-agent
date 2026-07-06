@@ -136,6 +136,9 @@ def test_mode_c_render_only_builds_golden_minimum_dashboard() -> None:
     assert 'id="segmentChart"' in html
     assert 'id="fcfChart"' in html
     assert 'id="quarterlyChart"' in html
+    assert "Quality of Earnings & Evidence Gate" in html
+    assert "Portfolio Strategy" in html
+    assert "Source-Tagged Claims Appendix" in html
     assert "arrays are not present" not in html
     assert "{COMPANY_NAME}" not in html
     assert "/Users/" not in html
@@ -201,6 +204,9 @@ def test_mode_c_korean_render_localizes_dashboard_chrome() -> None:
         "애널리스트 커버리지",
         "재무 차트",
         "재무 세부 분석",
+        "이익 품질 및 증거 게이트",
+        "포트폴리오 전략",
+        "출처 태그 클레임 부록",
         "면책 고지",
     ):
         assert expected in html
@@ -218,11 +224,9 @@ def test_mode_c_korean_render_localizes_dashboard_chrome() -> None:
         "Analyst Coverage",
         "Charts & Trend Data",
         "Financial Detail Analysis",
+        "Quality of Earnings & Evidence Gate",
         "Portfolio Strategy",
         "Source-Tagged Claims Appendix",
-        "이익 품질 및 증거 게이트",
-        "포트폴리오 전략",
-        "출처 태그 클레임 부록",
         ">Disclaimer<",
         "tracked metrics",
         "debate points",

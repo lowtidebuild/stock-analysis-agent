@@ -140,6 +140,9 @@ def test_mode_c_entrypoint_ko_smoke_publishes_localized_dashboard(monkeypatch, c
         "DCF 밸류에이션",
         "애널리스트 커버리지",
         "재무 차트",
+        "이익 품질 및 증거 게이트",
+        "포트폴리오 전략",
+        "출처 태그 클레임 부록",
         "면책 고지",
         "label: '매출'",
         "label: '영업이익'",
@@ -156,10 +159,9 @@ def test_mode_c_entrypoint_ko_smoke_publishes_localized_dashboard(monkeypatch, c
         "Precision Risk Analysis",
         "Charts & Trend Data",
         "Financial Detail Analysis",
+        "Quality of Earnings & Evidence Gate",
+        "Portfolio Strategy",
         "Source-Tagged Claims Appendix",
-        "이익 품질 및 증거 게이트",
-        "포트폴리오 전략",
-        "출처 태그 클레임 부록",
         ">Disclaimer<",
         "tracked metrics",
         "debate points",
@@ -226,8 +228,9 @@ def test_mode_c_entrypoint_codex_native_runs_without_fixture_allowance(monkeypat
     assert analysis["run_context"]["backend"]["provider"] == "codex_native"
     assert analysis["run_context"]["backend"]["usage"]["api_calls"] == 0
     assert analysis["run_context"]["fixture_backend"] is False
-    assert "이익 품질 및 증거 게이트" not in html
-    assert "출처 태그 클레임 부록" not in html
+    assert "이익 품질 및 증거 게이트" in html
+    assert "포트폴리오 전략" in html
+    assert "출처 태그 클레임 부록" in html
     assert validate_artifact_file(analysis_path, "analysis-result", base_dir=REPO_ROOT)["valid"]
     assert validate_artifact_file(quality_path, "quality-report", base_dir=REPO_ROOT)["valid"]
 
