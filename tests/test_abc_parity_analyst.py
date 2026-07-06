@@ -8,6 +8,7 @@ from pathlib import Path
 
 from scripts.parity.analyst import (
     build_analyst_handoff,
+    build_codex_native_analysis,
     enforce_deterministic_contract,
     ensure_mode_c_sections,
 )
@@ -121,6 +122,56 @@ def test_codex_native_analyst_writes_production_local_analysis_result(monkeypatc
     assert "fixture" not in analysis_text
     assert "프리미엄 디바이스" in analysis["thesis"]
     assert validate_artifact_file(analysis_path, "analysis-result", base_dir=REPO_ROOT)["valid"]
+
+
+def test_codex_native_falls_back_to_pe_ratio_when_forward_pe_missing() -> None:
+    metric = lambda value, unit: {"value": value, "unit": unit, "grade": "B", "display_tag": "[Portal]"}
+    validated = {
+        "ticker": "AAPL",
+        "company_name": "Apple Inc.",
+        "market": "US",
+        "currency": "USD",
+        "analysis_date": "2026-07-06",
+        "validated_metrics": {
+            "price_at_analysis": metric(200.0, "USD"),
+            "revenue_ttm": metric(340_000_000_000.0, "USD"),
+            "revenue_growth_yoy": metric(5.0, "%"),
+            "operating_margin": metric(30.0, "%"),
+            "fcf_yield": metric(2.4, "%"),
+            "ev_ebitda": metric(22.0, "x"),
+            "pe_ratio": metric(30.0, "x"),
+            "beta": metric(1.1, "x"),
+        },
+        "exclusions": [],
+    }
+    calculations = {
+        "scenario_analysis": {
+            "rr_score": 2.5,
+            "scenarios": {
+                "bull": {"target": 260.0, "probability": 0.3, "key_assumption": "Upside"},
+                "base": {"target": 225.0, "probability": 0.5, "key_assumption": "Base"},
+                "bear": {"target": 160.0, "probability": 0.2, "key_assumption": "Downside"},
+            },
+        },
+        "dcf_analysis": {"result": {"fair_value_per_share": 220.0}},
+        "reverse_dcf": {"implied_fcf_growth": 0.04, "analyst_growth_assumption": 0.05, "growth_gap_bp": 100},
+        "valuation_bridge": {"weighted_fair_value": 225.0},
+        "ratio_recomputation": {"computed_metrics": {}},
+    }
+    evidence = {"facts": [{"claim": "Revenue", "grade": "B", "sources": ["fixture"]}]}
+
+    analysis = build_codex_native_analysis(
+        calculations=calculations,
+        evidence=evidence,
+        language="en",
+        mode="C",
+        peer_records=[],
+        validated=validated,
+    )
+
+    text = analysis["sections"]["variant_view_q3"]
+    assert "forward P/E 30.0x" in text
+    assert "forward P/E -" not in text
 
 
 def test_mode_a_enforces_precision_risks_when_backend_returns_empty(monkeypatch) -> None:

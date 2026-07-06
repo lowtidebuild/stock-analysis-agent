@@ -4,7 +4,12 @@ import json
 from pathlib import Path
 from typing import Any
 
-from scripts.run_analysis import emit_legacy_web_runner_warning, main as legacy_run_main
+from scripts.run_analysis import (
+    emit_legacy_web_runner_warning,
+    main as legacy_run_main,
+    parse_args as legacy_parse_args,
+    run_native_mode,
+)
 from scripts.run_mode import main as run_main
 from tests.test_abc_parity_comparison import prepare_mode_b_fixture_run, write_peer_yfinance
 from tests.test_abc_parity_calculations import write_mock_yfinance
@@ -313,6 +318,40 @@ def test_run_analysis_native_delegates_mode_a_to_unified_entrypoint(monkeypatch,
     assert payload["run_profile"] == "deterministic"
     assert quality["items"]["fixture_delivery_guard"]["status"] == "PASS_WITH_FLAGS"
     assert analysis["run_context"]["backend"]["provider"] == "codex_native"
+
+
+def test_run_analysis_native_forwards_explicit_timeout_zero(monkeypatch):
+    captured: dict[str, list[str]] = {}
+
+    def fake_main(argv: list[str]) -> int:
+        captured["argv"] = argv
+        return 0
+
+    monkeypatch.setattr("scripts.run_mode.main", fake_main)
+    args = legacy_parse_args(
+        [
+            "--ticker",
+            "AAPL",
+            "--mode",
+            "A",
+            "--lang",
+            "en",
+            "--market",
+            "US",
+            "--run-id",
+            "pytest_timeout_zero_forwarding",
+            "--native",
+            "--timeout",
+            "0",
+        ]
+    )
+
+    rc = run_native_mode(args)
+
+    assert rc == 0
+    assert "--timeout" in captured["argv"]
+    timeout_index = captured["argv"].index("--timeout")
+    assert captured["argv"][timeout_index + 1] == "0"
 
 
 def test_run_mode_dispatches_mode_c_codex_native(monkeypatch, capsys):

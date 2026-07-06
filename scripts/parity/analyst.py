@@ -812,7 +812,9 @@ def build_codex_native_analysis(
     margin_text = metric_display(metrics, "operating_margin", currency=currency)
     fcf_yield_text = metric_display(metrics, "fcf_yield", currency=currency)
     ev_ebitda_text = metric_display(metrics, "ev_ebitda", currency=currency)
-    forward_pe_text = metric_display(metrics, "pe_forward", currency=currency) or metric_display(metrics, "pe_ratio", currency=currency)
+    forward_pe_text = metric_display(metrics, "pe_forward", currency=currency)
+    if forward_pe_text == "-":
+        forward_pe_text = metric_display(metrics, "pe_ratio", currency=currency)
     beta_text = metric_display(metrics, "beta", currency=currency)
     price_text = money_text(price, currency)
     base_text = money_text(base_target, currency)

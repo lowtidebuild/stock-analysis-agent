@@ -182,7 +182,7 @@ def run_native_mode(args: argparse.Namespace) -> int:
         forwarded.append("--reuse-collected")
     if args.peer_tickers:
         forwarded.extend(["--peer-tickers", args.peer_tickers])
-    if args.timeout:
+    if args.timeout is not None:
         forwarded.extend(["--timeout", str(args.timeout)])
     if args.run_profile:
         forwarded.extend(["--run-profile", args.run_profile])
