@@ -489,6 +489,7 @@ def check_margin_invariant(metrics: dict[str, Any]) -> list[dict[str, str]]:
     g = _metric_value(metrics.get("gross_margin_pct"))
     e = _metric_value(metrics.get("ebitda_margin_pct"))
     n = _metric_value(metrics.get("net_margin_pct"))
+    # TODO: D&A-in-COGS firms legitimately have EBITDA margin > gross margin; needs sector-aware tolerance before any severity above MAJOR.
     if g is not None and e is not None and g < e:
         flags.append(
             {

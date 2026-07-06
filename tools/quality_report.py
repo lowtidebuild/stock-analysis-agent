@@ -1038,19 +1038,34 @@ def build_numeric_sanity_item(validated: dict[str, Any]) -> dict[str, Any]:
             "blocker_action": "none",
         }
 
-    major_flags = [flag for flag in flags if flag.get("severity") in {"MAJOR", "BLOCKER"}]
-    if major_flags:
+    blocker_flags = [flag for flag in flags if flag.get("severity") == "BLOCKER"]
+    if blocker_flags:
         return {
             "status": "FAIL",
             "flag_count": len(flags),
-            "major_flag_count": len(major_flags),
+            "blocker_flag_count": len(blocker_flags),
             "flags": flags,
             "errors": [
-                "Validated-data sanity flags include MAJOR/BLOCKER numeric anomalies; refresh or repair source metrics before delivery."
+                "Validated-data sanity flags include BLOCKER numeric anomalies; refresh or repair source metrics before delivery."
             ],
             "severity": "BLOCKER",
             "delivery_impact": "delivery_blocking_flag",
             "blocker_action": "terminal",
+        }
+
+    major_flags = [flag for flag in flags if flag.get("severity") == "MAJOR"]
+    if major_flags:
+        return {
+            "status": "PASS_WITH_FLAGS",
+            "flag_count": len(flags),
+            "major_flag_count": len(major_flags),
+            "flags": flags,
+            "warnings": [
+                "Validated-data sanity flags include MAJOR numeric anomalies; review source metrics before relying on the report."
+            ],
+            "severity": "MAJOR",
+            "delivery_impact": "non_blocking_flag",
+            "blocker_action": "none",
         }
 
     return {

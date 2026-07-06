@@ -45,7 +45,7 @@ def _analysis() -> dict:
     }
 
 
-def test_numeric_sanity_item_blocks_major_validated_data_flags() -> None:
+def test_numeric_sanity_item_delivers_major_validated_data_flags_with_flag() -> None:
     validated = {
         "ticker": "AAPL",
         "market": "US",
@@ -64,11 +64,36 @@ def test_numeric_sanity_item_blocks_major_validated_data_flags() -> None:
 
     item = build_numeric_sanity_item(validated)
 
+    assert item["status"] == "PASS_WITH_FLAGS"
+    assert item["severity"] == "MAJOR"
+    assert item["delivery_impact"] == "non_blocking_flag"
+    assert item["blocker_action"] == "none"
+    assert item["flag_count"] == 1
+
+
+def test_numeric_sanity_item_still_blocks_blocker_validated_data_flags() -> None:
+    validated = {
+        "ticker": "AAPL",
+        "market": "US",
+        "validated_metrics": {},
+        "exclusions": [],
+        "_validation": {
+            "sanity_flags": [
+                {
+                    "rule": "impossible_value",
+                    "severity": "BLOCKER",
+                    "detail": "negative market cap",
+                }
+            ]
+        },
+    }
+
+    item = build_numeric_sanity_item(validated)
+
     assert item["status"] == "FAIL"
     assert item["severity"] == "BLOCKER"
     assert item["delivery_impact"] == "delivery_blocking_flag"
     assert item["blocker_action"] == "terminal"
-    assert item["flag_count"] == 1
 
 
 def test_numeric_sanity_item_warns_on_minor_validated_data_flags() -> None:
@@ -95,7 +120,7 @@ def test_numeric_sanity_item_warns_on_minor_validated_data_flags() -> None:
     assert item["delivery_impact"] == "non_blocking_flag"
 
 
-def test_quality_report_blocks_delivery_on_major_numeric_sanity_flag() -> None:
+def test_quality_report_delivers_with_flag_on_major_numeric_sanity_flag() -> None:
     validated = {
         "ticker": "AAPL",
         "market": "US",
@@ -119,8 +144,9 @@ def test_quality_report_blocks_delivery_on_major_numeric_sanity_flag() -> None:
         _analysis(),
     )
 
-    assert report["items"]["numeric_sanity"]["status"] == "FAIL"
-    assert report["delivery_gate"]["result"] == "BLOCKED"
-    assert "numeric_sanity" in report["delivery_gate"]["blocking_items"]
-    assert "numeric_sanity" in report["delivery_gate"]["terminal_blocking_items"]
+    assert report["items"]["numeric_sanity"]["status"] == "PASS_WITH_FLAGS"
+    assert report["items"]["numeric_sanity"]["severity"] == "MAJOR"
+    assert "numeric_sanity" in report["delivery_gate"]["non_blocking_items"]
+    assert "numeric_sanity" not in report["delivery_gate"]["blocking_items"]
+    assert "numeric_sanity" not in report["delivery_gate"]["terminal_blocking_items"]
     assert validate_artifact_data("quality-report", report) == []
