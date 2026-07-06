@@ -65,6 +65,18 @@ class SecurityAuditTests(unittest.TestCase):
         self.assertEqual(len(findings), 3)
         self.assertEqual({finding.rule for finding in findings}, {"forbidden_staged_path"})
 
+    def test_staged_env_variants_are_forbidden(self):
+        for name in [".env.production", ".env.staging", ".env.dev", "config/.env.production"]:
+            with self.subTest(name=name):
+                findings = forbidden_staged_findings([name])
+                self.assertTrue(any(item.rule == "forbidden_staged_path" for item in findings))
+                self.assertTrue(any(item.severity == "ERROR" for item in findings))
+
+    def test_staged_env_example_is_allowed(self):
+        findings = forbidden_staged_findings([".env.example", "config/.env.example"])
+
+        self.assertEqual(findings, [])
+
     def test_fixture_marker_in_published_report_is_blocking(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = pathlib.Path(tmp) / "output" / "reports" / "AAPL_A_ko_2026-06-23.html"

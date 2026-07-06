@@ -50,14 +50,16 @@ NEVER_READ_PATTERNS = (
 )
 FORBIDDEN_STAGED_PATTERNS = (
     ".env",
-    ".env.local",
-    ".env.*.local",
+    ".env.*",
+    "*/.env",
+    "*/.env.*",
     "*.key",
     "*.pem",
     "secrets.json",
     "output/*",
     ".understand-anything/*",
 )
+ALLOWED_ENV_BASENAMES = {".env.example"}
 PLACEHOLDER_VALUES = {
     "",
     "none",
@@ -177,6 +179,8 @@ def forbidden_staged_findings(path_names: Iterable[str]) -> list[Finding]:
     findings: list[Finding] = []
     for name in path_names:
         normalized = name.replace("\\", "/")
+        if normalized.rsplit("/", 1)[-1] in ALLOWED_ENV_BASENAMES:
+            continue
         for pattern in FORBIDDEN_STAGED_PATTERNS:
             if fnmatch.fnmatch(normalized, pattern):
                 findings.append(

@@ -258,7 +258,7 @@ exit 0(388-392행) → 실제 시크릿 파일이 감사 통과 상태로 커밋
 
 **Steps:**
 
-- [ ] **4-1. 실패 테스트 작성** (기존 테스트 파일의 픽스처 패턴 재사용):
+- [x] **4-1. 실패 테스트 작성** (기존 테스트 파일의 픽스처 패턴 재사용):
   ```python
   @pytest.mark.parametrize(
       "name",
@@ -273,7 +273,7 @@ exit 0(388-392행) → 실제 시크릿 파일이 감사 통과 상태로 커밋
       # ".env.example"은 ERROR 없이 통과 (내용 스캔도 하지 않음 — never-read 유지)
   ```
   실행 → FAIL 확인.
-- [ ] **4-2. 구현:** 주의 — `forbidden_staged_findings`(security_audit.py:176-190)
+- [x] **4-2. 구현:** 주의 — `forbidden_staged_findings`(security_audit.py:176-190)
   는 **repo 상대 전체 경로 문자열**에 fnmatch를 적용한다(Path가 아니라 str이며,
   `normalized = name.replace("\\", "/")`). 따라서 `".env"`/`".env.*"`만 넣으면
   루트 파일만 걸리고 `config/.env.production` 같은 중첩 경로는 통과한다.
@@ -290,8 +290,8 @@ exit 0(388-392행) → 실제 시크릿 파일이 감사 통과 상태로 커밋
   ```
   `.env.example`은 여전히 NEVER_READ(내용 미스캔) 대상으로 남긴다 —
   CLAUDE.md Security 절이 `.env.example` 읽기도 금지하므로 일관적이다.
-- [ ] **4-3.** 테스트 PASS + `python3 -m pytest tests/test_security_audit.py -q` GREEN.
-- [ ] **4-4. Commit:** `fix(security-audit): forbid staging any .env variant except .env.example`
+- [x] **4-3.** 테스트 PASS + `python3 -m pytest tests/test_security_audit.py -q` GREEN.
+- [x] **4-4. Commit:** `fix(security-audit): forbid staging any .env variant except .env.example`
 
 ### Task 5: security_audit — 따옴표 키 시크릿 정규식 수정
 
