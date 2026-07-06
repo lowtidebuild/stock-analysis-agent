@@ -12,19 +12,13 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from scripts.parity.analyst import build_analyst_handoff  # noqa: E402
-from scripts.parity.calculations import build_calculation_handoff  # noqa: E402
-from scripts.parity.critic import build_critic_handoff  # noqa: E402
 from scripts.parity.data_sources import load_json, utc_now, write_json  # noqa: E402
-from scripts.parity.rendering import build_render_handoff  # noqa: E402
-from scripts.parity.validation import build_validation_handoff  # noqa: E402
 from scripts.run_abc_parity import (  # noqa: E402
     analyst_result_payload,
     build_paths,
     build_run_performance,
     calculation_result_payload,
     collect_macro,
-    collect_ticker_sources,
     critic_result_payload,
     display_path,
     elapsed_seconds,
@@ -37,15 +31,13 @@ from scripts.run_abc_parity import (  # noqa: E402
     resolve_peer_tickers,
     result_payload,
     reuse_macro,
-    reuse_ticker_sources,
     validation_result_payload,
-    write_source_collection_summary,
 )
 from scripts.run_mode_common import (  # noqa: E402
-    annotate_analysis_run_profile,
+    TickerPipelineContext,
     publish_report_via_contract,
-    temporary_env,
-    timed_stage,
+    request_schema_version,
+    run_ticker_pipeline,
 )
 from tools.artifact_validation import validate_artifact_data  # noqa: E402
 from tools.web_search import search as web_search  # noqa: E402
@@ -84,7 +76,7 @@ def run_mode_c(args: argparse.Namespace) -> dict[str, Any]:
     write_json(
         paths["request"],
         {
-            "schema_version": "mode-c-entry-request-v1",
+            "schema_version": request_schema_version(mode),
             "ticker": ticker,
             "mode": mode,
             "language": language,
@@ -118,138 +110,32 @@ def run_mode_c(args: argparse.Namespace) -> dict[str, Any]:
         skipped=args.skip_network,
     )
 
-    stage_start = time.perf_counter()
-    if args.reuse_collected:
-        ticker_summary = reuse_ticker_sources(
-            market=market,
-            run_id=run_id,
-            ticker=ticker,
-        )
-    else:
-        ticker_summary = collect_ticker_sources(
-            language=language,
-            market=market,
-            mode=mode,
-            peer_tickers=peer_tickers,
-            run_id=run_id,
-            skip_network=args.skip_network,
-            ticker=ticker,
-            timeout=args.timeout,
-        )
-    ticker_summary["duration_seconds"] = record_stage(
-        stage_timings,
-        "ticker_collect",
-        stage_start,
+    pipeline = run_ticker_pipeline(
+        ticker,
+        mode,
+        args,
+        error_cls=ModeCEntryError,
+        extra_stages=(run_tier2_stage,),
         market=market,
-        reused=args.reuse_collected,
-        skipped=args.skip_network,
-        ticker=ticker,
+        peer_tickers=peer_tickers,
+        stage_timings=stage_timings,
     )
-    write_source_collection_summary(run_id, ticker, ticker_summary)
+    if pipeline.render is None:
+        raise ModeCEntryError("Mode C render stage did not produce an HTML artifact")
+    tier2_payload = pipeline.extra_stage_payloads["tier2"]
 
-    stage_start = time.perf_counter()
-    tier2_path = ensure_tier2_artifact(
-        market=market,
-        provider=args.web_provider,
-        run_id=run_id,
-        skip_network=args.skip_network,
-        ticker=ticker,
-    )
-    tier2_duration = record_stage(
-        stage_timings,
-        "tier2_web",
-        stage_start,
-        market=market,
-        path=display_path(tier2_path),
-        skipped=args.skip_network,
-        ticker=ticker,
-    )
-    tier2_payload = {
-        "path": display_path(tier2_path),
-        "duration_seconds": tier2_duration,
-        "artifact": measure_text_artifact(tier2_path),
-    }
-
-    validation = timed_stage(
-        stage_timings,
-        "validation",
-        lambda: build_validation_handoff(
-            language=language,
-            market=market,
-            mode=mode,
-            run_id=run_id,
-            ticker=ticker,
-        ),
-    )
-    calculation = timed_stage(
-        stage_timings,
-        "calculation",
-        lambda: build_calculation_handoff(
-            language=language,
-            market=market,
-            mode=mode,
-            run_id=run_id,
-            ticker=ticker,
-        ),
-    )
-    with temporary_env("ANALYST_BACKEND", args.analyst_backend):
-        analyst = timed_stage(
-            stage_timings,
-            "analyst",
-            lambda: build_analyst_handoff(
-                language=language,
-                market=market,
-                mode=mode,
-                run_id=run_id,
-                ticker=ticker,
-            ),
-        )
-    run_profile = annotate_analysis_run_profile(
-        analyst.analysis_result_path,
-        allow_deterministic_delivery=args.allow_deterministic_delivery,
-        allow_fixture_delivery=args.allow_fixture_delivery,
-        requested_run_profile=args.run_profile,
-    )
-    render = timed_stage(
-        stage_timings,
-        "render",
-        lambda: build_render_handoff(
-            language=language,
-            market=market,
-            mode=mode,
-            run_id=run_id,
-            ticker=ticker,
-        ),
-    )
-    critic = timed_stage(
-        stage_timings,
-        "critic",
-        lambda: build_critic_handoff(
-            language=language,
-            market=market,
-            mode=mode,
-            run_id=run_id,
-            ticker=ticker,
-        ),
-    )
-    if not critic.delivery_ready:
-        raise ModeCEntryError("Mode C quality gate is not ready for delivery")
-
-    analysis = load_json(analyst.analysis_result_path)
+    analysis = load_json(pipeline.analyst.analysis_result_path)
     analysis_date = str(analysis.get("analysis_date") or utc_now()[:10])
     report_path = publish_report_via_contract(
         analysis_date=analysis_date,
-        html_path=render.html_path,
+        html_path=pipeline.render.html_path,
         language=language,
         mode=mode,
         peer_tickers=None,
         ticker=ticker,
     )
-    quality_path = critic.quality_report_path
-    quality = load_json(quality_path)
-    delivery_gate = quality.get("delivery_gate") if isinstance(quality.get("delivery_gate"), dict) else {}
-    if delivery_gate.get("ready_for_delivery") is not True:
-        raise ModeCEntryError("quality-report delivery_gate.ready_for_delivery is not true")
+    quality_path = pipeline.quality_report_path
+    delivery_gate = pipeline.delivery_gate
 
     completed_at = utc_now()
     metadata = {
@@ -260,19 +146,19 @@ def run_mode_c(args: argparse.Namespace) -> dict[str, Any]:
         "market": market,
         "ticker": ticker,
         "macro": macro_payload,
-        "ticker_result": ticker_summary,
+        "ticker_result": pipeline.ticker_summary,
         "tier2": tier2_payload,
-        "validation": validation_result_payload(validation),
-        "calculation": calculation_result_payload(calculation),
-        "analyst": analyst_result_payload(analyst),
-        "run_profile": run_profile,
-        "render": render_result_payload(render),
-        "critic": critic_result_payload(critic),
+        "validation": validation_result_payload(pipeline.validation),
+        "calculation": calculation_result_payload(pipeline.calculation),
+        "analyst": analyst_result_payload(pipeline.analyst),
+        "run_profile": pipeline.run_profile,
+        "render": render_result_payload(pipeline.render),
+        "critic": critic_result_payload(pipeline.critic),
         "published_report_path": display_path(report_path),
         "quality_report_path": display_path(quality_path),
         "delivery_gate": delivery_gate,
         "performance": build_run_performance(
-            analyst_results=[analyst_result_payload(analyst)],
+            analyst_results=[analyst_result_payload(pipeline.analyst)],
             completed_at=completed_at,
             stage_timings=stage_timings,
             started_at=started_at,
@@ -286,8 +172,36 @@ def run_mode_c(args: argparse.Namespace) -> dict[str, Any]:
         "run_id": run_id,
         "quality_report_path": str(quality_path),
         "delivery_gate": delivery_gate.get("result"),
-        "run_profile": run_profile.get("run_profile"),
+        "run_profile": pipeline.run_profile.get("run_profile"),
     }
+
+
+def run_tier2_stage(context: TickerPipelineContext) -> tuple[str, dict[str, Any]]:
+    stage_start = time.perf_counter()
+    tier2_path = ensure_tier2_artifact(
+        market=context.market,
+        provider=context.args.web_provider,
+        run_id=context.run_id,
+        skip_network=context.args.skip_network,
+        ticker=context.ticker,
+    )
+    tier2_duration = record_stage(
+        context.stage_timings,
+        "tier2_web",
+        stage_start,
+        market=context.market,
+        path=display_path(tier2_path),
+        skipped=context.args.skip_network,
+        ticker=context.ticker,
+    )
+    return (
+        "tier2",
+        {
+            "path": display_path(tier2_path),
+            "duration_seconds": tier2_duration,
+            "artifact": measure_text_artifact(tier2_path),
+        },
+    )
 
 
 def ensure_tier2_artifact(
@@ -345,4 +259,3 @@ def update_research_plan_with_tier2(
     research["tier2_fetches"] = research.get("tier2_fetches") or []
     research["tier2_raw_path"] = display_path(tier2_path)
     write_json(research_path, research)
-
