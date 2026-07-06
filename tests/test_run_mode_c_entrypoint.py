@@ -71,11 +71,13 @@ def test_mode_c_entrypoint_offline_produces_passing_dashboard_when_fixture_allow
     quality_path = ticker_root / "quality-report.json"
     tier2_path = ticker_root / "tier2-raw.json"
     quality = json.loads(quality_path.read_text(encoding="utf-8"))
+    analysis = json.loads((ticker_root / "analysis-result.json").read_text(encoding="utf-8"))
 
     assert rc == 0
     assert payload["run_id"] == run_id
     assert payload["run_profile"] == "smoke"
     assert report_path.exists()
+    assert report_path.name == f"AAPL_C_EN_{analysis['analysis_date']}.html"
     assert report_path.stat().st_size > 40_000
     assert quality["delivery_gate"]["result"] == "PASS"
     assert quality["delivery_gate"]["ready_for_delivery"] is True
@@ -114,6 +116,7 @@ def test_mode_c_entrypoint_ko_smoke_publishes_localized_dashboard(monkeypatch, c
     quality_path = Path(payload["quality_report_path"])
     render_path = ticker_root / "mode-c-dashboard.html"
     quality = json.loads(quality_path.read_text(encoding="utf-8"))
+    analysis = json.loads((ticker_root / "analysis-result.json").read_text(encoding="utf-8"))
     html = report_path.read_text(encoding="utf-8")
     run_local_html = render_path.read_text(encoding="utf-8")
 
@@ -122,6 +125,7 @@ def test_mode_c_entrypoint_ko_smoke_publishes_localized_dashboard(monkeypatch, c
     assert payload["run_profile"] == "smoke"
     assert payload["delivery_gate"] == "PASS"
     assert report_path.exists()
+    assert report_path.name == f"AAPL_C_KO_{analysis['analysis_date']}.html"
     assert render_path.exists()
     assert html == run_local_html
     assert quality_path == ticker_root / "quality-report.json"

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import shutil
 import sys
 import time
 from pathlib import Path
@@ -44,6 +43,7 @@ from scripts.run_abc_parity import (  # noqa: E402
 )
 from scripts.run_mode_common import (  # noqa: E402
     annotate_analysis_run_profile,
+    publish_report_via_contract,
     temporary_env,
     timed_stage,
 )
@@ -235,9 +235,14 @@ def run_mode_c(args: argparse.Namespace) -> dict[str, Any]:
     if not critic.delivery_ready:
         raise ModeCEntryError("Mode C quality gate is not ready for delivery")
 
-    report_path = publish_report(
+    analysis = load_json(analyst.analysis_result_path)
+    analysis_date = str(analysis.get("analysis_date") or utc_now()[:10])
+    report_path = publish_report_via_contract(
+        analysis_date=analysis_date,
         html_path=render.html_path,
         language=language,
+        mode=mode,
+        peer_tickers=None,
         ticker=ticker,
     )
     quality_path = critic.quality_report_path
@@ -341,17 +346,3 @@ def update_research_plan_with_tier2(
     research["tier2_raw_path"] = display_path(tier2_path)
     write_json(research_path, research)
 
-
-def publish_report(
-    *,
-    html_path: Path,
-    language: str,
-    ticker: str,
-) -> Path:
-    analysis = load_json(html_path.parent / "analysis-result.json")
-    analysis_date = str(analysis.get("analysis_date") or utc_now()[:10])
-    reports_dir = REPO_ROOT / "output" / "reports"
-    reports_dir.mkdir(parents=True, exist_ok=True)
-    report_path = reports_dir / f"{ticker}_C_{language}_{analysis_date}.html"
-    shutil.copyfile(html_path, report_path)
-    return report_path

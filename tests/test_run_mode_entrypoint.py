@@ -191,7 +191,7 @@ def test_run_mode_dispatches_mode_a_codex_native(monkeypatch, capsys):
     assert payload["run_profile"] == "deterministic"
     assert payload["delivery_gate"] == "PASS"
     assert report_path.exists()
-    assert report_path.name.startswith("AAPL_A_en_")
+    assert report_path.name == f"AAPL_A_EN_{analysis['analysis_date']}.html"
     assert (ticker_root / "mode-a-briefing.html").exists()
     assert quality["delivery_gate"]["ready_for_delivery"] is True
     assert quality["items"]["fixture_delivery_guard"]["status"] == "PASS_WITH_FLAGS"
@@ -261,7 +261,7 @@ def test_run_mode_dispatches_mode_a_kr_auto_codex_native(monkeypatch, capsys):
     assert payload["delivery_gate"] == "PASS"
     report_path = Path(payload["report_path"])
     html = report_path.read_text(encoding="utf-8")
-    assert report_path.name.startswith("005930_A_ko_")
+    assert report_path.name == f"005930_A_KO_{analysis['analysis_date']}.html"
     assert request["market"] == "KR"
     assert source_summary["market"] == "KR"
     assert validated["market"] == "KR"
@@ -354,6 +354,7 @@ def test_run_mode_dispatches_mode_c_codex_native(monkeypatch, capsys):
     report_path = Path(payload["report_path"])
     html = report_path.read_text(encoding="utf-8")
     assert report_path.exists()
+    assert report_path.name == f"AAPL_C_KO_{analysis['analysis_date']}.html"
     assert quality["delivery_gate"]["ready_for_delivery"] is True
     assert quality["items"]["fixture_delivery_guard"]["status"] == "PASS_WITH_FLAGS"
     assert "fixture_delivery_guard" in quality["delivery_gate"]["non_blocking_items"]
@@ -468,7 +469,10 @@ def test_run_mode_dispatches_mode_b_codex_native(monkeypatch, capsys):
     assert payload["delivery_gate"] == "PASS"
     assert payload["best_pick"] in {"GOOGL", "MSFT", "AAPL"}
     report_html = Path(payload["report_path"]).read_text(encoding="utf-8")
-    comparison_html = Path(payload["comparison_report_path"]).read_text(encoding="utf-8")
+    comparison_report_path = Path(payload["comparison_report_path"])
+    comparison_html = comparison_report_path.read_text(encoding="utf-8")
+    primary_analysis = json.loads((run_root / "GOOGL" / "analysis-result.json").read_text(encoding="utf-8"))
+    assert comparison_report_path.name == f"GOOGL_MSFT_AAPL_B_KO_{primary_analysis['analysis_date']}.html"
     assert "LLM 분석 없이 검증 지표 기반 결정론적 템플릿" in comparison_html
     assert "LLM 분석 없이 검증 지표 기반 결정론적 템플릿" in report_html
     assert Path(payload["quality_report_path"]) == comparison_dir / "comparison-quality-report.json"
@@ -527,6 +531,8 @@ def test_run_mode_dispatches_mode_b_mixed_market_codex_native(monkeypatch, capsy
     assert payload["backend_provider"] == "codex_native"
     assert payload["run_profile"] == "deterministic"
     assert payload["delivery_gate"] == "PASS"
+    primary_analysis = json.loads((run_root / "AAPL" / "analysis-result.json").read_text(encoding="utf-8"))
+    assert Path(payload["comparison_report_path"]).name == f"AAPL_005930_000660_B_KO_{primary_analysis['analysis_date']}.html"
     assert metadata["market"] == "mixed"
     assert comparison["market"] == "mixed"
     assert comparison["compared_tickers"] == ["AAPL", "005930", "000660"]

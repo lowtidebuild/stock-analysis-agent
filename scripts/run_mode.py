@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import shutil
 import sys
 import time
 from pathlib import Path
@@ -47,17 +46,16 @@ from scripts.run_abc_parity import (  # noqa: E402
 )
 from scripts.run_mode_c_impl import ModeCEntryError, run_mode_c  # noqa: E402
 from scripts.run_mode_common import (  # noqa: E402
+    RunModeExecutionError,
     annotate_analysis_run_profile,
+    publish_report_via_contract,
     temporary_env,
     timed_stage,
 )
+from tools.paths import data_path  # noqa: E402
 
 
 class RunModeInputError(RuntimeError):
-    pass
-
-
-class RunModeExecutionError(RuntimeError):
     pass
 
 
@@ -305,10 +303,14 @@ def run_mode_a(args: argparse.Namespace) -> dict[str, Any]:
     if not critic.delivery_ready:
         raise RunModeExecutionError("Mode A quality gate is not ready for delivery")
 
-    report_path = publish_mode_report(
+    analysis = load_json(analyst.analysis_result_path)
+    analysis_date = str(analysis.get("analysis_date") or utc_now()[:10])
+    report_path = publish_report_via_contract(
+        analysis_date=analysis_date,
         html_path=render.html_path,
         language=language,
         mode=mode,
+        peer_tickers=None,
         ticker=ticker,
     )
     quality_path = critic.quality_report_path
@@ -538,11 +540,15 @@ def run_mode_b(args: argparse.Namespace, tickers: list[str]) -> dict[str, Any]:
     if delivery_gate.get("ready_for_delivery") is not True:
         raise RunModeExecutionError("comparison-quality-report delivery_gate.ready_for_delivery is not true")
 
-    report_path = publish_mode_b_report(
+    primary_analysis = load_json(data_path("runs", run_id, primary_ticker, "analysis-result.json"))
+    analysis_date = str(primary_analysis.get("analysis_date") or utc_now()[:10])
+    report_path = publish_report_via_contract(
+        analysis_date=analysis_date,
         html_path=comparison.html_path,
         language=language,
-        primary_ticker=primary_ticker,
-        run_id=run_id,
+        mode=mode,
+        peer_tickers=tickers,
+        ticker=primary_ticker,
     )
     completed_at = utc_now()
     analyst_payloads = [analyst_result_payload(result) for result in analyst_results]
@@ -627,7 +633,7 @@ def enrich_payload(
     run_id: str,
     ticker: str,
 ) -> dict[str, Any]:
-    analysis = load_json(REPO_ROOT / "output" / "runs" / run_id / ticker / "analysis-result.json")
+    analysis = load_json(data_path("runs", run_id, ticker, "analysis-result.json"))
     run_context = analysis.get("run_context") if isinstance(analysis.get("run_context"), dict) else {}
     backend = run_context.get("backend") if isinstance(run_context.get("backend"), dict) else {}
     return {
@@ -637,39 +643,6 @@ def enrich_payload(
         "backend_provider": backend.get("provider"),
         **payload,
     }
-
-
-def publish_mode_report(
-    *,
-    html_path: Path,
-    language: str,
-    mode: str,
-    ticker: str,
-) -> Path:
-    analysis = load_json(html_path.parent / "analysis-result.json")
-    analysis_date = str(analysis.get("analysis_date") or utc_now()[:10])
-    reports_dir = REPO_ROOT / "output" / "reports"
-    reports_dir.mkdir(parents=True, exist_ok=True)
-    report_path = reports_dir / f"{ticker}_{mode}_{language}_{analysis_date}.html"
-    shutil.copyfile(html_path, report_path)
-    return report_path
-
-
-def publish_mode_b_report(
-    *,
-    html_path: Path,
-    language: str,
-    primary_ticker: str,
-    run_id: str,
-) -> Path:
-    analysis = load_json(REPO_ROOT / "output" / "runs" / run_id / primary_ticker / "analysis-result.json")
-    analysis_date = str(analysis.get("analysis_date") or utc_now()[:10])
-    reports_dir = REPO_ROOT / "output" / "reports"
-    reports_dir.mkdir(parents=True, exist_ok=True)
-    report_path = reports_dir / f"{primary_ticker}_B_{language}_{analysis_date}.html"
-    shutil.copyfile(html_path, report_path)
-    return report_path
-
 
 if __name__ == "__main__":
     raise SystemExit(main())
