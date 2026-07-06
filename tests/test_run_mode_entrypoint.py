@@ -643,3 +643,32 @@ def test_run_mode_blocks_mode_b_fixture_without_explicit_allow(monkeypatch, caps
     assert quality["items"]["fixture_delivery_guard"]["status"] == "FAIL"
     assert quality["delivery_gate"]["ready_for_delivery"] is False
     assert "fixture_delivery_guard" in quality["delivery_gate"]["blocking_items"]
+
+
+def test_main_emits_json_error_for_parity_runner_error(capsys):
+    rc = run_main(
+        [
+            "--ticker",
+            "AAPL",
+            "--mode",
+            "A",
+            "--lang",
+            "en",
+            "--market",
+            "US",
+            "--run-id",
+            "pytest_missing_reuse_collected_json_contract",
+            "--skip-network",
+            "--reuse-collected",
+            "--analyst-backend",
+            "codex_native",
+        ]
+    )
+
+    out = capsys.readouterr().out.strip()
+    payload = json.loads(out)
+
+    assert rc == 1
+    assert payload["mode"] == "A"
+    assert payload["run_id"] == "pytest_missing_reuse_collected_json_contract"
+    assert "error" in payload

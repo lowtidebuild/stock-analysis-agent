@@ -36,6 +36,7 @@ from scripts.run_abc_parity import (  # noqa: E402
     normalize_ticker,
     normalize_tickers,
     parse_env_json,
+    ParityRunnerError,
     record_stage,
     render_result_payload,
     result_payload,
@@ -75,11 +76,23 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
         return 2
-    except (ModeCEntryError, RunModeExecutionError) as exc:
+    except (ModeCEntryError, RunModeExecutionError, ParityRunnerError, ValueError) as exc:
         print(
             json.dumps(
                 {
                     "error": str(exc),
+                    "mode": args.mode.upper(),
+                    "run_id": args.run_id,
+                },
+                ensure_ascii=False,
+            )
+        )
+        return 1
+    except Exception as exc:  # Contract guard: stdout should remain one-line JSON for automation.
+        print(
+            json.dumps(
+                {
+                    "error": f"unexpected: {type(exc).__name__}: {exc}",
                     "mode": args.mode.upper(),
                     "run_id": args.run_id,
                 },
