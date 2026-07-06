@@ -7,7 +7,7 @@ import sys
 import tempfile
 import unittest
 
-from tools.security_audit import audit_paths, forbidden_staged_findings
+from tools.security_audit import audit_paths, forbidden_staged_findings, scan_file
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 CLI = ROOT / "tools" / "security_audit.py"
@@ -76,6 +76,27 @@ class SecurityAuditTests(unittest.TestCase):
         findings = forbidden_staged_findings([".env.example", "config/.env.example"])
 
         self.assertEqual(findings, [])
+
+    def test_sensitive_assignment_matches_quoted_json_keys(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "config.json"
+            path.write_text(
+                '{"password": "hunter2secret9012", "api_key": "abcd1234efgh5678"}',
+                encoding="utf-8",
+            )
+
+            findings = scan_file(path)
+
+        self.assertIn("sensitive_assignment", {item.rule for item in findings})
+
+    def test_sensitive_assignment_still_matches_env_style(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "settings.py"
+            path.write_text('API_KEY = "abcd1234efgh5678"', encoding="utf-8")
+
+            findings = scan_file(path)
+
+        self.assertIn("sensitive_assignment", {item.rule for item in findings})
 
     def test_fixture_marker_in_published_report_is_blocking(self):
         with tempfile.TemporaryDirectory() as tmp:

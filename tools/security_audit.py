@@ -86,7 +86,7 @@ SECRET_VALUE_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
 SENSITIVE_ASSIGNMENT_RE = re.compile(
     r"""(?ix)
     \b(?:[A-Za-z0-9_]+[_-])?(api[_-]?key|secret|token|password|passwd|credential|private[_-]?key)\b
-    \s*[:=]\s*
+    ["']?\s*[:=]\s*
     ["']?([^"',\s#}]+)
     """
 )
