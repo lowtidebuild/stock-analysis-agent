@@ -52,182 +52,242 @@ DEFAULT_GOLDEN_CONFIG = {
     ],
 }
 
-MODE_C_KO_STATIC_REPLACEMENTS = (
-    (
-        "Revenue, operating income, margin, FCF run-rate, and business-driver bridge charts are populated from normalized quarterly financial statement rows or validated TTM metrics. If the raw provider nests rows under a vendor-specific envelope, the renderer must flatten that structure before charting so the dashboard cannot pass with a single zero-filled fallback period.",
-        "매출, 영업이익, 마진, 잉여현금흐름 런레이트, 사업 동인 브리지 차트는 정규화된 분기 재무제표 행 또는 검증된 TTM 지표에서 채웁니다. 원천 제공자가 벤더별 포장 구조 안에 행을 중첩하더라도, 렌더러는 차트 작성 전에 이를 평탄화해 단일 0값 기간으로 대시보드가 통과하지 못하게 해야 합니다.",
-    ),
-    (
-        "The audit table below mirrors the chart arrays used by Chart.js. It lets a reviewer verify that trend visuals are backed by at least four concrete periods, non-zero revenue and operating-income points, and visibly changing margins before the dashboard clears strict semantic parity.",
-        "아래 감사 표는 Chart.js에 전달된 차트 배열을 그대로 반영합니다. 검토자는 대시보드가 엄격한 의미 정합성을 통과하기 전에 추세 시각화가 최소 4개 실제 기간, 0이 아닌 매출 및 영업이익 값, 실제로 변하는 마진에 의해 뒷받침되는지 확인할 수 있습니다.",
-    ),
-    ("Mode C Deep Dive Dashboard", "Mode C 심층 대시보드"),
-    ("Investment Dashboard", "투자 대시보드"),
-    ("Scenario Valuation (12-Month Targets)", "시나리오 밸류에이션 (12개월 목표가)"),
-    ("Key Performance Indicators", "핵심 KPI"),
-    ("Investment Thesis & Variant View", "투자 논점과 차별적 관점"),
-    ("Precision Risk Analysis", "정밀 리스크 분석"),
-    ("Valuation Metrics", "밸류에이션 지표"),
-    ("DCF Valuation", "DCF 밸류에이션"),
-    ("Valuation Bridge", "밸류에이션 브리지"),
-    ("Peer Comparison", "동종업계 비교"),
-    ("Macro Environment", "매크로 환경"),
-    ("Analyst Coverage", "애널리스트 커버리지"),
-    ("Charts & Trend Data", "재무 차트"),
-    ("Financial Detail Analysis", "재무 세부 분석"),
-    ("Quality of Earnings & Evidence Gate", "이익 품질 및 증거 게이트"),
-    ("Quality of Earnings", "이익 품질"),
-    ("Portfolio Strategy", "포트폴리오 전략"),
-    ("Source-Tagged Claims Appendix", "출처 태그 클레임 부록"),
-    ("Chart Evidence Boundary", "차트 증거 경계"),
-    ("Quarterly Revenue & Operating Income", "분기 매출 및 영업이익"),
-    ("Margin Trend - Op vs Net %", "마진 추이 - 영업 vs 순이익률"),
-    ("Latest Quarter Business Driver Bridge", "최근 분기 사업 동인 브리지"),
-    ("Free Cash Flow Run-Rate - validated trend boundary", "잉여현금흐름 런레이트 - 검증 추세 경계"),
-    ("Quarterly Trend Compatibility - revenue, operating income, FCF", "분기 추세 정합성 - 매출, 영업이익, FCF"),
-    ("Stock Price vs Scenario Targets", "주가와 시나리오 목표가"),
-    ("Base DCF Fair Value", "Base DCF 적정가"),
-    ("Enterprise Value", "기업가치"),
-    ("Equity value", "주주가치"),
-    ("Terminal growth", "영구성장률"),
-    ("DCF Sensitivity Table", "DCF 민감도 표"),
-    ("Reverse DCF", "역산 DCF"),
-    ("Market is pricing in", "시장은 다음을 반영"),
-    ("Our base assumes", "Base 가정"),
-    ("annual FCF growth", "연간 FCF 성장률"),
-    ("Consensus Average", "컨센서스 평균"),
-    ("Median Target", "중앙값 목표가"),
-    ("Street High", "최고 목표가"),
-    ("Street Low", "최저 목표가"),
-    ("Coverage status:", "커버리지 상태:"),
-    ("Weighted Fair Value", "가중 적정가"),
-    ("Current Price", "현재가"),
-    ("Implied View vs Market", "시장 대비 내재 시각"),
-    ("Reconciliation Logic", "조정 논리"),
-    ("Decision anchor:", "판단 앵커:"),
-    ("Weight", "가중치"),
-    ("Subject", "대상 기업"),
-    ("4-artifact evidence boundary", "4개 산출물 증거 경계"),
-    ("renderer-specific guardrails", "렌더러 전용 가드레일"),
-    ("Scenario math", "시나리오 산식"),
-    ("Chart arrays", "차트 배열"),
-    ("Delivery gate", "전달 게이트"),
-    ("3-scenario execution guidelines", "3개 시나리오 실행 기준"),
-    ("What Would Make Me Wrong", "내 판단이 틀리는 조건"),
-    ("Source profile", "소스 프로필"),
-    ("Analysis Date:", "분석일:"),
-    ("Mode: Deep Dive Dashboard (C)", "모드: 심층 대시보드 (C)"),
-    ("Data Mode:", "데이터 모드:"),
-    ("Confidence Cap:", "신뢰도 상한:"),
-    ("R/R Score:", "R/R 점수:"),
-    ("Bear Case", "약세 시나리오"),
-    ("Base Case", "기준 시나리오"),
-    ("Bull Case", "강세 시나리오"),
-    ("Variant View", "차별적 관점"),
-    ("Market Cap", "시가총액"),
-    ("Revenue TTM", "TTM 매출"),
-    ("Revenue Growth", "매출 성장률"),
-    ("Operating Margin", "영업이익률"),
-    ("Op Margin", "영업이익률"),
-    ("FCF Yield", "FCF 수익률"),
-    ("Net Debt / EBITDA", "순차입금 / EBITDA"),
-    ("Net Debt", "순차입금"),
-    ("FCF TTM", "TTM FCF"),
-    ("P/E", "PER"),
-    ("Beta", "베타"),
-    ("Risk", "리스크"),
-    ("Mechanism", "작동 경로"),
-    ("Financial Impact", "재무 영향"),
-    ("Probability", "확률"),
-    ("Metric", "지표"),
-    ("Current", "현재"),
-    ("Unit", "단위"),
-    ("Assessment", "판단"),
-    ("Company", "기업"),
-    ("Basis", "근거"),
-    ("Value", "값"),
-    ("Period", "기간"),
-    ("Quarter", "분기"),
-    ("Revenue", "매출"),
-    ("Gross Profit", "매출총이익"),
-    ("Operating Income", "영업이익"),
-    ("Net Income", "순이익"),
-    ("Free Cash Flow", "잉여현금흐름"),
-    ("Operating Margin", "영업이익률"),
-    ("Net Margin", "순이익률"),
-    ("Latest Quarter", "최근 분기"),
-    ("Bull Target", "강세 목표가"),
-    ("Base Target", "기준 목표가"),
-    ("Bear Target", "약세 목표가"),
-    ("52W Low", "52주 저점"),
-    ("52W High", "52주 고점"),
-    ("Price", "주가"),
-    ("Date", "날짜"),
-    ("Catalyst", "촉매"),
-    ("Significance", "의미"),
-    ("Claim", "클레임"),
-    ("Source", "출처"),
-    ("Grade", "등급"),
-    ("Tag", "태그"),
-    ("Disclaimer", "면책 고지"),
-    ("Last updated:", "최종 업데이트:"),
-    ("Sources:", "출처:"),
-    ("validated metrics, evidence pack, deterministic calculations.", "검증 지표, 증거 패키지, 결정론적 계산."),
-    ("This dashboard is for informational purposes only and does not constitute investment advice.", "이 대시보드는 정보 제공용이며 투자 조언이 아닙니다."),
-    ("This is not investment advice; outputs depend on the verified artifacts available at run time.", "투자 조언이 아니며, 결과는 실행 시점의 검증된 산출물에 따라 달라집니다."),
-    ("This is not investment advice; verify source artifacts before acting.", "투자 조언이 아니며, 행동 전 원천 산출물을 확인해야 합니다."),
-    ("underweight", "비중축소"),
-    ("overweight", "비중확대"),
-    ("neutral", "중립"),
-    ("monitor", "모니터링"),
-    ("Gap", "차이"),
-    ("Converged in", "수렴 반복"),
-    ("iterations.", "회."),
-)
-
-MODE_C_KO_REGEX_REPLACEMENTS = (
-    (r" - (\d+) tracked metrics", r" - \1개 추적 지표"),
-    (r" - (\d+) debate points", r" - \1개 논점"),
-    (r" - (\d+) deterministic rows", r" - \1개 결정론적 항목"),
-    (r" - (\d+) target anchors", r" - \1개 목표가 앵커"),
-    (r" - (\d+) scenario paths", r" - \1개 시나리오 경로"),
-    (r" - (\d+) mechanisms", r" - \1개 메커니즘"),
-    (r" - (\d+) quarters", r" - \1개 분기"),
-    (r" - (\d+) charts", r" - \1개 차트"),
-    (r" - (\d+) points max", r" - \1개 포인트 이하"),
-    (r" - (\d+) anchor points", r" - \1개 앵커 포인트"),
-    (r" - (\d+) FRED series", r" - \1개 FRED 시계열"),
-    (r" - (\d+) rows", r" - \1개 행"),
-    (r" - (\d+) facts", r" - \1개 팩트"),
-    (r" - (\d+) claims", r" - \1개 클레임"),
-    (r" - (\d+) checks", r" - \1개 체크"),
-    (r" - (\d+) WACC cases", r" - \1개 WACC 케이스"),
-    (r"Reconciliation Logic - (\d+) anchors", r"조정 논리 - \1개 앵커"),
-    (r"역산 DCF - ([\d.]+)% market-implied growth", r"역산 DCF - \1% 시장 내재 성장률"),
-    (r"밸류에이션 브리지 - weighted FV", "밸류에이션 브리지 - 가중 적정가"),
-    (r"커버리지 상태: unavailable", "커버리지 상태: 이용 불가"),
-    (r"커버리지 상태: available", "커버리지 상태: 이용 가능"),
-    (r"Macro data unavailable", "매크로 데이터 이용 불가"),
-    (r"FRED structured series unavailable", "FRED 구조화 시계열 이용 불가"),
-    (r"Chart audit rows unavailable", "차트 감사 행 이용 불가"),
-    (r"Quarterly data unavailable", "분기 데이터 이용 불가"),
-    (r"DCF sensitivity unavailable", "DCF 민감도 이용 불가"),
-    (r"Reverse DCF - unavailable", "역산 DCF - 이용 불가"),
-    (r"([+\-\d.,%]+) growth / ([+\-\d.,%]+) margin", r"\1 성장률 / \2 마진"),
-)
-
-MODE_C_KO_SCRIPT_REPLACEMENTS = (
-    ("label: 'Revenue'", "label: '매출'"),
-    ("label: 'Operating Income'", "label: '영업이익'"),
-    ("label: 'Operating Margin'", "label: '영업이익률'"),
-    ("label: 'Net Margin'", "label: '순이익률'"),
-    ("label: 'Latest Quarter'", "label: '최근 분기'"),
-    ("label: 'Free Cash Flow'", "label: '잉여현금흐름'"),
-    ("label: 'Bull Target'", "label: '강세 목표가'"),
-    ("label: 'Base Target'", "label: '기준 목표가'"),
-    ("label: 'Bear Target'", "label: '약세 목표가'"),
-    (" Price'", " 주가'"),
-)
+LABELS: dict[str, dict[str, str]] = {
+    "en": {
+        "investment_dashboard": "Investment Dashboard",
+        "mode_c_dashboard": "Mode C Deep Dive Dashboard",
+        "scenario_valuation": "Scenario Valuation",
+        "scenario_valuation_12m": "Scenario Valuation (12-Month Targets)",
+        "key_performance_indicators": "Key Performance Indicators",
+        "investment_thesis_variant_view": "Investment Thesis & Variant View",
+        "precision_risk_analysis": "Precision Risk Analysis",
+        "valuation_metrics": "Valuation Metrics",
+        "dcf_valuation": "DCF Valuation",
+        "valuation_bridge": "Valuation Bridge",
+        "peer_comparison": "Peer Comparison",
+        "macro_environment": "Macro Environment",
+        "analyst_coverage": "Analyst Coverage",
+        "charts_trend_data": "Charts & Trend Data",
+        "financial_detail_analysis": "Financial Detail Analysis",
+        "quality_gate": "Quality of Earnings & Evidence Gate",
+        "quality_earnings": "Quality of Earnings",
+        "portfolio_strategy": "Portfolio Strategy",
+        "source_appendix": "Source-Tagged Claims Appendix",
+        "chart_evidence_boundary": "Chart Evidence Boundary",
+        "quarterly_revenue_operating_income": "Quarterly Revenue & Operating Income",
+        "margin_trend": "Margin Trend - Op vs Net %",
+        "latest_quarter_bridge": "Latest Quarter Business Driver Bridge",
+        "fcf_run_rate": "Free Cash Flow Run-Rate - validated trend boundary",
+        "quarterly_trend_compatibility": "Quarterly Trend Compatibility - revenue, operating income, FCF",
+        "stock_price_targets": "Stock Price vs Scenario Targets",
+        "base_dcf_fair_value": "Base DCF Fair Value",
+        "enterprise_value": "Enterprise Value",
+        "equity_value": "Equity value",
+        "terminal_growth": "Terminal growth",
+        "dcf_sensitivity_table": "DCF Sensitivity Table",
+        "reverse_dcf": "Reverse DCF",
+        "market_is_pricing_in": "Market is pricing in",
+        "our_base_assumes": "Our base assumes",
+        "annual_fcf_growth": "annual FCF growth",
+        "consensus_average": "Consensus Average",
+        "median_target": "Median Target",
+        "street_high": "Street High",
+        "street_low": "Street Low",
+        "coverage_status": "Coverage status:",
+        "weighted_fair_value": "Weighted Fair Value",
+        "current_price": "Current Price",
+        "implied_view_vs_market": "Implied View vs Market",
+        "reconciliation_logic": "Reconciliation Logic",
+        "decision_anchor": "Decision anchor:",
+        "weight": "Weight",
+        "subject": "Subject",
+        "evidence_boundary_4_artifact": "4-artifact evidence boundary",
+        "renderer_guardrails": "renderer-specific guardrails",
+        "scenario_math": "Scenario math",
+        "chart_arrays": "Chart arrays",
+        "delivery_gate": "Delivery gate",
+        "scenario_execution_guidelines": "3-scenario execution guidelines",
+        "what_would_make_wrong": "What Would Make Me Wrong",
+        "source_profile": "Source profile",
+        "analysis_date": "Analysis Date:",
+        "mode_deep_dive": "Mode: Deep Dive Dashboard (C)",
+        "data_mode": "Data Mode:",
+        "confidence_cap": "Confidence Cap:",
+        "rr_score": "R/R Score:",
+        "bear_case": "Bear Case",
+        "base_case": "Base Case",
+        "bull_case": "Bull Case",
+        "variant_view": "Variant View",
+        "market_cap": "Market Cap",
+        "revenue_ttm": "Revenue TTM",
+        "revenue_growth": "Revenue Growth",
+        "operating_margin": "Operating Margin",
+        "op_margin": "Op Margin",
+        "fcf_yield": "FCF Yield",
+        "net_debt_ebitda": "Net Debt / EBITDA",
+        "net_debt": "Net Debt",
+        "fcf_ttm": "FCF TTM",
+        "pe_ratio": "P/E",
+        "beta": "Beta",
+        "risk": "Risk",
+        "mechanism": "Mechanism",
+        "financial_impact": "Financial Impact",
+        "probability": "Probability",
+        "metric": "Metric",
+        "current": "Current",
+        "unit": "Unit",
+        "assessment": "Assessment",
+        "company": "Company",
+        "basis": "Basis",
+        "value": "Value",
+        "period": "Period",
+        "check": "Check",
+        "quarter": "Quarter",
+        "revenue": "Revenue",
+        "gross_profit": "Gross Profit",
+        "operating_income": "Operating Income",
+        "op_income": "Op Income",
+        "net_income": "Net Income",
+        "free_cash_flow": "Free Cash Flow",
+        "net_margin": "Net Margin",
+        "latest_quarter": "Latest Quarter",
+        "bull_target": "Bull Target",
+        "base_target": "Base Target",
+        "bear_target": "Bear Target",
+        "price": "Price",
+        "date": "Date",
+        "catalyst": "Catalyst",
+        "significance": "Significance",
+        "claim": "Claim",
+        "source": "Source",
+        "grade": "Grade",
+        "tag": "Tag",
+        "disclaimer": "Disclaimer",
+        "last_updated": "Last updated:",
+        "sources": "Sources:",
+        "validated_sources": "validated metrics, evidence pack, deterministic calculations.",
+        "disclaimer_default": "This dashboard is for informational purposes only and does not constitute investment advice.",
+        "chart_boundary_paragraph_1": "Revenue, operating income, margin, FCF run-rate, and business-driver bridge charts are populated from normalized quarterly financial statement rows or validated TTM metrics. If the raw provider nests rows under a vendor-specific envelope, the renderer must flatten that structure before charting so the dashboard cannot pass with a single zero-filled fallback period.",
+        "chart_boundary_paragraph_2": "The audit table below mirrors the chart arrays used by Chart.js. It lets a reviewer verify that trend visuals are backed by at least four concrete periods, non-zero revenue and operating-income points, and visibly changing margins before the dashboard clears strict semantic parity.",
+    },
+    "ko": {
+        "investment_dashboard": "투자 대시보드",
+        "mode_c_dashboard": "Mode C 심층 대시보드",
+        "scenario_valuation": "시나리오 밸류에이션",
+        "scenario_valuation_12m": "시나리오 밸류에이션 (12개월 목표가)",
+        "key_performance_indicators": "핵심 KPI",
+        "investment_thesis_variant_view": "투자 논점과 차별적 관점",
+        "precision_risk_analysis": "정밀 리스크 분석",
+        "valuation_metrics": "밸류에이션 지표",
+        "dcf_valuation": "DCF 밸류에이션",
+        "valuation_bridge": "밸류에이션 브리지",
+        "peer_comparison": "동종업계 비교",
+        "macro_environment": "매크로 환경",
+        "analyst_coverage": "애널리스트 커버리지",
+        "charts_trend_data": "재무 차트",
+        "financial_detail_analysis": "재무 세부 분석",
+        "quality_gate": "이익 품질 및 증거 게이트",
+        "quality_earnings": "이익 품질",
+        "portfolio_strategy": "포트폴리오 전략",
+        "source_appendix": "출처 태그 클레임 부록",
+        "chart_evidence_boundary": "차트 증거 경계",
+        "quarterly_revenue_operating_income": "분기 매출 및 영업이익",
+        "margin_trend": "마진 추이 - 영업 vs 순이익률",
+        "latest_quarter_bridge": "최근 분기 사업 동인 브리지",
+        "fcf_run_rate": "잉여현금흐름 런레이트 - 검증 추세 경계",
+        "quarterly_trend_compatibility": "분기 추세 정합성 - 매출, 영업이익, FCF",
+        "stock_price_targets": "주가와 시나리오 목표가",
+        "base_dcf_fair_value": "Base DCF 적정가",
+        "enterprise_value": "기업가치",
+        "equity_value": "주주가치",
+        "terminal_growth": "영구성장률",
+        "dcf_sensitivity_table": "DCF 민감도 표",
+        "reverse_dcf": "역산 DCF",
+        "market_is_pricing_in": "시장은 다음을 반영",
+        "our_base_assumes": "Base 가정",
+        "annual_fcf_growth": "연간 FCF 성장률",
+        "consensus_average": "컨센서스 평균",
+        "median_target": "중앙값 목표가",
+        "street_high": "최고 목표가",
+        "street_low": "최저 목표가",
+        "coverage_status": "커버리지 상태:",
+        "weighted_fair_value": "가중 적정가",
+        "current_price": "현재가",
+        "implied_view_vs_market": "시장 대비 내재 시각",
+        "reconciliation_logic": "조정 논리",
+        "decision_anchor": "판단 앵커:",
+        "weight": "가중치",
+        "subject": "대상 기업",
+        "evidence_boundary_4_artifact": "4개 산출물 증거 경계",
+        "renderer_guardrails": "렌더러 전용 가드레일",
+        "scenario_math": "시나리오 산식",
+        "chart_arrays": "차트 배열",
+        "delivery_gate": "전달 게이트",
+        "scenario_execution_guidelines": "3개 시나리오 실행 기준",
+        "what_would_make_wrong": "내 판단이 틀리는 조건",
+        "source_profile": "소스 프로필",
+        "analysis_date": "분석일:",
+        "mode_deep_dive": "모드: 심층 대시보드 (C)",
+        "data_mode": "데이터 모드:",
+        "confidence_cap": "신뢰도 상한:",
+        "rr_score": "R/R 점수:",
+        "bear_case": "약세 시나리오",
+        "base_case": "기준 시나리오",
+        "bull_case": "강세 시나리오",
+        "variant_view": "차별적 관점",
+        "market_cap": "시가총액",
+        "revenue_ttm": "TTM 매출",
+        "revenue_growth": "매출 성장률",
+        "operating_margin": "영업이익률",
+        "op_margin": "영업이익률",
+        "fcf_yield": "FCF 수익률",
+        "net_debt_ebitda": "순차입금 / EBITDA",
+        "net_debt": "순차입금",
+        "fcf_ttm": "TTM FCF",
+        "pe_ratio": "PER",
+        "beta": "베타",
+        "risk": "리스크",
+        "mechanism": "작동 경로",
+        "financial_impact": "재무 영향",
+        "probability": "확률",
+        "metric": "지표",
+        "current": "현재",
+        "unit": "단위",
+        "assessment": "판단",
+        "company": "기업",
+        "basis": "근거",
+        "value": "값",
+        "period": "기간",
+        "check": "체크",
+        "quarter": "분기",
+        "revenue": "매출",
+        "gross_profit": "매출총이익",
+        "operating_income": "영업이익",
+        "op_income": "영업이익",
+        "net_income": "순이익",
+        "free_cash_flow": "잉여현금흐름",
+        "net_margin": "순이익률",
+        "latest_quarter": "최근 분기",
+        "bull_target": "강세 목표가",
+        "base_target": "기준 목표가",
+        "bear_target": "약세 목표가",
+        "price": "주가",
+        "date": "날짜",
+        "catalyst": "촉매",
+        "significance": "의미",
+        "claim": "클레임",
+        "source": "출처",
+        "grade": "등급",
+        "tag": "태그",
+        "disclaimer": "면책 고지",
+        "last_updated": "최종 업데이트:",
+        "sources": "출처:",
+        "validated_sources": "검증 지표, 증거 패키지, 결정론적 계산.",
+        "disclaimer_default": "이 대시보드는 정보 제공용이며 투자 조언이 아닙니다.",
+        "chart_boundary_paragraph_1": "매출, 영업이익, 마진, 잉여현금흐름 런레이트, 사업 동인 브리지 차트는 정규화된 분기 재무제표 행 또는 검증된 TTM 지표에서 채웁니다. 원천 제공자가 벤더별 포장 구조 안에 행을 중첩하더라도, 렌더러는 차트 작성 전에 이를 평탄화해 단일 0값 기간으로 대시보드가 통과하지 못하게 해야 합니다.",
+        "chart_boundary_paragraph_2": "아래 감사 표는 Chart.js에 전달된 차트 배열을 그대로 반영합니다. 검토자는 대시보드가 엄격한 의미 정합성을 통과하기 전에 추세 시각화가 최소 4개 실제 기간, 0이 아닌 매출 및 영업이익 값, 실제로 변하는 마진에 의해 뒷받침되는지 확인할 수 있습니다.",
+    },
+}
 
 KOREAN_REQUIRED_HEADING_FALLBACKS = {
     "variant_view": r"투자 논점|차별적 관점",
@@ -240,19 +300,30 @@ def is_korean(language: str | None) -> bool:
     return str(language or "").lower().startswith("ko")
 
 
-def localize_mode_c_static_html(html_text: str, language: str) -> str:
+def mode_c_label(language: str | None, key: str) -> str:
+    locale = "ko" if is_korean(language) else "en"
+    return LABELS.get(locale, {}).get(key) or LABELS["en"].get(key, key)
+
+
+def mode_c_count(language: str | None, count: int, en_unit: str, ko_unit: str) -> str:
+    if is_korean(language):
+        return f"{count}개 {ko_unit}"
+    return f"{count} {en_unit}"
+
+
+def mode_c_status(language: str | None, value: Any) -> str:
+    text = str(value or "")
     if not is_korean(language):
-        return html_text
-    script_marker = "\n  <script>\n  const blue"
-    html_part, marker, script_part = html_text.partition(script_marker)
-    for source, target in MODE_C_KO_STATIC_REPLACEMENTS:
-        html_part = html_part.replace(source, target)
-    for pattern, replacement in MODE_C_KO_REGEX_REPLACEMENTS:
-        html_part = re.sub(pattern, replacement, html_part)
-    if marker:
-        for source, target in MODE_C_KO_SCRIPT_REPLACEMENTS:
-            script_part = script_part.replace(source, target)
-    return html_part + marker + script_part
+        return text
+    return {
+        "available": "이용 가능",
+        "unavailable": "이용 불가",
+        "success": "성공",
+        "monitor": "모니터링",
+        "neutral": "중립",
+        "overweight": "비중확대",
+        "underweight": "비중축소",
+    }.get(text.lower(), text.replace("_", " "))
 
 
 @dataclass(frozen=True)
@@ -927,12 +998,18 @@ def build_mode_c_dashboard_html(
         scenarios=scenarios,
         language=language,
     )
+    price_chart_label = (
+        f"{ticker} {mode_c_label(language, 'price')}"
+        if is_korean(language)
+        else f"{ticker} {mode_c_label(language, 'price')}"
+    )
+    footer_disclaimer = analysis.get("disclaimer") or mode_c_label(language, "disclaimer_default")
     html_text = f"""<!DOCTYPE html>
 <html lang="{esc(language)}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{esc(company)} ({esc(ticker)}) - Investment Dashboard</title>
+  <title>{esc(company)} ({esc(ticker)}) - {esc(mode_c_label(language, "investment_dashboard"))}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -965,9 +1042,9 @@ def build_mode_c_dashboard_html(
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       <div class="flex flex-col lg:flex-row justify-between gap-6">
         <div>
-          <p class="text-blue-200 text-xs font-semibold uppercase tracking-widest">Mode C Deep Dive Dashboard</p>
+          <p class="text-blue-200 text-xs font-semibold uppercase tracking-widest">{esc(mode_c_label(language, "mode_c_dashboard"))}</p>
           <h1 class="text-3xl md:text-4xl font-extrabold text-white mt-2">{esc(company)}</h1>
-          <p class="text-blue-200 mt-1">{esc(market)}: {esc(ticker)} · Source profile {esc(analysis.get("source_profile") or "mixed")}</p>
+          <p class="text-blue-200 mt-1">{esc(market)}: {esc(ticker)} · {esc(mode_c_label(language, "source_profile"))} {esc(analysis.get("source_profile") or "mixed")}</p>
           <div class="flex flex-wrap items-center gap-3 mt-5">
             <span class="text-4xl font-extrabold text-white">{symbol}{fmt(metric_value(metrics, "price_at_analysis") or analysis.get("price_at_analysis"), 2)}</span>
             {verdict_badge(analysis.get("verdict"))}
@@ -975,44 +1052,44 @@ def build_mode_c_dashboard_html(
           </div>
         </div>
         <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-right">
-          {header_metric("Market Cap", metrics.get("market_cap"), currency)}
-          {header_metric("P/E", metrics.get("pe_ratio"), currency)}
-          {header_metric("EV/EBITDA", metrics.get("ev_ebitda"), currency)}
-          {header_metric("FCF Yield", metrics.get("fcf_yield"), currency)}
-          {header_metric("Revenue TTM", metrics.get("revenue_ttm"), currency)}
-          {header_metric("Op Margin", metrics.get("operating_margin"), currency)}
+          {header_metric(mode_c_label(language, "market_cap"), metrics.get("market_cap"), currency, "market_cap")}
+          {header_metric(mode_c_label(language, "pe_ratio"), metrics.get("pe_ratio"), currency, "pe_ratio")}
+          {header_metric("EV/EBITDA", metrics.get("ev_ebitda"), currency, "ev_ebitda")}
+          {header_metric(mode_c_label(language, "fcf_yield"), metrics.get("fcf_yield"), currency, "fcf_yield")}
+          {header_metric(mode_c_label(language, "revenue_ttm"), metrics.get("revenue_ttm"), currency, "revenue_ttm")}
+          {header_metric(mode_c_label(language, "op_margin"), metrics.get("operating_margin"), currency, "operating_margin")}
         </div>
       </div>
       <div class="mt-5 pt-4 border-t border-white/10 flex flex-wrap gap-3 text-xs text-blue-200/70">
-        <span>Analysis Date: {esc(analysis.get("analysis_date"))}</span>
-        <span>Mode: Deep Dive Dashboard (C)</span>
-        <span>Data Mode: {esc(analysis.get("data_mode"))}</span>
-        <span>Confidence Cap: {esc(analysis.get("confidence_cap") or validated.get("confidence_cap"))}</span>
+        <span>{esc(mode_c_label(language, "analysis_date"))} {esc(analysis.get("analysis_date"))}</span>
+        <span>{esc(mode_c_label(language, "mode_deep_dive"))}</span>
+        <span>{esc(mode_c_label(language, "data_mode"))} {esc(analysis.get("data_mode"))}</span>
+        <span>{esc(mode_c_label(language, "confidence_cap"))} {esc(analysis.get("confidence_cap") or validated.get("confidence_cap"))}</span>
       </div>
     </div>
   </header>
   {deterministic_disclosure_banner(analysis, language)}
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
-    {render_scenario_section(analysis, scenarios, sections, currency)}
-    {render_kpi_section(metrics, currency)}
-    {render_variant_section(analysis, sections)}
-    {render_precision_risk_section(analysis, sections)}
-    {render_valuation_section(sections, dcf, bridge, reverse_dcf, currency)}
-    {render_peer_and_macro_section(analysis, sections, metrics)}
-    {render_analyst_coverage_section(metrics, sections, currency)}
-    {render_charts_section(chart_data, currency)}
-    {render_financial_detail_section(metrics, quarterly, sections, currency)}
-    {render_quality_gate_section(analysis, calculations, evidence, validated)}
-    {render_portfolio_section(analysis, sections, scenarios)}
-    {render_source_appendix(source_claims)}
+    {render_scenario_section(analysis, scenarios, sections, currency, language)}
+    {render_kpi_section(metrics, currency, language)}
+    {render_variant_section(analysis, sections, language)}
+    {render_precision_risk_section(analysis, sections, language)}
+    {render_valuation_section(sections, dcf, bridge, reverse_dcf, currency, language)}
+    {render_peer_and_macro_section(analysis, sections, metrics, language)}
+    {render_analyst_coverage_section(metrics, sections, currency, language)}
+    {render_charts_section(chart_data, currency, language)}
+    {render_financial_detail_section(metrics, quarterly, sections, currency, language)}
+    {render_quality_gate_section(analysis, calculations, evidence, validated, language)}
+    {render_portfolio_section(analysis, sections, scenarios, language)}
+    {render_source_appendix(source_claims, language)}
   </main>
 
   <footer class="bg-gray-900 text-gray-400 mt-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <h2 class="text-sm font-bold text-gray-200 mb-2">Disclaimer</h2>
-      <p class="text-xs leading-6">{esc(analysis.get("disclaimer") or "This dashboard is for informational purposes only and does not constitute investment advice.")}</p>
-      <p class="text-xs mt-2">Last updated: {esc(analysis.get("analysis_date"))} · Sources: validated metrics, evidence pack, deterministic calculations.</p>
+      <h2 class="text-sm font-bold text-gray-200 mb-2">{esc(mode_c_label(language, "disclaimer"))}</h2>
+      <p class="text-xs leading-6">{esc(footer_disclaimer)}</p>
+      <p class="text-xs mt-2">{esc(mode_c_label(language, "last_updated"))} {esc(analysis.get("analysis_date"))} · {esc(mode_c_label(language, "sources"))} {esc(mode_c_label(language, "validated_sources"))}</p>
     </div>
   </footer>
 
@@ -1038,8 +1115,8 @@ def build_mode_c_dashboard_html(
   new Chart(document.getElementById('revenueChart').getContext('2d'), {{
     type: 'bar',
     data: {{ labels: quarters, datasets: [
-      {{ label: 'Revenue', data: revenueData, backgroundColor: blue + '0.55)', borderColor: blue + '1)', borderWidth: 1, borderRadius: 6 }},
-      {{ label: 'Operating Income', type: 'line', data: opIncomeData, borderColor: green + '1)', backgroundColor: green + '0.1)', borderWidth: 2.5, pointRadius: 4, fill: false }}
+      {{ label: '{esc(mode_c_label(language, "revenue"))}', data: revenueData, backgroundColor: blue + '0.55)', borderColor: blue + '1)', borderWidth: 1, borderRadius: 6 }},
+      {{ label: '{esc(mode_c_label(language, "operating_income"))}', type: 'line', data: opIncomeData, borderColor: green + '1)', backgroundColor: green + '0.1)', borderWidth: 2.5, pointRadius: 4, fill: false }}
     ] }},
     options: {{ responsive: true, plugins: {{ legend: {{ position: 'bottom' }} }}, scales: {{ y: {{ ticks: {{ callback: v => '{currency_prefix(currency)}' + v + 'B' }} }} }} }}
   }});
@@ -1047,8 +1124,8 @@ def build_mode_c_dashboard_html(
   new Chart(document.getElementById('marginChart').getContext('2d'), {{
     type: 'line',
     data: {{ labels: quarters, datasets: [
-      {{ label: 'Operating Margin', data: marginData, borderColor: green + '1)', backgroundColor: green + '0.12)', borderWidth: 2.5, pointRadius: 4, fill: true }},
-      {{ label: 'Net Margin', data: netMarginData, borderColor: amber + '1)', backgroundColor: amber + '0.10)', borderWidth: 2, pointRadius: 4, fill: false }}
+      {{ label: '{esc(mode_c_label(language, "operating_margin"))}', data: marginData, borderColor: green + '1)', backgroundColor: green + '0.12)', borderWidth: 2.5, pointRadius: 4, fill: true }},
+      {{ label: '{esc(mode_c_label(language, "net_margin"))}', data: netMarginData, borderColor: amber + '1)', backgroundColor: amber + '0.10)', borderWidth: 2, pointRadius: 4, fill: false }}
     ] }},
     options: {{ responsive: true, plugins: {{ legend: {{ position: 'bottom' }} }}, scales: {{ y: {{ ticks: {{ callback: v => v + '%' }} }} }} }}
   }});
@@ -1056,7 +1133,7 @@ def build_mode_c_dashboard_html(
   new Chart(document.getElementById('segmentChart').getContext('2d'), {{
     type: 'bar',
     data: {{ labels: segmentLabels, datasets: [
-      {{ label: 'Latest Quarter', data: segmentData, backgroundColor: [blue + '0.55)', green + '0.55)', amber + '0.55)', red + '0.45)'], borderColor: [blue + '1)', green + '1)', amber + '1)', red + '0.9)'], borderWidth: 1, borderRadius: 6 }}
+      {{ label: '{esc(mode_c_label(language, "latest_quarter"))}', data: segmentData, backgroundColor: [blue + '0.55)', green + '0.55)', amber + '0.55)', red + '0.45)'], borderColor: [blue + '1)', green + '1)', amber + '1)', red + '0.9)'], borderWidth: 1, borderRadius: 6 }}
     ] }},
     options: {{ responsive: true, plugins: {{ legend: {{ display: false }} }}, scales: {{ y: {{ ticks: {{ callback: v => '{currency_prefix(currency)}' + v + 'B' }} }} }} }}
   }});
@@ -1064,7 +1141,7 @@ def build_mode_c_dashboard_html(
   new Chart(document.getElementById('fcfChart').getContext('2d'), {{
     type: 'line',
     data: {{ labels: quarters, datasets: [
-      {{ label: 'Free Cash Flow', data: fcfData, borderColor: green + '1)', backgroundColor: green + '0.12)', borderWidth: 2.5, pointRadius: 4, fill: true }}
+      {{ label: '{esc(mode_c_label(language, "free_cash_flow"))}', data: fcfData, borderColor: green + '1)', backgroundColor: green + '0.12)', borderWidth: 2.5, pointRadius: 4, fill: true }}
     ] }},
     options: {{ responsive: true, plugins: {{ legend: {{ position: 'bottom' }} }}, scales: {{ y: {{ ticks: {{ callback: v => '{currency_prefix(currency)}' + v + 'B' }} }} }} }}
   }});
@@ -1072,9 +1149,9 @@ def build_mode_c_dashboard_html(
   new Chart(document.getElementById('quarterlyChart').getContext('2d'), {{
     type: 'line',
     data: {{ labels: quarters, datasets: [
-      {{ label: 'Revenue', data: revenueData, borderColor: blue + '1)', backgroundColor: blue + '0.10)', borderWidth: 2.5, pointRadius: 4, fill: false }},
-      {{ label: 'Operating Income', data: opIncomeData, borderColor: green + '1)', backgroundColor: green + '0.10)', borderWidth: 2.3, pointRadius: 4, fill: false }},
-      {{ label: 'Free Cash Flow', data: fcfData, borderColor: amber + '1)', backgroundColor: amber + '0.10)', borderWidth: 2.1, pointRadius: 4, fill: false }}
+      {{ label: '{esc(mode_c_label(language, "revenue"))}', data: revenueData, borderColor: blue + '1)', backgroundColor: blue + '0.10)', borderWidth: 2.5, pointRadius: 4, fill: false }},
+      {{ label: '{esc(mode_c_label(language, "operating_income"))}', data: opIncomeData, borderColor: green + '1)', backgroundColor: green + '0.10)', borderWidth: 2.3, pointRadius: 4, fill: false }},
+      {{ label: '{esc(mode_c_label(language, "free_cash_flow"))}', data: fcfData, borderColor: amber + '1)', backgroundColor: amber + '0.10)', borderWidth: 2.1, pointRadius: 4, fill: false }}
     ] }},
     options: {{ responsive: true, plugins: {{ legend: {{ position: 'bottom' }} }}, scales: {{ y: {{ ticks: {{ callback: v => '{currency_prefix(currency)}' + v + 'B' }} }} }} }}
   }});
@@ -1082,10 +1159,10 @@ def build_mode_c_dashboard_html(
   new Chart(document.getElementById('priceChart').getContext('2d'), {{
     type: 'line',
     data: {{ labels: priceLabels, datasets: [
-      {{ label: '{esc(ticker)} Price', data: priceData, borderColor: blue + '1)', backgroundColor: blue + '0.08)', borderWidth: 2.5, pointRadius: 4, fill: true, tension: 0.25 }},
-      {{ label: 'Bull Target', data: bullLineData, borderColor: green + '0.7)', borderDash: [7,4], pointRadius: 0 }},
-      {{ label: 'Base Target', data: baseLineData, borderColor: amber + '0.8)', borderDash: [4,4], pointRadius: 0 }},
-      {{ label: 'Bear Target', data: bearLineData, borderColor: red + '0.7)', borderDash: [7,4], pointRadius: 0 }}
+      {{ label: '{esc(price_chart_label)}', data: priceData, borderColor: blue + '1)', backgroundColor: blue + '0.08)', borderWidth: 2.5, pointRadius: 4, fill: true, tension: 0.25 }},
+      {{ label: '{esc(mode_c_label(language, "bull_target"))}', data: bullLineData, borderColor: green + '0.7)', borderDash: [7,4], pointRadius: 0 }},
+      {{ label: '{esc(mode_c_label(language, "base_target"))}', data: baseLineData, borderColor: amber + '0.8)', borderDash: [4,4], pointRadius: 0 }},
+      {{ label: '{esc(mode_c_label(language, "bear_target"))}', data: bearLineData, borderColor: red + '0.7)', borderDash: [7,4], pointRadius: 0 }}
     ] }},
     options: {{ responsive: true, plugins: {{ legend: {{ position: 'bottom' }} }}, scales: {{ y: {{ ticks: {{ callback: v => '{currency_prefix(currency)}' + v }} }} }} }}
   }});
@@ -1093,7 +1170,7 @@ def build_mode_c_dashboard_html(
 </body>
 </html>
 """
-    return localize_mode_c_static_html(html_text, language)
+    return html_text
 
 
 def render_scenario_section(
@@ -1101,12 +1178,13 @@ def render_scenario_section(
     scenarios: dict[str, Any],
     sections: dict[str, Any],
     currency: str,
+    language: str,
 ) -> str:
     cards = []
     for key, title, klass in (
-        ("bear", "Bear Case", "border-red-400/30 text-red-300"),
-        ("base", "Base Case", "border-blue-300/60 text-blue-100 bg-white/15"),
-        ("bull", "Bull Case", "border-green-400/30 text-green-300"),
+        ("bear", mode_c_label(language, "bear_case"), "border-red-400/30 text-red-300"),
+        ("base", mode_c_label(language, "base_case"), "border-blue-300/60 text-blue-100 bg-white/15"),
+        ("bull", mode_c_label(language, "bull_case"), "border-green-400/30 text-green-300"),
     ):
         item = scenarios.get(key) if isinstance(scenarios.get(key), dict) else {}
         cards.append(
@@ -1121,11 +1199,11 @@ def render_scenario_section(
       <div class="p-6 sm:p-8">
         <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
           <div>
-            <h2 class="text-lg font-bold text-blue-200 mb-1"><i class="fa-solid fa-bullseye mr-2"></i>Scenario Valuation (12-Month Targets)</h2>
+            <h2 class="text-lg font-bold text-blue-200 mb-1"><i class="fa-solid fa-bullseye mr-2"></i>{esc(mode_c_label(language, "scenario_valuation_12m"))}</h2>
             <p class="text-blue-200/60 text-xs max-w-4xl">{esc(analysis.get("thesis") or sections.get("one_line_thesis") or sections.get("variant_view_q1"))}</p>
           </div>
           <div class="bg-gray-700 text-white px-5 py-3 rounded-xl text-center">
-            <div class="text-2xl font-bold">R/R Score: {fmt(analysis.get("rr_score"), 2)}</div>
+            <div class="text-2xl font-bold">{esc(mode_c_label(language, "rr_score"))} {fmt(analysis.get("rr_score"), 2)}</div>
             <div class="text-sm text-gray-200">{esc(analysis.get("verdict"))}</div>
           </div>
         </div>
@@ -1134,16 +1212,16 @@ def render_scenario_section(
     </section>"""
 
 
-def render_kpi_section(metrics: dict[str, Any], currency: str) -> str:
+def render_kpi_section(metrics: dict[str, Any], currency: str, language: str) -> str:
     keys = [
-        ("market_cap", "Market Cap"),
-        ("revenue_ttm", "Revenue TTM"),
-        ("revenue_growth_yoy", "Revenue Growth"),
-        ("operating_margin", "Operating Margin"),
-        ("fcf_yield", "FCF Yield"),
+        ("market_cap", mode_c_label(language, "market_cap")),
+        ("revenue_ttm", mode_c_label(language, "revenue_ttm")),
+        ("revenue_growth_yoy", mode_c_label(language, "revenue_growth")),
+        ("operating_margin", mode_c_label(language, "operating_margin")),
+        ("fcf_yield", mode_c_label(language, "fcf_yield")),
         ("ev_ebitda", "EV/EBITDA"),
-        ("pe_ratio", "P/E"),
-        ("beta", "Beta"),
+        ("pe_ratio", mode_c_label(language, "pe_ratio")),
+        ("beta", mode_c_label(language, "beta")),
     ]
     tiles = [
         f"""<div class="card p-5 stat-card">
@@ -1155,12 +1233,12 @@ def render_kpi_section(metrics: dict[str, Any], currency: str) -> str:
         if isinstance(metrics.get(key), dict)
     ]
     return f"""<section id="section-kpi">
-      <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-chart-bar mr-2 text-brand-400"></i>Key Performance Indicators - {len(tiles)} tracked metrics</h2>
+      <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-chart-bar mr-2 text-brand-400"></i>{esc(mode_c_label(language, "key_performance_indicators"))} - {esc(mode_c_count(language, len(tiles), "tracked metrics", "추적 지표"))}</h2>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">{''.join(tiles)}</div>
     </section>"""
 
 
-def render_variant_section(analysis: dict[str, Any], sections: dict[str, Any]) -> str:
+def render_variant_section(analysis: dict[str, Any], sections: dict[str, Any], language: str) -> str:
     variants = analysis.get("variant_view") if isinstance(analysis.get("variant_view"), list) else []
     questions = [
         ("Q1", sections.get("variant_view_q1") or first(variants)),
@@ -1169,13 +1247,13 @@ def render_variant_section(analysis: dict[str, Any], sections: dict[str, Any]) -
     ]
     rows = "".join(
         f"""<div class="bg-blue-50 rounded-lg p-4 border border-blue-100">
-          <p class="font-bold text-blue-900 mb-2"><span class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded mr-2">{label}</span>Variant View</p>
+          <p class="font-bold text-blue-900 mb-2"><span class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded mr-2">{label}</span>{esc(mode_c_label(language, "variant_view"))}</p>
           <p class="text-sm leading-7 text-gray-700">{esc(text or "Company-specific variant view unavailable.")}</p>
         </div>"""
         for label, text in questions
     )
     return f"""<section id="section-thesis">
-      <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-scale-balanced mr-2 text-brand-400"></i>Investment Thesis & Variant View - 3 debate points</h2>
+      <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-scale-balanced mr-2 text-brand-400"></i>{mode_c_label(language, "investment_thesis_variant_view")} - {esc(mode_c_count(language, 3, "debate points", "논점"))}</h2>
       <div class="card p-6 border-l-4 border-blue-500">
         <p class="text-sm text-gray-700 leading-7 mb-5">{esc(analysis.get("thesis") or sections.get("one_line_thesis"))}</p>
         <div class="space-y-4">{rows}</div>
@@ -1183,7 +1261,7 @@ def render_variant_section(analysis: dict[str, Any], sections: dict[str, Any]) -
     </section>"""
 
 
-def render_precision_risk_section(analysis: dict[str, Any], sections: dict[str, Any]) -> str:
+def render_precision_risk_section(analysis: dict[str, Any], sections: dict[str, Any], language: str) -> str:
     risks = sections.get("precision_risks") if isinstance(sections.get("precision_risks"), list) else analysis.get("top_risks")
     if not isinstance(risks, list):
         risks = []
@@ -1204,10 +1282,10 @@ def render_precision_risk_section(analysis: dict[str, Any], sections: dict[str, 
                 f"""<tr class="border-b"><td class="p-4 font-semibold">{esc(risk)}</td><td class="p-4">Mechanism requires analyst follow-up.</td><td class="p-4">Not quantified.</td><td class="p-4">monitor</td><td class="p-4">{source_tag("[User]")}</td></tr>"""
             )
     return f"""<section id="section-risks">
-      <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-shield-halved mr-2 text-red-500"></i>Precision Risk Analysis - {len(rows)} mechanisms</h2>
+      <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-shield-halved mr-2 text-red-500"></i>{esc(mode_c_label(language, "precision_risk_analysis"))} - {esc(mode_c_count(language, len(rows), "mechanisms", "메커니즘"))}</h2>
       <div class="card overflow-x-auto">
         <table class="w-full text-sm">
-          <thead><tr class="bg-gray-50 text-gray-600 text-xs uppercase"><th class="text-left p-4">Risk</th><th class="text-left p-4">Mechanism</th><th class="text-left p-4">Financial Impact</th><th class="text-left p-4">Probability</th><th class="text-left p-4">Source</th></tr></thead>
+          <thead><tr class="bg-gray-50 text-gray-600 text-xs uppercase"><th class="text-left p-4">{esc(mode_c_label(language, "risk"))}</th><th class="text-left p-4">{esc(mode_c_label(language, "mechanism"))}</th><th class="text-left p-4">{esc(mode_c_label(language, "financial_impact"))}</th><th class="text-left p-4">{esc(mode_c_label(language, "probability"))}</th><th class="text-left p-4">{esc(mode_c_label(language, "source"))}</th></tr></thead>
           <tbody>{''.join(rows)}</tbody>
         </table>
       </div>
@@ -1220,6 +1298,7 @@ def render_valuation_section(
     bridge: dict[str, Any] | None,
     reverse_dcf: dict[str, Any] | None,
     currency: str,
+    language: str,
 ) -> str:
     valuation_metrics = sections.get("valuation_metrics") if isinstance(sections.get("valuation_metrics"), list) else []
     metric_rows = []
@@ -1233,32 +1312,32 @@ def render_valuation_section(
                   <td class="p-4 text-gray-600">{esc(item.get("assessment") or item.get("formula") or "Deterministic calculation.")}</td>
                 </tr>"""
             )
-    dcf_rows = render_dcf_sensitivity(dcf, currency)
+    dcf_rows = render_dcf_sensitivity(dcf, currency, language)
     return f"""<section id="section-valuation">
-      <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-calculator mr-2 text-brand-400"></i>Valuation Metrics - {len(metric_rows)} deterministic rows</h2>
+      <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-calculator mr-2 text-brand-400"></i>{esc(mode_c_label(language, "valuation_metrics"))} - {esc(mode_c_count(language, len(metric_rows), "deterministic rows", "결정론적 항목"))}</h2>
       <div class="card overflow-x-auto mb-5">
         <table class="w-full text-sm">
-          <thead><tr class="bg-gray-50 text-gray-600 text-xs uppercase"><th class="text-left p-4">Metric</th><th class="text-right p-4">Current</th><th class="text-right p-4">Unit</th><th class="text-left p-4">Assessment</th></tr></thead>
+          <thead><tr class="bg-gray-50 text-gray-600 text-xs uppercase"><th class="text-left p-4">{esc(mode_c_label(language, "metric"))}</th><th class="text-right p-4">{esc(mode_c_label(language, "current"))}</th><th class="text-right p-4">{esc(mode_c_label(language, "unit"))}</th><th class="text-left p-4">{esc(mode_c_label(language, "assessment"))}</th></tr></thead>
           <tbody>{''.join(metric_rows)}</tbody>
         </table>
       </div>
       <section id="section-dcf">
-        <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-square-root-variable mr-2 text-brand-400"></i>DCF Valuation - fair value {currency_symbol(currency)}{fmt(dcf.get("fair_value_per_share"), 2)}</h2>
+        <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-square-root-variable mr-2 text-brand-400"></i>{esc(mode_c_label(language, "dcf_valuation"))} - fair value {currency_symbol(currency)}{fmt(dcf.get("fair_value_per_share"), 2)}</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div class="card p-5 stat-card"><p class="text-xs text-gray-500">Base DCF Fair Value</p><p class="text-3xl font-bold text-brand-700">{currency_symbol(currency)}{fmt(dcf.get("fair_value_per_share"), 2)}</p><p class="text-xs text-gray-500 mt-1">Upside {pct(dcf.get("upside_downside_pct"))} {source_tag("[Calc]")}</p></div>
-          <div class="card p-5 stat-card"><p class="text-xs text-gray-500">Enterprise Value</p><p class="text-3xl font-bold text-brand-700">{fmt(dcf.get("enterprise_value"), 1)}M</p><p class="text-xs text-gray-500 mt-1">Equity value {fmt(dcf.get("equity_value"), 1)}M {source_tag("[Calc]")}</p></div>
-          <div class="card p-5 stat-card"><p class="text-xs text-gray-500">WACC</p><p class="text-3xl font-bold text-brand-700">{pct((dcf.get("assumptions") or {}).get("wacc"), probability=True)}</p><p class="text-xs text-gray-500 mt-1">Terminal growth {pct((dcf.get("assumptions") or {}).get("terminal_growth_rate"), probability=True)} {source_tag("[Calc]")}</p></div>
+          <div class="card p-5 stat-card"><p class="text-xs text-gray-500">{esc(mode_c_label(language, "base_dcf_fair_value"))}</p><p class="text-3xl font-bold text-brand-700">{currency_symbol(currency)}{fmt(dcf.get("fair_value_per_share"), 2)}</p><p class="text-xs text-gray-500 mt-1">Upside {pct(dcf.get("upside_downside_pct"))} {source_tag("[Calc]")}</p></div>
+          <div class="card p-5 stat-card"><p class="text-xs text-gray-500">{esc(mode_c_label(language, "enterprise_value"))}</p><p class="text-3xl font-bold text-brand-700">{fmt(dcf.get("enterprise_value"), 1)}M</p><p class="text-xs text-gray-500 mt-1">{esc(mode_c_label(language, "equity_value"))} {fmt(dcf.get("equity_value"), 1)}M {source_tag("[Calc]")}</p></div>
+          <div class="card p-5 stat-card"><p class="text-xs text-gray-500">WACC</p><p class="text-3xl font-bold text-brand-700">{pct((dcf.get("assumptions") or {}).get("wacc"), probability=True)}</p><p class="text-xs text-gray-500 mt-1">{esc(mode_c_label(language, "terminal_growth"))} {pct((dcf.get("assumptions") or {}).get("terminal_growth_rate"), probability=True)} {source_tag("[Calc]")}</p></div>
         </div>
         <div class="card p-6 mb-4 overflow-x-auto">
-          <h3 class="text-sm font-bold text-gray-700 mb-3">DCF Sensitivity Table - 3 WACC cases</h3>
+          <h3 class="text-sm font-bold text-gray-700 mb-3">{esc(mode_c_label(language, "dcf_sensitivity_table"))} - {esc(mode_c_count(language, 3, "WACC cases", "WACC 케이스"))}</h3>
           <table class="w-full text-sm">
             <thead><tr class="bg-gray-50 text-gray-600 text-xs uppercase"><th class="text-left p-3">WACC</th><th class="text-right p-3">TGR 2.0%</th><th class="text-right p-3">TGR 2.5%</th><th class="text-right p-3">TGR 3.0%</th></tr></thead>
             <tbody>{dcf_rows}</tbody>
           </table>
         </div>
-        {render_reverse_dcf(reverse_dcf)}
+        {render_reverse_dcf(reverse_dcf, language)}
       </section>
-      {render_valuation_bridge(bridge, currency)}
+      {render_valuation_bridge(bridge, currency, language)}
     </section>"""
 
 
@@ -1266,10 +1345,11 @@ def render_peer_and_macro_section(
     analysis: dict[str, Any],
     sections: dict[str, Any],
     metrics: dict[str, Any],
+    language: str,
 ) -> str:
     peers = sections.get("peer_comparison") if isinstance(sections.get("peer_comparison"), list) else []
     peer_rows = [
-        peer_row(analysis.get("ticker"), "Subject", metrics, "bg-blue-50/60 font-semibold")
+        peer_row(analysis.get("ticker"), mode_c_label(language, "subject"), metrics, "bg-blue-50/60 font-semibold", language)
     ]
     for peer in peers[:5]:
         if isinstance(peer, dict):
@@ -1291,21 +1371,21 @@ def render_peer_and_macro_section(
         )
     else:
         macro_cards = f"""<div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          <p class="font-semibold">Macro data unavailable {source_tag("[Macro]")}</p>
-          <p>{esc(structured.get("reason") or "FRED structured series unavailable; no rates are inferred.")}</p>
+          <p class="font-semibold">{esc("매크로 데이터 이용 불가" if is_korean(language) else "Macro data unavailable")} {source_tag("[Macro]")}</p>
+          <p>{esc(structured.get("reason") or ("FRED 구조화 시계열 이용 불가; 금리는 추정하지 않습니다." if is_korean(language) else "FRED structured series unavailable; no rates are inferred."))}</p>
         </div>"""
     return f"""<section class="grid grid-cols-1 xl:grid-cols-2 gap-5">
       <div id="section-peers">
-        <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-users mr-2 text-brand-400"></i>Peer Comparison - {len(peer_rows)} rows</h2>
+        <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-users mr-2 text-brand-400"></i>{esc(mode_c_label(language, "peer_comparison"))} - {esc(mode_c_count(language, len(peer_rows), "rows", "행"))}</h2>
         <div class="card overflow-x-auto">
           <table class="w-full text-sm">
-            <thead><tr class="bg-gray-50 text-gray-600 text-xs uppercase"><th class="text-left p-4">Company</th><th class="text-left p-4">Basis</th><th class="text-right p-4">Value</th><th class="text-right p-4">Source</th></tr></thead>
+            <thead><tr class="bg-gray-50 text-gray-600 text-xs uppercase"><th class="text-left p-4">{esc(mode_c_label(language, "company"))}</th><th class="text-left p-4">{esc(mode_c_label(language, "basis"))}</th><th class="text-right p-4">{esc(mode_c_label(language, "value"))}</th><th class="text-right p-4">{esc(mode_c_label(language, "source"))}</th></tr></thead>
             <tbody>{''.join(peer_rows)}</tbody>
           </table>
         </div>
       </div>
       <div id="section-macro">
-        <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-globe mr-2 text-brand-400"></i>Macro Environment - {len(structured.get("series") or [])} FRED series</h2>
+        <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-globe mr-2 text-brand-400"></i>{esc(mode_c_label(language, "macro_environment"))} - {esc(mode_c_count(language, len(structured.get("series") or []), "FRED series", "FRED 시계열"))}</h2>
         <div class="card p-5">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">{macro_cards}</div>
           <p class="text-sm text-gray-700 leading-7">{esc(macro.get("narrative") or "Macro context is included only when structured FRED data is available.")}</p>
@@ -1314,7 +1394,7 @@ def render_peer_and_macro_section(
     </section>"""
 
 
-def render_analyst_coverage_section(metrics: dict[str, Any], sections: dict[str, Any], currency: str) -> str:
+def render_analyst_coverage_section(metrics: dict[str, Any], sections: dict[str, Any], currency: str, language: str) -> str:
     coverage = sections.get("analyst_coverage") if isinstance(sections.get("analyst_coverage"), dict) else {}
     mean = metric_value(metrics, "analyst_target_mean") or coverage.get("price_target")
     median = metric_value(metrics, "analyst_target_median")
@@ -1322,42 +1402,42 @@ def render_analyst_coverage_section(metrics: dict[str, Any], sections: dict[str,
     low = metric_value(metrics, "analyst_target_low")
     price = metric_value(metrics, "price_at_analysis")
     return f"""<section id="section-analyst">
-      <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-bullhorn mr-2 text-brand-400"></i>Analyst Coverage - 4 target anchors</h2>
+      <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-bullhorn mr-2 text-brand-400"></i>{esc(mode_c_label(language, "analyst_coverage"))} - {esc(mode_c_count(language, 4, "target anchors", "목표가 앵커"))}</h2>
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {target_card("Consensus Average", mean, price, currency)}
-        {target_card("Median Target", median, price, currency)}
-        {target_card("Street High", high, price, currency)}
-        {target_card("Street Low", low, price, currency)}
+        {target_card(mode_c_label(language, "consensus_average"), mean, price, currency, language)}
+        {target_card(mode_c_label(language, "median_target"), median, price, currency, language)}
+        {target_card(mode_c_label(language, "street_high"), high, price, currency, language)}
+        {target_card(mode_c_label(language, "street_low"), low, price, currency, language)}
       </div>
-      <div class="card p-5 mt-4 text-sm text-gray-700">Coverage status: {esc(coverage.get("consensus") or "available if target metrics exist")} {source_tag("[Est]")}</div>
+      <div class="card p-5 mt-4 text-sm text-gray-700">{esc(mode_c_label(language, "coverage_status"))} {esc(mode_c_status(language, coverage.get("consensus") or "available if target metrics exist"))} {source_tag("[Est]")}</div>
     </section>"""
 
 
-def render_charts_section(chart_data: dict[str, Any], currency: str) -> str:
-    chart_rows = render_chart_audit_rows(chart_data, currency)
+def render_charts_section(chart_data: dict[str, Any], currency: str, language: str) -> str:
+    chart_rows = render_chart_audit_rows(chart_data, currency, language)
     return f"""<section id="section-charts">
-      <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-chart-bar mr-2 text-brand-400"></i>Charts & Trend Data - 6 charts</h2>
+      <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-chart-bar mr-2 text-brand-400"></i>{mode_c_label(language, "charts_trend_data")} - {esc(mode_c_count(language, 6, "charts", "차트"))}</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="card p-5"><h3 class="text-sm font-semibold text-gray-700 mb-3">Quarterly Revenue & Operating Income - 6 points max</h3><canvas id="revenueChart" height="210"></canvas></div>
-        <div class="card p-5"><h3 class="text-sm font-semibold text-gray-700 mb-3">Margin Trend - Op vs Net %</h3><canvas id="marginChart" height="210"></canvas></div>
+        <div class="card p-5"><h3 class="text-sm font-semibold text-gray-700 mb-3">{esc(mode_c_label(language, "quarterly_revenue_operating_income"))} - {esc(mode_c_count(language, 6, "points max", "포인트 이하"))}</h3><canvas id="revenueChart" height="210"></canvas></div>
+        <div class="card p-5"><h3 class="text-sm font-semibold text-gray-700 mb-3">{esc(mode_c_label(language, "margin_trend"))}</h3><canvas id="marginChart" height="210"></canvas></div>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        <div class="card p-5"><h3 class="text-sm font-semibold text-gray-700 mb-3">Latest Quarter Business Driver Bridge</h3><canvas id="segmentChart" height="190"></canvas></div>
-        <div class="card p-5"><h3 class="text-sm font-semibold text-gray-700 mb-3">Free Cash Flow Run-Rate - validated trend boundary</h3><canvas id="fcfChart" height="190"></canvas></div>
+        <div class="card p-5"><h3 class="text-sm font-semibold text-gray-700 mb-3">{esc(mode_c_label(language, "latest_quarter_bridge"))}</h3><canvas id="segmentChart" height="190"></canvas></div>
+        <div class="card p-5"><h3 class="text-sm font-semibold text-gray-700 mb-3">{esc(mode_c_label(language, "fcf_run_rate"))}</h3><canvas id="fcfChart" height="190"></canvas></div>
       </div>
       <div class="grid grid-cols-1 gap-4 mt-4">
-        <div class="card p-5"><h3 class="text-sm font-semibold text-gray-700 mb-3">Quarterly Trend Compatibility - revenue, operating income, FCF</h3><canvas id="quarterlyChart" height="190"></canvas></div>
+        <div class="card p-5"><h3 class="text-sm font-semibold text-gray-700 mb-3">{esc(mode_c_label(language, "quarterly_trend_compatibility"))}</h3><canvas id="quarterlyChart" height="190"></canvas></div>
       </div>
       <div class="grid grid-cols-1 gap-4 mt-4">
-        <div class="card p-5"><h3 class="text-sm font-semibold text-gray-700 mb-3">Stock Price vs Scenario Targets - 6 anchor points</h3><canvas id="priceChart" height="190"></canvas></div>
+        <div class="card p-5"><h3 class="text-sm font-semibold text-gray-700 mb-3">{esc(mode_c_label(language, "stock_price_targets"))} - {esc(mode_c_count(language, 6, "anchor points", "앵커 포인트"))}</h3><canvas id="priceChart" height="190"></canvas></div>
       </div>
       <div class="card p-5 mt-4 bg-gray-50 border border-gray-200">
-        <h3 class="text-sm font-bold text-gray-700 mb-2">Chart Evidence Boundary</h3>
-        <p class="text-sm text-gray-700 leading-7 mb-3">Revenue, operating income, margin, FCF run-rate, and business-driver bridge charts are populated from normalized quarterly financial statement rows or validated TTM metrics. If the raw provider nests rows under a vendor-specific envelope, the renderer must flatten that structure before charting so the dashboard cannot pass with a single zero-filled fallback period. {source_tag("[Calc]")}</p>
-        <p class="text-sm text-gray-700 leading-7 mb-4">The audit table below mirrors the chart arrays used by Chart.js. It lets a reviewer verify that trend visuals are backed by at least four concrete periods, non-zero revenue and operating-income points, and visibly changing margins before the dashboard clears strict semantic parity. {source_tag("[Calc]")}</p>
+        <h3 class="text-sm font-bold text-gray-700 mb-2">{esc(mode_c_label(language, "chart_evidence_boundary"))}</h3>
+        <p class="text-sm text-gray-700 leading-7 mb-3">{esc(mode_c_label(language, "chart_boundary_paragraph_1"))} {source_tag("[Calc]")}</p>
+        <p class="text-sm text-gray-700 leading-7 mb-4">{esc(mode_c_label(language, "chart_boundary_paragraph_2"))} {source_tag("[Calc]")}</p>
         <div class="overflow-x-auto">
           <table class="w-full text-sm bg-white border border-gray-200">
-            <thead><tr class="bg-gray-50 text-gray-600 text-xs uppercase"><th class="text-left p-3">Period</th><th class="text-right p-3">Revenue</th><th class="text-right p-3">Operating Income</th><th class="text-right p-3">FCF</th><th class="text-right p-3">Operating Margin</th><th class="text-right p-3">Net Margin</th><th class="text-right p-3">Source</th></tr></thead>
+            <thead><tr class="bg-gray-50 text-gray-600 text-xs uppercase"><th class="text-left p-3">{esc(mode_c_label(language, "period"))}</th><th class="text-right p-3">{esc(mode_c_label(language, "revenue"))}</th><th class="text-right p-3">{esc(mode_c_label(language, "operating_income"))}</th><th class="text-right p-3">FCF</th><th class="text-right p-3">{esc(mode_c_label(language, "operating_margin"))}</th><th class="text-right p-3">{esc(mode_c_label(language, "net_margin"))}</th><th class="text-right p-3">{esc(mode_c_label(language, "source"))}</th></tr></thead>
             <tbody>{chart_rows}</tbody>
           </table>
         </div>
@@ -1365,7 +1445,7 @@ def render_charts_section(chart_data: dict[str, Any], currency: str) -> str:
     </section>"""
 
 
-def render_chart_audit_rows(chart_data: dict[str, Any], currency: str) -> str:
+def render_chart_audit_rows(chart_data: dict[str, Any], currency: str, language: str) -> str:
     quarters = chart_data.get("quarters") if isinstance(chart_data.get("quarters"), list) else []
     revenue = chart_data.get("revenue") if isinstance(chart_data.get("revenue"), list) else []
     op_income = chart_data.get("operating_income") if isinstance(chart_data.get("operating_income"), list) else []
@@ -1386,7 +1466,8 @@ def render_chart_audit_rows(chart_data: dict[str, Any], currency: str) -> str:
             </tr>"""
         )
     if not rows:
-        return f"""<tr><td colspan="7" class="p-3 text-gray-500">Chart audit rows unavailable. {source_tag("[Calc]")}</td></tr>"""
+        message = "차트 감사 행 이용 불가" if is_korean(language) else "Chart audit rows unavailable."
+        return f"""<tr><td colspan="7" class="p-3 text-gray-500">{esc(message)} {source_tag("[Calc]")}</td></tr>"""
     return "".join(rows)
 
 
@@ -1395,6 +1476,7 @@ def render_financial_detail_section(
     quarterly: list[dict[str, Any]],
     sections: dict[str, Any],
     currency: str,
+    language: str,
 ) -> str:
     qoe = sections.get("qoe_summary") if isinstance(sections.get("qoe_summary"), dict) else {}
     quarter_rows = "".join(
@@ -1408,23 +1490,24 @@ def render_financial_detail_section(
         for item in quarterly[:6]
     )
     if not quarter_rows:
-        quarter_rows = f"""<tr><td colspan="5" class="p-4 text-gray-500">Quarterly data unavailable; TTM metrics remain visible. {source_tag("[Calc]")}</td></tr>"""
+        message = "분기 데이터 이용 불가; TTM 지표는 계속 표시됩니다." if is_korean(language) else "Quarterly data unavailable; TTM metrics remain visible."
+        quarter_rows = f"""<tr><td colspan="5" class="p-4 text-gray-500">{esc(message)} {source_tag("[Calc]")}</td></tr>"""
     return f"""<section id="section-financials">
-      <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-file-invoice-dollar mr-2 text-brand-400"></i>Financial Detail Analysis - {len(quarterly[:6])} quarters</h2>
+      <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-file-invoice-dollar mr-2 text-brand-400"></i>{esc(mode_c_label(language, "financial_detail_analysis"))} - {esc(mode_c_count(language, len(quarterly[:6]), "quarters", "분기"))}</h2>
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-        {detail_card("Revenue TTM", metrics.get("revenue_ttm"), currency)}
-        {detail_card("FCF TTM", metrics.get("fcf_ttm"), currency)}
-        {detail_card("Net Debt", metrics.get("net_debt"), currency)}
-        {detail_card("Net Debt / EBITDA", metrics.get("net_debt_ebitda"), currency)}
+        {detail_card(mode_c_label(language, "revenue_ttm"), metrics.get("revenue_ttm"), currency, "revenue_ttm")}
+        {detail_card(mode_c_label(language, "fcf_ttm"), metrics.get("fcf_ttm"), currency, "fcf_ttm")}
+        {detail_card(mode_c_label(language, "net_debt"), metrics.get("net_debt"), currency, "net_debt")}
+        {detail_card(mode_c_label(language, "net_debt_ebitda"), metrics.get("net_debt_ebitda"), currency, "net_debt_ebitda")}
       </div>
       <div class="card overflow-x-auto">
         <table class="w-full text-sm">
-          <thead><tr class="bg-gray-50 text-gray-600 text-xs uppercase"><th class="text-left p-3">Quarter</th><th class="text-right p-3">Revenue</th><th class="text-right p-3">Op Income</th><th class="text-right p-3">Op Margin</th><th class="text-right p-3">Net Income</th></tr></thead>
+          <thead><tr class="bg-gray-50 text-gray-600 text-xs uppercase"><th class="text-left p-3">{esc(mode_c_label(language, "quarter"))}</th><th class="text-right p-3">{esc(mode_c_label(language, "revenue"))}</th><th class="text-right p-3">{esc(mode_c_label(language, "op_income"))}</th><th class="text-right p-3">{esc(mode_c_label(language, "op_margin"))}</th><th class="text-right p-3">{esc(mode_c_label(language, "net_income"))}</th></tr></thead>
           <tbody>{quarter_rows}</tbody>
         </table>
       </div>
       <div class="card p-5 mt-4 bg-blue-50 border border-blue-200">
-        <h3 class="text-sm font-bold text-blue-900 mb-2">Quality of Earnings - 1 Grade {esc(qoe.get("grade") or "C")} read</h3>
+        <h3 class="text-sm font-bold text-blue-900 mb-2">{esc(mode_c_label(language, "quality_earnings"))} - {esc(mode_c_count(language, 1, f"Grade {qoe.get('grade') or 'C'} read", f"등급 {qoe.get('grade') or 'C'} 리드"))}</h3>
         <p class="text-sm text-gray-700 leading-7">{esc(qoe.get("narrative") or "Quality of earnings uses validated metrics only; excluded fields remain blank.")} {source_tag("[Calc]")}</p>
       </div>
     </section>"""
@@ -1435,6 +1518,7 @@ def render_quality_gate_section(
     calculations: dict[str, Any],
     evidence: dict[str, Any],
     validated: dict[str, Any],
+    language: str,
 ) -> str:
     grade_summary = validated.get("grade_summary") if isinstance(validated.get("grade_summary"), dict) else {}
     fact_count = len(evidence.get("facts") or []) if isinstance(evidence, dict) else 0
@@ -1448,44 +1532,44 @@ def render_quality_gate_section(
           <td class="p-3">{source_tag(tag)}</td>
         </tr>"""
         for label, value, tag in (
-            ("Validated metric count", len(validated.get("validated_metrics") or {}), "[Calc]"),
-            ("Evidence fact count", fact_count, "[Calc]"),
-            ("Grade A/B/C/D split", f"A {grade_summary.get('A', 0)} / B {grade_summary.get('B', 0)} / C {grade_summary.get('C', 0)} / D {grade_summary.get('D', 0)}", "[Calc]"),
-            ("Deterministic calculation status", calc_status, "[Calc]"),
-            ("Scenario calculation status", scenario_status, "[Calc]"),
-            ("DCF calculation status", dcf_status, "[Calc]"),
-            ("Source profile", analysis.get("source_profile") or validated.get("source_profile") or "mixed", "[Portal]"),
-            ("Confidence cap", analysis.get("confidence_cap") or validated.get("confidence_cap") or "unknown", "[Calc]"),
+            ("검증 지표 수" if is_korean(language) else "Validated metric count", len(validated.get("validated_metrics") or {}), "[Calc]"),
+            ("증거 팩트 수" if is_korean(language) else "Evidence fact count", fact_count, "[Calc]"),
+            ("등급 A/B/C/D 분포" if is_korean(language) else "Grade A/B/C/D split", f"A {grade_summary.get('A', 0)} / B {grade_summary.get('B', 0)} / C {grade_summary.get('C', 0)} / D {grade_summary.get('D', 0)}", "[Calc]"),
+            ("결정론 계산 상태" if is_korean(language) else "Deterministic calculation status", mode_c_status(language, calc_status), "[Calc]"),
+            ("시나리오 계산 상태" if is_korean(language) else "Scenario calculation status", mode_c_status(language, scenario_status), "[Calc]"),
+            ("DCF 계산 상태" if is_korean(language) else "DCF calculation status", mode_c_status(language, dcf_status), "[Calc]"),
+            (mode_c_label(language, "source_profile"), analysis.get("source_profile") or validated.get("source_profile") or "mixed", "[Portal]"),
+            ("신뢰도 상한" if is_korean(language) else "Confidence cap", analysis.get("confidence_cap") or validated.get("confidence_cap") or "unknown", "[Calc]"),
         )
     )
     return f"""<section id="section-quality-gate">
-      <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-clipboard-check mr-2 text-brand-400"></i>Quality of Earnings & Evidence Gate - {fact_count} facts</h2>
+      <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-clipboard-check mr-2 text-brand-400"></i>{mode_c_label(language, "quality_gate")} - {esc(mode_c_count(language, fact_count, "facts", "팩트"))}</h2>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div class="card p-6">
-          <h3 class="text-sm font-bold text-gray-700 mb-3">4-artifact evidence boundary</h3>
+          <h3 class="text-sm font-bold text-gray-700 mb-3">{esc(mode_c_label(language, "evidence_boundary_4_artifact"))}</h3>
           <p class="text-sm text-gray-700 leading-7 mb-3">This Mode C dashboard is populated from validated-data, evidence-pack, deterministic-calculations, and analysis-result only. Raw artifacts stay outside the renderer by default, which prevents the dashboard from silently pulling unvalidated quarterly rows, stale market fields, or local files into the final HTML. Numbers in scenario valuation, DCF, reverse DCF, valuation bridge, KPI tiles, financial detail cards, and chart arrays are treated as deterministic outputs rather than analyst prose. When a metric is Grade D or excluded, the renderer is required to leave the value blank instead of filling a plausible substitute. {source_tag("[Calc]")}</p>
           <p class="text-sm text-gray-700 leading-7">The quality-of-earnings read is therefore deliberately narrow: revenue, operating margin, free cash flow, net debt, and analyst target fields can influence the report only when they appear in validated metrics with source tags and grades. This keeps the final dashboard closer to the original stock-analysis-agent discipline: explain the thesis richly, but let contract artifacts define what can be shown as a number. {source_tag("[Calc]")}</p>
         </div>
         <div class="card overflow-x-auto">
           <table class="w-full text-sm">
-            <thead><tr class="bg-gray-50 text-gray-600 text-xs uppercase"><th class="text-left p-3">Check</th><th class="text-left p-3">Value</th><th class="text-left p-3">Source</th></tr></thead>
+            <thead><tr class="bg-gray-50 text-gray-600 text-xs uppercase"><th class="text-left p-3">{esc(mode_c_label(language, "check"))}</th><th class="text-left p-3">{esc(mode_c_label(language, "value"))}</th><th class="text-left p-3">{esc(mode_c_label(language, "source"))}</th></tr></thead>
             <tbody>{rows}</tbody>
           </table>
         </div>
       </div>
       <div class="card p-6 mt-4 bg-gray-50 border border-gray-200">
-        <h3 class="text-sm font-bold text-gray-700 mb-3">12 renderer-specific guardrails</h3>
+        <h3 class="text-sm font-bold text-gray-700 mb-3">12 {esc(mode_c_label(language, "renderer_guardrails"))}</h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-700">
           <div class="rounded-lg bg-white border border-gray-200 p-4">
-            <p class="font-semibold text-gray-900 mb-2">Scenario math</p>
+            <p class="font-semibold text-gray-900 mb-2">{esc(mode_c_label(language, "scenario_math"))}</p>
             <p class="leading-6">Bull, base, and bear targets use deterministic scenario targets exactly. The R/R badge is carried from analysis-result, and the rendered chart lines reuse those same target values so table, cards, and chart cannot drift. {source_tag("[Calc]")}</p>
           </div>
           <div class="rounded-lg bg-white border border-gray-200 p-4">
-            <p class="font-semibold text-gray-900 mb-2">Chart arrays</p>
+            <p class="font-semibold text-gray-900 mb-2">{esc(mode_c_label(language, "chart_arrays"))}</p>
             <p class="leading-6">Revenue and margin charts are built from validated quarterly financial rows when available. The price chart is derived from current price, 52-week range, and deterministic scenario targets. Empty chart arrays are blocked by the Mode C render validator. {source_tag("[Calc]")}</p>
           </div>
           <div class="rounded-lg bg-white border border-gray-200 p-4">
-            <p class="font-semibold text-gray-900 mb-2">Delivery gate</p>
+            <p class="font-semibold text-gray-900 mb-2">{esc(mode_c_label(language, "delivery_gate"))}</p>
             <p class="leading-6">The generated HTML must clear byte-size, visible-text, canvas, script, table, required heading, forbidden string, local path leak, source tag, DCF, reverse DCF, and valuation bridge checks before later sessions may promote it to a report snapshot. {source_tag("[Calc]")}</p>
           </div>
         </div>
@@ -1493,7 +1577,7 @@ def render_quality_gate_section(
     </section>"""
 
 
-def render_portfolio_section(analysis: dict[str, Any], sections: dict[str, Any], scenarios: dict[str, Any]) -> str:
+def render_portfolio_section(analysis: dict[str, Any], sections: dict[str, Any], scenarios: dict[str, Any], language: str) -> str:
     wrong = sections.get("what_would_make_me_wrong") if isinstance(sections.get("what_would_make_me_wrong"), list) else []
     wrong_html = "".join(f"<li>{esc(item)}</li>" for item in wrong[:8])
     catalysts = analysis.get("upcoming_catalysts") if isinstance(analysis.get("upcoming_catalysts"), list) else []
@@ -1503,21 +1587,21 @@ def render_portfolio_section(analysis: dict[str, Any], sections: dict[str, Any],
         if isinstance(item, dict)
     )
     return f"""<section id="section-strategy">
-      <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-chess-knight mr-2 text-brand-400"></i>Portfolio Strategy - 3 scenario paths</h2>
+      <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-chess-knight mr-2 text-brand-400"></i>{esc(mode_c_label(language, "portfolio_strategy"))} - {esc(mode_c_count(language, 3, "scenario paths", "시나리오 경로"))}</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="card p-6"><h3 class="text-sm font-bold text-gray-700 mb-3">3-scenario execution guidelines</h3><p class="text-sm text-gray-700 leading-7">{esc(sections.get("portfolio_strategy") or "Portfolio action should follow scenario probabilities and valuation bridge evidence.")}</p></div>
-        <div class="card p-6"><h3 class="text-sm font-bold text-gray-700 mb-3">What Would Make Me Wrong - {len(wrong[:8])} checks</h3><ul class="list-disc pl-5 text-sm text-gray-700 space-y-2">{wrong_html}</ul></div>
+        <div class="card p-6"><h3 class="text-sm font-bold text-gray-700 mb-3">{esc(mode_c_label(language, "scenario_execution_guidelines"))}</h3><p class="text-sm text-gray-700 leading-7">{esc(sections.get("portfolio_strategy") or "Portfolio action should follow scenario probabilities and valuation bridge evidence.")}</p></div>
+        <div class="card p-6"><h3 class="text-sm font-bold text-gray-700 mb-3">{esc(mode_c_label(language, "what_would_make_wrong"))} - {esc(mode_c_count(language, len(wrong[:8]), "checks", "체크"))}</h3><ul class="list-disc pl-5 text-sm text-gray-700 space-y-2">{wrong_html}</ul></div>
       </div>
       <div class="card overflow-x-auto mt-4">
         <table class="w-full text-sm">
-          <thead><tr class="bg-gray-50 text-gray-600 text-xs uppercase"><th class="text-left p-3">Date</th><th class="text-left p-3">Catalyst</th><th class="text-left p-3">Significance</th><th class="text-left p-3">Source</th></tr></thead>
+          <thead><tr class="bg-gray-50 text-gray-600 text-xs uppercase"><th class="text-left p-3">{esc(mode_c_label(language, "date"))}</th><th class="text-left p-3">{esc(mode_c_label(language, "catalyst"))}</th><th class="text-left p-3">{esc(mode_c_label(language, "significance"))}</th><th class="text-left p-3">{esc(mode_c_label(language, "source"))}</th></tr></thead>
           <tbody>{catalyst_rows}</tbody>
         </table>
       </div>
     </section>"""
 
 
-def render_source_appendix(source_claims: list[Any]) -> str:
+def render_source_appendix(source_claims: list[Any], language: str) -> str:
     rows = []
     for index, claim in enumerate(source_claims[:40], start=1):
         if not isinstance(claim, dict):
@@ -1534,17 +1618,17 @@ def render_source_appendix(source_claims: list[Any]) -> str:
             </tr>"""
         )
     return f"""<section id="section-sources">
-      <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-book mr-2 text-brand-400"></i>Source-Tagged Claims Appendix - {len(rows)} claims</h2>
+      <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-book mr-2 text-brand-400"></i>{esc(mode_c_label(language, "source_appendix"))} - {esc(mode_c_count(language, len(rows), "claims", "클레임"))}</h2>
       <div class="card overflow-x-auto">
         <table class="w-full text-sm">
-          <thead><tr class="bg-gray-50 text-gray-600 text-xs uppercase"><th class="text-right p-3">#</th><th class="text-left p-3">Claim</th><th class="text-left p-3">Source</th><th class="text-left p-3">Grade</th><th class="text-left p-3">Tag</th></tr></thead>
+          <thead><tr class="bg-gray-50 text-gray-600 text-xs uppercase"><th class="text-right p-3">#</th><th class="text-left p-3">{esc(mode_c_label(language, "claim"))}</th><th class="text-left p-3">{esc(mode_c_label(language, "source"))}</th><th class="text-left p-3">{esc(mode_c_label(language, "grade"))}</th><th class="text-left p-3">{esc(mode_c_label(language, "tag"))}</th></tr></thead>
           <tbody>{''.join(rows)}</tbody>
         </table>
       </div>
     </section>"""
 
 
-def render_dcf_sensitivity(dcf: dict[str, Any], currency: str) -> str:
+def render_dcf_sensitivity(dcf: dict[str, Any], currency: str, language: str) -> str:
     rows = []
     table = dcf.get("sensitivity_table") if isinstance(dcf.get("sensitivity_table"), list) else []
     for item in table[:5]:
@@ -1559,18 +1643,19 @@ def render_dcf_sensitivity(dcf: dict[str, Any], currency: str) -> str:
             </tr>"""
         )
     if not rows:
-        rows.append(f"""<tr><td class="p-3" colspan="4">DCF sensitivity unavailable {source_tag("[Calc]")}</td></tr>""")
+        message = "DCF 민감도 이용 불가" if is_korean(language) else "DCF sensitivity unavailable"
+        rows.append(f"""<tr><td class="p-3" colspan="4">{esc(message)} {source_tag("[Calc]")}</td></tr>""")
     return "".join(rows)
 
 
-def render_reverse_dcf(reverse: dict[str, Any] | None) -> str:
+def render_reverse_dcf(reverse: dict[str, Any] | None, language: str = "en") -> str:
     if not isinstance(reverse, dict):
         return ""
     status = str(reverse.get("status") or "unavailable")
     if status not in {"success", "available"}:
         reason = reverse.get("notes") or reverse.get("reason") or "Reverse DCF requires validated positive free cash flow before an implied-growth read can be shown."
         return f"""<div class="card p-5 mt-4 bg-amber-50 border border-amber-200">
-          <h3 class="text-sm font-bold text-amber-900 mb-3">Reverse DCF - unavailable ({esc(status)})</h3>
+          <h3 class="text-sm font-bold text-amber-900 mb-3">{esc(mode_c_label(language, "reverse_dcf"))} - {esc(mode_c_status(language, "unavailable"))} ({esc(mode_c_status(language, status))})</h3>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div class="p-3 bg-white rounded-lg"><p class="text-xs text-gray-500">Status</p><p class="text-xl font-bold text-amber-800">{esc(status.replace("_", " "))}</p><p class="text-xs text-gray-400">No implied growth shown {source_tag("[Calc]")}</p></div>
             <div class="p-3 bg-white rounded-lg"><p class="text-xs text-gray-500">Market price anchor</p><p class="text-xl font-bold text-gray-700">{fmt(reverse.get("target_price"), 2)}</p><p class="text-xs text-gray-400">Used only as context {source_tag("[Calc]")}</p></div>
@@ -1579,16 +1664,16 @@ def render_reverse_dcf(reverse: dict[str, Any] | None) -> str:
         </div>"""
     gap = reverse.get("growth_gap_bp")
     return f"""<div class="card p-5 mt-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200">
-      <h3 class="text-sm font-bold text-brand-700 mb-3">Reverse DCF - {pct(reverse.get("implied_fcf_growth"), probability=True)} market-implied growth</h3>
+      <h3 class="text-sm font-bold text-brand-700 mb-3">{esc(mode_c_label(language, "reverse_dcf"))} - {pct(reverse.get("implied_fcf_growth"), probability=True)} {esc("시장 내재 성장률" if is_korean(language) else "market-implied growth")}</h3>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div class="text-center p-3 bg-white rounded-lg"><p class="text-xs text-gray-500">Market is pricing in</p><p class="text-2xl font-bold text-brand-700">{pct(reverse.get("implied_fcf_growth"), probability=True)}</p><p class="text-xs text-gray-400">annual FCF growth {source_tag("[Calc]")}</p></div>
-        <div class="text-center p-3 bg-white rounded-lg"><p class="text-xs text-gray-500">Our base assumes</p><p class="text-2xl font-bold text-gray-700">{pct(reverse.get("analyst_growth_assumption"), probability=True)}</p><p class="text-xs text-gray-400">annual FCF growth {source_tag("[Calc]")}</p></div>
-        <div class="text-center p-3 bg-white rounded-lg"><p class="text-xs text-gray-500">Gap</p><p class="text-2xl font-bold text-gray-700">{fmt(gap, 0)}bp</p><p class="text-xs text-gray-400">{esc(reverse.get("notes"))}</p></div>
+        <div class="text-center p-3 bg-white rounded-lg"><p class="text-xs text-gray-500">{esc(mode_c_label(language, "market_is_pricing_in"))}</p><p class="text-2xl font-bold text-brand-700">{pct(reverse.get("implied_fcf_growth"), probability=True)}</p><p class="text-xs text-gray-400">{esc(mode_c_label(language, "annual_fcf_growth"))} {source_tag("[Calc]")}</p></div>
+        <div class="text-center p-3 bg-white rounded-lg"><p class="text-xs text-gray-500">{esc(mode_c_label(language, "our_base_assumes"))}</p><p class="text-2xl font-bold text-gray-700">{pct(reverse.get("analyst_growth_assumption"), probability=True)}</p><p class="text-xs text-gray-400">{esc(mode_c_label(language, "annual_fcf_growth"))} {source_tag("[Calc]")}</p></div>
+        <div class="text-center p-3 bg-white rounded-lg"><p class="text-xs text-gray-500">{esc("차이" if is_korean(language) else "Gap")}</p><p class="text-2xl font-bold text-gray-700">{fmt(gap, 0)}bp</p><p class="text-xs text-gray-400">{esc(reverse.get("notes"))}</p></div>
       </div>
     </div>"""
 
 
-def render_valuation_bridge(bridge: dict[str, Any] | None, currency: str) -> str:
+def render_valuation_bridge(bridge: dict[str, Any] | None, currency: str, language: str) -> str:
     if not isinstance(bridge, dict):
         return ""
     anchors = bridge.get("anchors") if isinstance(bridge.get("anchors"), list) else []
@@ -1596,23 +1681,23 @@ def render_valuation_bridge(bridge: dict[str, Any] | None, currency: str) -> str
         f"""<div class="card p-4 stat-card">
           <p class="text-xs text-gray-500 mb-1">{esc(item.get("label"))}</p>
           <p class="text-2xl font-bold text-brand-700">{currency_symbol(currency)}{fmt(item.get("value_per_share"), 2)}</p>
-          <p class="text-xs text-gray-500 mt-1">Weight {pct(item.get("weight"), probability=True)} · {esc(item.get("method"))}</p>
+          <p class="text-xs text-gray-500 mt-1">{esc(mode_c_label(language, "weight"))} {pct(item.get("weight"), probability=True)} · {esc(item.get("method"))}</p>
           <p class="text-xs mt-1">{source_tag(item.get("tag") or "[Calc]")}</p>
         </div>"""
         for item in anchors
         if isinstance(item, dict)
     )
     return f"""<section id="section-valuation-bridge">
-      <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-bridge mr-2 text-brand-400"></i>Valuation Bridge - weighted FV {currency_symbol(currency)}{fmt(bridge.get("weighted_fair_value"), 2)}</h2>
+      <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fa-solid fa-bridge mr-2 text-brand-400"></i>{esc(mode_c_label(language, "valuation_bridge"))} - {esc("가중 적정가" if is_korean(language) else "weighted FV")} {currency_symbol(currency)}{fmt(bridge.get("weighted_fair_value"), 2)}</h2>
       <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-3 mb-4">{anchor_html}</div>
       <div class="card p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 mb-4">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-          <div><p class="text-xs text-gray-500">Weighted Fair Value</p><p class="text-3xl font-extrabold text-brand-700">{currency_symbol(currency)}{fmt(bridge.get("weighted_fair_value"), 2)}</p></div>
-          <div><p class="text-xs text-gray-500">Current Price</p><p class="text-3xl font-bold text-gray-700">{currency_symbol(currency)}{fmt(bridge.get("current_price"), 2)}</p></div>
-          <div><p class="text-xs text-gray-500">Implied View vs Market</p><p class="text-3xl font-bold text-green-700">{esc(bridge.get("implied_view_vs_market"))}</p></div>
+          <div><p class="text-xs text-gray-500">{esc(mode_c_label(language, "weighted_fair_value"))}</p><p class="text-3xl font-extrabold text-brand-700">{currency_symbol(currency)}{fmt(bridge.get("weighted_fair_value"), 2)}</p></div>
+          <div><p class="text-xs text-gray-500">{esc(mode_c_label(language, "current_price"))}</p><p class="text-3xl font-bold text-gray-700">{currency_symbol(currency)}{fmt(bridge.get("current_price"), 2)}</p></div>
+          <div><p class="text-xs text-gray-500">{esc(mode_c_label(language, "implied_view_vs_market"))}</p><p class="text-3xl font-bold text-green-700">{esc(bridge.get("implied_view_vs_market"))}</p></div>
         </div>
       </div>
-      <div class="card p-5 bg-gray-50 border border-gray-200"><h3 class="text-sm font-bold text-gray-700 mb-2">Reconciliation Logic - {len(anchors)} anchors</h3><p class="text-sm text-gray-700 leading-7">{esc(bridge.get("reconciliation_logic"))}</p><p class="text-xs text-gray-400 mt-2">Decision anchor: {esc(bridge.get("decision_anchor"))} {source_tag("[Calc]")}</p></div>
+      <div class="card p-5 bg-gray-50 border border-gray-200"><h3 class="text-sm font-bold text-gray-700 mb-2">{esc(mode_c_label(language, "reconciliation_logic"))} - {esc(mode_c_count(language, len(anchors), "anchors", "앵커"))}</h3><p class="text-sm text-gray-700 leading-7">{esc(bridge.get("reconciliation_logic"))}</p><p class="text-xs text-gray-400 mt-2">{esc(mode_c_label(language, "decision_anchor"))} {esc(bridge.get("decision_anchor"))} {source_tag("[Calc]")}</p></div>
     </section>"""
 
 
@@ -2021,8 +2106,8 @@ def tag_for_grade(grade: str) -> str:
     return "[Calc]" if grade in {"A", "B", "C"} else "[User]"
 
 
-def header_metric(label: str, entry: Any, currency: str) -> str:
-    return f"""<span class="text-blue-200/60">{esc(label)}</span><span class="text-white font-semibold">{metric_display(entry, label.lower().replace(" ", "_"), currency)} {grade_badge(entry)}</span>"""
+def header_metric(label: str, entry: Any, currency: str, metric_key: str) -> str:
+    return f"""<span class="text-blue-200/60">{esc(label)}</span><span class="text-white font-semibold">{metric_display(entry, metric_key, currency)} {grade_badge(entry)}</span>"""
 
 
 def verdict_badge(verdict: Any) -> str:
@@ -2070,8 +2155,10 @@ def sensitivity_cell(value: Any, currency: str) -> str:
     return f"{currency_symbol(currency)}{fmt(value.get('fair_value'), 2)}<div class=\"text-xs text-gray-500\">{pct(value.get('upside_pct'))} {source_tag('[Calc]')}</div>"
 
 
-def peer_row(ticker: Any, label: str, metrics: dict[str, Any], klass: str) -> str:
-    basis = f"{metric_display(metrics.get('revenue_growth_yoy'), 'revenue_growth_yoy', 'USD')} growth / {metric_display(metrics.get('operating_margin'), 'operating_margin', 'USD')} margin"
+def peer_row(ticker: Any, label: str, metrics: dict[str, Any], klass: str, language: str) -> str:
+    growth_word = "성장률" if is_korean(language) else "growth"
+    margin_word = "마진" if is_korean(language) else "margin"
+    basis = f"{metric_display(metrics.get('revenue_growth_yoy'), 'revenue_growth_yoy', 'USD')} {growth_word} / {metric_display(metrics.get('operating_margin'), 'operating_margin', 'USD')} {margin_word}"
     return f"""<tr class="border-b {klass}">
       <td class="p-4 font-semibold">{esc(ticker)}</td>
       <td class="p-4">{esc(label)} - {basis}</td>
@@ -2080,7 +2167,7 @@ def peer_row(ticker: Any, label: str, metrics: dict[str, Any], klass: str) -> st
     </tr>"""
 
 
-def target_card(label: str, target: Any, price: Any, currency: str) -> str:
+def target_card(label: str, target: Any, price: Any, currency: str, language: str) -> str:
     target_number = as_number(target)
     price_number = as_number(price)
     upside = None
@@ -2089,14 +2176,14 @@ def target_card(label: str, target: Any, price: Any, currency: str) -> str:
     return f"""<div class="card p-5 text-center">
       <p class="text-xs text-gray-500 mb-1">{esc(label)}</p>
       <p class="text-3xl font-bold text-brand-600">{currency_symbol(currency)}{fmt(target_number, 2)}</p>
-      <p class="text-sm text-gray-500 mt-1">{pct(upside)} vs current {source_tag("[Est]")}</p>
+      <p class="text-sm text-gray-500 mt-1">{pct(upside)} {esc("현재 대비" if is_korean(language) else "vs current")} {source_tag("[Est]")}</p>
     </div>"""
 
 
-def detail_card(title: str, entry: Any, currency: str) -> str:
+def detail_card(title: str, entry: Any, currency: str, metric_key: str) -> str:
     return f"""<div class="card p-5">
       <p class="text-xs text-gray-500 mb-1">{esc(title)} {grade_badge(entry)}</p>
-      <p class="text-2xl font-bold text-brand-700">{metric_display(entry, title.lower().replace(" ", "_"), currency)}</p>
+      <p class="text-2xl font-bold text-brand-700">{metric_display(entry, metric_key, currency)}</p>
       <p class="text-xs text-gray-500 mt-1">{metric_source(entry)}</p>
     </div>"""
 
