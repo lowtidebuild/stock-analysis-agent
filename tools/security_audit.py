@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import fnmatch
 import json
+import os
 import re
 import subprocess
 import sys
@@ -144,9 +145,14 @@ def iter_path_inputs(paths: Iterable[Path]) -> list[Path]:
     files: list[Path] = []
     for path in paths:
         if path.is_dir():
-            for child in sorted(path.rglob("*")):
-                if child.is_file():
-                    files.append(child)
+            for root, dirnames, filenames in os.walk(path):
+                dirnames[:] = sorted(dirname for dirname in dirnames if dirname not in SKIP_DIRS)
+                for filename in sorted(filenames):
+                    child = Path(root) / filename
+                    if is_never_read_path(child):
+                        continue
+                    if child.is_file():
+                        files.append(child)
         elif path.exists():
             files.append(path)
     return files

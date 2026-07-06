@@ -606,7 +606,7 @@ __pycache__/.pytest_cache)까지 전부 열거·정렬하고, 각 파일이 scan
 
 **Steps:**
 
-- [ ] **11-1. 실패 테스트 작성:**
+- [x] **11-1. 실패 테스트 작성:**
   ```python
   def test_iter_path_inputs_prunes_skip_dirs(tmp_path):
       (tmp_path / ".git" / "objects").mkdir(parents=True)
@@ -624,7 +624,7 @@ __pycache__/.pytest_cache)까지 전부 열거·정렬하고, 각 파일이 scan
       # 위 구조에서 --paths 스캔 실행 → skipped_sensitive_path WARN 0건
   ```
   실행 → FAIL 확인.
-- [ ] **11-2. 구현:** `iter_path_inputs`를 os.walk 기반으로 교체:
+- [x] **11-2. 구현:** `iter_path_inputs`를 os.walk 기반으로 교체:
   ```python
   def iter_path_inputs(paths: Iterable[Path]) -> list[Path]:
       files: list[Path] = []
@@ -642,9 +642,9 @@ __pycache__/.pytest_cache)까지 전부 열거·정렬하고, 각 파일이 scan
   스킵**하고, 사용자가 **명시적으로 인자에 지정한** 파일이 never-read일 때만
   기존 `skipped_sensitive_path` WARN 1건을 낸다(발견 경로 구분 플래그를
   scan 호출부에서 전달).
-- [ ] **11-3.** 테스트 PASS + 기존 skipped_sensitive_path 테스트(명시 경로
+- [x] **11-3.** 테스트 PASS + 기존 skipped_sensitive_path 테스트(명시 경로
   케이스)가 여전히 GREEN인지 확인.
-- [ ] **11-4. Commit:** `fix(security-audit): prune skip dirs during traversal and stop warn flooding`
+- [x] **11-4. Commit:** `fix(security-audit): prune skip dirs during traversal and stop warn flooding`
 
 ### Task 12: security_audit — fixture 판정을 문자열 마커에서 구조적 검사로
 

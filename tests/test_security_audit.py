@@ -7,7 +7,7 @@ import sys
 import tempfile
 import unittest
 
-from tools.security_audit import audit_paths, forbidden_staged_findings, scan_file
+from tools.security_audit import audit_paths, forbidden_staged_findings, iter_path_inputs, scan_file
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 CLI = ROOT / "tools" / "security_audit.py"
@@ -97,6 +97,54 @@ class SecurityAuditTests(unittest.TestCase):
             findings = scan_file(path)
 
         self.assertIn("sensitive_assignment", {item.rule for item in findings})
+
+    def test_iter_path_inputs_prunes_skip_dirs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            git_object = root / ".git" / "objects" / "aa"
+            node_module = root / "node_modules" / "pkg" / "index.js"
+            app = root / "src" / "app.py"
+            git_object.parent.mkdir(parents=True)
+            node_module.parent.mkdir(parents=True)
+            app.parent.mkdir(parents=True)
+            git_object.write_text("x", encoding="utf-8")
+            node_module.write_text("x", encoding="utf-8")
+            app.write_text("print('hi')", encoding="utf-8")
+
+            files = iter_path_inputs([root])
+
+        names = {item.name for item in files}
+        self.assertIn("app.py", names)
+        self.assertNotIn("aa", names)
+        self.assertNotIn("index.js", names)
+
+    def test_directory_scan_emits_no_skip_warn_per_pruned_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            git_object = root / ".git" / "objects" / "aa"
+            node_module = root / "node_modules" / "pkg" / "index.js"
+            env_file = root / ".env"
+            app = root / "src" / "app.py"
+            git_object.parent.mkdir(parents=True)
+            node_module.parent.mkdir(parents=True)
+            app.parent.mkdir(parents=True)
+            git_object.write_text("x", encoding="utf-8")
+            node_module.write_text("x", encoding="utf-8")
+            env_file.write_text("OPENAI_API_KEY=sk-proj-should-not-be-read-from-dir", encoding="utf-8")
+            app.write_text("print('hi')", encoding="utf-8")
+
+            findings = audit_paths([root])
+
+        self.assertNotIn("skipped_sensitive_path", {item.rule for item in findings})
+
+    def test_explicit_never_read_path_still_emits_skip_warn(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / ".env"
+            path.write_text("OPENAI_API_KEY=sk-proj-should-not-be-read", encoding="utf-8")
+
+            findings = audit_paths([path])
+
+        self.assertIn("skipped_sensitive_path", {item.rule for item in findings})
 
     def test_fixture_marker_in_published_report_is_blocking(self):
         with tempfile.TemporaryDirectory() as tmp:
