@@ -74,7 +74,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 MODE_REQUIRED_RENDERED_TERMS = {
     "C": (
         ("DCF valuation", ("dcf",)),
-        ("analyst coverage", ("analyst coverage", "analyst target", "analyst rating", "애널리스트 커버리지", "목표가")),
+        ("analyst coverage", ("analyst coverage", "analyst target", "analyst rating", "애널리스트 커버리지", "애널리스트 목표가", "중앙값 목표가")),
         ("chart data", ("new chart", "chart.js", "pricelabels", "pricedata")),
     ),
     "D": (

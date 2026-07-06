@@ -499,18 +499,18 @@ analyst 서사(analyst.py:829-858)에 항상 "목표가"가 있으므로, Analys
 
 **Steps:**
 
-- [ ] **8-1. 실패 테스트 작성:** `build_rendered_output_item`을 직접 호출 —
+- [x] **8-1. 실패 테스트 작성:** `build_rendered_output_item`을 직접 호출 —
   한국어 Mode C HTML 픽스처에서 "애널리스트 커버리지" 섹션 문자열을 제거하되
   시나리오 표의 "기준 목표가"는 남긴 입력으로, 결과 item이 analyst coverage
   누락을 **실패(missing section)** 로 보고해야 한다.
   실행 → FAIL 확인(현재는 통과해버리므로).
-- [ ] **8-2. 구현:** 후보 목록에서 `"목표가"`를 제거하고 섹션 특정적 토큰으로
+- [x] **8-2. 구현:** 후보 목록에서 `"목표가"`를 제거하고 섹션 특정적 토큰으로
   교체: `("analyst coverage", ("analyst coverage", "analyst target",
   "analyst rating", "애널리스트 커버리지", "애널리스트 목표가"))`.
   (한국어 커버리지 섹션의 실제 렌더 문자열은 rendering.py:89-91의
   "중앙값/최고/최저 목표가" — 필요하면 `"중앙값 목표가"`를 추가 토큰으로.)
-- [ ] **8-3.** 테스트 PASS + 전체 suite GREEN.
-- [ ] **8-4. Commit:** `fix(quality): make korean analyst-coverage required-term section-specific`
+- [x] **8-3.** 테스트 PASS + 전체 suite GREEN.
+- [x] **8-4. Commit:** `fix(quality): make korean analyst-coverage required-term section-specific`
 
 ### Task 9: run_mode.py main() 예외 커버리지 — JSON stdout 계약 보장
 

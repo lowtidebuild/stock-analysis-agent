@@ -237,6 +237,35 @@ class RenderedOutputValidationTests(unittest.TestCase):
             self.assertEqual(item["status"], "FAIL")
             self.assertTrue(any("excluded" in error.lower() or "grade d" in error.lower() for error in item["errors"]))
 
+    def test_korean_mode_c_target_price_does_not_satisfy_missing_analyst_coverage(self):
+        html = """<!doctype html>
+<html>
+  <body>
+    <h1>한국어 리포트</h1>
+    <section>DCF Valuation</section>
+    <section>시나리오 밸류에이션 기준 목표가 120,000원</section>
+    <p>Revenue 10 [Filing] and margin 20% [Calc].</p>
+    <script>
+      const priceLabels = ["2026-01-01"];
+      const priceData = [10];
+      new Chart(document.createElement("canvas"), { data: { labels: priceLabels } });
+    </script>
+    <footer>Disclaimer: informational only, not investment advice.</footer>
+  </body>
+</html>"""
+        with tempfile.TemporaryDirectory() as tmp:
+            report_path = pathlib.Path(tmp) / "report.html"
+            report_path.write_text(html, encoding="utf-8")
+
+            item = build_rendered_output_item(
+                report_path,
+                {"output_mode": "C", "output_language": "ko", "key_metrics": {}},
+                {"exclusions": []},
+            )
+
+        self.assertEqual(item["status"], "FAIL")
+        self.assertTrue(any("analyst coverage" in error.lower() for error in item["errors"]))
+
     def test_builder_accepts_report_path_in_print_only_mode(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = pathlib.Path(tmp)
