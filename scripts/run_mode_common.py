@@ -10,8 +10,7 @@ from typing import Any
 
 from scripts.parity.data_sources import load_json, write_json
 from scripts.run_abc_parity import record_stage
-
-FIXTURE_BACKEND_PROVIDERS = {"fixture", "deterministic_fixture", "local_fixture"}
+from tools.backend_providers import FIXTURE_BACKEND_PROVIDERS
 
 
 def timed_stage(

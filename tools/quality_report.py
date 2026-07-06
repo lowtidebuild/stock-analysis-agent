@@ -19,6 +19,7 @@ from tools.artifact_validation import (
     validate_verdict_alignment,
     _classify_valuation_bridge_severity,
 )
+from tools.backend_providers import FIXTURE_BACKEND_PROVIDERS
 
 QUALITY_ITEM_STATUSES = {"PASS", "PASS_WITH_FLAGS", "CRITICAL_FLAG", "FAIL", "SKIP"}
 CRITIC_OVERALL_STATUSES = {"PASS", "PASS_WITH_FLAGS", "FAIL"}
@@ -59,7 +60,6 @@ BASELINE_GENERATED_ITEMS = (
     "price_and_date",
     "blank_over_wrong",
 )
-FIXTURE_BACKEND_PROVIDERS = {"fixture", "deterministic_fixture", "local_fixture"}
 FINANCIAL_SAMPLE_PRIORITY = (
     "price_at_analysis",
     "market_cap",

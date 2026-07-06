@@ -16,6 +16,7 @@ from tools.artifact_validation import (
     validate_artifact_data,
     validate_cross_artifact_consistency,
 )
+from tools.backend_providers import FIXTURE_BACKEND_PROVIDERS
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ANALYSIS_SCHEMA_PATH = REPO_ROOT / ".claude" / "schemas" / "analysis-result.schema.json"
@@ -27,7 +28,7 @@ PEER_PLACEHOLDER_TERMS = (
     "will be expanded",
     "placeholder",
 )
-FIXTURE_BACKEND_NAMES = {"fixture", "deterministic_fixture", "local_fixture"}
+FIXTURE_BACKEND_NAMES = FIXTURE_BACKEND_PROVIDERS
 CODEX_NATIVE_BACKEND_NAMES = {"codex_native", "codex", "local_codex"}
 
 

@@ -195,7 +195,7 @@ CLAUDE.md §7.1("결정론적 전처리는 최종 verdict를 정할 수 없다")
 
 **Steps:**
 
-- [ ] **3-1. 공유 상수 모듈 생성:**
+- [x] **3-1. 공유 상수 모듈 생성:**
   ```python
   # tools/backend_providers.py
   """Single source of truth for analyst-backend provider classes.
@@ -209,7 +209,7 @@ CLAUDE.md §7.1("결정론적 전처리는 최종 verdict를 정할 수 없다")
   )
   DETERMINISTIC_BACKEND_PROVIDERS: frozenset[str] = frozenset({"codex_native"})
   ```
-- [ ] **3-2.** 3곳의 로컬 정의를 삭제하고 import로 교체
+- [x] **3-2.** 3곳의 로컬 정의를 삭제하고 import로 교체
   (`from tools.backend_providers import FIXTURE_BACKEND_PROVIDERS`;
   analyst.py의 `FIXTURE_BACKEND_NAMES`는 alias 유지 가능:
   `FIXTURE_BACKEND_NAMES = FIXTURE_BACKEND_PROVIDERS`).
