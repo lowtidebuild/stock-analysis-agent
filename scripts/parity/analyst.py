@@ -12,6 +12,14 @@ from typing import Any
 
 from scripts.analyst_backends import get_backend
 from scripts.parity.data_sources import load_json, write_json
+from scripts.parity.formatting import (
+    as_number,
+    format_plain_number,
+    metric_display_from_metrics as metric_display,
+    metric_value,
+    money_text,
+    percent_text,
+)
 from tools.artifact_validation import (
     validate_artifact_data,
     validate_cross_artifact_consistency,
@@ -1113,61 +1121,6 @@ def scenario_target(scenarios: dict[str, Any], case: str) -> float | None:
     return as_number(row.get("target") or row.get("target_price"))
 
 
-def money_text(value: Any, currency: str) -> str:
-    number = as_number(value)
-    if number is None:
-        return "-"
-    if currency.upper() == "KRW":
-        return f"KRW {number:,.0f}"
-    symbol = "$" if currency.upper() == "USD" else f"{currency} "
-    return f"{symbol}{number:,.2f}"
-
-
-def metric_display(metrics: dict[str, Any], key: str, *, currency: str) -> str:
-    entry = metrics.get(key)
-    if not isinstance(entry, dict):
-        return "-"
-    value = as_number(entry.get("value"))
-    if value is None:
-        return "-"
-    unit = str(entry.get("unit") or "").lower()
-    if unit in {"percent", "%"} or key.endswith("_margin") or key.endswith("_yield") or key.endswith("_growth_yoy"):
-        return percent_text(value)
-    if unit in {"x", "turns"} or key in {"ev_ebitda", "pe_forward", "pe_ratio", "pb_ratio"}:
-        return f"{value:,.1f}x"
-    if "billion" in unit or unit in {"billions", "b"}:
-        return f"{currency_symbol_text(currency)}{value:,.1f}B"
-    if "million" in unit or unit in {"millions", "m"}:
-        return f"{value:,.1f}M"
-    if key in {"price_at_analysis", "fifty_two_week_high", "fifty_two_week_low"}:
-        return money_text(value, currency)
-    return format_plain_number(value)
-
-
-def currency_symbol_text(currency: str) -> str:
-    if currency.upper() == "USD":
-        return "$"
-    if currency.upper() == "KRW":
-        return "KRW "
-    return f"{currency} "
-
-
-def percent_text(value: Any, *, probability: bool = False) -> str:
-    number = as_number(value)
-    if number is None:
-        return "-"
-    display = number * 100 if probability and abs(number) <= 1 else number
-    sign = "+" if display > 0 and not probability else ""
-    return f"{sign}{display:,.1f}%"
-
-
-def format_plain_number(value: Any) -> str:
-    number = as_number(value)
-    if number is None:
-        return "-"
-    return f"{number:,.2f}".rstrip("0").rstrip(".")
-
-
 def korean_verdict(verdict: str) -> str:
     return {
         "overweight": "비중확대",
@@ -1683,26 +1636,6 @@ def verdict_from_rr(rr_score: Any) -> str:
     if value >= 1:
         return "neutral"
     return "underweight"
-
-
-def metric_value(metrics: dict[str, Any], key: str) -> float | None:
-    entry = metrics.get(key)
-    if not isinstance(entry, dict):
-        return None
-    return as_number(entry.get("value"))
-
-
-def as_number(value: Any) -> float | None:
-    if isinstance(value, bool) or value is None:
-        return None
-    if isinstance(value, (int, float)):
-        return float(value)
-    if isinstance(value, str):
-        try:
-            return float(value.replace("%", "").replace(",", "").strip())
-        except ValueError:
-            return None
-    return None
 
 
 def display_path(path: Path) -> str:

@@ -11,6 +11,15 @@ from pathlib import Path
 from typing import Any
 
 from scripts.parity.data_sources import load_json, write_json
+from scripts.parity.formatting import (
+    as_number,
+    currency_prefix,
+    currency_symbol,
+    fmt,
+    metric_display,
+    metric_value,
+    pct,
+)
 from tools.quality_report import build_rendered_output_item
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -1978,67 +1987,6 @@ def deterministic_disclosure_banner(analysis: dict[str, Any], language: str) -> 
         'border-radius:8px;font-size:13px;line-height:1.55;font-weight:650;">'
         f"{esc(message)}</div>"
     )
-
-
-def currency_symbol(currency: str) -> str:
-    return {"USD": "$", "KRW": "KRW ", "EUR": "EUR ", "JPY": "JPY "}.get(currency.upper(), f"{currency} " if currency else "")
-
-
-def currency_prefix(currency: str) -> str:
-    return {"USD": "$", "KRW": "KRW ", "EUR": "EUR ", "JPY": "JPY "}.get(currency.upper(), "")
-
-
-def fmt(value: Any, digits: int = 1) -> str:
-    number = as_number(value)
-    if number is None:
-        return "-"
-    return f"{number:,.{digits}f}"
-
-
-def pct(value: Any, *, probability: bool = False) -> str:
-    number = as_number(value)
-    if number is None:
-        return "-"
-    if probability and abs(number) <= 1:
-        number *= 100
-    return f"{number:+.1f}%" if not probability and number > 0 else f"{number:.1f}%"
-
-
-def as_number(value: Any) -> float | None:
-    if isinstance(value, bool) or value is None:
-        return None
-    if isinstance(value, (int, float)):
-        return float(value)
-    if isinstance(value, str):
-        try:
-            return float(value.replace("%", "").replace(",", "").strip())
-        except ValueError:
-            return None
-    return None
-
-
-def metric_value(metrics: dict[str, Any], key: str) -> float | None:
-    entry = metrics.get(key)
-    if not isinstance(entry, dict):
-        return None
-    return as_number(entry.get("value"))
-
-
-def metric_display(entry: Any, metric_name: str, currency: str) -> str:
-    if not isinstance(entry, dict):
-        return "-"
-    value = entry.get("value")
-    unit = entry.get("unit")
-    number = as_number(value)
-    if number is None:
-        return "-"
-    if metric_name in {"market_cap", "revenue_ttm", "fcf_ttm", "net_debt"}:
-        return f"{currency_symbol(currency)}{fmt(number, 1)}B"
-    if unit in {"percent", "%"} or metric_name.endswith("yield") or "margin" in metric_name or "growth" in metric_name:
-        return pct(number)
-    if unit == "x" or metric_name in {"pe_ratio", "pe_forward", "ev_ebitda", "pb_ratio", "net_debt_ebitda"}:
-        return f"{fmt(number, 1)}x"
-    return fmt(number, 2)
 
 
 def metric_source(entry: Any) -> str:

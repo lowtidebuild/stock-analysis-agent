@@ -134,7 +134,7 @@ def test_codex_native_falls_back_to_pe_ratio_when_forward_pe_missing() -> None:
         "analysis_date": "2026-07-06",
         "validated_metrics": {
             "price_at_analysis": metric(200.0, "USD"),
-            "revenue_ttm": metric(340_000_000_000.0, "USD"),
+            "revenue_ttm": metric(340.0, "billions"),
             "revenue_growth_yoy": metric(5.0, "%"),
             "operating_margin": metric(30.0, "%"),
             "fcf_yield": metric(2.4, "%"),
@@ -170,6 +170,7 @@ def test_codex_native_falls_back_to_pe_ratio_when_forward_pe_missing() -> None:
     )
 
     text = analysis["sections"]["variant_view_q3"]
+    assert "verified TTM revenue of $340.0B" in analysis["thesis"]
     assert "forward P/E 30.0x" in text
     assert "forward P/E -" not in text
 

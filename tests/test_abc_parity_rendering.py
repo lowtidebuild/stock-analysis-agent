@@ -16,6 +16,7 @@ from scripts.parity.rendering import (
     validate_mode_a_rendered_html,
     validate_mode_c_rendered_html,
 )
+from scripts.parity.formatting import metric_display, metric_display_from_metrics
 from tests.test_abc_parity_calculations import write_mock_yfinance
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -81,6 +82,32 @@ def write_peer_records(ticker_root: Path) -> None:
             json.dumps(record, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
+
+
+def test_shared_metric_formatting_snapshot_public_rules() -> None:
+    metrics = {
+        "market_cap": {"value": 3_000.0, "unit": "billions"},
+        "revenue_ttm": {"value": 340.0, "unit": "billions"},
+        "operating_margin": {"value": 30.0, "unit": "percent"},
+        "fcf_yield": {"value": 2.4, "unit": "percent"},
+        "ev_ebitda": {"value": 22.0, "unit": "x"},
+        "beta": {"value": 1.1},
+    }
+
+    snapshot = {
+        key: metric_display_from_metrics(metrics, key, currency="USD")
+        for key in ("market_cap", "revenue_ttm", "operating_margin", "fcf_yield", "ev_ebitda", "beta")
+    }
+
+    assert snapshot == {
+        "market_cap": "$3,000.0B",
+        "revenue_ttm": "$340.0B",
+        "operating_margin": "+30.0%",
+        "fcf_yield": "+2.4%",
+        "ev_ebitda": "22.0x",
+        "beta": "1.10",
+    }
+    assert metric_display(metrics["market_cap"], "market_cap", "USD") == snapshot["market_cap"]
 
 
 def test_golden_config_normalization_never_weakens() -> None:
