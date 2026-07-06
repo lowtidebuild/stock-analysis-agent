@@ -523,6 +523,7 @@ def build_mode_a_briefing_html(
       <div class="hero-stat"><div class="label">Base Target</div><div class="value">{mode_a_currency(base_target, currency)}</div></div>
     </div>
   </header>
+  {deterministic_disclosure_banner(analysis, language)}
 
   <section id="decision-brief">
     <h2>Decision Brief</h2>
@@ -981,6 +982,7 @@ def build_mode_c_dashboard_html(
       </div>
     </div>
   </header>
+  {deterministic_disclosure_banner(analysis, language)}
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
     {render_scenario_section(analysis, scenarios, sections, currency)}
@@ -1959,6 +1961,23 @@ def korean_font(language: str) -> str:
     if language == "ko":
         return '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">'
     return ""
+
+
+def deterministic_disclosure_banner(analysis: dict[str, Any], language: str) -> str:
+    run_context = analysis.get("run_context") if isinstance(analysis.get("run_context"), dict) else {}
+    if str(run_context.get("run_profile") or "").strip().lower() != "deterministic":
+        return ""
+    message = (
+        "본 리포트는 LLM 분석 없이 검증 지표 기반 결정론적 템플릿으로 생성되었습니다. 투자 판단(verdict)은 규칙 기반 산출값입니다."
+        if language == "ko"
+        else "This report was generated from a deterministic template without LLM analysis; the verdict is rule-derived."
+    )
+    return (
+        '<div style="max-width:1120px;margin:18px auto 0;padding:12px 18px;'
+        'border:1px solid #f59e0b;background:#fffbeb;color:#92400e;'
+        'border-radius:8px;font-size:13px;line-height:1.55;font-weight:650;">'
+        f"{esc(message)}</div>"
+    )
 
 
 def currency_symbol(currency: str) -> str:

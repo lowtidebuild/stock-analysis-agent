@@ -215,7 +215,7 @@ CLAUDE.md §7.1("결정론적 전처리는 최종 verdict를 정할 수 없다")
   `FIXTURE_BACKEND_NAMES = FIXTURE_BACKEND_PROVIDERS`).
   `python3 -m pytest tests/ -q` → GREEN (동작 불변 리팩터링).
   Commit: `refactor: single-source fixture backend provider set`
-- [ ] **3-3. 실패 테스트 작성** (신규 `tests/test_deterministic_delivery_guard.py`):
+- [x] **3-3. 실패 테스트 작성** (신규 `tests/test_deterministic_delivery_guard.py`):
   - `annotate_analysis_run_profile`가 provider `codex_native`에 대해
     `run_profile == "deterministic"`을 기록한다.
   - `build_fixture_delivery_guard_item`(또는 신설
@@ -225,7 +225,7 @@ CLAUDE.md §7.1("결정론적 전처리는 최종 verdict를 정할 수 없다")
     `status PASS_WITH_FLAGS / severity MINOR`.
   - fixture 백엔드 동작(기존 테스트)은 불변.
   실행 → FAIL 확인.
-- [ ] **3-4. 구현:**
+- [x] **3-4. 구현:**
   - `run_mode_common.annotate_analysis_run_profile`(56행 부근): provider가
     `DETERMINISTIC_BACKEND_PROVIDERS`에 있으면 `run_profile="deterministic"`,
     `run_context.verdict_provenance="deterministic_rule"` 기록.
@@ -238,10 +238,10 @@ CLAUDE.md §7.1("결정론적 전처리는 최종 verdict를 정할 수 없다")
     run_context로 전달되는 경로(grep으로 확인)와 동일하게 전달.
   - `rendering.py`: `analysis.run_context.run_profile == "deterministic"`일 때
     Mode A/B/C 렌더 헤더 직후 배너 div 삽입(위 문구, ko/en은 `language` 인자로 분기).
-- [ ] **3-5.** 신규 테스트 PASS + 전체 suite GREEN.
-- [ ] **3-6.** `docs/codex/RUNBOOK.md`의 codex_native 안내(69, 111, 225-235행 등
+- [x] **3-5.** 신규 테스트 PASS + 전체 suite GREEN.
+- [x] **3-6.** `docs/codex/RUNBOOK.md`의 codex_native 안내(69, 111, 225-235행 등
   `run_profile=production` 서술)를 `deterministic` + opt-in 플래그 설명으로 갱신.
-- [ ] **3-7. Commit:** `feat(gate): classify codex_native as deterministic profile with explicit delivery opt-in`
+- [x] **3-7. Commit:** `feat(gate): classify codex_native as deterministic profile with explicit delivery opt-in`
 
 ### Task 4: security_audit — `.env.*` 스테이징 전면 차단
 

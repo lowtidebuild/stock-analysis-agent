@@ -51,6 +51,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Allow fixture/smoke runs to pass delivery for deterministic tests.",
     )
     parser.add_argument(
+        "--allow-deterministic-delivery",
+        action="store_true",
+        help="Allow deterministic template runs to pass delivery with a visible disclosure flag.",
+    )
+    parser.add_argument(
         "--web-provider",
         choices=["tavily", "brave", "none"],
         default=None,

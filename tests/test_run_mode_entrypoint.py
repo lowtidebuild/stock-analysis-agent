@@ -173,6 +173,7 @@ def test_run_mode_dispatches_mode_a_codex_native(monkeypatch, capsys):
             "--reuse-collected",
             "--analyst-backend",
             "codex_native",
+            "--allow-deterministic-delivery",
         ]
     )
 
@@ -180,21 +181,26 @@ def test_run_mode_dispatches_mode_a_codex_native(monkeypatch, capsys):
     quality = json.loads((ticker_root / "quality-report.json").read_text(encoding="utf-8"))
     analysis = json.loads((ticker_root / "analysis-result.json").read_text(encoding="utf-8"))
     report_path = Path(payload["report_path"])
+    html = report_path.read_text(encoding="utf-8")
 
     assert rc == 0
     assert payload["schema_version"] == "run-mode-entry-result-v1"
     assert payload["mode"] == "A"
     assert payload["ticker"] == "AAPL"
     assert payload["backend_provider"] == "codex_native"
-    assert payload["run_profile"] == "production"
+    assert payload["run_profile"] == "deterministic"
     assert payload["delivery_gate"] == "PASS"
     assert report_path.exists()
     assert report_path.name.startswith("AAPL_A_en_")
     assert (ticker_root / "mode-a-briefing.html").exists()
     assert quality["delivery_gate"]["ready_for_delivery"] is True
-    assert quality["items"]["fixture_delivery_guard"]["status"] == "PASS"
+    assert quality["items"]["fixture_delivery_guard"]["status"] == "PASS_WITH_FLAGS"
+    assert "fixture_delivery_guard" in quality["delivery_gate"]["non_blocking_items"]
     assert analysis["run_context"]["backend"]["provider"] == "codex_native"
     assert analysis["run_context"]["backend"]["usage"]["api_calls"] == 0
+    assert analysis["run_context"]["run_profile"] == "deterministic"
+    assert analysis["run_context"]["verdict_provenance"] == "deterministic_rule"
+    assert "deterministic template without LLM analysis" in html
     assert validate_artifact_file(ticker_root / "quality-report.json", "quality-report", base_dir=REPO_ROOT)["valid"]
 
 
@@ -236,6 +242,7 @@ def test_run_mode_dispatches_mode_a_kr_auto_codex_native(monkeypatch, capsys):
             "--reuse-collected",
             "--analyst-backend",
             "codex_native",
+            "--allow-deterministic-delivery",
         ]
     )
 
@@ -250,8 +257,11 @@ def test_run_mode_dispatches_mode_a_kr_auto_codex_native(monkeypatch, capsys):
     assert payload["mode"] == "A"
     assert payload["ticker"] == "005930"
     assert payload["backend_provider"] == "codex_native"
+    assert payload["run_profile"] == "deterministic"
     assert payload["delivery_gate"] == "PASS"
-    assert Path(payload["report_path"]).name.startswith("005930_A_ko_")
+    report_path = Path(payload["report_path"])
+    html = report_path.read_text(encoding="utf-8")
+    assert report_path.name.startswith("005930_A_ko_")
     assert request["market"] == "KR"
     assert source_summary["market"] == "KR"
     assert validated["market"] == "KR"
@@ -259,6 +269,8 @@ def test_run_mode_dispatches_mode_a_kr_auto_codex_native(monkeypatch, capsys):
     assert validated["source_profile"] == "yfinance_fallback"
     assert analysis["currency"] == "KRW"
     assert analysis["run_context"]["backend"]["usage"]["api_calls"] == 0
+    assert analysis["run_context"]["run_profile"] == "deterministic"
+    assert "LLM 분석 없이 검증 지표 기반 결정론적 템플릿" in html
 
 
 def test_run_analysis_native_delegates_mode_a_to_unified_entrypoint(monkeypatch, capsys):
@@ -283,6 +295,7 @@ def test_run_analysis_native_delegates_mode_a_to_unified_entrypoint(monkeypatch,
             "--reuse-collected",
             "--analyst-backend",
             "codex_native",
+            "--allow-deterministic-delivery",
         ]
     )
 
@@ -297,7 +310,8 @@ def test_run_analysis_native_delegates_mode_a_to_unified_entrypoint(monkeypatch,
     assert payload["mode"] == "A"
     assert payload["backend_provider"] == "codex_native"
     assert Path(payload["report_path"]).exists()
-    assert quality["items"]["fixture_delivery_guard"]["status"] == "PASS"
+    assert payload["run_profile"] == "deterministic"
+    assert quality["items"]["fixture_delivery_guard"]["status"] == "PASS_WITH_FLAGS"
     assert analysis["run_context"]["backend"]["provider"] == "codex_native"
 
 
@@ -322,6 +336,7 @@ def test_run_mode_dispatches_mode_c_codex_native(monkeypatch, capsys):
             "--reuse-collected",
             "--analyst-backend",
             "codex_native",
+            "--allow-deterministic-delivery",
         ]
     )
 
@@ -334,13 +349,18 @@ def test_run_mode_dispatches_mode_c_codex_native(monkeypatch, capsys):
     assert payload["mode"] == "C"
     assert payload["ticker"] == "AAPL"
     assert payload["backend_provider"] == "codex_native"
-    assert payload["run_profile"] == "production"
+    assert payload["run_profile"] == "deterministic"
     assert payload["delivery_gate"] == "PASS"
-    assert Path(payload["report_path"]).exists()
+    report_path = Path(payload["report_path"])
+    html = report_path.read_text(encoding="utf-8")
+    assert report_path.exists()
     assert quality["delivery_gate"]["ready_for_delivery"] is True
-    assert quality["items"]["fixture_delivery_guard"]["status"] == "PASS"
+    assert quality["items"]["fixture_delivery_guard"]["status"] == "PASS_WITH_FLAGS"
+    assert "fixture_delivery_guard" in quality["delivery_gate"]["non_blocking_items"]
     assert analysis["run_context"]["backend"]["provider"] == "codex_native"
     assert analysis["run_context"]["backend"]["usage"]["api_calls"] == 0
+    assert analysis["run_context"]["run_profile"] == "deterministic"
+    assert "LLM 분석 없이 검증 지표 기반 결정론적 템플릿" in html
 
 
 def test_run_mode_blocks_mode_a_fixture_without_explicit_allow(monkeypatch, capsys):
@@ -428,6 +448,7 @@ def test_run_mode_dispatches_mode_b_codex_native(monkeypatch, capsys):
             "--reuse-collected",
             "--analyst-backend",
             "codex_native",
+            "--allow-deterministic-delivery",
         ]
     )
 
@@ -443,21 +464,25 @@ def test_run_mode_dispatches_mode_b_codex_native(monkeypatch, capsys):
     assert payload["ticker"] == "GOOGL"
     assert payload["tickers"] == ["GOOGL", "MSFT", "AAPL"]
     assert payload["backend_provider"] == "codex_native"
-    assert payload["run_profile"] == "production"
+    assert payload["run_profile"] == "deterministic"
     assert payload["delivery_gate"] == "PASS"
     assert payload["best_pick"] in {"GOOGL", "MSFT", "AAPL"}
-    assert Path(payload["report_path"]).exists()
-    assert Path(payload["comparison_report_path"]).exists()
+    report_html = Path(payload["report_path"]).read_text(encoding="utf-8")
+    comparison_html = Path(payload["comparison_report_path"]).read_text(encoding="utf-8")
+    assert "LLM 분석 없이 검증 지표 기반 결정론적 템플릿" in comparison_html
+    assert "LLM 분석 없이 검증 지표 기반 결정론적 템플릿" in report_html
     assert Path(payload["quality_report_path"]) == comparison_dir / "comparison-quality-report.json"
     assert comparison_quality["delivery_gate"]["ready_for_delivery"] is True
     for ticker in ["GOOGL", "MSFT", "AAPL"]:
         ticker_root = run_root / ticker
         quality = json.loads((ticker_root / "quality-report.json").read_text(encoding="utf-8"))
         analysis = json.loads((ticker_root / "analysis-result.json").read_text(encoding="utf-8"))
-        assert quality["items"]["fixture_delivery_guard"]["status"] == "PASS"
+        assert quality["items"]["fixture_delivery_guard"]["status"] == "PASS_WITH_FLAGS"
         assert quality["delivery_gate"]["ready_for_delivery"] is True
+        assert "fixture_delivery_guard" in quality["delivery_gate"]["non_blocking_items"]
         assert analysis["run_context"]["backend"]["provider"] == "codex_native"
         assert analysis["run_context"]["backend"]["usage"]["api_calls"] == 0
+        assert analysis["run_context"]["run_profile"] == "deterministic"
         assert validate_artifact_file(ticker_root / "quality-report.json", "quality-report", base_dir=REPO_ROOT)[
             "valid"
         ]
@@ -486,6 +511,7 @@ def test_run_mode_dispatches_mode_b_mixed_market_codex_native(monkeypatch, capsy
             "--reuse-collected",
             "--analyst-backend",
             "codex_native",
+            "--allow-deterministic-delivery",
         ]
     )
 
@@ -499,7 +525,7 @@ def test_run_mode_dispatches_mode_b_mixed_market_codex_native(monkeypatch, capsy
     assert payload["ticker"] == "AAPL"
     assert payload["tickers"] == ["AAPL", "005930", "000660"]
     assert payload["backend_provider"] == "codex_native"
-    assert payload["run_profile"] == "production"
+    assert payload["run_profile"] == "deterministic"
     assert payload["delivery_gate"] == "PASS"
     assert metadata["market"] == "mixed"
     assert comparison["market"] == "mixed"
@@ -519,6 +545,7 @@ def test_run_mode_dispatches_mode_b_mixed_market_codex_native(monkeypatch, capsy
         assert analysis["currency"] == expected_currencies[ticker]
         assert analysis["run_context"]["backend"]["provider"] == "codex_native"
         assert analysis["run_context"]["backend"]["usage"]["api_calls"] == 0
+        assert analysis["run_context"]["run_profile"] == "deterministic"
         assert row_by_ticker[ticker]["currency"] == expected_currencies[ticker]
 
     stage_markets = {
@@ -553,6 +580,7 @@ def test_run_analysis_native_delegates_mode_b_to_unified_entrypoint(monkeypatch,
             "--reuse-collected",
             "--analyst-backend",
             "codex_native",
+            "--allow-deterministic-delivery",
         ]
     )
 
@@ -568,6 +596,7 @@ def test_run_analysis_native_delegates_mode_b_to_unified_entrypoint(monkeypatch,
     assert payload["mode"] == "B"
     assert payload["tickers"] == ["GOOGL", "MSFT", "AAPL"]
     assert payload["backend_provider"] == "codex_native"
+    assert payload["run_profile"] == "deterministic"
     assert payload["delivery_gate"] == "PASS"
     assert Path(payload["comparison_report_path"]).exists()
     assert comparison_quality["delivery_gate"]["ready_for_delivery"] is True

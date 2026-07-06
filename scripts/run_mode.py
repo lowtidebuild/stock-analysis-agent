@@ -118,6 +118,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Allow fixture/smoke runs to pass delivery for deterministic tests.",
     )
     parser.add_argument(
+        "--allow-deterministic-delivery",
+        action="store_true",
+        help="Allow deterministic template runs to pass delivery with a visible disclosure flag.",
+    )
+    parser.add_argument(
         "--web-provider",
         choices=["tavily", "brave", "none"],
         default=None,
@@ -271,6 +276,7 @@ def run_mode_a(args: argparse.Namespace) -> dict[str, Any]:
         )
     run_profile = annotate_analysis_run_profile(
         analyst.analysis_result_path,
+        allow_deterministic_delivery=args.allow_deterministic_delivery,
         allow_fixture_delivery=args.allow_fixture_delivery,
         requested_run_profile=args.run_profile,
     )
@@ -487,6 +493,7 @@ def run_mode_b(args: argparse.Namespace, tickers: list[str]) -> dict[str, Any]:
 
         run_profile = annotate_analysis_run_profile(
             analyst.analysis_result_path,
+            allow_deterministic_delivery=args.allow_deterministic_delivery,
             allow_fixture_delivery=args.allow_fixture_delivery,
             requested_run_profile=args.run_profile,
         )

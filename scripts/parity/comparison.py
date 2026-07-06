@@ -13,6 +13,7 @@ from scripts.parity.data_sources import load_json, write_json
 from scripts.parity.rendering import (
     as_number,
     currency_symbol,
+    deterministic_disclosure_banner,
     esc,
     fmt,
     grade_badge,
@@ -153,16 +154,24 @@ def build_comparison_input(
     run_id: str,
     tickers: list[str],
 ) -> dict[str, Any]:
+    run_context = {
+        "run_id": run_id,
+        "artifact_root": display_path(REPO_ROOT / "output" / "runs" / run_id / "comparison"),
+        "tickers": tickers,
+    }
+    run_profiles = {
+        str(((item.get("analysis") or {}).get("run_context") or {}).get("run_profile") or "").strip().lower()
+        for item in loaded
+        if isinstance(item.get("analysis"), dict)
+    }
+    if "deterministic" in run_profiles:
+        run_context["run_profile"] = "deterministic"
     return {
         "schema_version": "abc-parity-mode-b-comparison-input-v1",
         "mode": "B",
         "language": language,
         "market": market,
-        "run_context": {
-            "run_id": run_id,
-            "artifact_root": display_path(REPO_ROOT / "output" / "runs" / run_id / "comparison"),
-            "tickers": tickers,
-        },
+        "run_context": run_context,
         "metric_columns": COMPARISON_METRICS,
         "ticker_artifacts": [
             {
@@ -213,6 +222,7 @@ def build_comparison_analysis(comparison_input: dict[str, Any]) -> dict[str, Any
         "mode": "B",
         "language": comparison_input["language"],
         "market": comparison_input["market"],
+        "run_context": comparison_input.get("run_context") or {},
         "compared_tickers": ticker_list,
         "comparison_thesis": thesis,
         "metric_columns": metric_columns,
@@ -671,6 +681,7 @@ def build_mode_b_comparison_html(analysis: dict[str, Any]) -> str:
       <div class="hero-stat"><div class="label">Compared Tickers</div><div class="value">{len(tickers)}</div><p>2-5 ticker contract {source_tag("[Calc]")}</p></div>
     </div>
   </header>
+  {deterministic_disclosure_banner(analysis, str(analysis.get("language") or "en"))}
   <section id="comparison-thesis">
     <h2>Ticker Set and Comparison Thesis</h2>
     <p>{esc(analysis.get("comparison_thesis"))} {source_tag("[Calc]")}</p>

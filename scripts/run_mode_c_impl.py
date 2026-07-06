@@ -94,6 +94,7 @@ def run_mode_c(args: argparse.Namespace) -> dict[str, Any]:
             "reuse_collected": args.reuse_collected,
             "peer_tickers": peer_tickers,
             "run_profile": args.run_profile,
+            "allow_deterministic_delivery": args.allow_deterministic_delivery,
             "allow_fixture_delivery": args.allow_fixture_delivery,
             "analyst_backend": args.analyst_backend,
             "request_payload": request_payload,
@@ -205,6 +206,7 @@ def run_mode_c(args: argparse.Namespace) -> dict[str, Any]:
         )
     run_profile = annotate_analysis_run_profile(
         analyst.analysis_result_path,
+        allow_deterministic_delivery=args.allow_deterministic_delivery,
         allow_fixture_delivery=args.allow_fixture_delivery,
         requested_run_profile=args.run_profile,
     )

@@ -19,7 +19,7 @@ from tools.artifact_validation import (
     validate_verdict_alignment,
     _classify_valuation_bridge_severity,
 )
-from tools.backend_providers import FIXTURE_BACKEND_PROVIDERS
+from tools.backend_providers import DETERMINISTIC_BACKEND_PROVIDERS, FIXTURE_BACKEND_PROVIDERS
 
 QUALITY_ITEM_STATUSES = {"PASS", "PASS_WITH_FLAGS", "CRITICAL_FLAG", "FAIL", "SKIP"}
 CRITIC_OVERALL_STATUSES = {"PASS", "PASS_WITH_FLAGS", "FAIL"}
@@ -1081,15 +1081,45 @@ def build_fixture_delivery_guard_item(analysis: dict[str, Any]) -> dict[str, Any
     backend = run_context.get("backend") if isinstance(run_context.get("backend"), dict) else {}
     provider = str(backend.get("provider") or "").strip().lower()
     fixture_backend = provider in FIXTURE_BACKEND_PROVIDERS or run_context.get("fixture_backend") is True
+    deterministic_backend = (
+        provider in DETERMINISTIC_BACKEND_PROVIDERS
+        or run_context.get("deterministic_backend") is True
+        or run_profile == "deterministic"
+    )
     non_production_profile = run_profile in {"smoke", "fixture"}
+    allow_deterministic_delivery = run_context.get("allow_deterministic_delivery") is True
     allow_fixture_delivery = run_context.get("allow_fixture_delivery") is True
 
     payload = {
         "run_profile": run_profile,
         "backend_provider": provider or None,
+        "deterministic_backend": deterministic_backend,
+        "allow_deterministic_delivery": allow_deterministic_delivery,
         "fixture_backend": fixture_backend,
         "allow_fixture_delivery": allow_fixture_delivery,
     }
+    if deterministic_backend:
+        if allow_deterministic_delivery:
+            return {
+                "status": "PASS_WITH_FLAGS",
+                **payload,
+                "warnings": [
+                    "Deterministic template output was explicitly allowed; verdict is rule-derived without LLM analysis."
+                ],
+                "severity": "MINOR",
+                "delivery_impact": "non_blocking_flag",
+                "blocker_action": "none",
+            }
+        return {
+            "status": "FAIL",
+            **payload,
+            "errors": [
+                "Deterministic template output is not production-deliverable without --allow-deterministic-delivery."
+            ],
+            "severity": "BLOCKER",
+            "delivery_impact": "delivery_blocking_flag",
+            "blocker_action": "terminal",
+        }
     if not fixture_backend and not non_production_profile:
         return {
             "status": "PASS",

@@ -12,7 +12,11 @@ harness.
   session.
 - For Codex-native Mode A/B/C analyst runs with no external analyst API call, pass
   `--analyst-backend codex_native`. The run still uses whatever live market,
-  filing, macro, or web sources you enable for collection.
+  filing, macro, or web sources you enable for collection, but the analyst
+  narrative and verdict are deterministic template outputs.
+- `codex_native` runs record `run_context.run_profile=deterministic` and are
+  blocked from delivery unless `--allow-deterministic-delivery` is explicitly
+  passed. Opted-in reports include a visible disclosure banner.
 - All-mode native delivery planning lives in
   `docs/codex/CODEX_NATIVE_ALL_MODES_PLAN.md`.
 - For deterministic offline analyst runs, set `ANALYST_BACKEND=fixture`.
@@ -57,7 +61,8 @@ python3 scripts/run_mode.py \
   --lang en \
   --market US \
   --run-id codex_aapl_a \
-  --analyst-backend codex_native
+  --analyst-backend codex_native \
+  --allow-deterministic-delivery
 ```
 
 The command publishes:
@@ -67,9 +72,12 @@ output/reports/{TICKER}_A_{lang}_{analysis_date}.html
 ```
 
 It records `run_context.backend.provider=codex_native`,
-`run_context.backend.usage.api_calls=0`, and `run_context.run_profile=production`.
-Fixture/smoke Mode A output is blocked unless `--allow-fixture-delivery` is
-explicitly passed.
+`run_context.backend.usage.api_calls=0`,
+`run_context.run_profile=deterministic`, and
+`run_context.verdict_provenance=deterministic_rule`. Deterministic Mode A
+output is blocked unless `--allow-deterministic-delivery` is explicitly passed.
+Fixture/smoke Mode A output is separately blocked unless
+`--allow-fixture-delivery` is explicitly passed.
 
 For KR tickers, `--market auto` infers `KR` for six-digit numeric tickers and
 keeps KRW-denominated metrics in the rendered report and JSON artifacts:
@@ -81,7 +89,8 @@ python3 scripts/run_mode.py \
   --lang ko \
   --market auto \
   --run-id codex_005930_a \
-  --analyst-backend codex_native
+  --analyst-backend codex_native \
+  --allow-deterministic-delivery
 ```
 
 ## Mode B Codex-Native Comparison
@@ -96,7 +105,8 @@ python3 scripts/run_mode.py \
   --lang ko \
   --market US \
   --run-id codex_googl_b \
-  --analyst-backend codex_native
+  --analyst-backend codex_native \
+  --allow-deterministic-delivery
 ```
 
 The command runs a native analyst pass for each ticker, builds the comparison
@@ -109,8 +119,11 @@ output/reports/{PRIMARY}_B_{lang}_{analysis_date}.html
 The final JSON includes `comparison_report_path`, `best_pick`, `tickers`, and
 the comparison `quality_report_path`. Each ticker analysis records
 `run_context.backend.provider=codex_native` and
-`run_context.backend.usage.api_calls=0`. Fixture/smoke Mode B output is blocked
-unless `--allow-fixture-delivery` is explicitly passed.
+`run_context.backend.usage.api_calls=0`, with
+`run_context.run_profile=deterministic`. Deterministic Mode B output is blocked
+unless `--allow-deterministic-delivery` is explicitly passed. Fixture/smoke
+Mode B output is separately blocked unless `--allow-fixture-delivery` is
+explicitly passed.
 
 Mixed-market comparison is supported by passing `--market mixed`; the runner
 infers each ticker's local market before validation and analysis:
@@ -123,7 +136,8 @@ python3 scripts/run_mode.py \
   --lang ko \
   --market mixed \
   --run-id codex_mixed_b \
-  --analyst-backend codex_native
+  --analyst-backend codex_native \
+  --allow-deterministic-delivery
 ```
 
 ## Deprecated Legacy Mode A Smoke
@@ -152,13 +166,15 @@ python3 scripts/run_analysis.py \
   --market US \
   --run-id codex_aapl_a \
   --native \
-  --analyst-backend codex_native
+  --analyst-backend codex_native \
+  --allow-deterministic-delivery
 ```
 
 `--native` also forwards shared native options such as `--skip-network`,
-`--reuse-collected`, `--allow-fixture-delivery`, `--tickers`, and
-`--peer-tickers`. This native delegation path does not emit the legacy
-deprecation warning, so the JSON payload remains clean for automation.
+`--reuse-collected`, `--allow-fixture-delivery`,
+`--allow-deterministic-delivery`, `--tickers`, and `--peer-tickers`. This native
+delegation path does not emit the legacy deprecation warning, so the JSON
+payload remains clean for automation.
 
 ## Mode C Live Dashboard
 
@@ -172,6 +188,7 @@ python3 scripts/run_mode.py \
   --market US \
   --run-id codex_vrt_c \
   --analyst-backend codex_native \
+  --allow-deterministic-delivery \
   --web-provider tavily
 ```
 
@@ -187,6 +204,7 @@ python3 scripts/run_mode_c.py \
   --market US \
   --run-id codex_vrt_c \
   --analyst-backend codex_native \
+  --allow-deterministic-delivery \
   --web-provider tavily
 ```
 
@@ -219,12 +237,16 @@ python3 scripts/run_mode.py \
   --run-id codex_vrt_c \
   --skip-network \
   --reuse-collected \
-  --analyst-backend codex_native
+  --analyst-backend codex_native \
+  --allow-deterministic-delivery
 ```
 
 This records `run_context.backend.provider=codex_native`,
-`run_context.backend.usage.api_calls=0`, and keeps the run profile as
-`production` rather than `smoke`.
+`run_context.backend.usage.api_calls=0`,
+`run_context.run_profile=deterministic`, and
+`run_context.verdict_provenance=deterministic_rule`. Without
+`--allow-deterministic-delivery`, the run renders local artifacts but the
+delivery gate blocks promotion.
 
 ## Mode C Offline Fixture Smoke
 
@@ -326,6 +348,8 @@ Delivery is acceptable only when:
 - `items.numeric_sanity.status` is not `FAIL`; MAJOR/BLOCKER validated-data
   sanity flags are terminal input blockers, not analyst-patch issues
 - For production Mode A/B/C, `items.fixture_delivery_guard.status` is not `FAIL`
+  and deterministic reports are either blocked or explicitly opted in with a
+  visible disclosure banner.
 
 If the gate is not ready, treat the report as failed even if HTML was rendered.
 
@@ -333,8 +357,10 @@ If the gate is not ready, treat the report as failed even if HTML was rendered.
 
 - `python: command not found`: use `python3`.
 - Missing analyst API key: use `--analyst-backend codex_native` for local
-  production-style Mode A/B/C analysis, use `ANALYST_BACKEND=fixture` for smoke
-  tests, or configure `OPENAI_API_KEY` outside the agent session.
+  deterministic Mode A/B/C analysis, add `--allow-deterministic-delivery` only
+  when that rule-derived verdict should be deliverable, use
+  `ANALYST_BACKEND=fixture` for smoke tests, or configure `OPENAI_API_KEY`
+  outside the agent session.
 - `run_abc_parity.py` raises after a full unflagged run: this is intentional.
   Use stop flags such as `--collect-only` for parity steps, or use
   `scripts/run_mode_c.py` for production Mode C.

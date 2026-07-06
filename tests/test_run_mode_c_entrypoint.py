@@ -185,7 +185,7 @@ def test_mode_c_entrypoint_ko_smoke_publishes_localized_dashboard(monkeypatch, c
     assert validate_artifact_file(quality_path, "quality-report", base_dir=REPO_ROOT)["valid"]
 
 
-def test_mode_c_entrypoint_codex_native_runs_without_fixture_allowance(monkeypatch, capsys):
+def test_mode_c_entrypoint_codex_native_blocks_without_deterministic_opt_in(monkeypatch, capsys):
     run_id = "pytest_run_mode_c_entrypoint_codex_native_AAPL_C_ko"
     ticker_root = prepare_collected_fixture_run(run_id, language="ko")
     monkeypatch.delenv("ANALYST_BACKEND", raising=False)
@@ -210,24 +210,26 @@ def test_mode_c_entrypoint_codex_native_runs_without_fixture_allowance(monkeypat
     )
 
     payload = json.loads(capsys.readouterr().out)
-    report_path = Path(payload["report_path"])
     quality_path = ticker_root / "quality-report.json"
     analysis_path = ticker_root / "analysis-result.json"
+    render_path = ticker_root / "mode-c-dashboard.html"
     quality = json.loads(quality_path.read_text(encoding="utf-8"))
     analysis = json.loads(analysis_path.read_text(encoding="utf-8"))
-    html = report_path.read_text(encoding="utf-8")
+    html = render_path.read_text(encoding="utf-8")
 
-    assert rc == 0
-    assert payload["run_profile"] == "production"
-    assert payload["delivery_gate"] == "PASS"
-    assert report_path.exists()
-    assert quality["delivery_gate"]["ready_for_delivery"] is True
-    assert quality["items"]["fixture_delivery_guard"]["status"] == "PASS"
+    assert rc == 1
+    assert "quality gate" in payload["error"].lower()
+    assert quality["delivery_gate"]["ready_for_delivery"] is False
+    assert quality["items"]["fixture_delivery_guard"]["status"] == "FAIL"
     assert quality["items"]["fixture_delivery_guard"]["backend_provider"] == "codex_native"
-    assert "fixture_delivery_guard" not in quality["delivery_gate"]["blocking_items"]
+    assert quality["items"]["fixture_delivery_guard"]["blocker_action"] == "terminal"
+    assert "fixture_delivery_guard" in quality["delivery_gate"]["blocking_items"]
     assert analysis["run_context"]["backend"]["provider"] == "codex_native"
     assert analysis["run_context"]["backend"]["usage"]["api_calls"] == 0
     assert analysis["run_context"]["fixture_backend"] is False
+    assert analysis["run_context"]["run_profile"] == "deterministic"
+    assert analysis["run_context"]["verdict_provenance"] == "deterministic_rule"
+    assert "LLM 분석 없이 검증 지표 기반 결정론적 템플릿" in html
     assert "이익 품질 및 증거 게이트" in html
     assert "포트폴리오 전략" in html
     assert "출처 태그 클레임 부록" in html

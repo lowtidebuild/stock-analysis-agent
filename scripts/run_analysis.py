@@ -137,6 +137,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Allow fixture/smoke native runs to pass delivery for deterministic tests.",
     )
     parser.add_argument(
+        "--allow-deterministic-delivery",
+        action="store_true",
+        help="Allow deterministic template native runs to pass delivery with a visible disclosure flag.",
+    )
+    parser.add_argument(
         "--web-provider",
         choices=["tavily", "brave", "none"],
         default=None,
@@ -183,6 +188,8 @@ def run_native_mode(args: argparse.Namespace) -> int:
         forwarded.extend(["--run-profile", args.run_profile])
     if args.allow_fixture_delivery:
         forwarded.append("--allow-fixture-delivery")
+    if args.allow_deterministic_delivery:
+        forwarded.append("--allow-deterministic-delivery")
     if args.web_provider:
         forwarded.extend(["--web-provider", args.web_provider])
     if args.analyst_backend:
