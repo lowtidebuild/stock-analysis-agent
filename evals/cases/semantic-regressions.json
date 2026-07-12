@@ -12,6 +12,16 @@
       ]
     },
     {
+      "id": "analysis_result_positive_bear_is_rejected",
+      "kind": "artifact",
+      "path": "evals/fixtures/analysis-result-bear-positive-invalid.json",
+      "artifact_type": "analysis-result",
+      "expect_valid": false,
+      "required_error_substrings": [
+        "$.scenarios.bear"
+      ]
+    },
+    {
       "id": "analysis_result_verdict_policy_mismatch_is_rejected",
       "kind": "artifact",
       "path": "evals/fixtures/analysis-result-verdict-invalid.json",

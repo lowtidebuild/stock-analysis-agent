@@ -779,6 +779,10 @@ def build_scenario_consistency_item(analysis: dict[str, Any]) -> dict[str, Any]:
     }
     if errors:
         item["errors"] = errors
+        if all("shallow bear" in error for error in errors):
+            item["severity"] = "MAJOR"
+            item["delivery_impact"] = "non_blocking_flag"
+            item["blocker_action"] = "none"
     return item
 
 

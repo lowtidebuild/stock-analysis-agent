@@ -836,6 +836,13 @@ Interpretation:
 
 **If R/R Score < 0** (base case return is negative): display as "N/A — Structural Bear". Verdict = Underweight.
 
+**Bear scenario invariants** (validator-enforced):
+- `bear.target` MUST be below `price_at_analysis`, and `bear.return_pct` MUST be negative.
+  A non-negative bear case makes the R/R denominator meaningless → write rr_score as null
+  and verdict via qualitative judgment instead.
+- If your honest bear case is shallower than −5%, say so explicitly in the bear narrative —
+  the pipeline will flag the R/R score as potentially inflated ([Quality flag]).
+
 ---
 
 ## Data Quality Handling

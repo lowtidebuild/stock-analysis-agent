@@ -803,6 +803,10 @@ def validate_scenarios(data: dict[str, Any], path: str = "$.scenarios") -> list[
     return errors
 
 
+BEAR_RETURN_BLOCKER_MAX = 0.0  # bear return must be strictly negative (percent units)
+BEAR_RETURN_SHALLOW_MAX = -5.0  # shallower than -5% -> warning-tier error
+
+
 def validate_analysis_semantics(data: dict[str, Any], path: str = "$") -> list[str]:
     errors: list[str] = []
     scenarios = data.get("scenarios")
@@ -838,13 +842,29 @@ def validate_analysis_semantics(data: dict[str, Any], path: str = "$") -> list[s
         ):
             errors.append(f"{path}.scenarios: expected bull.target >= base.target >= bear.target")
 
+    bear_target = targets.get("bear")
+    bear_return = returns.get("bear")
+    if price is not None and bear_target is not None and bear_return is not None:
+        if bear_return >= BEAR_RETURN_BLOCKER_MAX or bear_target >= price:
+            errors.append(
+                f"{path}.scenarios.bear: bear return must be negative (got {bear_return}); "
+                "a non-negative bear case makes the R/R denominator degenerate"
+            )
+        elif BEAR_RETURN_SHALLOW_MAX < bear_return < BEAR_RETURN_BLOCKER_MAX:
+            errors.append(
+                f"{path}.scenarios.bear: shallow bear case ({bear_return}%) — "
+                "verify the downside is a real scenario, R/R may be inflated"
+            )
+
     bull_return = returns.get("bull")
     base_return = returns.get("base")
-    bear_return = returns.get("bear")
     bull_prob = probabilities.get("bull")
     base_prob = probabilities.get("base")
     bear_prob = probabilities.get("bear")
     rr_score = extract_numeric_value(data.get("rr_score"))
+
+    if bear_return == 0:
+        errors.append(f"{path}.rr_score: cannot verify rr_score because bear return is zero")
 
     if (
         bull_return is not None
