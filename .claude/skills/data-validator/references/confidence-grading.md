@@ -17,6 +17,14 @@ This file provides the decision tree for assigning A/B/C/D confidence grades to 
 | **C — Single-Source** | 1 source only, arithmetic consistent | Use with "단일 소스 기준" caveat |
 | **D — Unverified** | Cannot confirm OR arithmetic inconsistent | **Exclude from analysis. Display "—"** |
 
+## Derived-Value Grade Propagation ([Calc])
+
+A `[Calc]` metric's grade is **min(grade of every input)**. No exceptions.
+- Grade A price ÷ Grade A EPS → Grade A [Calc]
+- Grade A FCF ÷ Grade C market cap → Grade C [Calc] (NOT B — mixing does not average)
+- Any Grade D input → the derived metric is Grade D (value: null, "—")
+Example 1 below is Grade A **only because both inputs are filing-verified**.
+
 ---
 
 ## Decision Tree
@@ -40,7 +48,8 @@ For each data point:
    (Independent = different companies/databases, not the same data licensed to both)
 
    Examples of INDEPENDENT sources: SEC filing + Yahoo Finance, DART + 네이버금융
-   Examples of NOT independent: Yahoo Finance + Google Finance (often same vendor data)
+   Examples of NOT independent: Yahoo Finance + Google Finance (often same vendor data),
+   yfinance + Yahoo Finance web pages (same data, two delivery paths)
 
    YES → What is the discrepancy?
      ≤5% → Grade B

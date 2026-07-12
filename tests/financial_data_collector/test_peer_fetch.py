@@ -185,7 +185,7 @@ class PeerFetchSchemaTests(PeerFetchTestBase):
         self.assertEqual(record["company_name"], "Microsoft Corporation")
         self.assertEqual(record["currency"], "USD")
         self.assertEqual(record["tag"], "[Portal]")
-        self.assertEqual(record["confidence_grade"], "B")
+        self.assertEqual(record["confidence_grade"], "C")
         self.assertIn("yfinance", record["data_source"].lower())
 
         # Canonical metric fields
@@ -239,7 +239,7 @@ class PeerFetchCacheHitTests(PeerFetchTestBase):
             "collection_timestamp": "2026-05-06T00:00:00Z",
             "data_source": "yfinance (peer mini-fetch)",
             "tag": "[Portal]",
-            "confidence_grade": "B",
+            "confidence_grade": "C",
             "metrics": {
                 "current_price": 999.99,  # distinctive cached value
                 "market_cap": 1,
@@ -290,7 +290,7 @@ class PeerFetchCacheMissTests(PeerFetchTestBase):
             "collection_timestamp": "2026-04-01T00:00:00Z",
             "data_source": "yfinance (peer mini-fetch)",
             "tag": "[Portal]",
-            "confidence_grade": "B",
+            "confidence_grade": "C",
             "metrics": {
                 "current_price": 100.0,
                 "market_cap": 1,
@@ -369,7 +369,7 @@ class PeerFetchMissingFieldsTests(PeerFetchTestBase):
         ):
             self.assertIsNone(metrics[key], f"{key} should be None for sparse info")
         # Still well-formed.
-        self.assertEqual(record["confidence_grade"], "B")
+        self.assertEqual(record["confidence_grade"], "C")
         self.assertEqual(record["tag"], "[Portal]")
         self.assertIn("_sanitization", record)
 

@@ -37,7 +37,7 @@ and rely on validated-data or the evidence pack instead.
    - Mode C → `references/analysis-framework-dashboard.md`
    - Mode D → `references/analysis-framework-memo.md` + `references/investment-memo-prompt.md`
    - Mode E → `references/analysis-framework-earnings.md`
-6. **Mode C and Mode D only** — Run-local `output/runs/{run_id}/peers/*.json` (Phase D peer mini-pipeline). One JSON per peer ticker, each with the canonical 8-metric `[Portal]` Grade B snapshot. Refuse any file lacking `_sanitization`. If the directory is empty (Step 2.7 skipped because `peer_tickers[]` was empty), the analyst still proceeds and emits a single `⚠️ 데이터 미수집` placeholder peer row instead of fabricating `[Est]` peers.
+6. **Mode C and Mode D only** — Run-local `output/runs/{run_id}/peers/*.json` (Phase D peer mini-pipeline). One JSON per peer ticker, each with the canonical 8-metric `[Portal]` Grade C snapshot. Refuse any file lacking `_sanitization`. If the directory is empty (Step 2.7 skipped because `peer_tickers[]` was empty), the analyst still proceeds and emits a single `⚠️ 데이터 미수집` placeholder peer row instead of fabricating `[Est]` peers.
 7. **Mode E only** — additional run-local artifacts:
    - `output/runs/{run_id}/earnings-window/{ticker}.json` (Step 0.5 output)
    - `output/runs/{run_id}/{ticker}/options-snapshot.json` (Preview only; OD-F2 graceful)
@@ -267,10 +267,10 @@ Follow `analysis-framework-dashboard.md` exactly:
     | Industrial | INDPRO (production) | ±2% | Order/revenue impact → stock |
     | Biotech/Pharma | DGS10 | ±50bp | Growth multiple sensitivity |
 8. Peer comparison table (3–5 peers)
-   - **Phase D — Peer Mini-Pipeline (Mode C/D only)**: Read every JSON file under `output/runs/{run_id}/peers/{PEER_TICKER}.json`. Each file is a `[Portal]` Grade B record produced by `peer-fetch.py` and contains the canonical 8 metrics: `current_price`, `market_cap`, `pe_forward`, `ev_ebitda`, `revenue_growth_yoy`, `operating_margin`, `fcf_yield`, `beta`.
+   - **Phase D — Peer Mini-Pipeline (Mode C/D only)**: Read every JSON file under `output/runs/{run_id}/peers/{PEER_TICKER}.json`. Each file is a `[Portal]` Grade C record produced by `peer-fetch.py` and contains the canonical 8 metrics: `current_price`, `market_cap`, `pe_forward`, `ev_ebitda`, `revenue_growth_yoy`, `operating_margin`, `fcf_yield`, `beta`.
    - Refuse any peer file lacking a `_sanitization` block (CLAUDE.md §12).
    - Build `sections.peer_comparison[]` with one row per peer + the subject ticker. Each row: `{ticker, name, price, market_cap_b (= market_cap / 1e9), pe_forward, ev_ebitda, rev_growth_yoy, op_margin, fcf_yield, beta, tag, grade, is_subject}`.
-   - Subject ticker: `tag` is whatever validated-data assigned (typically `[Filing]` Grade A or `[Calc]` Grade B). Peers fetched via the mini-pipeline: `tag="[Portal]"`, `grade="B"`. Peers with `status="error"` in their per-ticker JSON: `grade="D"` and emit a row with `note="데이터 미수집"` so the renderer can show the ⚠️ warning row.
+   - Subject ticker: `tag` is whatever validated-data assigned (typically `[Filing]` Grade A or `[Calc]` Grade B). Peers fetched via the mini-pipeline: `tag="[Portal]"`, `grade="C"`. Peers with `status="error"` in their per-ticker JSON: `grade="D"` and emit a row with `note="데이터 미수집"` so the renderer can show the ⚠️ warning row.
    - Per-cell missing data → `null`; the renderer displays `—`. Do NOT fabricate `[Est] peer reference` values when a peer JSON is present.
    - If `output/runs/{run_id}/peers/` is empty (Mode C/D requested but Step 2.7 was skipped, e.g. empty `peer_tickers[]`): build the row only for the subject and emit a single `⚠️ 데이터 미수집` placeholder peer row so users see the warning instead of fabricated peers.
 9. Analyst coverage (from FMP or web)
@@ -398,9 +398,9 @@ Write ALL content — narrative text and structured tables — to run-local `ana
       "bear": "2-3 sentence bear narrative..."
     }
   },
-  "peer_comparison": [{"ticker": "<TICKER>", "name": "<COMPANY_NAME>", "price": "<PRICE>", "market_cap_b": "<MARKET_CAP_BILLIONS>", "pe_forward": "<FORWARD_PE>", "ev_ebitda": "<EV_EBITDA>", "rev_growth_yoy": "<REVENUE_GROWTH_PCT>", "op_margin": "<OPERATING_MARGIN_PCT>", "fcf_yield": "<FCF_YIELD_PCT>", "beta": "<BETA>", "tag": "[Portal]", "grade": "B", "is_subject": false}],
+  "peer_comparison": [{"ticker": "<TICKER>", "name": "<COMPANY_NAME>", "price": "<PRICE>", "market_cap_b": "<MARKET_CAP_BILLIONS>", "pe_forward": "<FORWARD_PE>", "ev_ebitda": "<EV_EBITDA>", "rev_growth_yoy": "<REVENUE_GROWTH_PCT>", "op_margin": "<OPERATING_MARGIN_PCT>", "fcf_yield": "<FCF_YIELD_PCT>", "beta": "<BETA>", "tag": "[Portal]", "grade": "C", "is_subject": false}],
   "peer_comparison_narrative": "Relative valuation assessment text...",
-  "_peer_comparison_source_note": "Phase D mini-pipeline: read each output/runs/{run_id}/peers/{TICKER}.json (Grade B [Portal]). Subject row uses validated-data tag. Missing peers → row with grade=D, note='데이터 미수집'.",
+  "_peer_comparison_source_note": "Phase D mini-pipeline: read each output/runs/{run_id}/peers/{TICKER}.json (Grade C [Portal]). Subject row uses validated-data tag. Missing peers → row with grade=D, note='데이터 미수집'.",
   "management_governance": "Full Section 8 text (150-200 words)...",
   "quality_of_earnings": {
     "ebitda_bridge": [{"item": "Reported EBITDA", "amount": "<REPORTED_EBITDA>", "note": "[Filing]"}],

@@ -239,14 +239,14 @@ Using `confidence-grading.md` decision tree, assign final grade per metric:
 | A | Value as-is | 규제기관 공시 원본(SEC filing via API, DART via API/web) + 산술 일관성 |
 | B | Value as-is | 2+ 독립 소스 ≤5% 차이, 또는 단일 aggregator + 공시 교차확인 ≤5% |
 | C | Value with caveat | 단일 소스, 산술 일관성 있음 |
-| D | "—" | 검증 불가, 또는 >10% 불일치 미해결 |
+| D | "—" | 검증 불가, 또는 >15% 불일치 미해결 |
 
 Source tags (`[Filing]`, `[Company]`, `[Portal]`, `[KR-Portal]`, `[Calc]`, `[Est]`, `[Macro]`) indicate provenance only — see CLAUDE.md Section 11.
 
 **Korean stock rules**:
 - Financial statements (IS/BS/CF) from DART API → **Grade A**, tag `[Filing]`
-- Price / market cap from 네이버금융 → Grade B, tag `[KR-Portal]`
-- Analyst consensus from FnGuide/web → Grade B, tag `[KR-Portal]`
+- Price / market cap from 네이버금융 → Grade C (단일 소스), tag `[KR-Portal]`. DART 공시값과 ≤5% 교차확인된 경우에만 Grade B
+- Analyst consensus from FnGuide/web → Grade C (단일 소스), tag `[KR-Portal]`. DART 공시값과 ≤5% 교차확인된 경우에만 Grade B
 - 잠정실적 공시 in dart-api-raw.json disclosures → Grade B (preliminary, not yet filed)
 - If dart-api-raw.json missing (API failure fallback):
   - DART web + 네이버금융 agree within 5% → Grade B

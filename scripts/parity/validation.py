@@ -449,7 +449,7 @@ def metrics_from_dart(
         "operating_margin": metric(safe_pct(operating_income, revenue), grade="A", source="DART operating income / revenue", source_type="calculated", tag="[Calc]", unit="percent", as_of_date=as_of),
         "net_margin": metric(safe_pct(net_income, revenue), grade="A", source="DART net income / revenue", source_type="calculated", tag="[Calc]", unit="percent", as_of_date=as_of),
         "fcf_ttm": metric(billions(fcf), currency=currency, grade="A", source="DART operating cash flow - capex", source_type="calculated", tag="[Calc]", unit="billions", as_of_date=as_of),
-        "fcf_yield": metric(safe_pct(fcf, (market_cap_value or 0) * 1_000_000_000), grade="B", source="DART FCF / yfinance market cap", source_type="calculated", tag="[Calc]", unit="percent", as_of_date=as_of),
+        "fcf_yield": metric(safe_pct(fcf, (market_cap_value or 0) * 1_000_000_000), grade="C", source="DART FCF / yfinance market cap (grade = min of inputs: DART A, yfinance C)", source_type="calculated", tag="[Calc]", unit="percent", as_of_date=as_of),
         "net_debt": metric(billions(net_debt), currency=currency, grade="A", source="DART debt minus cash", source_type="calculated", tag="[Calc]", unit="billions", as_of_date=as_of),
     }
 
@@ -487,8 +487,8 @@ def metrics_from_financial_datasets(
     revenue_growth = growth_from_quarters(quarterly_records, "revenue")
 
     return {
-        "price_at_analysis": metric(price, currency=currency, grade="B", source=f"Financial Datasets prices for {ticker}", source_type="portal_global", tag="[Portal]", as_of_date=as_of),
-        "market_cap": metric(billions(market_cap), currency=currency, grade="B", source="Financial Datasets market cap", source_type="portal_global", tag="[Portal]", unit="billions", as_of_date=as_of),
+        "price_at_analysis": metric(price, currency=currency, grade="C", source=f"Financial Datasets prices for {ticker}", source_type="portal_global", tag="[Portal]", as_of_date=as_of),
+        "market_cap": metric(billions(market_cap), currency=currency, grade="C", source="Financial Datasets market cap", source_type="portal_global", tag="[Portal]", unit="billions", as_of_date=as_of),
         "pe_ratio": metric(pe, grade="B", source="Financial Datasets TTM financials", source_type="filing", tag="[Filing]", unit="x", as_of_date=as_of),
         "ev_ebitda": metric(ev_ebitda, grade="B", source="Financial Datasets TTM financials", source_type="filing", tag="[Filing]", unit="x", as_of_date=as_of),
         "pb_ratio": metric(pb, grade="B", source="Financial Datasets TTM financials", source_type="filing", tag="[Filing]", unit="x", as_of_date=as_of),

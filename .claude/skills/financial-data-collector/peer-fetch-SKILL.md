@@ -1,6 +1,6 @@
 # Peer Mini-Fetch — SKILL.md
 
-**Role**: Step 2.7 — After the research plan is written, fetch a lightweight 8-metric snapshot for each `peer_tickers[]` so that the Mode C Peer Comparison table renders with real `[Portal]` Grade B numbers instead of `[Est] peer reference` placeholders.
+**Role**: Step 2.7 — After the research plan is written, fetch a lightweight 8-metric snapshot for each `peer_tickers[]` so that the Mode C Peer Comparison table renders with real `[Portal]` Grade C numbers instead of `[Est] peer reference` placeholders.
 **Triggered by**: market-router Step 2.7 (Mode C and Mode D only — never Mode A or Mode B)
 **Reads**: `output/runs/{run_id}/{ticker}/research-plan.json` → `peer_tickers[]`
 **Writes**: `output/runs/{run_id}/peers/{TICKER}.json` (run-local) AND `output/data/peers-cache/{TICKER}.json` (24h shared cache)
@@ -54,7 +54,7 @@ The script prints a JSON summary to stdout and exits **0** if at least one peer 
   "collection_timestamp": "2026-05-07T00:00:00Z",
   "data_source": "yfinance (peer mini-fetch)",
   "tag": "[Portal]",
-  "confidence_grade": "B",
+  "confidence_grade": "C",
   "metrics": {
     "current_price": 425.30,
     "market_cap": 3158000000000,
@@ -113,7 +113,7 @@ Every peer payload passes through `tools.prompt_injection_filter.sanitize_record
 
 ## Downstream consumers
 
-- **Analyst Agent (`.claude/agents/analyst/AGENT.md`)** — reads every `output/runs/{run_id}/peers/*.json` and merges the metrics into `sections.peer_comparison[]` with `tag="[Portal]"` and `grade="B"`. Subject ticker keeps its own (richer) metrics.
+- **Analyst Agent (`.claude/agents/analyst/AGENT.md`)** — reads every `output/runs/{run_id}/peers/*.json` and merges the metrics into `sections.peer_comparison[]` with `tag="[Portal]"` and `grade="C"`. Subject ticker keeps its own (richer) metrics.
 - **Dashboard template** (`.claude/skills/dashboard-generator/references/html-template.md`) — peer rows show grade badges; missing metrics render as `—`; entirely absent peers render as a `⚠️ 데이터 미수집` row.
 
 ## Completion check

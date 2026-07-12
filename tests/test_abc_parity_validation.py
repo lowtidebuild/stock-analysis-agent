@@ -5,7 +5,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-from scripts.parity.validation import build_validation_handoff
+from scripts.parity.validation import (
+    build_validation_handoff,
+    metrics_from_dart,
+    metrics_from_financial_datasets,
+)
 from tools.artifact_validation import validate_artifact_file
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -312,3 +316,62 @@ def test_dart_raw_without_status_is_primary_for_kr_validation() -> None:
     assert validated["source_tier"] == "filing_primary"
     assert validated["validated_metrics"]["revenue_ttm"]["grade"] == "A"
     assert validate_artifact_file(validated_path, "validated-data", base_dir=REPO_ROOT)["valid"]
+
+
+def test_dart_fcf_yield_inherits_yfinance_market_cap_grade() -> None:
+    dart_metrics = metrics_from_dart(
+        {
+            "confidence_grade": "A",
+            "collection_timestamp": "2026-05-21T00:00:00Z",
+            "ttm_income_statement": {
+                "revenue": 333_000_000_000_000,
+                "operating_income": 43_000_000_000_000,
+                "net_income": 45_000_000_000_000,
+            },
+            "periods_detail": {
+                "Annual": {
+                    "year": 2025,
+                    "metrics": {
+                        "revenue": {"value": 333_000_000_000_000, "prior": 300_000_000_000_000},
+                        "operating_cash_flow": {"value": 85_000_000_000_000},
+                        "capex": {"value": 47_000_000_000_000},
+                    },
+                }
+            },
+        },
+        currency="KRW",
+        yfinance={
+            "status": "success",
+            "collection_timestamp": "2026-05-21T00:00:00Z",
+            "current_price": {"price": 60_000, "as_of": "2026-05-21"},
+            "info": {"market_cap": 400_000_000_000_000},
+        },
+    )
+
+    fcf_yield = dart_metrics["fcf_yield"]
+    assert fcf_yield["grade"] == "C"
+    assert fcf_yield["sources"] == [
+        "DART FCF / yfinance market cap (grade = min of inputs: DART A, yfinance C)"
+    ]
+
+
+def test_financial_datasets_market_snapshot_is_single_source_grade_c() -> None:
+    metrics = metrics_from_financial_datasets(
+        {
+            "status": "success",
+            "collection_timestamp": "2026-05-21T00:00:00Z",
+            "calls": {
+                "financials_ttm": {
+                    "data": [{"free_cash_flow": 10_000_000_000, "revenue": 100_000_000_000}]
+                },
+                "prices_recent": {
+                    "prices": [{"date": "2026-05-21", "close": 200, "market_cap": 3_000_000_000_000}]
+                },
+            },
+        },
+        currency="USD",
+        ticker="AAPL",
+    )
+
+    assert metrics["price_at_analysis"]["grade"] == "C"
+    assert metrics["market_cap"]["grade"] == "C"

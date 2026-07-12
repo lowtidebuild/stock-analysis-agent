@@ -84,7 +84,9 @@ except ImportError:  # pragma: no cover - exercised only in environments w/o yfi
 
 
 PEER_TAG = "[Portal]"
-PEER_GRADE = "B"
+# Single-source yfinance snapshot = Grade C per confidence-grading.md;
+# upgrade to B requires an actual cross-check record.
+PEER_GRADE = "C"
 DATA_SOURCE = "yfinance (peer mini-fetch)"
 
 # Canonical metric column set displayed by the Mode C peer table.
