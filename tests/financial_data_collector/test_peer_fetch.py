@@ -44,6 +44,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import unittest
 from datetime import datetime, timedelta, timezone
@@ -438,6 +439,10 @@ class PeerFetchMultipleTickersCliTests(PeerFetchTestBase):
 
         # Three result entries returned (one per requested ticker).
         self.assertEqual(len(results), 3)
+        self.assertEqual(
+            [record["ticker"] for record in results],
+            ["MSFT", "META", "BAD"],
+        )
         result_by_ticker = {r["ticker"]: r for r in results}
 
         # MSFT and META wrote files with metrics.
@@ -471,6 +476,37 @@ class PeerFetchMultipleTickersCliTests(PeerFetchTestBase):
             bad_payload = json.loads(bad_output.read_text(encoding="utf-8"))
             self.assertEqual(bad_payload.get("status"), "error")
             self.assertIn("_sanitization", bad_payload)
+
+    def test_fetch_peers_runs_in_parallel_and_preserves_input_order(self) -> None:
+        active = 0
+        max_active = 0
+        lock = threading.Lock()
+
+        def fake_fetch_peer(*, ticker, **_kwargs):
+            nonlocal active, max_active
+            with lock:
+                active += 1
+                max_active = max(max_active, active)
+            time.sleep(0.05)
+            with lock:
+                active -= 1
+            return {"ticker": ticker.upper()}
+
+        with mock.patch.object(self.module, "fetch_peer", side_effect=fake_fetch_peer):
+            results = self.module.fetch_peers(
+                tickers=["MSFT", "META", "AAPL"],
+                output_dir=self.output_dir,
+                cache_dir=self.cache_dir,
+                cache_ttl_hours=24,
+                timeout=5,
+                yf_module=None,
+            )
+
+        self.assertGreaterEqual(max_active, 2)
+        self.assertEqual(
+            [record["ticker"] for record in results],
+            ["MSFT", "META", "AAPL"],
+        )
 
 
 class PeerFetchModuleSurfaceTests(unittest.TestCase):

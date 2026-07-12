@@ -428,11 +428,12 @@ def fetch_peers(
     output_dir_path.mkdir(parents=True, exist_ok=True)
     cache_dir_path.mkdir(parents=True, exist_ok=True)
 
-    results: list[dict[str, Any]] = []
-    for raw_ticker in tickers:
-        ticker = (raw_ticker or "").strip()
-        if not ticker:
-            continue
+    ticker_list = [(raw_ticker or "").strip() for raw_ticker in tickers]
+    ticker_list = [ticker for ticker in ticker_list if ticker]
+    if not ticker_list:
+        return []
+
+    def fetch_one(ticker: str) -> dict[str, Any]:
         try:
             record = fetch_peer(
                 ticker=ticker,
@@ -450,8 +451,10 @@ def fetch_peers(
                 _write_json(output_dir_path / f"{ticker.upper()}.json", record)
             except OSError:
                 pass
-        results.append(record)
-    return results
+        return record
+
+    with ThreadPoolExecutor(max_workers=min(4, len(ticker_list))) as executor:
+        return list(executor.map(fetch_one, ticker_list))
 
 
 # ---------------------------------------------------------------------------

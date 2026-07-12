@@ -377,6 +377,7 @@ Substitution rules:
         -->
       </tbody>
     </table>
+    <p class="text-xs text-gray-400">peer 데이터 수집시각: {PEER_COLLECTED_AT_MIN} ~ {PEER_COLLECTED_AT_MAX} (24h 캐시)</p>
     <p class="text-[11px] text-gray-400 mt-3 px-2">
       Subject row uses validated filings ([Filing] Grade A); peer rows use the Phase D mini-pipeline
       yfinance snapshot ([Portal] Grade B, 24h cache). Empty cells display "—" rather than fabricated values.

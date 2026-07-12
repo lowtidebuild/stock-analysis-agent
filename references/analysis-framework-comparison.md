@@ -170,6 +170,12 @@ each peer differs in macro sensitivity (Beta, FX exposure, sector cyclicality).
 
 **Source tags**: `[Macro]` for FRED-derived series, `[News]` or `[Calc]` for qualitative or computed indices.
 
+### Cross-currency comparison rule
+
+한·미 혼합 비교에서 절대금액(시가총액, 매출 등)은 현지통화로 병기하는 것을 기본으로 한다.
+단일 통화 환산이 필요한 경우 반드시 `[Macro]` 태그의 USD/KRW(FRED DEXKOUS)와 기준일을
+함께 표기한다. 출처·기준일 없는 환산 금액은 Grade D로 취급한다 (표시 금지).
+
 ### Step 6 — Key Differentiators
 
 Identify 2–3 fundamental differences that explain divergent valuations or risk profiles:

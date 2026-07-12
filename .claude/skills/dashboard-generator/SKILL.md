@@ -78,6 +78,8 @@ Populate each section of `html-template.md` with data from `analysis-result.json
 | `valuation_bridge` (top-level) | Section 5b | `{VALUATION_BRIDGE_SECTION}` (4 anchors + weighted fair value + reconciliation paragraph) |
 | `sections.macro_context` | Section 4/6 | Macro Environment section |
 | `sections.peer_comparison` | Section 6 | peer table rows |
+| `output/runs/{run_id}/peers/*.json` minimum `collection_timestamp` | Section 6 | `{PEER_COLLECTED_AT_MIN}` |
+| `output/runs/{run_id}/peers/*.json` maximum `collection_timestamp` | Section 6 | `{PEER_COLLECTED_AT_MAX}` |
 | `sections.analyst_coverage` | Section 7 | analyst data |
 | `historical_prices` | Section 8 | Chart 1 data array |
 | `income_statements` | Section 8, 9 | Charts 2/3, quarterly table |
