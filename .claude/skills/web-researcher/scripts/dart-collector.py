@@ -325,7 +325,7 @@ def get_financial_statements(api_key, corp_code, bsns_year, reprt_code):
     """
     Get consolidated (연결) financial statements.
     reprt_code: 11011=Annual, 11012=H1, 11013=Q1, 11014=Q3
-    Returns list of account rows or empty list.
+    Returns (account rows, fs_div used), or ([], None) when unavailable.
     """
     data = dart_request("fnlttSinglAcntAll.json", {
         "crtfc_key": api_key,
@@ -335,7 +335,7 @@ def get_financial_statements(api_key, corp_code, bsns_year, reprt_code):
         "fs_div": "CFS",   # 연결재무제표 (Consolidated Financial Statements)
     })
     if data.get("status") == "000":
-        return data.get("list", [])
+        return data.get("list", []), "CFS"
     # Fallback: try standalone (별도) if consolidated not available
     if data.get("status") in ("013", "020"):  # no data / not found
         data2 = dart_request("fnlttSinglAcntAll.json", {
@@ -346,8 +346,8 @@ def get_financial_statements(api_key, corp_code, bsns_year, reprt_code):
             "fs_div": "OFS",   # 별도재무제표
         })
         if data2.get("status") == "000":
-            return data2.get("list", [])
-    return []
+            return data2.get("list", []), "OFS"
+    return [], None
 
 
 def parse_amount(amount_str):
@@ -608,13 +608,14 @@ def main():
     # Keep collecting the prior same-period report when available so true
     # TTM can be reconstructed instead of using current YTD as a proxy.
     for year, reprt_code, label in attempts:
-        rows = get_financial_statements(api_key, corp_code, str(year), reprt_code)
+        rows, fs_div_used = get_financial_statements(api_key, corp_code, str(year), reprt_code)
         if rows:
             parsed, raw = parse_financial_rows(rows)
             periods[label] = {
                 "year": year,
                 "reprt_code": reprt_code,
                 "label": label,
+                "fs_div": fs_div_used,
                 "parsed": parsed,
                 "row_count": len(rows),
             }
@@ -658,22 +659,25 @@ def main():
         "confidence_grade": "A",
         "note": "Structured data from DART OpenAPI — equivalent to SEC EDGAR API for US stocks",
         "collected_periods": collected,
+        "fs_div_used": sorted({p["fs_div"] for p in periods.values() if p.get("fs_div")}),
         "ttm_income_statement": {
             "calculation_note": ttm_note,
             "precision": ttm_precision,
             "currency": "KRW",
-            "unit": "백만원 (millions KRW) — verify unit from source filing",
+            "unit": "원 (KRW, raw amounts as filed — fnlttSinglAcntAll returns won)",
             **ttm_data,
         },
         "balance_sheet_latest": {
             "period": most_recent_label,
             "currency": "KRW",
+            "unit": "원 (KRW, raw amounts as filed — fnlttSinglAcntAll returns won)",
             **balance_sheet,
         },
         "periods_detail": {
             label: {
                 "year": info["year"],
                 "period_type": info["label"],
+                "fs_div": info.get("fs_div"),
                 "metrics": {
                     field: {"value": d["value"], "prior": d["prior_period"], "account_kr": d["account_name_kr"]}
                     for field, d in info["parsed"].items()

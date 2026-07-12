@@ -275,6 +275,8 @@ def test_dart_raw_without_status_is_primary_for_kr_validation() -> None:
                 "confidence_grade": "A",
                 "ttm_income_statement": {
                     "currency": "KRW",
+                    "precision": "high",
+                    "calculation_note": "True TTM reconstructed from filed periods",
                     "revenue": 333_000_000_000_000,
                     "operating_income": 43_000_000_000_000,
                     "net_income": 45_000_000_000_000,

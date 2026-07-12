@@ -418,6 +418,9 @@ def metrics_from_dart(
     if not has_successful_source(dart):
         return {}
     income = dart.get("ttm_income_statement") if isinstance(dart.get("ttm_income_statement"), dict) else {}
+    ttm_precision = income.get("precision")
+    ttm_note = income.get("calculation_note")
+    income_grade = "A" if ttm_precision in {"high", "medium"} else "C"
     balance = dart.get("balance_sheet_latest") if isinstance(dart.get("balance_sheet_latest"), dict) else {}
     periods = dart.get("periods_detail") if isinstance(dart.get("periods_detail"), dict) else {}
     annual = periods.get("Annual") if isinstance(periods.get("Annual"), dict) else {}
@@ -442,15 +445,32 @@ def metrics_from_dart(
     prior_revenue = metric_prior(annual_metrics.get("revenue"))
     revenue_growth = safe_pct(safe_subtract(revenue, prior_revenue), prior_revenue)
     as_of = dart_year_date(annual.get("year")) or date_part(dart.get("collection_timestamp"))
+    fs_div_used = dart.get("fs_div_used")
+    ofs_prefix = (
+        "[별도(OFS) 재무 기준] "
+        if isinstance(fs_div_used, list) and "OFS" in fs_div_used
+        else ""
+    )
+    income_note = (
+        str(ttm_note)
+        if ttm_precision != "high" and ttm_note not in (None, "")
+        else ""
+    )
+    income_note = f"{ofs_prefix}{income_note}".strip() or None
+    basis_note = ofs_prefix.strip() or None
+    annual_fcf_note = (
+        f"{ofs_prefix}FY{annual.get('year')} full-year FCF (annual filing); "
+        "trailing-twelve-month value not reconstructable from available periods"
+    )
 
     return {
-        "revenue_ttm": metric(billions(revenue), currency=currency, grade="A", source="DART OpenAPI revenue", source_type="filing", tag="[Filing]", unit="billions", as_of_date=as_of),
-        "revenue_growth_yoy": metric(revenue_growth, grade="A", source="DART annual revenue vs prior year", source_type="calculated", tag="[Calc]", unit="percent", as_of_date=as_of),
-        "operating_margin": metric(safe_pct(operating_income, revenue), grade="A", source="DART operating income / revenue", source_type="calculated", tag="[Calc]", unit="percent", as_of_date=as_of),
-        "net_margin": metric(safe_pct(net_income, revenue), grade="A", source="DART net income / revenue", source_type="calculated", tag="[Calc]", unit="percent", as_of_date=as_of),
-        "fcf_ttm": metric(billions(fcf), currency=currency, grade="A", source="DART operating cash flow - capex", source_type="calculated", tag="[Calc]", unit="billions", as_of_date=as_of),
-        "fcf_yield": metric(safe_pct(fcf, (market_cap_value or 0) * 1_000_000_000), grade="C", source="DART FCF / yfinance market cap (grade = min of inputs: DART A, yfinance C)", source_type="calculated", tag="[Calc]", unit="percent", as_of_date=as_of),
-        "net_debt": metric(billions(net_debt), currency=currency, grade="A", source="DART debt minus cash", source_type="calculated", tag="[Calc]", unit="billions", as_of_date=as_of),
+        "revenue_ttm": metric(billions(revenue), currency=currency, grade=income_grade, source="DART OpenAPI revenue", source_type="filing", tag="[Filing]", unit="billions", as_of_date=as_of, note=income_note),
+        "revenue_growth_yoy": metric(revenue_growth, grade="A", source="DART annual revenue vs prior year", source_type="calculated", tag="[Calc]", unit="percent", as_of_date=as_of, note=basis_note),
+        "operating_margin": metric(safe_pct(operating_income, revenue), grade=income_grade, source="DART operating income / revenue", source_type="calculated", tag="[Calc]", unit="percent", as_of_date=as_of, note=income_note),
+        "net_margin": metric(safe_pct(net_income, revenue), grade=income_grade, source="DART net income / revenue", source_type="calculated", tag="[Calc]", unit="percent", as_of_date=as_of, note=income_note),
+        "fcf_ttm": metric(billions(fcf), currency=currency, grade="A", source="DART operating cash flow - capex", source_type="calculated", tag="[Calc]", unit="billions", as_of_date=as_of, note=annual_fcf_note),
+        "fcf_yield": metric(safe_pct(fcf, (market_cap_value or 0) * 1_000_000_000), grade="C", source="DART FCF / yfinance market cap (grade = min of inputs: DART A, yfinance C)", source_type="calculated", tag="[Calc]", unit="percent", as_of_date=as_of, note=annual_fcf_note),
+        "net_debt": metric(billions(net_debt), currency=currency, grade="A", source="DART debt minus cash", source_type="calculated", tag="[Calc]", unit="billions", as_of_date=as_of, note=basis_note),
     }
 
 
@@ -675,11 +695,12 @@ def metric(
     as_of_date: str | None = None,
     currency: str | None = None,
     unit: str | None = None,
+    note: str | None = None,
 ) -> dict[str, Any]:
     numeric = as_number(value)
     if numeric is None:
         return excluded_metric(f"Missing verified value from {source}")
-    return {
+    entry = {
         "value": round(numeric, 4) if isinstance(numeric, float) else numeric,
         "grade": grade,
         "source_type": source_type,
@@ -691,6 +712,9 @@ def metric(
         "currency": currency,
         "as_of_date": as_of_date,
     }
+    if note not in (None, ""):
+        entry["notes"] = note
+    return entry
 
 
 def excluded_metric(reason: str) -> dict[str, Any]:
