@@ -40,6 +40,23 @@ def _load_fixture() -> dict:
     return json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
 
 
+def _set_bridge_weights(analysis: dict, weights: list[float]) -> None:
+    bridge = analysis["valuation_bridge"]
+    for anchor, weight in zip(bridge["anchors"], weights, strict=True):
+        anchor["weight"] = weight
+    weighted = sum(
+        anchor["value_per_share"] * anchor["weight"]
+        for anchor in bridge["anchors"]
+    )
+    bridge["weighted_fair_value"] = round(weighted, 2)
+    implied = (
+        (bridge["weighted_fair_value"] - bridge["current_price"])
+        / bridge["current_price"]
+        * 100
+    )
+    bridge["implied_view_vs_market"] = f"{implied:+.1f}%"
+
+
 class ValuationBridgeConsistencyCheckTests(unittest.TestCase):
     """The Critic check enforces the 5 framework invariants."""
 
@@ -86,6 +103,24 @@ class ValuationBridgeConsistencyCheckTests(unittest.TestCase):
             any("weight" in err for err in item["errors"]),
             f"expected weight-sum error, got {item['errors']!r}",
         )
+
+    def test_fail_major_when_anchor_weight_is_below_allowed_range(self) -> None:
+        analysis = _load_fixture()
+        _set_bridge_weights(analysis, [0.05, 0.45, 0.25, 0.25])
+
+        item = build_valuation_bridge_consistency_item(analysis)
+
+        self.assertEqual(item["status"], "FAIL")
+        self.assertEqual(item["severity"], "MAJOR")
+        self.assertTrue(any("must be within 0.10-0.60" in error for error in item["errors"]))
+
+    def test_anchor_weight_at_point_fifty_five_passes(self) -> None:
+        analysis = _load_fixture()
+        _set_bridge_weights(analysis, [0.55, 0.15, 0.15, 0.15])
+
+        item = build_valuation_bridge_consistency_item(analysis)
+
+        self.assertEqual(item["status"], "PASS", item)
 
     def test_fail_major_when_reconciliation_logic_too_short(self) -> None:
         analysis = _load_fixture()

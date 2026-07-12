@@ -199,6 +199,8 @@ Display:
 - **Methodology note**: One line showing key assumptions (WACC, terminal growth, forecast years)
 - **Transparency**: All assumptions displayed. User can see exactly what drives the valuation.
 
+DCF fair value와 `weighted_fair_value`는 confidence grade를 달지 않는다. 대신 **"모델 산출값"** 배지를 필수 표기한다.
+
 If dcf_analysis is null or absent: omit this subsection entirely. Do NOT show placeholder.
 
 ### Reverse DCF / Expectations Investing (Mode C, optional sub-section)
@@ -261,6 +263,8 @@ If any one of those three inputs is missing, omit the field entirely — do NOT 
 **Required fields per anchor**: `label`, `value_per_share` (numeric, USD or KRW per share), `weight` (decimal, 0–1), `method` (≤80 chars), `tag` (one of `[Calc]`, `[Filing]`, `[Est]`, `[Portal]`, `[Macro]`).
 
 **Default weights**: 0.25 each (equal-weight). Adjust ONLY when one anchor is materially more or less reliable in the current company's context, and explain the deviation in `reconciliation_logic`. Weights MUST sum to 1.0.
+
+**Allowed weight range**: 개별 앵커 가중치는 0.10–0.60 범위 내에서만 조정 가능. 범위를 벗어나면 `[Quality flag]`.
 
 **Arithmetic invariants** (Critic checks; analyst self-checks before writing):
 

@@ -61,6 +61,11 @@ class ValuationBridgeContractTests(unittest.TestCase):
             "bridge HTML between DCF/Reverse DCF and Peer Comparison.",
         )
 
+    def test_template_marks_weighted_fair_value_as_model_output(self) -> None:
+        text = TEMPLATE_PATH.read_text(encoding="utf-8")
+        self.assertIn('class="badge-model"', text)
+        self.assertIn("모델 산출값", text)
+
     def test_template_places_bridge_between_valuation_and_peers(self) -> None:
         text = TEMPLATE_PATH.read_text(encoding="utf-8")
         bridge_idx = text.find("{VALUATION_BRIDGE_SECTION}")

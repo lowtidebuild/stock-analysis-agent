@@ -894,6 +894,8 @@ VALUATION_BRIDGE_DECISION_ANCHORS = (
 )
 # Minimum tokens (whitespace-split) for reconciliation_logic — invariant #4.
 VALUATION_BRIDGE_MIN_RECONCILIATION_TOKENS = 50
+VALUATION_BRIDGE_WEIGHT_MIN = 0.10
+VALUATION_BRIDGE_WEIGHT_MAX = 0.60
 
 
 def _classify_valuation_bridge_severity(error: str) -> str:
@@ -910,6 +912,8 @@ def _classify_valuation_bridge_severity(error: str) -> str:
         ".anchors:",  # missing/malformed anchors fail arithmetic preconditions
         ".current_price:",
     )
+    if ".anchors[" in error and ".weight:" in error:
+        return "MAJOR"
     if any(marker in error for marker in arithmetic_markers):
         return "BLOCKER"
     return "MAJOR"
@@ -962,6 +966,12 @@ def validate_valuation_bridge(data: dict[str, Any], path: str = "$") -> list[str
                 errors.append(f"{bridge_path}.anchors[{idx}].weight: missing or non-numeric")
                 weight_total_known = False
                 continue
+            if not VALUATION_BRIDGE_WEIGHT_MIN <= weight <= VALUATION_BRIDGE_WEIGHT_MAX:
+                errors.append(
+                    f"{bridge_path}.anchors[{idx}].weight: must be within "
+                    f"{VALUATION_BRIDGE_WEIGHT_MIN:.2f}-{VALUATION_BRIDGE_WEIGHT_MAX:.2f} "
+                    f"(got {weight})"
+                )
             weight_total += weight
             if value is not None:
                 running_sum += value * weight

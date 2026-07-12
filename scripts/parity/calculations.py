@@ -17,6 +17,12 @@ from scripts.parity.data_sources import load_json, write_json
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DCF_CALCULATOR_PATH = REPO_ROOT / ".claude" / "agents" / "analyst" / "scripts" / "dcf-calculator.py"
 
+# Long-run US equity risk premium convention (Damodaran survey ballpark). Not market-sourced.
+DCF_DEFAULT_ERP = 0.055
+# Terminal growth: long-run nominal GDP proxy; widened to 3.0% when risk-free > 5%.
+DCF_DEFAULT_TGR_LOW_RATE = 0.025
+DCF_DEFAULT_TGR_HIGH_RATE = 0.03
+
 
 @dataclass(frozen=True)
 class CalculationResult:
@@ -276,8 +282,12 @@ def build_dcf_analysis(metrics: dict[str, Any], *, macro: dict[str, Any]) -> dic
         "fcf_growth_rate": fcf_growth_rate,
         "risk_free_rate": risk_free_rate,
         "beta": beta,
-        "erp": 0.055,
-        "terminal_growth_rate": 0.025 if risk_free_rate <= 0.05 else 0.03,
+        "erp": DCF_DEFAULT_ERP,
+        "terminal_growth_rate": (
+            DCF_DEFAULT_TGR_LOW_RATE
+            if risk_free_rate <= 0.05
+            else DCF_DEFAULT_TGR_HIGH_RATE
+        ),
         "forecast_years": 10,
         "net_debt": net_debt_b * 1000,
         "mid_year_convention": True,

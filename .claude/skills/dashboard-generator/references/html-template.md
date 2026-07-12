@@ -291,6 +291,7 @@ Analyst=amber, Our Base=emerald. Replace {…} placeholders with values from
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="text-center">
         <p class="text-xs text-gray-500 mb-1">Weighted Fair Value</p>
+        <span class="badge-model" title="WACC·terminal growth 등 가정 기반 모델 산출값 — 데이터 신뢰등급 비적용">모델 산출값</span>
         <p class="text-3xl font-extrabold text-brand-700">{CURRENCY_SYMBOL}{WEIGHTED_FAIR_VALUE}</p>
       </div>
       <div class="text-center">
