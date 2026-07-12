@@ -189,6 +189,14 @@ class RenderEarningsPreviewTests(unittest.TestCase):
         self.assertIn("D-3", html, "D-N window badge missing")
         self.assertIn("2.62", html, "consensus EPS mean missing from hero")
 
+    def test_estimated_earnings_date_is_labeled(self) -> None:
+        analysis = make_preview_analysis()
+        analysis["earnings_window"]["date_precision"] = "estimated"
+
+        html = self.render.build_preview_html(analysis)
+
+        self.assertIn("추정 — yfinance calendar 기준, IR 확인 전", html)
+
     def test_all_six_sections_rendered_with_full_data(self) -> None:
         """Test 2: All 6 sections rendered when full data present."""
         analysis = make_preview_analysis()

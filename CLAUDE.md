@@ -1,6 +1,6 @@
 # Stock Analysis Agent — Master Orchestrator
 
-**Version**: 2.1 | **Last updated**: 2026-05-07
+**Version**: 2.2 | **Last updated**: 2026-07-13
 
 ---
 
@@ -643,7 +643,7 @@ Tags indicate provenance — where the data was fetched from. Tags do NOT determ
 | `[Calc]` | 검증된 입력값으로부터 자체 계산 (P/E, EV/EBITDA 등) |
 | `[Est]` | 애널리스트 컨센서스, 목표가, 추정 실적 |
 | `[Macro]` | FRED (Federal Reserve Economic Data) 등 정부/중앙은행 경제 통계 |
-| `[Options]` | yfinance option_chain (Mode E Preview) — ATM straddle, IV percentile, implied move % |
+| `[Options]` | yfinance option_chain (Mode E Preview) — ATM straddle, IV percentile(현재 미산출 — 항상 —), implied move % |
 | `[History]` | yfinance earnings_history (Mode E Preview/Review) — last 8Q actual vs consensus, surprise %, 1d reaction % |
 
 Grade D metrics display as "—" (no tag needed).

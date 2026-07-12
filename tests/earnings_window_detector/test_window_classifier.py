@@ -203,6 +203,7 @@ class WindowClassifierPreviewTests(WindowClassifierTestBase):
         self.assertFalse(result["fallback_used"])
         self.assertEqual(result["next_earnings_date"], earnings.isoformat())
         self.assertEqual(result["lookup_source"], "yfinance.Ticker.calendar")
+        self.assertEqual(result["date_precision"], "estimated")
 
 
 class WindowClassifierReviewTodayTests(WindowClassifierTestBase):
@@ -322,6 +323,7 @@ class WindowClassifierFallbackToEarningsDatesTests(WindowClassifierTestBase):
         self.assertEqual(
             result["lookup_source"], "yfinance.Ticker.earnings_dates"
         )
+        self.assertEqual(result["date_precision"], "estimated")
 
 
 class WindowClassifierBothFailTests(WindowClassifierTestBase):
@@ -350,6 +352,7 @@ class WindowClassifierBothFailTests(WindowClassifierTestBase):
         self.assertTrue(result["fallback_used"])
         self.assertIsNone(result["next_earnings_date"])
         self.assertIsNone(result["days_until"])
+        self.assertIsNone(result["date_precision"])
         self.assertIn("_sanitization", result)
 
 

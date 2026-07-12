@@ -212,6 +212,10 @@ def _preview_hero(analysis: dict[str, Any]) -> str:
     data_mode = escape(analysis.get("data_mode") or "standard")
     days_label = escape(days_until_label(days_until, korean))
     earnings_dt_text = escape(next_date or "—")
+    if window.get("date_precision") == "estimated":
+        earnings_dt_text += (
+            ' <span class="text-xs">(추정 — yfinance calendar 기준, IR 확인 전)</span>'
+        )
 
     if not confirmed:
         warning_banner = (

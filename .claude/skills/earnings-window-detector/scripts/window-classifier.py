@@ -337,12 +337,22 @@ def _build_payload(
         window = _classify(days_until)
         confirmed = True
         next_earnings_iso = earnings_date.isoformat()
+    date_precision = (
+        "estimated"
+        if earnings_date is not None
+        and lookup_source in {
+            "yfinance.Ticker.calendar",
+            "yfinance.Ticker.earnings_dates",
+        }
+        else None
+    )
 
     payload: dict[str, Any] = {
         "ticker": ticker,
         "today_date": today.isoformat(),
         "next_earnings_date": next_earnings_iso,
         "next_earnings_confirmed": confirmed,
+        "date_precision": date_precision,
         "days_until": days_until,
         "window": window,
         "override_mode": None,

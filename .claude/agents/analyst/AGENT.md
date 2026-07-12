@@ -446,7 +446,8 @@ evidence-pack, context-budget, research-plan, framework). Refuse any file
 without `_sanitization` per Trust Boundary.
 
 - `output/runs/{run_id}/earnings-window/{ticker}.json` — `days_until`,
-  `next_earnings_date`, `next_earnings_confirmed`, `window`.
+  `next_earnings_date`, `next_earnings_confirmed`, `window`, `date_precision`.
+  Copy `date_precision` unchanged to `analysis-result.json.earnings_window.date_precision`.
 - `output/runs/{run_id}/{ticker}/options-snapshot.json` — ATM straddle
   price, implied 1-day move %, IV percentile, nearest expiry. **OD-F2**:
   if this file is missing OR all numeric fields are null, do not abort.
