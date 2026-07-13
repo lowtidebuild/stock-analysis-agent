@@ -115,7 +115,8 @@ def make_preview_analysis(*, options_available: bool = True, history_quarters: i
         "earnings_window": {
             "next_earnings_date": "2026-04-29",
             "next_earnings_confirmed": confirmed,
-            "days_until": -3,
+            # Detector sign contract: positive = days until the upcoming print.
+            "days_until": 3,
             "window_label": "D-3",
         },
         "output_language": language,
@@ -289,7 +290,7 @@ class RenderEarningsPreviewTests(unittest.TestCase):
             "earnings_window": {
                 "next_earnings_date": "2026-05-08",
                 "next_earnings_confirmed": False,
-                "days_until": -7,
+                "days_until": 7,
                 "window_label": "D-7",
             },
             "consensus_snapshot": {
@@ -365,6 +366,29 @@ class RenderEarningsPreviewTests(unittest.TestCase):
             self.assertTrue(out_path.exists())
             content = out_path.read_text(encoding="utf-8")
             self.assertIn("EARNINGS PREVIEW", content)
+
+
+class DaysUntilLabelSignContractTests(unittest.TestCase):
+    """days_until follows the Step 0.5 detector: positive = upcoming print.
+
+    Regression for the sign inversion where an upcoming print (detector
+    days_until=+3) rendered as "3일 경과" (3 days ago).
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.render = load_render_module()
+
+    def test_positive_days_until_is_upcoming(self) -> None:
+        self.assertEqual(self.render.days_until_label(3, korean=True), "3일 후")
+        self.assertEqual(self.render.days_until_label(3, korean=False), "in 3 days")
+
+    def test_negative_days_until_is_days_since_print(self) -> None:
+        self.assertEqual(self.render.days_until_label(-2, korean=True), "2일 경과")
+        self.assertEqual(self.render.days_until_label(-2, korean=False), "2 days ago")
+
+    def test_zero_days_until_is_print_day(self) -> None:
+        self.assertEqual(self.render.days_until_label(0, korean=True), "0일 경과")
 
 
 if __name__ == "__main__":

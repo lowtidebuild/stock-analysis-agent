@@ -154,12 +154,15 @@ def _safe_json_for_script(obj: Any) -> str:
 
 
 def days_until_label(days_until: Any, korean: bool) -> str:
+    # Sign contract follows the earnings-window detector (Step 0.5):
+    # days_until = (earnings_date - today).days, so POSITIVE = upcoming print
+    # (preview, D-7~D-1) and NEGATIVE/ZERO = days since the print (review).
     if not isinstance(days_until, (int, float)) or isinstance(days_until, bool):
         return ""
     n = abs(int(days_until))
     if korean:
-        return f"{n}일 후" if days_until < 0 else f"{n}일 경과"
-    return f"in {n} days" if days_until < 0 else f"{n} days ago"
+        return f"{n}일 후" if days_until > 0 else f"{n}일 경과"
+    return f"in {n} days" if days_until > 0 else f"{n} days ago"
 
 
 def quarter_from_date(date_iso: str | None) -> str:
