@@ -23,7 +23,7 @@ Per-ticker JSON output (written to BOTH ``--output-dir`` and ``--cache-dir``)::
       "collection_timestamp": "2026-05-07T00:00:00Z",
       "data_source": "yfinance (peer mini-fetch)",
       "tag": "[Portal]",
-      "confidence_grade": "B",
+      "confidence_grade": "C",
       "metrics": {
         "current_price": 425.30,
         "market_cap": 3158000000000,

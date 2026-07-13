@@ -517,9 +517,9 @@ def metrics_from_financial_datasets(
         "operating_margin": metric(safe_pct(operating_income, revenue), grade="A", source="Financial Datasets operating income / revenue", source_type="calculated", tag="[Calc]", unit="percent", as_of_date=as_of),
         "net_margin": metric(safe_pct(net_income, revenue), grade="A", source="Financial Datasets net income / revenue", source_type="calculated", tag="[Calc]", unit="percent", as_of_date=as_of),
         "fcf_ttm": metric(billions(fcf), currency=currency, grade="A", source="Financial Datasets free cash flow", source_type="filing", tag="[Filing]", unit="billions", as_of_date=as_of),
-        "fcf_yield": metric(safe_pct(fcf, market_cap), grade="B", source="Financial Datasets FCF / market cap", source_type="calculated", tag="[Calc]", unit="percent", as_of_date=as_of),
-        "diluted_shares": metric(millions(diluted_shares), grade="B", source="Financial Datasets diluted shares or market cap / price", source_type="calculated", tag="[Calc]", unit="millions", as_of_date=as_of),
-        "analyst_target_mean": metric(pick_number(estimates_record, "target_mean", "mean_target", "price_target"), currency=currency, grade="B", source="Financial Datasets analyst estimates", source_type="estimate", tag="[Est]", as_of_date=as_of),
+        "fcf_yield": metric(safe_pct(fcf, market_cap), grade="C", source="Financial Datasets FCF / market cap (grade = min of inputs: FCF A, market cap C)", source_type="calculated", tag="[Calc]", unit="percent", as_of_date=as_of),
+        "diluted_shares": metric(millions(diluted_shares), grade="C", source="Financial Datasets diluted shares or market cap / price (grade = min of inputs; market cap and price are single-source C)", source_type="calculated", tag="[Calc]", unit="millions", as_of_date=as_of),
+        "analyst_target_mean": metric(pick_number(estimates_record, "target_mean", "mean_target", "price_target"), currency=currency, grade="C", source="Financial Datasets analyst estimates (single source)", source_type="estimate", tag="[Est]", as_of_date=as_of),
     }
 
 

@@ -369,6 +369,9 @@ def test_financial_datasets_market_snapshot_is_single_source_grade_c() -> None:
                 "prices_recent": {
                     "prices": [{"date": "2026-05-21", "close": 200, "market_cap": 3_000_000_000_000}]
                 },
+                "analyst_estimates": {
+                    "data": [{"target_mean": 230.0}]
+                },
             },
         },
         currency="USD",
@@ -377,3 +380,10 @@ def test_financial_datasets_market_snapshot_is_single_source_grade_c() -> None:
 
     assert metrics["price_at_analysis"]["grade"] == "C"
     assert metrics["market_cap"]["grade"] == "C"
+    # Derived values mixing an A-grade filing input with the C-grade market
+    # snapshot must inherit min(input grades) = C, and single-source analyst
+    # estimates are C — see confidence-grading.md "Derived-Value Grade
+    # Propagation".
+    assert metrics["fcf_yield"]["grade"] == "C"
+    assert metrics["diluted_shares"]["grade"] == "C"
+    assert metrics["analyst_target_mean"]["grade"] == "C"

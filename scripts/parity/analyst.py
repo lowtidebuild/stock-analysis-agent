@@ -1458,6 +1458,12 @@ def peer_comparison_from_records(
         if not ticker:
             continue
         value = peer_value(metrics)
+        grade = str(record.get("confidence_grade") or "C").upper()
+        if grade not in {"C", "D"}:
+            # Peer mini-fetch is a single-source yfinance snapshot, so C is the
+            # ceiling; legacy caches may still carry the pre-policy "B" during
+            # their 24h TTL — clamp instead of passing the inflated grade on.
+            grade = "C"
         if language == "ko":
             summary = f"{record.get('company_name') or ticker} peer mini-fetch: 성장, 마진, 현금흐름, 밸류에이션을 같은 yfinance 스냅샷 기준으로 비교한다."
         else:
@@ -1469,7 +1475,7 @@ def peer_comparison_from_records(
                 "value": value,
                 "tag": record.get("tag") or "[Portal]",
                 "source": record.get("data_source") or "yfinance (peer mini-fetch)",
-                "confidence_grade": record.get("confidence_grade") or "B",
+                "confidence_grade": grade,
                 "metrics": metrics,
             }
         )

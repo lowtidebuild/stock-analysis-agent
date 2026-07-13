@@ -325,3 +325,33 @@ def test_mode_c_sections_use_peer_mini_fetch_when_available() -> None:
     assert peer["ticker"] == "MSFT"
     assert "Forward P/E 31.5x" in peer["value"]
     assert peer["tag"] == "[Portal]"
+
+
+def test_peer_rows_clamp_legacy_grade_b_and_missing_grade_to_c() -> None:
+    from scripts.parity.analyst import peer_comparison_from_records
+
+    records = [
+        {
+            "ticker": "MSFT",
+            "company_name": "Microsoft",
+            "confidence_grade": "B",  # legacy pre-policy cache entry (24h TTL)
+            "metrics": {"pe_forward": 31.5},
+        },
+        {
+            "ticker": "GOOG",
+            "company_name": "Alphabet",
+            # grade missing entirely
+            "metrics": {"pe_forward": 22.0},
+        },
+        {
+            "ticker": "META",
+            "company_name": "Meta",
+            "confidence_grade": "D",  # error record grade must survive
+            "metrics": {"pe_forward": 25.0},
+        },
+    ]
+
+    rows = peer_comparison_from_records(records, language="en")
+
+    grades = {row["ticker"]: row["confidence_grade"] for row in rows}
+    assert grades == {"MSFT": "C", "GOOG": "C", "META": "D"}
