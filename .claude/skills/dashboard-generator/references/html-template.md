@@ -50,6 +50,9 @@ This file provides the complete structural skeleton for the Mode C Deep Dive Das
     .tag-dart { color: #7c3aed; }
     .tag-naver { color: #2563eb; }
     .tag-unverified { color: #dc2626; }
+    /* Model-derived values (DCF fair value, weighted fair value): assumption-based
+       outputs that carry NO data confidence grade — see framework §5/§5b. */
+    .badge-model { display: inline-block; font-size: 0.65rem; font-weight: 600; padding: 1px 6px; border-radius: 9999px; background: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe; vertical-align: middle; }
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
   </style>
@@ -354,7 +357,7 @@ Substitution rules:
               <span class="inline-block px-2 py-0.5 text-[10px] font-semibold rounded
                            bg-emerald-100 text-emerald-700">[Filing] · A</span>   (subject, validated)
               <span class="inline-block px-2 py-0.5 text-[10px] font-semibold rounded
-                           bg-blue-100 text-blue-700">[Portal] · B</span>          (Phase D peer)
+                           bg-blue-100 text-blue-700">[Portal] · C</span>          (Phase D peer, single-source yfinance)
               <span class="inline-block px-2 py-0.5 text-[10px] font-semibold rounded
                            bg-amber-100 text-amber-700">[Est] · C</span>           (estimate, last-resort)
               <span class="inline-block px-2 py-0.5 text-[10px] font-semibold rounded
@@ -380,7 +383,7 @@ Substitution rules:
     <p class="text-xs text-gray-400">peer 데이터 수집시각: {PEER_COLLECTED_AT_MIN} ~ {PEER_COLLECTED_AT_MAX} (24h 캐시)</p>
     <p class="text-[11px] text-gray-400 mt-3 px-2">
       Subject row uses validated filings ([Filing] Grade A); peer rows use the Phase D mini-pipeline
-      yfinance snapshot ([Portal] Grade B, 24h cache). Empty cells display "—" rather than fabricated values.
+      yfinance snapshot ([Portal] Grade C — single source, 24h cache). Empty cells display "—" rather than fabricated values.
     </p>
   </div>
 </section>
@@ -792,6 +795,58 @@ new Chart(document.getElementById('priceChart').getContext('2d'), {
 </body>
 </html>
 ```
+
+---
+
+## DCF Valuation block (Mode C, optional sub-section)
+
+Render only when `sections.dcf_analysis.base.fair_value` is non-null (framework: "If dcf_analysis is null or absent: omit this subsection entirely. Do NOT show placeholder."). Place inside Section 5 (Valuation), before the Reverse DCF block.
+
+```html
+<div class="card p-5 mt-4">
+  <div class="flex items-center gap-2 mb-3">
+    <h4 class="text-sm font-bold text-brand-700">DCF Valuation — Base Case</h4>
+    <span class="badge-model" title="WACC·terminal growth 등 가정 기반 모델 산출값 — 데이터 신뢰등급 비적용">모델 산출값</span>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+    <div class="text-center p-3 bg-gray-50 rounded-lg">
+      <p class="text-xs text-gray-500">Base Fair Value</p>
+      <p class="text-2xl font-bold text-brand-700">{CURRENCY_SYMBOL}{DCF_BASE_FAIR_VALUE}</p>
+      <p class="text-xs {DCF_UPSIDE_COLOR_CLASS}">{DCF_UPSIDE_PCT_SIGNED}% vs current</p>
+    </div>
+    <div class="text-center p-3 bg-gray-50 rounded-lg">
+      <p class="text-xs text-gray-500">Bull DCF</p>
+      <p class="text-xl font-semibold text-gray-700">{CURRENCY_SYMBOL}{DCF_BULL_FAIR_VALUE}</p>
+      <p class="text-xs text-gray-400">{DCF_BULL_UPSIDE_SIGNED}%</p>
+    </div>
+    <div class="text-center p-3 bg-gray-50 rounded-lg">
+      <p class="text-xs text-gray-500">Bear DCF</p>
+      <p class="text-xl font-semibold text-gray-700">{CURRENCY_SYMBOL}{DCF_BEAR_FAIR_VALUE}</p>
+      <p class="text-xs text-gray-400">{DCF_BEAR_UPSIDE_SIGNED}%</p>
+    </div>
+  </div>
+  <!-- 3×3 sensitivity: rows = WACC (low/mid/high), cols = terminal growth (low/mid/high) -->
+  <div class="overflow-x-auto">
+    <table class="w-full text-xs text-center">
+      <thead><tr class="text-gray-500">
+        <th class="p-2 text-left">WACC \ TGR</th><th class="p-2">{TGR_LOW}%</th><th class="p-2">{TGR_MID}%</th><th class="p-2">{TGR_HIGH}%</th>
+      </tr></thead>
+      <tbody>
+        <!-- each cell: fair value + upside %; bg-green-50 if upside > +10%, bg-red-50 if < -10%, plain otherwise -->
+        <tr><td class="p-2 text-left font-medium">{WACC_LOW}%</td><td class="p-2 {CELL_CLASS}">{CELL_VALUE}</td><td class="p-2 {CELL_CLASS}">{CELL_VALUE}</td><td class="p-2 {CELL_CLASS}">{CELL_VALUE}</td></tr>
+        <tr><td class="p-2 text-left font-medium">{WACC_MID}%</td><td class="p-2 {CELL_CLASS}">{CELL_VALUE}</td><td class="p-2 {CELL_CLASS}">{CELL_VALUE}</td><td class="p-2 {CELL_CLASS}">{CELL_VALUE}</td></tr>
+        <tr><td class="p-2 text-left font-medium">{WACC_HIGH}%</td><td class="p-2 {CELL_CLASS}">{CELL_VALUE}</td><td class="p-2 {CELL_CLASS}">{CELL_VALUE}</td><td class="p-2 {CELL_CLASS}">{CELL_VALUE}</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="text-xs text-gray-500 mt-3">Assumptions: WACC {WACC_MID}%, terminal growth {TGR_MID}%, {FORECAST_YEARS}Y forecast, FCF growth {FCF_GROWTH_PCT}%. All model inputs shown — no confidence grade applies to model outputs.</p>
+</div>
+```
+
+Substitution rules:
+- `{DCF_UPSIDE_COLOR_CLASS}`: `text-green-600` if upside > +10%, `text-red-600` if < -10%, `text-gray-500` otherwise
+- Bull/Bear rows: omit the tile (not the block) when the scenario value is null
+- Sensitivity cells come from `sections.dcf_analysis.sensitivity_table` verbatim — never recompute in the template
 
 ---
 
