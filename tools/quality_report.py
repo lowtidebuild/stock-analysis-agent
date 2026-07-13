@@ -715,7 +715,63 @@ def build_price_and_date_item(validated: dict[str, Any], analysis: dict[str, Any
     return item
 
 
-def build_blank_over_wrong_item(validated: dict[str, Any], analysis: dict[str, Any]) -> dict[str, Any]:
+# Rendered-output proximity scan for excluded metrics (blank-over-wrong).
+# A number counts only with a currency prefix or unit suffix so bare years,
+# dates, and counts near a label do not trip the scan.
+_RENDERED_SCAN_WINDOW_CHARS = 80
+_RENDERED_SCAN_NUMBER = re.compile(
+    r"(?:[$₩€£]\s?\d[\d,]*(?:\.\d+)?|\d[\d,]*(?:\.\d+)?\s?(?:%|x|배|B|M|T|조|억))"
+)
+_RENDERED_SCAN_BLANK_MARKERS = ("—", "N/A", "n/a")
+
+
+def _excluded_metric_display_labels(metric_name: str) -> list[str]:
+    labels = [metric_name.replace("_", " ")]
+    try:
+        # Lazy import: scripts.parity.rendering imports tools.quality_report at
+        # module load, so a top-level import here would be circular. By the
+        # time this runs both modules are fully initialized.
+        from scripts.parity.rendering import LABELS
+    except Exception:  # noqa: BLE001 — scan degrades gracefully without labels
+        return labels
+    for language_map in LABELS.values():
+        value = language_map.get(metric_name) if isinstance(language_map, dict) else None
+        if isinstance(value, str) and value and value not in labels:
+            labels.append(value)
+    return labels
+
+
+def _scan_rendered_for_excluded_metric(body_text: str, metric_name: str) -> dict[str, Any] | None:
+    for label in _excluded_metric_display_labels(metric_name):
+        if len(label) < 3:
+            continue
+        for match in re.finditer(re.escape(label), body_text, flags=re.IGNORECASE):
+            window = body_text[match.end(): match.end() + _RENDERED_SCAN_WINDOW_CHARS]
+            number = _RENDERED_SCAN_NUMBER.search(window)
+            if number is None:
+                continue
+            blank_positions = [
+                window.find(marker)
+                for marker in _RENDERED_SCAN_BLANK_MARKERS
+                if window.find(marker) != -1
+            ]
+            # A "—"/"N/A" between the label and the number means the metric
+            # cell itself is blank and the number belongs to a neighbor cell.
+            if blank_positions and min(blank_positions) < number.start():
+                continue
+            return {
+                "metric": metric_name,
+                "label": label,
+                "evidence": (label + window[: number.end() + 10]).strip(),
+            }
+    return None
+
+
+def build_blank_over_wrong_item(
+    validated: dict[str, Any],
+    analysis: dict[str, Any],
+    report_path: str | Path | None = None,
+) -> dict[str, Any]:
     exclusions = validated.get("exclusions") or []
     key_metrics = analysis.get("key_metrics") if isinstance(analysis.get("key_metrics"), dict) else {}
     checked_metrics: list[str] = []
@@ -735,17 +791,47 @@ def build_blank_over_wrong_item(validated: dict[str, Any], analysis: dict[str, A
         if value is not None:
             violations.append({"metric": metric_name, "value_found": value})
 
+    rendered_findings: list[dict[str, Any]] = []
+    rendered_scanned = False
+    if report_path is not None and checked_metrics:
+        rendered_text, _read_error = _read_rendered_text(report_path)
+        if rendered_text is not None:
+            rendered_scanned = True
+            body_text = _html_body_text(rendered_text)
+            for metric_name in checked_metrics:
+                finding = _scan_rendered_for_excluded_metric(body_text, metric_name)
+                if finding is not None:
+                    rendered_findings.append(finding)
+
     item: dict[str, Any] = {
-        "status": "FAIL" if violations else "PASS",
+        "status": "FAIL" if (violations or rendered_findings) else "PASS",
         "excluded_metrics_checked": checked_metrics,
         "violations_found": len(violations),
+        "rendered_scan": {
+            "scanned": rendered_scanned,
+            "findings": rendered_findings,
+        },
     }
+    errors: list[str] = []
     if violations:
         item["violations"] = violations
-        item["errors"] = [
+        errors.extend(
             f"{violation['metric']} appears with value {violation['value_found']} despite exclusion"
             for violation in violations
-        ]
+        )
+    if rendered_findings:
+        errors.extend(
+            f"excluded metric {finding['metric']} has a nearby numeric value in the rendered output: {finding['evidence']!r}"
+            for finding in rendered_findings
+        )
+        if not violations:
+            # Proximity scan is a heuristic — deliver with a flag instead of
+            # blocking on a possible neighbor-cell false positive.
+            item["severity"] = "MAJOR"
+            item["delivery_impact"] = "non_blocking_flag"
+            item["blocker_action"] = "none"
+    if errors:
+        item["errors"] = errors
     return item
 
 
@@ -1600,7 +1686,7 @@ def build_quality_report(
     generated_items = {
         "financial_consistency": build_financial_consistency_item(validated, analysis),
         "price_and_date": build_price_and_date_item(validated, analysis),
-        "blank_over_wrong": build_blank_over_wrong_item(validated, analysis),
+        "blank_over_wrong": build_blank_over_wrong_item(validated, analysis, report_path=report_path),
         "contract_validation": build_contract_validation_item(
             research_plan,
             validated,
