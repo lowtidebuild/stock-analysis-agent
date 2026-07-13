@@ -896,6 +896,12 @@ VALUATION_BRIDGE_DECISION_ANCHORS = (
 VALUATION_BRIDGE_MIN_RECONCILIATION_TOKENS = 50
 VALUATION_BRIDGE_WEIGHT_MIN = 0.10
 VALUATION_BRIDGE_WEIGHT_MAX = 0.60
+# The per-anchor range check only applies when the bridge has 3+ anchors.
+# With 1-2 anchors, renormalizing the framework defaults (0.25-0.40) forces
+# weights above 0.60 (e.g. analyst 0.25 + base 0.40 -> 0.3846/0.6154, single
+# anchor -> 1.0), so the range bound would reject the deterministic engine's
+# own legitimate output. The sum==1.0 invariant still applies at any count.
+VALUATION_BRIDGE_WEIGHT_RANGE_MIN_ANCHORS = 3
 
 
 def _classify_valuation_bridge_severity(error: str) -> str:
@@ -951,6 +957,7 @@ def validate_valuation_bridge(data: dict[str, Any], path: str = "$") -> list[str
         weight_total = 0.0
         weight_total_known = True
         running_sum = 0.0
+        enforce_weight_range = len(anchors) >= VALUATION_BRIDGE_WEIGHT_RANGE_MIN_ANCHORS
         for idx, anchor in enumerate(anchors):
             if not isinstance(anchor, dict):
                 errors.append(f"{bridge_path}.anchors[{idx}]: must be an object")
@@ -966,7 +973,9 @@ def validate_valuation_bridge(data: dict[str, Any], path: str = "$") -> list[str
                 errors.append(f"{bridge_path}.anchors[{idx}].weight: missing or non-numeric")
                 weight_total_known = False
                 continue
-            if not VALUATION_BRIDGE_WEIGHT_MIN <= weight <= VALUATION_BRIDGE_WEIGHT_MAX:
+            if enforce_weight_range and not (
+                VALUATION_BRIDGE_WEIGHT_MIN <= weight <= VALUATION_BRIDGE_WEIGHT_MAX
+            ):
                 errors.append(
                     f"{bridge_path}.anchors[{idx}].weight: must be within "
                     f"{VALUATION_BRIDGE_WEIGHT_MIN:.2f}-{VALUATION_BRIDGE_WEIGHT_MAX:.2f} "

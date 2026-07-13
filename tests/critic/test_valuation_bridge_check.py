@@ -122,6 +122,29 @@ class ValuationBridgeConsistencyCheckTests(unittest.TestCase):
 
         self.assertEqual(item["status"], "PASS", item)
 
+    def test_two_anchor_bridge_skips_weight_range_check(self) -> None:
+        # A 1-2 anchor bridge renormalizes the framework defaults above 0.60
+        # (e.g. analyst 0.25 + base 0.40 -> 0.3846/0.6154), which is the
+        # deterministic engine's own legitimate output in Standard Mode runs
+        # without FCF. The range check must not reject it; the sum==1.0
+        # invariant still applies.
+        analysis = _load_fixture()
+        analysis["valuation_bridge"]["anchors"] = analysis["valuation_bridge"]["anchors"][:2]
+        _set_bridge_weights(analysis, [0.3846, 0.6154])
+
+        item = build_valuation_bridge_consistency_item(analysis)
+
+        self.assertEqual(item["status"], "PASS", item)
+
+    def test_single_anchor_bridge_skips_weight_range_check(self) -> None:
+        analysis = _load_fixture()
+        analysis["valuation_bridge"]["anchors"] = analysis["valuation_bridge"]["anchors"][:1]
+        _set_bridge_weights(analysis, [1.0])
+
+        item = build_valuation_bridge_consistency_item(analysis)
+
+        self.assertEqual(item["status"], "PASS", item)
+
     def test_fail_major_when_reconciliation_logic_too_short(self) -> None:
         analysis = _load_fixture()
         analysis["valuation_bridge"]["reconciliation_logic"] = (

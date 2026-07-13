@@ -264,7 +264,7 @@ If any one of those three inputs is missing, omit the field entirely — do NOT 
 
 **Default weights**: 0.25 each (equal-weight). Adjust ONLY when one anchor is materially more or less reliable in the current company's context, and explain the deviation in `reconciliation_logic`. Weights MUST sum to 1.0.
 
-**Allowed weight range**: 개별 앵커 가중치는 0.10–0.60 범위 내에서만 조정 가능. 범위를 벗어나면 `[Quality flag]`.
+**Allowed weight range**: 앵커가 3개 이상일 때, 개별 앵커 가중치는 0.10–0.60 범위 내에서만 조정 가능. 범위를 벗어나면 `[Quality flag]`. 앵커가 1–2개뿐인 브리지(데이터 부족으로 DCF 등이 빠진 경우)는 정규화 산술상 0.60 초과가 불가피하므로 범위 검사를 적용하지 않는다 — 합계 1.0 불변식은 앵커 수와 무관하게 항상 적용.
 
 **Arithmetic invariants** (Critic checks; analyst self-checks before writing):
 
